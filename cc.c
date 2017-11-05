@@ -62,7 +62,7 @@ void put_value_on_stack(int register_number, struct token_list* a)
 	else exit(EXIT_FAILURE);
 }
 
-void be_pop_type(struct token_list* floor, enum otype type)
+void be_pop_type(struct token_list* floor, int type)
 {
 	bool flag = false;
 	for( struct token_list* i = global_stack; ((!flag) && (floor != i) && ((NULL == i->entry) || (i->entry->type == type))); i = global_stack)
@@ -72,7 +72,7 @@ void be_pop_type(struct token_list* floor, enum otype type)
 	}
 }
 
-struct token_list* sym_declare(char *s, enum otype type)
+struct token_list* sym_declare(char *s, int type)
 {
 	char* label;
 	asprintf(&label, "# Defining_%s\n", s);

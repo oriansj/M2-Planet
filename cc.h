@@ -20,13 +20,10 @@
 #include <string.h>
 #include <stdbool.h>
 
-enum otype
-{
-	GLOBAL = 1,
-	FUNCTION = (1 << 1),
-	LOCAL_VARIABLE = (1 << 2),
-	ARGUEMENT = (1 << 3)
-};
+#define GLOBAL 1
+#define FUNCTION 2
+#define LOCAL_VARIABLE 4
+#define ARGUEMENT 8
 
 struct token_list
 {
@@ -40,7 +37,7 @@ struct token_list
 	union
 	{
 		int length;
-		enum otype type;
+		int type;
 		bool hands_off;
 	};
 };
