@@ -430,10 +430,10 @@ void collect_local()
 }
 
 /* Evaluate if statements */
+int if_count;
 void process_if()
 {
 	char* label;
-	static int if_count;
 	int number = if_count;
 	if_count = if_count + 1;
 
@@ -463,10 +463,10 @@ void process_if()
 }
 
 /* Process while loops */
+int while_count;
 void process_while()
 {
 	char* label;
-	static int while_count;
 	int number = while_count;
 	while_count = while_count + 1;
 

@@ -16,6 +16,8 @@
  */
 
 #include "cc.h"
+#include <stdint.h>
+
 void emit(char *s, bool hands_off);
 int asprintf(char **strp, const char *fmt, ...);
 
@@ -31,17 +33,26 @@ char upcase(char a)
 
 int8_t hex(int c, bool high)
 {
-	switch(c)
+	if (c >= '0' && c <= '9')
 	{
-		case '0' ... '9': c = (c - 48); break;
-		case 'a' ... 'z': c = (c - 87); break;
-		case 'A' ... 'Z': c = (c - 55); break;
-		default: exit(EXIT_FAILURE);
+		c = (c - 48);
+	}
+	else if (c >= 'a' && c <= 'z')
+	{
+		c = (c - 87);
+	}
+	else if (c >= 'A' && c <= 'Z')
+	{
+		c = (c - 55);
+	}
+	else
+	{
+		exit(EXIT_FAILURE);
 	}
 
 	if(high)
 	{
-		c = c << 4;
+		c = c * 16;
 	}
 	return c;
 }
@@ -76,7 +87,9 @@ void parse_string()
 		{
 			hold[k + 1] = upcase(global_token->s[j + 2]);
 			hold[k + 2] = upcase(global_token->s[j + 3]);
-			message[i] = (hex(global_token->s[j + 2], true) + hex(global_token->s[j + 3], false));
+			int t1 = hex(global_token->s[j + 2], true);
+			int t2 = hex(global_token->s[j + 3], false);
+			message[i] = t1 + t2;
 			if(weird(message[i])) hexit = true;
 			j = j + 4;
 		}
