@@ -18,20 +18,26 @@
 #include "cc.h"
 #include <stdint.h>
 
+
+#define GLOBAL 1
+#define FUNCTION 2
+#define LOCAL_VARIABLE 4
+#define ARGUEMENT 8
+
 /* Globals */
 struct token_list* global_symbol_list;
 struct token_list* global_stack;
+struct token_list* global_token;
 
 /* Imported functions */
 int asprintf(char **strp, const char *fmt, ...);
-void read_all_tokens(char* source_file);
+struct token_list* read_all_tokens(char* source_file);
 
 struct token_list* emit(char *s, bool hands_off, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
 	t->next = head;
 	t->hands_off = hands_off;
-	head = t;
 	t->s = s;
 	return t;
 }
@@ -141,7 +147,7 @@ void require_char(char* message, char required)
 }
 
 struct token_list* expression(struct token_list* out);
-struct token_list* parse_string(struct token_list* out);
+struct token_list* parse_string(struct token_list* output_list, char* string);
 
 /*
  * primary-expr:
@@ -178,7 +184,7 @@ struct token_list* primary_expr(struct token_list* out)
 	}
 	else if(global_token->s[0] == '"')
 	{
-		out = parse_string(out);
+		out = parse_string(out, global_token->s);
 		global_token = global_token->next;
 	}
 	else exit(EXIT_FAILURE);
@@ -471,6 +477,44 @@ struct token_list* process_if(struct token_list* out)
 	return out;
 }
 
+int for_count;
+struct token_list* process_for(struct token_list* out)
+{
+	char* label;
+	int number = for_count;
+	for_count = for_count + 1;
+
+	asprintf(&label, "# FOR_initialization_%d\n", number);
+	out = emit(label, true, out);
+
+	global_token = global_token->next;
+
+	require_char("ERROR in process_for\nMISSING (\n", '(');
+	out = expression(out);
+
+	asprintf(&label, ":FOR_%d\n", number);
+	out = emit(label, true, out);
+
+	require_char("ERROR in process_for\nMISSING ;1\n", ';');
+	out = expression(out);
+
+	asprintf(&label, "TEST\nJUMP_EQ %c%s_%d\nJUMP %c%s_%d\n:FOR_ITER_%d\n", 37, "FOR_END", number, 37, "FOR_THEN", number, number);
+	out = emit(label, true, out);
+
+	require_char("ERROR in process_for\nMISSING ;2\n", ';');
+	out = expression(out);
+
+	asprintf(&label, "JUMP %c%s_%d\n:FOR_THEN_%d\n", 37, "FOR", number, number);
+	out = emit(label, true, out);
+
+	require_char("ERROR in process_for\nMISSING )\n", ')');
+	out = statement(out);
+
+	asprintf(&label, "JUMP %c%s_ITER_%d\n:FOR_END_%d\n", 37, "FOR", number, number);
+	out = emit(label, true, out);
+	return out;
+}
+
 /* Process while loops */
 int while_count;
 struct token_list* process_while(struct token_list* out)
@@ -533,6 +577,7 @@ struct token_list* recursive_statement(struct token_list* out)
  *     if ( expression ) statement
  *     if ( expression ) statement else statement
  *     while ( expression ) statement
+ *     for ( expression ; expression ; expression ) statement
  *     return ;
  *     expr ;
  */
@@ -542,6 +587,7 @@ struct token_list* statement(struct token_list* out)
 	else if((!strcmp(global_token->s, "char")) | (!strcmp(global_token->s, "int"))) out = collect_local(out);
 	else if(!strcmp(global_token->s, "if")) out = process_if(out);
 	else if(!strcmp(global_token->s, "while")) out = process_while(out);
+	else if(!strcmp(global_token->s, "for")) out = process_for(out);
 	else if(!strcmp(global_token->s, "return")) out = return_result(out);
 	else
 	{
@@ -586,8 +632,7 @@ struct token_list* declare_global(struct token_list* out)
 	sym_declare(global_token->prev->s, GLOBAL);
 
 	global_token = global_token->next;
-	out = emit("NOP\n", true, out);
-	return out;
+	return emit("NOP\n", true, out);
 }
 
 struct token_list* declare_function(struct token_list* out)
@@ -674,7 +719,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	read_all_tokens(argv[1]);
+	global_token = read_all_tokens(argv[1]);
 	struct token_list* output_list = program(NULL);
 	FILE* output = fopen(argv[2], "w");
 	recursive_output(output, output_list);

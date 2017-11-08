@@ -15,24 +15,22 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
+int putchar(int);
 
-struct token_list
+int main()
 {
-	struct token_list* next;
-	union
+	int max = 90;
+	int i;
+	int j;
+	for(i = 65; i <= max; i = i + 1)
 	{
-		struct token_list* prev;
-		struct token_list* entry;
-	};
-	char* s;
-	union
-	{
-		int length;
-		int type;
-		bool hands_off;
-	};
-};
+		putchar(i);
+		for(j = i + 1; j <= max; j = j + 1)
+		{
+			putchar(j);
+		}
+		putchar(10);
+	}
+	return 0;
+}

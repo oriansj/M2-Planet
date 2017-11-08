@@ -67,7 +67,7 @@ bool weird(char c)
 
 /* Parse string to deal with hex characters*/
 char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
-struct token_list* parse_string(struct token_list* output_list)
+struct token_list* parse_string(struct token_list* output_list, char* string)
 {
 	char* label;
 	static int string_num;
@@ -79,25 +79,25 @@ struct token_list* parse_string(struct token_list* output_list)
 	bool hexit = false;
 
 	message[0] = '"';
-	while(global_token->s[j] != '"')
+	while(string[j] != '"')
 	{
 		hold[k] = ' ';
 
-		if((global_token->s[j] == 92) & (global_token->s[j + 1] == 'x'))
+		if((string[j] == 92) & (string[j + 1] == 'x'))
 		{
-			hold[k + 1] = upcase(global_token->s[j + 2]);
-			hold[k + 2] = upcase(global_token->s[j + 3]);
-			int t1 = hex(global_token->s[j + 2], true);
-			int t2 = hex(global_token->s[j + 3], false);
+			hold[k + 1] = upcase(string[j + 2]);
+			hold[k + 2] = upcase(string[j + 3]);
+			int t1 = hex(string[j + 2], true);
+			int t2 = hex(string[j + 3], false);
 			message[i] = t1 + t2;
 			if(weird(message[i])) hexit = true;
 			j = j + 4;
 		}
 		else
 		{
-			hold[k + 1] = table[(global_token->s[j] >> 4)];
-			hold[k + 2] = table[(global_token->s[j] & 15)];
-			message[i] = global_token->s[j];
+			hold[k + 1] = table[(string[j] >> 4)];
+			hold[k + 2] = table[(string[j] & 15)];
+			message[i] = string[j];
 			j = j + 1;
 		}
 

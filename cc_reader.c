@@ -17,6 +17,7 @@
 
 #include "cc.h"
 FILE* input;
+struct token_list* token;
 
 char clearWhiteSpace(char c)
 {
@@ -39,8 +40,15 @@ char consume_word(struct token_list* current, char c, char frequent)
 	return consume_byte(current, c);
 }
 
+char purge_macro(int ch)
+{
+	while(10 != ch) ch = fgetc(input);
+	return ch;
+}
+
 int get_token(int c)
 {
+	if('#' == c) c = purge_macro(c);
 	bool w = true;
 
 	struct token_list* current = calloc(1, sizeof(struct token_list));
@@ -77,9 +85,9 @@ int get_token(int c)
 		}
 	}
 
-	current->prev = global_token;
-	current->next = global_token;
-	global_token = current;
+	current->prev = token;
+	current->next = token;
+	token = current;
 	return c;
 }
 
@@ -96,11 +104,11 @@ struct token_list* reverse_list(struct token_list* head)
 	return root;
 }
 
-void read_all_tokens(char* source_file)
+struct token_list* read_all_tokens(char* source_file)
 {
 	input  = fopen(source_file, "r");
 	int ch =fgetc(input);
 	while(EOF != ch) ch = get_token(ch);
 
-	global_token = reverse_list(global_token);
+	return reverse_list(token);
 }
