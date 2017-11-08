@@ -18,7 +18,7 @@
 #include "cc.h"
 #include <stdint.h>
 
-void emit(char *s, bool hands_off);
+struct token_list* emit(char *s, bool hands_off, struct token_list* head);
 int asprintf(char **strp, const char *fmt, ...);
 
 char upcase(char a)
@@ -67,7 +67,7 @@ bool weird(char c)
 
 /* Parse string to deal with hex characters*/
 char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
-void parse_string()
+struct token_list* parse_string(struct token_list* output_list)
 {
 	char* label;
 	static int string_num;
@@ -112,25 +112,26 @@ void parse_string()
 	message[i + 1] = '\n';
 
 	/* call ... */
-	emit("CALL_IMMEDIATE ", true);
+	output_list = emit("CALL_IMMEDIATE ", true, output_list);
 	asprintf(&label, "%c_STRING_%d\n", 37, string_num);
-	emit(label, true);
+	output_list = emit(label, true, output_list);
 
 	/* the string */
 	if(hexit)
 	{
-		emit(hold, false);
+		output_list = emit(hold, false, output_list);
 	}
 	else
 	{
-		emit(message, true);
+		output_list = emit(message, true, output_list);
 	}
 
 	/* The target */
 	asprintf(&label, ":_STRING_%d\n", string_num);
-	emit(label, true);
+	output_list = emit(label, true, output_list);
 
 	/* The cleanup  */
-	emit("POP_eax\n", true);
+	output_list = emit("POP_eax\n", true, output_list);
 	string_num = string_num + 1;
+	return output_list;
 }
