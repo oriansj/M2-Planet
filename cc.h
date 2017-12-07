@@ -20,6 +20,14 @@
 #include <string.h>
 #include <stdbool.h>
 
+struct type
+{
+	int size;
+	int member_size;
+	int indirect;
+	int _void;
+};
+
 struct token_list
 {
 	struct token_list* next;
@@ -35,4 +43,8 @@ struct token_list
 		int type;
 		bool hands_off;
 	};
+	struct type* size;
+	struct token_list* arguments;
+	struct token_list* locals;
+	int temps;
 };

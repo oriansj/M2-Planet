@@ -26,8 +26,8 @@
 
 /* Globals */
 struct token_list* global_symbol_list;
-struct token_list* global_stack;
 struct token_list* global_token;
+struct token_list* current_target;
 
 /* Imported functions */
 int asprintf(char **strp, const char *fmt, ...);
@@ -42,46 +42,37 @@ struct token_list* emit(char *s, bool hands_off, struct token_list* head)
 	return t;
 }
 
-struct token_list* pull_value_off_stack(int register_number, struct token_list* out)
+struct token_list* pull_value_off_stack(int register_number, struct token_list* out, char* s)
 {
-	global_stack = global_stack->next;
+	char* label;
 
-	if(0 == register_number) out = emit("POP_eax\n", true, out);
-	else if(1 == register_number) out = emit("POP_ebx\n", true, out);
-	else exit(EXIT_FAILURE);
-	return out;
-}
-
-void add_to_frame(struct token_list* a)
-{
-	struct token_list* new = calloc(1, sizeof(struct token_list));
-	new->entry = a;
-	new->next = global_stack;
-	global_stack = new;
-}
-
-struct token_list* put_value_on_stack(int register_number, struct token_list* a, struct token_list* out)
-{
-	add_to_frame(a);
-
-	if(0 == register_number) out = emit("PUSH_eax\n", true, out);
-	else if(1 == register_number) out = emit("PUSH_ebx\n", true, out);
-	else exit(EXIT_FAILURE);
-	return out;
-}
-
-struct token_list* be_pop_type(struct token_list* floor, int type, struct token_list* out)
-{
-	bool flag = false;
-	for( struct token_list* i = global_stack; ((!flag) && (floor != i) && ((NULL == i->entry) || (i->entry->type == type))); i = global_stack)
+	if(0 == register_number) asprintf(&label, "POP_eax\t# %s\n", s);
+	else if(1 == register_number) asprintf(&label, "POP_ebx\t# %s\n", s);
+	else
 	{
-		if((NULL != i->entry) && (i->entry->type == FUNCTION)) flag = true;
-		out = pull_value_off_stack(1, out);
+		fprintf(stderr, "%d is not a valid register number\n", register_number);
+		exit(EXIT_FAILURE);
 	}
+	out = emit(label, true, out);
 	return out;
 }
 
-struct token_list* sym_declare(char *s, int type)
+struct token_list* put_value_on_stack(int register_number, struct token_list* out, char* s)
+{
+	char* label;
+
+	if(0 == register_number) asprintf(&label, "PUSH_eax\t#%s\n", s);
+	else if(1 == register_number) asprintf(&label, "PUSH_ebx\n\t#%s\n", s);
+	else
+	{
+		fprintf(stderr, "%d is not a valid register number\n", register_number);
+		exit(EXIT_FAILURE);
+	}
+	out = emit(label, true, out);
+	return out;
+}
+
+struct token_list* sym_declare(char *s, int type, struct type* size)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
 	a->next = global_symbol_list;
@@ -89,6 +80,7 @@ struct token_list* sym_declare(char *s, int type)
 
 	a->type = type;
 	a->s = s;
+	a->size = size;
 	return a;
 }
 
@@ -101,32 +93,49 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 	return NULL;
 }
 
-int stack_index(struct token_list* a)
+int stack_index(struct token_list* a, struct token_list* function)
 {
-	int index = 0;
-	for(struct token_list* b = global_stack; NULL != b; (b = b->next) && (index = index + 1))
+	int depth = function->temps;
+	for(struct token_list* i = function->locals; NULL != i; i = i->locals)
 	{
-		if(b->entry == a) return index;
+		if(i == a) return depth;
+		else depth = depth + 1;
 	}
-	return index;
+
+	/* Deal with offset caused by return pointer */
+	depth = depth+ 1;
+
+	for(struct token_list* i = function->arguments; NULL != i; i = i->arguments)
+	{
+		if(i == a) return depth;
+		else depth = depth + 1;
+	}
+
+	fprintf(stderr, "%s does not exist in function %s\n", a->s, function->s);
+	exit(EXIT_FAILURE);
 }
 
-struct token_list* sym_get_value(char *s, struct token_list* out)
+struct token_list* sym_get_value(char *s, struct token_list* out, struct token_list* function)
 {
 	char* label;
 	struct token_list* a = sym_lookup(s, global_symbol_list);
-	if(a == NULL) exit(EXIT_FAILURE);
+	if(a == NULL)
+	{
+		fprintf(stderr, "%s is not a defined symbol\n", s);
+		exit(EXIT_FAILURE);
+	}
+
+	current_target = a;
 
 	switch(a->type)
 	{
 		case GLOBAL: asprintf(&label, "LOAD_IMMEDIATE_eax &GLOBAL_%s\n", s); break;
-		case LOCAL_VARIABLE: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * stack_index(a)); break;
-		case ARGUEMENT: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * (stack_index(a) + 1)); break;
+		case LOCAL_VARIABLE: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * stack_index(a, function)); break;
+		case ARGUEMENT: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * (stack_index(a, function))); break;
 		case FUNCTION:
 		{
-			asprintf(&label, "LOAD_IMMEDIATE_eax &FUNCTION_%s\n", s);
-			out = emit(label, true, out);
-			out = put_value_on_stack(0, a, out);
+			/* Make space for function */
+			function->temps = function->temps - 1;
 			return out;
 		}
 		default: exit(EXIT_FAILURE);
@@ -146,7 +155,7 @@ void require_char(char* message, char required)
 	global_token = global_token->next;
 }
 
-struct token_list* expression(struct token_list* out);
+struct token_list* expression(struct token_list* out, struct token_list* function);
 struct token_list* parse_string(struct token_list* output_list, char* string);
 
 /*
@@ -155,7 +164,7 @@ struct token_list* parse_string(struct token_list* output_list, char* string);
  *     constant
  *     ( expression )
  */
-struct token_list* primary_expr(struct token_list* out)
+struct token_list* primary_expr(struct token_list* out, struct token_list* function)
 {
 	char* label;
 
@@ -167,13 +176,13 @@ struct token_list* primary_expr(struct token_list* out)
 	}
 	else if(('a' <= global_token->s[0]) & (global_token->s[0] <= 'z'))
 	{
-		out = sym_get_value(global_token->s, out);
+		out = sym_get_value(global_token->s, out, function);
 		global_token = global_token->next;
 	}
 	else if(global_token->s[0] == '(')
 	{
 		global_token = global_token->next;
-		out = expression(out);
+		out = expression(out, function);
 		require_char("Error in Primary expression\nDidn't get )\n", ')');
 	}
 	else if((global_token->s[0] == 39) & (global_token->s[1] != 0) & (global_token->s[2] == 39) & (global_token->s[3] == 0))
@@ -193,39 +202,54 @@ struct token_list* primary_expr(struct token_list* out)
 }
 
 /* Deal with Expression lists */
-struct token_list* process_expression_list(struct token_list* out)
+struct token_list* process_expression_list(struct token_list* out, struct token_list* function)
 {
+	struct token_list* func = sym_lookup(global_token->prev->s, global_symbol_list);
 	global_token = global_token->next;
-	struct token_list* function = global_stack->entry;
+	int temp = function->temps;
+	function->temps = function->temps + 1;
 
 	if(global_token->s[0] != ')')
 	{
-		out = expression(out);
-		out = put_value_on_stack(0, NULL, out);
+		out = expression(out, function);
+		out = put_value_on_stack(0, out, "_process_expression1");
+		function->temps = function->temps + 1;
 
 		while(global_token->s[0] == ',')
 		{
 			global_token = global_token->next;
-			out = expression(out);
-			out = put_value_on_stack(0, NULL, out);
+			out = expression(out, function);
+			out = put_value_on_stack(0, out, "_process_expression2");
+			function->temps = function->temps + 1;
 		}
 		require_char("ERROR in process_expression_list\nNo ) was found\n", ')');
 	}
 	else global_token = global_token->next;
+	function->temps = temp;
 
 	char* label;
-	asprintf(&label, "LOAD_ESP_IMMEDIATE_into_eax %c%d\nCALL_eax\n", 37, 4 * stack_index(function));
+	asprintf(&label, "CALL_IMMEDIATE %cFUNCTION_%s\n", 37, func->s);
 	out = emit(label, true, out);
-	out = be_pop_type(NULL, FUNCTION, out);
+
+	for(struct token_list* i = func->arguments; NULL != i; i = i->arguments)
+	{
+		out = pull_value_off_stack(1, out, "_process_expression_locals");
+	}
+
+	/* Pull off function pointer */
+	function->temps =  function->temps + 1;
+
 	return out;
 }
 
-struct token_list* common_recursion(struct token_list* (*function) (struct token_list*), struct token_list* out)
+struct token_list* common_recursion(struct token_list* (*function) (struct token_list*, struct token_list*), struct token_list* out, struct token_list* func)
 {
 	global_token = global_token->next;
-	out = put_value_on_stack(0, NULL, out);
-	out = function(out);
-	out = pull_value_off_stack(1, out);
+	out = put_value_on_stack(0,  out, "_common_recursion");
+	func->temps = func->temps + 1;
+	out = function(out, func);
+	func->temps = func->temps - 1;
+	out = pull_value_off_stack(1, out, "_common_recursion");
 	return out;
 }
 
@@ -235,18 +259,41 @@ struct token_list* common_recursion(struct token_list* (*function) (struct token
  *         postfix-expr [ expression ]
  *         postfix-expr ( expression-list-opt )
  */
-struct token_list* postfix_expr(struct token_list* out)
+struct token_list* postfix_expr(struct token_list* out, struct token_list* function)
 {
-	out = primary_expr(out);
+	out = primary_expr(out, function);
 
 	if(global_token->s[0] == '[')
 	{
-		out = common_recursion(expression, out);
+		struct token_list* target = current_target;
+		out = common_recursion(expression, out, function);
+
+		/* Add support for Ints*/
+		if( 4 == target->size->member_size)
+		{
+			out = emit("SAL_eax_Immediate8 !2\n", true, out);
+		}
+
 		out = emit("ADD_ebx_to_eax\n", true, out);
-		if(strcmp(global_token->next->s, "=")) out = emit("LOAD_BYTE\n", true, out);
+		current_target = target;
+
+		if(strcmp(global_token->next->s, "="))
+		{
+			if( 4 == target->size->member_size)
+			{
+				out = emit("LOAD_INTEGER\n", true, out);
+			}
+			else
+			{
+				out = emit("LOAD_BYTE\n", true, out);
+			}
+		}
 		require_char("ERROR in postfix_expr\nMissing ]\n", ']');
 	}
-	else if(global_token->s[0] == '(') out = process_expression_list(out);
+	else if(global_token->s[0] == '(')
+	{
+		out = process_expression_list(out, function);
+	}
 
 	return out;
 }
@@ -257,20 +304,20 @@ struct token_list* postfix_expr(struct token_list* out)
  *         additive-expr + postfix-expr
  *         additive-expr - postfix-expr
  */
-struct token_list* additive_expr(struct token_list* out)
+struct token_list* additive_expr(struct token_list* out, struct token_list* function)
 {
-	out = postfix_expr(out);
+	out = postfix_expr(out, function);
 
 	while(1)
 	{
 		if(global_token->s[0] == '+')
 		{
-			out = common_recursion(postfix_expr, out);
+			out = common_recursion(postfix_expr, out, function);
 			out = emit("ADD_ebx_to_eax\n", true, out);
 		}
 		else if(global_token->s[0] == '-')
 		{
-			out = common_recursion(postfix_expr, out);
+			out = common_recursion(postfix_expr, out, function);
 			out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", true, out);
 		}
 		else return out;
@@ -283,21 +330,21 @@ struct token_list* additive_expr(struct token_list* out)
  *         shift-expr << additive-expr
  *         shift-expr >> additive-expr
  */
-struct token_list* shift_expr(struct token_list* out)
+struct token_list* shift_expr(struct token_list* out, struct token_list* function)
 {
-	out = additive_expr(out);
+	out = additive_expr(out, function);
 
 	while(1)
 	{
 		if(!strcmp(global_token->s, "<<"))
 		{
-			out = common_recursion(additive_expr, out);
+			out = common_recursion(additive_expr, out, function);
 			// Ugly hack to Work around flaw in x86
 			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAL_eax_cl\n", true, out->next);
 		}
 		else if(!strcmp(global_token->s, ">>"))
 		{
-			out = common_recursion(additive_expr, out);
+			out = common_recursion(additive_expr, out, function);
 			// Ugly hack to Work around flaw in x86
 			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAR_eax_cl\n", true, out->next);
 		}
@@ -313,13 +360,13 @@ struct token_list* shift_expr(struct token_list* out)
  *         shift-expr
  *         relational-expr <= shift-expr
  */
-struct token_list* relational_expr(struct token_list* out)
+struct token_list* relational_expr(struct token_list* out, struct token_list* function)
 {
-	out = shift_expr(out);
+	out = shift_expr(out, function);
 
 	while(!strcmp(global_token->s, "<="))
 	{
-		out = common_recursion(shift_expr, out);
+		out = common_recursion(shift_expr, out, function);
 		out = emit("CMP\nSETLE\nMOVEZBL\n", true, out);
 	}
 	return out;
@@ -331,20 +378,20 @@ struct token_list* relational_expr(struct token_list* out)
  *         equality-expr == relational-expr
  *         equality-expr != relational-expr
  */
-struct token_list* equality_expr(struct token_list* out)
+struct token_list* equality_expr(struct token_list* out, struct token_list* function)
 {
-	out = relational_expr(out);
+	out = relational_expr(out, function);
 
 	while(1)
 	{
 		if(!strcmp(global_token->s, "=="))
 		{
-			out = common_recursion(relational_expr, out);
+			out = common_recursion(relational_expr, out, function);
 			out = emit("CMP\nSETE\nMOVEZBL\n", true, out);
 		}
 		else if(!strcmp(global_token->s, "!="))
 		{
-			out = common_recursion(relational_expr, out);
+			out = common_recursion(relational_expr, out, function);
 			out = emit("CMP\nSETNE\nMOVEZBL\n", true, out);
 		}
 		else return out;
@@ -356,13 +403,13 @@ struct token_list* equality_expr(struct token_list* out)
  *         equality-expr
  *         bitwise-and-expr & equality-expr
  */
-struct token_list* bitwise_and_expr(struct token_list* out)
+struct token_list* bitwise_and_expr(struct token_list* out, struct token_list* function)
 {
-	out = equality_expr(out);
+	out = equality_expr(out, function);
 
 	while(global_token->s[0] == '&')
 	{
-		out = common_recursion(equality_expr, out);
+		out = common_recursion(equality_expr, out, function);
 		out = emit("AND_eax_ebx\n", true, out);
 	}
 	return out;
@@ -373,13 +420,13 @@ struct token_list* bitwise_and_expr(struct token_list* out)
  *         bitwise-and-expr
  *         bitwise-and-expr | bitwise-or-expr
  */
-struct token_list* bitwise_or_expr(struct token_list* out)
+struct token_list* bitwise_or_expr(struct token_list* out, struct token_list* function)
 {
-	out = bitwise_and_expr(out);
+	out = bitwise_and_expr(out, function);
 
 	while(global_token->s[0] == '|')
 	{
-		out = common_recursion(bitwise_and_expr, out);
+		out = common_recursion(bitwise_and_expr, out, function);
 		out = emit("OR_eax_ebx\n", true, out);
 	}
 	return out;
@@ -390,16 +437,28 @@ struct token_list* bitwise_or_expr(struct token_list* out)
  *         bitwise-or-expr
  *         bitwise-or-expr = expression
  */
-struct token_list* expression(struct token_list* out)
+struct token_list* expression(struct token_list* out, struct token_list* function)
 {
-	out = bitwise_or_expr(out);
+	out = bitwise_or_expr(out, function);
 
 	if(global_token->s[0] == '=')
 	{
-		bool byte = !strcmp(global_token->prev->s, "]");
-		out = common_recursion(expression, out);
-		if(!byte) out = emit("STORE_INTEGER\n", true, out);
-		else out = emit("STORE_CHAR\n", true, out);
+		struct token_list* target = current_target;
+		bool member = !strcmp(global_token->prev->s, "]");
+		out = common_recursion(expression, out, function);
+
+		if(member)
+		{
+			if(1 == target->size->member_size) out = emit("STORE_CHAR\n", true, out);
+			else if(4 == target->size->member_size)
+			{
+				out = emit("STORE_INTEGER\n", true, out);
+			}
+		}
+		else
+		{
+			out = emit("STORE_INTEGER\n", true, out);
+		}
 	}
 	return out;
 }
@@ -409,43 +468,67 @@ struct token_list* expression(struct token_list* out)
  *     char *
  *     int
  */
-void type_name()
+struct type* type_name()
 {
+	struct type* ret = calloc(1, sizeof(struct type));
+	ret->size = 4;
+	if(!strcmp(global_token->s, "char"))
+	{
+		ret->size = 1;
+	}
+
+	if(!strcmp(global_token->s, "void"))
+	{
+		ret->_void = 1;
+	}
 	global_token = global_token->next;
+
+	if(global_token->s[0] == '*')
+	{
+		ret->member_size = ret->size;
+		ret->size = 4;
+		ret->indirect = 1;
+	}
 
 	while(global_token->s[0] == '*')
 	{
 		global_token = global_token->next;
 	}
+
+	return ret;
 }
 
-struct token_list* statement(struct token_list* out);
-
 /* Process local variable */
-struct token_list* collect_local(struct token_list* out)
+struct token_list* collect_local(struct token_list* out, struct token_list* function)
 {
-	type_name();
+	struct type* type_size = type_name();
 	char* label;
 	asprintf(&label, "# Defining local %s\n", global_token->s);
 	out = emit(label, true, out);
 
-	struct token_list* a = sym_declare(global_token->s, LOCAL_VARIABLE);
+	struct token_list* a = sym_declare(global_token->s, LOCAL_VARIABLE, type_size);
+	a->locals = function->locals;
+	function->locals = a;
 	global_token = global_token->next;
+	function->temps = function->temps - 1;
 
 	if(global_token->s[0] == '=')
 	{
 		global_token = global_token->next;
-		out = expression(out);
+		out = expression(out, function);
 	}
+	function->temps = function->temps + 1;
 
 	require_char("ERROR in collect_local\nMissing ;\n", ';');
-	out = put_value_on_stack(0, a, out);
+	out = put_value_on_stack(0, out, a->s);
 	return out;
 }
 
+struct token_list* statement(struct token_list* out, struct token_list* function);
+
 /* Evaluate if statements */
 int if_count;
-struct token_list* process_if(struct token_list* out)
+struct token_list* process_if(struct token_list* out, struct token_list* function)
 {
 	char* label;
 	int number = if_count;
@@ -456,13 +539,13 @@ struct token_list* process_if(struct token_list* out)
 
 	global_token = global_token->next;
 	require_char("ERROR in process_if\nMISSING (\n", '(');
-	out = expression(out);
+	out = expression(out, function);
 
 	asprintf(&label, "TEST\nJUMP_EQ %c%s_%d\n", 37, "ELSE",  number);
 	out = emit(label, true, out);
 
 	require_char("ERROR in process_if\nMISSING )\n", ')');
-	out = statement(out);
+	out = statement(out, function);
 
 	asprintf(&label, "JUMP %c_END_IF_%d\n:ELSE_%d\n", 37, number, number);
 	out = emit(label, true, out);
@@ -470,7 +553,7 @@ struct token_list* process_if(struct token_list* out)
 	if(!strcmp(global_token->s, "else"))
 	{
 		global_token = global_token->next;
-		out = statement(out);
+		out = statement(out, function);
 	}
 	asprintf(&label, ":_END_IF_%d\n", number);
 	out = emit(label, true, out);
@@ -478,7 +561,7 @@ struct token_list* process_if(struct token_list* out)
 }
 
 int for_count;
-struct token_list* process_for(struct token_list* out)
+struct token_list* process_for(struct token_list* out, struct token_list* function)
 {
 	char* label;
 	int number = for_count;
@@ -490,25 +573,25 @@ struct token_list* process_for(struct token_list* out)
 	global_token = global_token->next;
 
 	require_char("ERROR in process_for\nMISSING (\n", '(');
-	out = expression(out);
+	out = expression(out, function);
 
 	asprintf(&label, ":FOR_%d\n", number);
 	out = emit(label, true, out);
 
 	require_char("ERROR in process_for\nMISSING ;1\n", ';');
-	out = expression(out);
+	out = expression(out, function);
 
 	asprintf(&label, "TEST\nJUMP_EQ %c%s_%d\nJUMP %c%s_%d\n:FOR_ITER_%d\n", 37, "FOR_END", number, 37, "FOR_THEN", number, number);
 	out = emit(label, true, out);
 
 	require_char("ERROR in process_for\nMISSING ;2\n", ';');
-	out = expression(out);
+	out = expression(out, function);
 
 	asprintf(&label, "JUMP %c%s_%d\n:FOR_THEN_%d\n", 37, "FOR", number, number);
 	out = emit(label, true, out);
 
 	require_char("ERROR in process_for\nMISSING )\n", ')');
-	out = statement(out);
+	out = statement(out, function);
 
 	asprintf(&label, "JUMP %c%s_ITER_%d\n:FOR_END_%d\n", 37, "FOR", number, number);
 	out = emit(label, true, out);
@@ -517,7 +600,7 @@ struct token_list* process_for(struct token_list* out)
 
 /* Process while loops */
 int while_count;
-struct token_list* process_while(struct token_list* out)
+struct token_list* process_while(struct token_list* out, struct token_list* function)
 {
 	char* label;
 	int number = while_count;
@@ -529,13 +612,13 @@ struct token_list* process_while(struct token_list* out)
 	global_token = global_token->next;
 
 	require_char("ERROR in process_while\nMISSING (\n", '(');
-	out = expression(out);
+	out = expression(out, function);
 
 	asprintf(&label, "TEST\nJUMP_EQ %c%s_WHILE_%d\n# THEN_while_%d\n", 37, "END", number, number);
 	out = emit(label, true, out);
 
 	require_char("ERROR in process_while\nMISSING )\n", ')');
-	out = statement(out);
+	out = statement(out, function);
 
 	asprintf(&label, "JUMP %c%s_%d\n:END_WHILE_%d\n", 37, "WHILE", number, number);
 	out = emit(label, true, out);
@@ -543,29 +626,42 @@ struct token_list* process_while(struct token_list* out)
 }
 
 /* Ensure that functions return */
-struct token_list* return_result(struct token_list* out)
+struct token_list* return_result(struct token_list* out, struct token_list* function)
 {
 	global_token = global_token->next;
-	if(global_token->s[0] != ';') out = expression(out);
+	if(global_token->s[0] != ';') out = expression(out, function);
 
 	require_char("ERROR in return_result\nMISSING ;\n", ';');
-	out = be_pop_type(NULL, LOCAL_VARIABLE, out);
+
+	for(struct token_list* i = function->locals; NULL != i; i = i->locals)
+	{
+		out = pull_value_off_stack(1, out, "_return_result_locals");
+		function->locals = function->locals->locals;
+	}
 	out = emit("RETURN\n", true, out);
 	return out;
 }
 
-struct token_list* recursive_statement(struct token_list* out)
+struct token_list* recursive_statement(struct token_list* out, struct token_list* function)
 {
 	global_token = global_token->next;
-	struct token_list* frame = global_stack;
+	struct token_list* frame = function->locals;
 
 	while(strcmp(global_token->s, "}"))
 	{
-		out = statement(out);
+		out = statement(out, function);
 	}
 	global_token = global_token->next;
 
-	out = be_pop_type(frame, LOCAL_VARIABLE, out);
+	/* Clean up any locals added */
+	if(NULL != function->locals)
+	{
+		for(struct token_list* i = function->locals; frame != i; i = i->locals)
+		{
+			out = pull_value_off_stack(1, out, "_recursive_statement_locals");
+			function->locals = function->locals->locals;
+		}
+	}
 	return out;
 }
 
@@ -581,39 +677,51 @@ struct token_list* recursive_statement(struct token_list* out)
  *     return ;
  *     expr ;
  */
-struct token_list* statement(struct token_list* out)
+struct token_list* statement(struct token_list* out, struct token_list* function)
 {
-	if(global_token->s[0] == '{') out = recursive_statement(out);
-	else if((!strcmp(global_token->s, "char")) | (!strcmp(global_token->s, "int"))) out = collect_local(out);
-	else if(!strcmp(global_token->s, "if")) out = process_if(out);
-	else if(!strcmp(global_token->s, "while")) out = process_while(out);
-	else if(!strcmp(global_token->s, "for")) out = process_for(out);
-	else if(!strcmp(global_token->s, "return")) out = return_result(out);
+	if(global_token->s[0] == '{') out = recursive_statement(out, function);
+	else if((!strcmp(global_token->s, "char")) | (!strcmp(global_token->s, "int"))) out = collect_local(out, function);
+	else if(!strcmp(global_token->s, "if")) out = process_if(out, function);
+	else if(!strcmp(global_token->s, "while")) out = process_while(out, function);
+	else if(!strcmp(global_token->s, "for")) out = process_for(out, function);
+	else if(!strcmp(global_token->s, "return")) out = return_result(out, function);
 	else
 	{
-		out = expression(out);
+		out = expression(out, function);
 		require_char("ERROR in statement\nMISSING ;\n", ';');
 	}
 	return out;
 }
 
 /* Collect function arguments */
-struct token_list* collect_arguments(struct token_list* out)
+void collect_arguments(struct token_list* function)
 {
 	global_token = global_token->next;
 
 	while(strcmp(global_token->s, ")"))
 	{
-		type_name();
-
-		if(global_token->s[0] != ')')
+		struct type* type_size = type_name();
+		if(global_token->s[0] == ')')
+		{ /* deal with foo(int,char) */
+			if((!type_size->_void) || (type_size->indirect))
+			{
+				struct token_list* a = calloc(1, sizeof(struct token_list));
+				a->arguments = function->arguments;
+				function->arguments = a;
+			}
+		}
+		else if(global_token->s[0] == ',')
+		{ /* deal with foo(int,char) */
+			struct token_list* a = calloc(1, sizeof(struct token_list));
+			a->arguments = function->arguments;
+			function->arguments = a;
+			global_token = global_token->next;
+		}
+		else
 		{
-			char* label;
-			asprintf(&label, "# Defining Argument %s\n", global_token->s);
-			out = emit(label, true, out);
-
-			struct token_list* a = sym_declare(global_token->s, ARGUEMENT);
-			add_to_frame(a);
+			struct token_list* a = sym_declare(global_token->s, ARGUEMENT, type_size);
+			a->arguments = function->arguments;
+			function->arguments = a;
 			global_token = global_token->next;
 		}
 
@@ -621,34 +729,38 @@ struct token_list* collect_arguments(struct token_list* out)
 		if(global_token->s[0] == ',') global_token = global_token->next;
 	}
 	global_token = global_token->next;
-	return out;
 }
 
-struct token_list* declare_global(struct token_list* out)
+struct token_list* declare_global(struct token_list* out, struct type* type_size)
 {
 	char* label;
 	asprintf(&label, "# Defining global %s\n:GLOBAL_%s\n", global_token->prev->s, global_token->prev->s);
 	out = emit(label, true, out);
-	sym_declare(global_token->prev->s, GLOBAL);
+	sym_declare(global_token->prev->s, GLOBAL, type_size);
 
 	global_token = global_token->next;
 	return emit("NOP\n", true, out);
 }
 
-struct token_list* declare_function(struct token_list* out)
+struct token_list* declare_function(struct token_list* out, struct type* type)
 {
 	char* label;
 	asprintf(&label, "# Defining function %s\n:FUNCTION_%s\n", global_token->prev->s, global_token->prev->s);
-	sym_declare(global_token->prev->s, FUNCTION);
-
+	struct token_list* func = sym_declare(global_token->prev->s, FUNCTION, calloc(1, sizeof(struct type)));
 	struct token_list* current = global_symbol_list;
-	out = collect_arguments(out);
+	func->size = type;
+	collect_arguments(func);
 
 	if(global_token->s[0] != ';')
 	{
 		out = emit(label, true, out);
-		out = statement(out);
-		out = emit("RETURN\n", true, out);
+		out = statement(out, func);
+
+		/* Prevent duplicate RETURNS */
+		if(strcmp(out->s, "RETURN\n"))
+		{
+			out = emit("RETURN\n", true, out);
+		}
 	}
 	else
 	{
@@ -683,10 +795,10 @@ struct token_list* program(struct token_list* out)
 {
 	while(NULL != global_token->next)
 	{
-		type_name();
+		struct type* type_size = type_name();
 		global_token = global_token->next;
-		if(global_token->s[0] == ';') out = declare_global(out);
-		else if(global_token->s[0] == '(') out = declare_function(out);
+		if(global_token->s[0] == ';') out = declare_global(out, type_size);
+		else if(global_token->s[0] == '(') out = declare_function(out, type_size);
 		else exit(EXIT_FAILURE);
 	}
 	return out;
