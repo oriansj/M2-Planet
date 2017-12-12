@@ -598,6 +598,24 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	return out;
 }
 
+/* Process Assembly statements */
+struct token_list* process_asm(struct token_list* out)
+{
+	global_token = global_token->next;
+	require_char("ERROR in process_asm\nMISSING (\n", '(');
+	while('"' == global_token->s[0])
+	{
+		int i;
+		for(i = 0; 0 != global_token->s[i]; i = i + 1);
+		global_token->s[i-1] = 10;
+		out = emit((global_token->s + 1), true, out);
+		global_token = global_token->next;
+	}
+	require_char("ERROR in process_asm\nMISSING )\n", ')');
+	require_char("ERROR in process_asm\nMISSING ;\n", ';');
+	return out;
+}
+
 /* Process while loops */
 int while_count;
 struct token_list* process_while(struct token_list* out, struct token_list* function)
@@ -674,6 +692,7 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
  *     if ( expression ) statement else statement
  *     while ( expression ) statement
  *     for ( expression ; expression ; expression ) statement
+ *     asm ( "assembly" ... "assembly" ) ;
  *     return ;
  *     expr ;
  */
@@ -684,6 +703,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 	else if(!strcmp(global_token->s, "if")) out = process_if(out, function);
 	else if(!strcmp(global_token->s, "while")) out = process_while(out, function);
 	else if(!strcmp(global_token->s, "for")) out = process_for(out, function);
+	else if(!strcmp(global_token->s, "asm")) out = process_asm(out);
 	else if(!strcmp(global_token->s, "return")) out = return_result(out, function);
 	else
 	{
