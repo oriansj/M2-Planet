@@ -37,7 +37,7 @@ char consume_word(struct token_list* current, char c, char frequent)
 {
 	c = consume_byte(current, c);
 	while(c != frequent) c = consume_byte(current, c);
-	return consume_byte(current, c);
+	return fgetc(input);
 }
 
 char purge_macro(int ch)

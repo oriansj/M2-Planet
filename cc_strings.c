@@ -69,8 +69,6 @@ bool weird(char c)
 char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
 struct token_list* parse_string(struct token_list* output_list, char* string)
 {
-	char* label;
-	static int string_num;
 	int i = 1;
 	int j = 1;
 	int k = 0;
@@ -79,11 +77,11 @@ struct token_list* parse_string(struct token_list* output_list, char* string)
 	bool hexit = false;
 
 	message[0] = '"';
-	while(string[j] != '"')
+	while(string[j] != 0)
 	{
 		hold[k] = ' ';
 
-		if((string[j] == 92) & (string[j + 1] == 'x'))
+		if((string[j] == '\\') & (string[j + 1] == 'x'))
 		{
 			hold[k + 1] = upcase(string[j + 2]);
 			hold[k + 2] = upcase(string[j + 3]);
@@ -111,27 +109,17 @@ struct token_list* parse_string(struct token_list* output_list, char* string)
 	message[i] = '"';
 	message[i + 1] = '\n';
 
-	/* call ... */
-	output_list = emit("CALL_IMMEDIATE ", true, output_list);
-	asprintf(&label, "%c_STRING_%d\n", 37, string_num);
-	output_list = emit(label, true, output_list);
-
 	/* the string */
 	if(hexit)
 	{
 		output_list = emit(hold, false, output_list);
+		free(message);
 	}
 	else
 	{
 		output_list = emit(message, true, output_list);
+		free(hold);
 	}
 
-	/* The target */
-	asprintf(&label, ":_STRING_%d\n", string_num);
-	output_list = emit(label, true, output_list);
-
-	/* The cleanup  */
-	output_list = emit("POP_eax\n", true, output_list);
-	string_num = string_num + 1;
 	return output_list;
 }

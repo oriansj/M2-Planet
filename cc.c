@@ -28,6 +28,7 @@
 struct token_list* global_symbol_list;
 struct token_list* global_token;
 struct token_list* current_target;
+struct token_list* strings;
 
 /* Imported functions */
 int asprintf(char **strp, const char *fmt, ...);
@@ -40,36 +41,6 @@ struct token_list* emit(char *s, bool hands_off, struct token_list* head)
 	t->hands_off = hands_off;
 	t->s = s;
 	return t;
-}
-
-struct token_list* pull_value_off_stack(int register_number, struct token_list* out, char* s)
-{
-	char* label;
-
-	if(0 == register_number) asprintf(&label, "POP_eax\t# %s\n", s);
-	else if(1 == register_number) asprintf(&label, "POP_ebx\t# %s\n", s);
-	else
-	{
-		fprintf(stderr, "%d is not a valid register number\n", register_number);
-		exit(EXIT_FAILURE);
-	}
-	out = emit(label, true, out);
-	return out;
-}
-
-struct token_list* put_value_on_stack(int register_number, struct token_list* out, char* s)
-{
-	char* label;
-
-	if(0 == register_number) asprintf(&label, "PUSH_eax\t#%s\n", s);
-	else if(1 == register_number) asprintf(&label, "PUSH_ebx\n\t#%s\n", s);
-	else
-	{
-		fprintf(stderr, "%d is not a valid register number\n", register_number);
-		exit(EXIT_FAILURE);
-	}
-	out = emit(label, true, out);
-	return out;
 }
 
 struct token_list* sym_declare(char *s, int type, struct type* size)
@@ -132,12 +103,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 		case GLOBAL: asprintf(&label, "LOAD_IMMEDIATE_eax &GLOBAL_%s\n", s); break;
 		case LOCAL_VARIABLE: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * stack_index(a, function)); break;
 		case ARGUEMENT: asprintf(&label, "LOAD_EFFECTIVE_ADDRESS %c%d\n", 37, 4 * (stack_index(a, function))); break;
-		case FUNCTION:
-		{
-			/* Make space for function */
-			function->temps = function->temps - 1;
-			return out;
-		}
+		case FUNCTION: return out;
 		default: exit(EXIT_FAILURE);
 	}
 	out = emit(label, true, out);
@@ -185,7 +151,7 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 		out = expression(out, function);
 		require_char("Error in Primary expression\nDidn't get )\n", ')');
 	}
-	else if((global_token->s[0] == 39) & (global_token->s[1] != 0) & (global_token->s[2] == 39) & (global_token->s[3] == 0))
+	else if(global_token->s[0] == '\'')
 	{
 		asprintf(&label, "LOAD_IMMEDIATE_eax %c%d\n", 37, global_token->s[1]);
 		out = emit(label, true, out);
@@ -193,8 +159,19 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 	}
 	else if(global_token->s[0] == '"')
 	{
-		out = parse_string(out, global_token->s);
+		static int string_num;
+		asprintf(&label, "LOAD_IMMEDIATE_eax &STRING_%d\n", string_num);
+		out = emit(label, true, out);
+
+		/* The target */
+		asprintf(&label, ":STRING_%d\n", string_num);
+		strings = emit(label, true, strings);
+
+		/* Parse the string */
+		strings = parse_string(strings, global_token->s);
 		global_token = global_token->next;
+
+		string_num = string_num + 1;
 	}
 	else exit(EXIT_FAILURE);
 
@@ -207,19 +184,21 @@ struct token_list* process_expression_list(struct token_list* out, struct token_
 	struct token_list* func = sym_lookup(global_token->prev->s, global_symbol_list);
 	global_token = global_token->next;
 	int temp = function->temps;
-	function->temps = function->temps + 1;
 
 	if(global_token->s[0] != ')')
 	{
+		char* label;
 		out = expression(out, function);
-		out = put_value_on_stack(0, out, "_process_expression1");
+		asprintf(&label, "PUSH_eax\t#%s\n", "_process_expression1");
+		out = emit(label, true, out);
 		function->temps = function->temps + 1;
 
 		while(global_token->s[0] == ',')
 		{
 			global_token = global_token->next;
 			out = expression(out, function);
-			out = put_value_on_stack(0, out, "_process_expression2");
+			asprintf(&label, "PUSH_eax\t#%s\n", "_process_expression2");
+			out = emit(label, true, out);
 			function->temps = function->temps + 1;
 		}
 		require_char("ERROR in process_expression_list\nNo ) was found\n", ')');
@@ -233,23 +212,24 @@ struct token_list* process_expression_list(struct token_list* out, struct token_
 
 	for(struct token_list* i = func->arguments; NULL != i; i = i->arguments)
 	{
-		out = pull_value_off_stack(1, out, "_process_expression_locals");
+		asprintf(&label, "POP_ebx\t# %s\n", "_process_expression_locals");
+		out = emit(label, true, out);
 	}
-
-	/* Pull off function pointer */
-	function->temps =  function->temps + 1;
 
 	return out;
 }
 
 struct token_list* common_recursion(struct token_list* (*function) (struct token_list*, struct token_list*), struct token_list* out, struct token_list* func)
 {
+	char* label;
 	global_token = global_token->next;
-	out = put_value_on_stack(0,  out, "_common_recursion");
+	asprintf(&label, "PUSH_eax\t#%s\n", "_common_recursion");
+	out = emit(label, true, out);
 	func->temps = func->temps + 1;
 	out = function(out, func);
 	func->temps = func->temps - 1;
-	out = pull_value_off_stack(1, out, "_common_recursion");
+	asprintf(&label, "POP_ebx\t# %s\n", "_common_recursion");
+	out = emit(label, true, out);
 	return out;
 }
 
@@ -340,13 +320,17 @@ struct token_list* shift_expr(struct token_list* out, struct token_list* functio
 		{
 			out = common_recursion(additive_expr, out, function);
 			// Ugly hack to Work around flaw in x86
-			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAL_eax_cl\n", true, out->next);
+			struct token_list* old = out->next;
+			free(out);
+			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAL_eax_cl\n", true, old);
 		}
 		else if(!strcmp(global_token->s, ">>"))
 		{
 			out = common_recursion(additive_expr, out, function);
 			// Ugly hack to Work around flaw in x86
-			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAR_eax_cl\n", true, out->next);
+			struct token_list* old = out->next;
+			free(out);
+			out = emit("COPY_eax_to_ecx\nPOP_eax\nSAR_eax_cl\n", true, old);
 		}
 		else
 		{
@@ -520,7 +504,8 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 	function->temps = function->temps + 1;
 
 	require_char("ERROR in collect_local\nMissing ;\n", ';');
-	out = put_value_on_stack(0, out, a->s);
+	asprintf(&label, "PUSH_eax\t#%s\n", a->s);
+	out = emit(label, true, out);
 	return out;
 }
 
@@ -605,10 +590,8 @@ struct token_list* process_asm(struct token_list* out)
 	require_char("ERROR in process_asm\nMISSING (\n", '(');
 	while('"' == global_token->s[0])
 	{
-		int i;
-		for(i = 0; 0 != global_token->s[i]; i = i + 1);
-		global_token->s[i-1] = 10;
 		out = emit((global_token->s + 1), true, out);
+		out = emit("\n", true, out);
 		global_token = global_token->next;
 	}
 	require_char("ERROR in process_asm\nMISSING )\n", ')');
@@ -653,7 +636,9 @@ struct token_list* return_result(struct token_list* out, struct token_list* func
 
 	for(struct token_list* i = function->locals; NULL != i; i = i->locals)
 	{
-		out = pull_value_off_stack(1, out, "_return_result_locals");
+		char* label;
+		asprintf(&label, "POP_ebx\t# %s\n", "_return_result_locals");
+		out = emit(label, true, out);
 		function->locals = function->locals->locals;
 	}
 	out = emit("RETURN\n", true, out);
@@ -676,7 +661,9 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
 	{
 		for(struct token_list* i = function->locals; frame != i; i = i->locals)
 		{
-			out = pull_value_off_stack(1, out, "_recursive_statement_locals");
+			char* label;
+			asprintf(&label, "POP_ebx\t# %s\n", "_recursive_statement_locals");
+			out = emit(label, true, out);
 			function->locals = function->locals->locals;
 		}
 	}
@@ -787,10 +774,7 @@ struct token_list* declare_function(struct token_list* out, struct type* type)
 		global_token = global_token->next;
 	}
 
-	for( struct token_list* i = global_symbol_list; current != i; i = i->next)
-	{
-		global_symbol_list = i;
-	}
+	global_symbol_list = current;
 	return out;
 }
 
@@ -840,6 +824,7 @@ void recursive_output(FILE* out, struct token_list* i)
 		}
 		fprintf(out, "'\t# NONE\n");
 	}
+	free(i);
 }
 
 /* Our essential organizer */
@@ -855,6 +840,8 @@ int main(int argc, char **argv)
 	struct token_list* output_list = program(NULL);
 	FILE* output = fopen(argv[2], "w");
 	recursive_output(output, output_list);
+	fprintf(output, "\n# Program strings\n\n");
+	recursive_output(output, strings);
 	fclose(output);
 	return 0;
 }
