@@ -52,7 +52,7 @@ int get_token(int c)
 	bool w = true;
 
 	struct token_list* current = calloc(1, sizeof(struct token_list));
-	current->s = calloc(64, sizeof(char));
+	current->s = calloc(MAX_STRING, sizeof(char));
 
 	while(w)
 	{

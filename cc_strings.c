@@ -18,7 +18,7 @@
 #include "cc.h"
 #include <stdint.h>
 
-struct token_list* emit(char *s, bool hands_off, struct token_list* head);
+struct token_list* emit(char *s, struct token_list* head);
 int asprintf(char **strp, const char *fmt, ...);
 
 char upcase(char a)
@@ -57,26 +57,81 @@ int8_t hex(int c, bool high)
 	return c;
 }
 
-bool weird(char c)
+bool weird(char* string)
 {
-	if(32 > c) return true;
-	if(34 == c) return true; // Don't deal with lines with " in them
-	if(126 < c) return true;
-	return false;
+	if(0 == string[0]) return false;
+	if('\\' == string[0])
+	{
+		if('x' == string[1])
+		{
+			switch(string[2])
+			{
+				case '0': return true;
+				case '1': return true;
+				case '8': return true;
+				case '9': return true;
+				case 'a': return true;
+				case 'A': return true;
+				case 'b': return true;
+				case 'B': return true;
+				case 'c': return true;
+				case 'C': return true;
+				case 'd': return true;
+				case 'D': return true;
+				case 'e': return true;
+				case 'E': return true;
+				case 'f': return true;
+				case 'F': return true;
+				default: return weird(string+3);
+			}
+		}
+		else
+		{
+			return weird(string+3);
+		}
+	}
+	return weird(string+1);
 }
 
-/* Parse string to deal with hex characters*/
-char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
-struct token_list* parse_string(struct token_list* output_list, char* string)
+/* Deal with human strings */
+char* collect_regular_string(char* string)
 {
-	int i = 1;
-	int j = 1;
-	int k = 0;
-	char* hold = calloc(4096, sizeof(char));
-	char* message = calloc(4096, sizeof(char));
-	bool hexit = false;
-
+	int j = 0;
+	int i = 0;
+	char* message = calloc(MAX_STRING, sizeof(char));
 	message[0] = '"';
+	while(string[j] != 0)
+	{
+		if((string[j] == '\\') & (string[j + 1] == 'x'))
+		{
+			int t1 = hex(string[j + 2], true);
+			int t2 = hex(string[j + 3], false);
+			message[i] = t1 + t2;
+			j = j + 4;
+		}
+		else
+		{
+			message[i] = string[j];
+			j = j + 1;
+		}
+
+		i = i + 1;
+	}
+
+	message[i] = '"';
+	message[i + 1] = '\n';
+	return message;
+}
+
+/* Deal with non-human strings */
+char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
+char* collect_weird_string(char* string)
+{
+	int j = 1;
+	int k = 1;
+	char* hold = calloc(MAX_STRING, sizeof(char));
+
+	hold[0] = '\'';
 	while(string[j] != 0)
 	{
 		hold[k] = ' ';
@@ -85,41 +140,30 @@ struct token_list* parse_string(struct token_list* output_list, char* string)
 		{
 			hold[k + 1] = upcase(string[j + 2]);
 			hold[k + 2] = upcase(string[j + 3]);
-			int t1 = hex(string[j + 2], true);
-			int t2 = hex(string[j + 3], false);
-			message[i] = t1 + t2;
-			if(weird(message[i])) hexit = true;
 			j = j + 4;
 		}
 		else
 		{
 			hold[k + 1] = table[(string[j] >> 4)];
 			hold[k + 2] = table[(string[j] & 15)];
-			message[i] = string[j];
 			j = j + 1;
 		}
 
-		i = i + 1;
 		k = k + 3;
 	}
 
 	hold[k] = ' ';
 	hold[k + 1] = '0';
 	hold[k + 2] = '0';
-	message[i] = '"';
-	message[i + 1] = '\n';
+	hold[k + 3] = '\'';
+	hold[k + 4] = '\n';
+	return hold;
+}
 
+/* Parse string to deal with hex characters*/
+char* parse_string(char* string)
+{
 	/* the string */
-	if(hexit)
-	{
-		output_list = emit(hold, false, output_list);
-		free(message);
-	}
-	else
-	{
-		output_list = emit(message, true, output_list);
-		free(hold);
-	}
-
-	return output_list;
+	if(weird(string)) return collect_weird_string(string);
+	else return collect_regular_string(string);
 }

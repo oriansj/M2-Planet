@@ -20,6 +20,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define MAX_STRING 4096
+
 struct type
 {
 	int size;
@@ -41,7 +43,6 @@ struct token_list
 	{
 		int length;
 		int type;
-		bool hands_off;
 	};
 	struct type* size;
 	struct token_list* arguments;
