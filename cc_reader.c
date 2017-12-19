@@ -40,6 +40,24 @@ char consume_word(struct token_list* current, char c, char frequent)
 	return fgetc(input);
 }
 
+char preserve_keyword(struct token_list* current, char c)
+{
+	while((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
+	{
+		c = consume_byte(current, c);
+	}
+	return c;
+}
+
+char preserve_symbol(struct token_list* current, char c)
+{
+	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!'))
+	{
+		c = consume_byte(current, c);
+	}
+	return c;
+}
+
 char purge_macro(int ch)
 {
 	while(10 != ch) ch = fgetc(input);
@@ -48,42 +66,55 @@ char purge_macro(int ch)
 
 int get_token(int c)
 {
-	if('#' == c) c = purge_macro(c);
-	bool w = true;
-
 	struct token_list* current = calloc(1, sizeof(struct token_list));
 	current->s = calloc(MAX_STRING, sizeof(char));
 
-	while(w)
-	{
-		w = false;
-		string_index = 0;
+reset:
+	string_index = 0;
 
-		c = clearWhiteSpace(c);
-		while((('a' <= c) & (c <= 'z')) | (('0' <= c) & (c <= '9')) | (c == '_')) c = consume_byte(current, c);
-		if(string_index == 0) while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!')) c = consume_byte(current, c);
-		if(string_index == 0)
+	c = clearWhiteSpace(c);
+	if('#' == c)
+	{
+		c = purge_macro(c);
+		goto reset;
+	}
+	else if((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
+	{
+		c = preserve_keyword(current, c);
+	}
+	else if((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!'))
+	{
+		c = preserve_symbol(current, c);
+	}
+	else if(c == '\'')
+	{
+		c = consume_word(current, c, '\'');
+	}
+	else if(c == '"')
+	{
+		c = consume_word(current, c, '"');
+	}
+	else if(c == '/')
+	{
+		c = consume_byte(current, c);
+		if(c == '*')
 		{
-			if(c == 39) c = consume_word(current, c, 39);
-			else if(c == '"') c = consume_word(current, c, '"');
-			else if(c == '/')
+			c = fgetc(input);
+			while(c != '/')
 			{
-				c = consume_byte(current, c);
-				if(c == '*')
-				{
-					c = fgetc(input);
-					while(c != '/')
-					{
-						while(c != '*') c = fgetc(input);
-						c = fgetc(input);
-					}
-					c = fgetc(input);
-					w = true;
-				}
+				while(c != '*') c = fgetc(input);
+				c = fgetc(input);
 			}
-			else if(c != EOF) c = consume_byte(current, c);
+			c = fgetc(input);
+			goto reset;
+		}
+		else if(c == '/')
+		{
+			c = fgetc(input);
+			goto reset;
 		}
 	}
+	else if(c != EOF) c = consume_byte(current, c);
 
 	current->prev = token;
 	current->next = token;

@@ -22,9 +22,11 @@
 #define FUNCTION 2
 #define LOCAL_VARIABLE 4
 #define ARGUEMENT 8
+#define CONSTANT 16
 
 /* Globals */
 struct token_list* global_symbol_list;
+struct token_list* global_constant_list;
 struct token_list* global_token;
 struct token_list* current_target;
 struct token_list* strings_list;
@@ -132,7 +134,8 @@ int stack_index(struct token_list* a, struct token_list* function)
 
 struct token_list* sym_get_value(char *s, struct token_list* out, struct token_list* function)
 {
-	struct token_list* a = sym_lookup(s, function->locals);
+	struct token_list* a = sym_lookup(s, global_constant_list);
+	if(NULL == a) a= sym_lookup(s, function->locals);
 	if(NULL == a) a = sym_lookup(s, function->arguments);
 	if(NULL == a) a = sym_lookup(s, global_symbol_list);
 	if(a == NULL)
@@ -146,6 +149,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 
 	switch(a->type)
 	{
+		case CONSTANT: out = double_emit("LOAD_IMMEDIATE_eax %", a->arguments->s, out, true); return out;;
 		case FUNCTION: return out;
 		case GLOBAL: out = double_emit("LOAD_IMMEDIATE_eax &GLOBAL_", s, out, true); break;
 		default: out = double_emit("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function)), out, false);
@@ -179,7 +183,7 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 		out = double_emit("LOAD_IMMEDIATE_eax %", global_token->s, out, true);
 		global_token = global_token->next;
 	}
-	else if(('a' <= global_token->s[0]) & (global_token->s[0] <= 'z'))
+	else if((('a' <= global_token->s[0]) & (global_token->s[0] <= 'z')) | (('A' <= global_token->s[0]) & (global_token->s[0] <= 'Z')))
 	{
 		out = sym_get_value(global_token->s, out, function);
 	}
@@ -547,7 +551,6 @@ int if_count;
 struct token_list* process_if(struct token_list* out, struct token_list* function)
 {
 	char* number_string = numerate_number(if_count);
-	int number = if_count;
 	if_count = if_count + 1;
 
 	out = double_emit("# IF_",number_string, out, false);
@@ -815,6 +818,7 @@ struct token_list* declare_function(struct token_list* out, struct type* type)
  *     declaration program
  *
  * declaration:
+ *     CONSTANT identifer value
  *     type-name identifier ;
  *     type-name identifier ( parameter-list ) ;
  *     type-name identifier ( parameter-list ) statement
@@ -830,14 +834,23 @@ struct token_list* program(struct token_list* out)
 {
 	while(NULL != global_token->next)
 	{
-		struct type* type_size = type_name();
-		global_token = global_token->next;
-		if(global_token->s[0] == ';') out = declare_global(out, type_size);
-		else if(global_token->s[0] == '(') out = declare_function(out, type_size);
+		if(!strcmp(global_token->s, "CONSTANT"))
+		{
+			global_constant_list =  sym_declare(global_token->next->s, CONSTANT, NULL, global_constant_list);
+			global_constant_list->arguments = global_token->next->next;
+			global_token = global_token->next->next->next;
+		}
 		else
 		{
-			fprintf(stderr, "Recieved %s in program\n", global_token->s);
-			exit(EXIT_FAILURE);
+			struct type* type_size = type_name();
+			global_token = global_token->next;
+			if(global_token->s[0] == ';') out = declare_global(out, type_size);
+			else if(global_token->s[0] == '(') out = declare_function(out, type_size);
+			else
+			{
+				fprintf(stderr, "Recieved %s in program\n", global_token->s);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 	return out;
