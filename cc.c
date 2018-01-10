@@ -380,18 +380,39 @@ struct token_list* shift_expr(struct token_list* out, struct token_list* functio
 /*
  * relational-expr:
  *         shift-expr
+ *         relational-expr < shift-expr
  *         relational-expr <= shift-expr
+ *         relational-expr >= shift-expr
+ *         relational-expr > shift-expr
  */
 struct token_list* relational_expr(struct token_list* out, struct token_list* function)
 {
 	out = shift_expr(out, function);
 
-	while(!strcmp(global_token->s, "<="))
+	while(1)
 	{
-		out = common_recursion(shift_expr, out, function);
-		out = emit("CMP\nSETLE\nMOVEZBL\n", out);
+		if(!strcmp(global_token->s, "<"))
+		{
+			out = common_recursion(shift_expr, out, function);
+			out = emit("CMP\nSETL\nMOVEZBL\n", out);
+		}
+		else if(!strcmp(global_token->s, "<="))
+		{
+			out = common_recursion(shift_expr, out, function);
+			out = emit("CMP\nSETLE\nMOVEZBL\n", out);
+		}
+		else if(!strcmp(global_token->s, ">="))
+		{
+			out = common_recursion(shift_expr, out, function);
+			out = emit("CMP\nSETGE\nMOVEZBL\n", out);
+		}
+		else if(!strcmp(global_token->s, ">"))
+		{
+			out = common_recursion(shift_expr, out, function);
+			out = emit("CMP\nSETG\nMOVEZBL\n", out);
+		}
+		else return out;
 	}
-	return out;
 }
 
 /*
