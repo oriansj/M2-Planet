@@ -25,6 +25,7 @@
 #define CONSTANT 16
 
 /* Globals */
+struct type* global_types;
 struct token_list* global_symbol_list;
 struct token_list* global_constant_list;
 struct token_list* global_token;
@@ -271,6 +272,23 @@ struct token_list* common_recursion(struct token_list* (*function) (struct token
 	return out;
 }
 
+int ceil_log2(int a)
+{
+	int result = 0;
+	if((a & (a - 1)) == 0)
+	{
+		result = -1;
+	}
+
+	while(a > 0)
+	{
+		result = result + 1;
+		a = a >> 1;
+	}
+
+	return result;
+}
+
 /*
  * postfix-expr:
  *         primary-expr
@@ -284,10 +302,11 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
 	if(global_token->s[0] == '[')
 	{
 		struct token_list* target = current_target;
+		struct type* a = current_target->size;
 		out = common_recursion(expression, out, function);
 
-		/* Add support for Ints*/
-		if( 4 == target->size->member_size)
+		/* Add support for Ints */
+		if( 1 != a->indirect->size)
 		{
 			out = emit("SAL_eax_Immediate8 !2\n", out);
 		}
@@ -297,7 +316,7 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
 
 		if(strcmp(global_token->next->s, "="))
 		{
-			if( 4 == target->size->member_size)
+			if( 4 == a->indirect->size)
 			{
 				out = emit("LOAD_INTEGER\n", out);
 			}
@@ -492,8 +511,8 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 
 		if(member)
 		{
-			if(1 == target->size->member_size) out = emit("STORE_CHAR\n", out);
-			else if(4 == target->size->member_size)
+			if(1 == target->size->indirect->size) out = emit("STORE_CHAR\n", out);
+			else if(4 == target->size->indirect->size)
 			{
 				out = emit("STORE_INTEGER\n", out);
 			}
@@ -513,28 +532,27 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
  */
 struct type* type_name()
 {
-	struct type* ret = calloc(1, sizeof(struct type));
-	ret->size = 4;
-	if(!strcmp(global_token->s, "char"))
+	struct type* ret = NULL;
+	for(struct type* i = global_types; NULL != i; i = i->next)
 	{
-		ret->size = 1;
+		if(!strcmp(global_token->s,i->name))
+		{
+			ret = i;
+			break;
+		}
 	}
 
-	if(!strcmp(global_token->s, "void"))
+	if(NULL == ret)
 	{
-		ret->_void = 1;
+		fprintf(stderr, "Unknown type %s\n", global_token->s);
+		exit(EXIT_FAILURE);
 	}
+
 	global_token = global_token->next;
-
-	if(global_token->s[0] == '*')
-	{
-		ret->member_size = ret->size;
-		ret->size = 4;
-		ret->indirect = 1;
-	}
 
 	while(global_token->s[0] == '*')
 	{
+		ret = ret->indirect;
 		global_token = global_token->next;
 	}
 
@@ -884,6 +902,42 @@ void recursive_output(FILE* out, struct token_list* i)
 	fprintf(out, "%s", i->s);
 }
 
+/* Initialize default types */
+void initialize_types()
+{
+	/* Define void */
+	global_types = calloc(1, sizeof(struct type));
+	global_types->name = "void";
+	global_types->size = 4;
+	/* void* has the same properties as void */
+	global_types->indirect = global_types;
+
+	/* Define int */
+	struct type* a = calloc(1, sizeof(struct type));
+	a->name = "int";
+	a->size = 4;
+	/* int* has the same properties as int */
+	a->indirect = a;
+
+	/* Define char* */
+	struct type* b = calloc(1, sizeof(struct type));
+	b->name = "char*";
+	b->size = 4;
+
+	/* Define char */
+	struct type* c = calloc(1, sizeof(struct type));
+	c->name = "char";
+	c->size = 1;
+
+	/* char** is char */
+	c->indirect = b;
+	b->indirect = c;
+
+	/* Finalize type list */
+	a->next = c;
+	global_types->next = a;
+}
+
 /* Our essential organizer */
 int main(int argc, char **argv)
 {
@@ -892,6 +946,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "We require more arguments\n");
 		exit(EXIT_FAILURE);
 	}
+
+	initialize_types();
 
 	global_token = read_all_tokens(argv[1]);
 	struct token_list* output_list = program(NULL);

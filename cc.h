@@ -24,10 +24,10 @@
 
 struct type
 {
+	struct type* next;
 	int size;
-	int member_size;
-	int indirect;
-	int _void;
+	struct type* indirect;
+	char* name;
 };
 
 struct token_list
