@@ -51,7 +51,7 @@ char preserve_keyword(struct token_list* current, char c)
 
 char preserve_symbol(struct token_list* current, char c)
 {
-	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!'))
+	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | (c == '-'))
 	{
 		c = consume_byte(current, c);
 	}
@@ -82,7 +82,7 @@ reset:
 	{
 		c = preserve_keyword(current, c);
 	}
-	else if((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!'))
+	else if((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | ( c == '-'))
 	{
 		c = preserve_symbol(current, c);
 	}

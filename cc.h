@@ -26,7 +26,9 @@ struct type
 {
 	struct type* next;
 	int size;
+	int offset;
 	struct type* indirect;
+	struct type* members;
 	char* name;
 };
 
@@ -39,12 +41,7 @@ struct token_list
 		struct token_list* entry;
 	};
 	char* s;
-	union
-	{
-		int length;
-		int type;
-	};
-	struct type* size;
+	struct type* type;
 	struct token_list* arguments;
 	struct token_list* locals;
 	int temps;

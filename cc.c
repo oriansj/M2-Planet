@@ -18,18 +18,18 @@
 #include "cc.h"
 #include <stdint.h>
 
-#define GLOBAL 1
-#define FUNCTION 2
-#define LOCAL_VARIABLE 4
-#define ARGUEMENT 8
-#define CONSTANT 16
 
-/* Globals */
+/* Global lists */
 struct type* global_types;
 struct token_list* global_symbol_list;
+struct token_list* global_function_list;
 struct token_list* global_constant_list;
+
+/* What we are currently working on */
 struct token_list* global_token;
 struct token_list* current_target;
+
+/* Output reorder collections*/
 struct token_list* strings_list;
 struct token_list* globals_list;
 
@@ -92,13 +92,12 @@ char* numerate_number(int a)
 	return result;
 }
 
-struct token_list* sym_declare(char *s, int type, struct type* size, struct token_list* list)
+struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
 	a->next = list;
-	a->type = type;
 	a->s = s;
-	a->size = size;
+	a->type = t;
 	return a;
 }
 
@@ -135,28 +134,48 @@ int stack_index(struct token_list* a, struct token_list* function)
 
 struct token_list* sym_get_value(char *s, struct token_list* out, struct token_list* function)
 {
-	struct token_list* a = sym_lookup(s, global_constant_list);
-	if(NULL == a) a= sym_lookup(s, function->locals);
-	if(NULL == a) a = sym_lookup(s, function->arguments);
-	if(NULL == a) a = sym_lookup(s, global_symbol_list);
-	if(a == NULL)
-	{
-		fprintf(stderr, "%s is not a defined symbol\n", s);
-		exit(EXIT_FAILURE);
-	}
-
-	current_target = a;
 	global_token = global_token->next;
-
-	switch(a->type)
+	struct token_list* a = sym_lookup(s, global_constant_list);
+	if(NULL != a)
 	{
-		case CONSTANT: out = double_emit("LOAD_IMMEDIATE_eax %", a->arguments->s, out, true); return out;;
-		case FUNCTION: return out;
-		case GLOBAL: out = double_emit("LOAD_IMMEDIATE_eax &GLOBAL_", s, out, true); break;
-		default: out = double_emit("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function)), out, false);
+		out = double_emit("LOAD_IMMEDIATE_eax %", a->arguments->s, out, true); return out;
 	}
-	if(strcmp(global_token->s, "=")) out = emit("LOAD_INTEGER\n", out);
-	return out;
+
+	a= sym_lookup(s, global_function_list);
+	if(NULL != a)
+	{
+		return out;
+	}
+
+	a= sym_lookup(s, function->locals);
+	if(NULL != a)
+	{
+		current_target = a;
+		out = double_emit("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function)), out, false);
+		if(strcmp(global_token->s, "=")) out = emit("LOAD_INTEGER\n", out);
+		return out;
+	}
+	a = sym_lookup(s, function->arguments);
+
+	if(NULL != a)
+	{
+		current_target = a;
+		out = double_emit("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function)), out, false);
+		if(strcmp(global_token->s, "=")) out = emit("LOAD_INTEGER\n", out);
+		return out;
+	}
+
+	a = sym_lookup(s, global_symbol_list);
+	if(NULL != a)
+	{
+		current_target = a;
+		out = double_emit("LOAD_IMMEDIATE_eax &GLOBAL_", s, out, true);
+		if(strcmp(global_token->s, "=")) out = emit("LOAD_INTEGER\n", out);
+		return out;
+	}
+
+	fprintf(stderr, "%s is not a defined symbol\n", s);
+	exit(EXIT_FAILURE);
 }
 
 void require_char(char* message, char required)
@@ -294,45 +313,74 @@ int ceil_log2(int a)
  *         primary-expr
  *         postfix-expr [ expression ]
  *         postfix-expr ( expression-list-opt )
+ *         postfix-expr -> member
  */
 struct token_list* postfix_expr(struct token_list* out, struct token_list* function)
 {
 	out = primary_expr(out, function);
 
-	if(global_token->s[0] == '[')
+	while(1)
 	{
-		struct token_list* target = current_target;
-		struct type* a = current_target->size;
-		out = common_recursion(expression, out, function);
-
-		/* Add support for Ints */
-		if( 1 != a->indirect->size)
+		if(global_token->s[0] == '[')
 		{
-			out = emit("SAL_eax_Immediate8 !2\n", out);
+			struct token_list* target = current_target;
+			struct type* a = current_target->type;
+			out = common_recursion(expression, out, function);
+
+			/* Add support for Ints */
+			if( 1 != a->indirect->size)
+			{
+				out = double_emit("SAL_eax_Immediate8 !", numerate_number(ceil_log2(a->indirect->size)), out, false);
+			}
+
+			out = emit("ADD_ebx_to_eax\n", out);
+			current_target = target;
+
+			if(strcmp(global_token->next->s, "="))
+			{
+				if( 4 == a->indirect->size)
+				{
+					out = emit("LOAD_INTEGER\n", out);
+				}
+				else
+				{
+					out = emit("LOAD_BYTE\n", out);
+				}
+			}
+			require_char("ERROR in postfix_expr\nMissing ]\n", ']');
 		}
-
-		out = emit("ADD_ebx_to_eax\n", out);
-		current_target = target;
-
-		if(strcmp(global_token->next->s, "="))
+		else if(global_token->s[0] == '(')
 		{
-			if( 4 == a->indirect->size)
+			out = process_expression_list(out, function);
+		}
+		else if(!strcmp("->", global_token->s))
+		{
+			out = emit("# looking up offset\n", out);
+			global_token = global_token->next;
+			struct type* i;
+			for(i = current_target->type->members; NULL != i; i = i->members)
+			{
+				if(!strcmp(i->name, global_token->s)) break;
+			}
+			if(NULL == i)
+			{
+				fprintf(stderr, "ERROR in postfix_expr %s->%s does not exist\n", current_target->type->name, global_token->s);
+				exit(EXIT_FAILURE);
+			}
+			if(0 != i->offset)
+			{
+				out = emit("# -> offset calculation\n", out);
+				out = double_emit("LOAD_IMMEDIATE_ebx %", numerate_number(i->offset), out, false);
+				out = emit("ADD_ebx_to_eax\n", out);
+			}
+			if(strcmp(global_token->next->s, "="))
 			{
 				out = emit("LOAD_INTEGER\n", out);
 			}
-			else
-			{
-				out = emit("LOAD_BYTE\n", out);
-			}
+			global_token = global_token->next;
 		}
-		require_char("ERROR in postfix_expr\nMissing ]\n", ']');
+		else return out;
 	}
-	else if(global_token->s[0] == '(')
-	{
-		out = process_expression_list(out, function);
-	}
-
-	return out;
 }
 
 /*
@@ -511,8 +559,8 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 
 		if(member)
 		{
-			if(1 == target->size->indirect->size) out = emit("STORE_CHAR\n", out);
-			else if(4 == target->size->indirect->size)
+			if(1 == target->type->indirect->size) out = emit("STORE_CHAR\n", out);
+			else if(4 == target->type->indirect->size)
 			{
 				out = emit("STORE_INTEGER\n", out);
 			}
@@ -525,6 +573,57 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 	return out;
 }
 
+struct type* lookup_type(char* s)
+{
+	for(struct type* i = global_types; NULL != i; i = i->next)
+	{
+		if(!strcmp(i->name, s))
+		{
+			return i;
+		}
+	}
+	return NULL;
+}
+
+struct type* type_name();
+void create_struct()
+{
+	int offset = 0;
+	struct type* head = calloc(1, sizeof(struct type));
+	struct type* i = calloc(1, sizeof(struct type));
+	head->name = global_token->s;
+	i->name = global_token->s;
+	head->indirect = i;
+	i->indirect = head;
+	head->next = global_types;
+	global_types = head;
+	global_token = global_token->next;
+	i->size = 4;
+	require_char("ERROR in create_struct\nMissing {\n", '{');
+	struct type* last = NULL;
+	while('}' != global_token->s[0])
+	{
+		struct type* member_type = type_name();
+		i = calloc(1, sizeof(struct type));
+		i->name = global_token->s;
+		i->members = last;
+		i->size = member_type->size;
+		i->offset = offset;
+		offset = offset + member_type->size;
+		global_token = global_token->next;
+		require_char("ERROR in create_struct\nMissing ;\n", ';');
+		last = i;
+	}
+
+	global_token = global_token->next;
+	require_char("ERROR in create_struct\nMissing ;\n", ';');
+
+	head->size = offset;
+	head->members = last;
+	head->indirect->members = last;
+}
+
+
 /*
  * type-name:
  *     char *
@@ -532,20 +631,25 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
  */
 struct type* type_name()
 {
-	struct type* ret = NULL;
-	for(struct type* i = global_types; NULL != i; i = i->next)
+	int structure = false;
+
+	if(!strcmp(global_token->s, "struct"))
 	{
-		if(!strcmp(global_token->s,i->name))
-		{
-			ret = i;
-			break;
-		}
+		structure = true;
+		global_token = global_token->next;
 	}
 
-	if(NULL == ret)
+	struct type* ret = lookup_type(global_token->s);
+
+	if(NULL == ret && !structure)
 	{
 		fprintf(stderr, "Unknown type %s\n", global_token->s);
 		exit(EXIT_FAILURE);
+	}
+	else if(NULL == ret)
+	{
+		create_struct();
+		return NULL;
 	}
 
 	global_token = global_token->next;
@@ -565,7 +669,7 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 	struct type* type_size = type_name();
 	out = double_emit("# Defining local ", global_token->s, out, true);
 
-	struct token_list* a = sym_declare(global_token->s, LOCAL_VARIABLE, type_size, function->locals);
+	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	function->locals = a;
 	global_token = global_token->next;
 	function->temps = function->temps - 1;
@@ -750,7 +854,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 	{
 		out = recursive_statement(out, function);
 	}
-	else if((!strcmp(global_token->s, "char")) | (!strcmp(global_token->s, "int")))
+	else if((NULL != lookup_type(global_token->s)) || !strcmp("struct", global_token->s))
 	{
 		out = collect_local(out, function);
 	}
@@ -798,7 +902,7 @@ void collect_arguments(struct token_list* function)
 		else if(global_token->s[0] != ',')
 		{
 			/* deal with foo(int a, char b) */
-			struct token_list* a = sym_declare(global_token->s, ARGUEMENT, type_size, function->arguments);
+			struct token_list* a = sym_declare(global_token->s, type_size, function->arguments);
 			function->arguments = a;
 		}
 
@@ -811,28 +915,15 @@ void collect_arguments(struct token_list* function)
 	global_token = global_token->next;
 }
 
-struct token_list* declare_global(struct token_list* out, struct type* type_size)
-{
-	/* Add to global symbol table */
-	global_symbol_list = sym_declare(global_token->prev->s, GLOBAL, type_size, global_symbol_list);
-
-	/* Ensure 4 bytes are allocated for the global */
-	globals_list = double_emit(":GLOBAL_", global_token->prev->s, globals_list, true);
-	globals_list = emit("NOP\n", globals_list);
-
-	global_token = global_token->next;
-	return out;
-}
-
 struct token_list* declare_function(struct token_list* out, struct type* type)
 {
 	char* essential = global_token->prev->s;
-	struct token_list* func = sym_declare(global_token->prev->s, FUNCTION, calloc(1, sizeof(struct type)), global_symbol_list);
-	func->size = type;
+	struct token_list* func = sym_declare(global_token->prev->s, calloc(1, sizeof(struct type)), global_function_list);
+	func->type = type;
 	collect_arguments(func);
 
 	/* allow previously defined functions to be looked up */
-	global_symbol_list = func;
+	global_function_list = func;
 
 	/* If just a prototype don't waste time */
 	if(global_token->s[0] == ';') global_token = global_token->next;
@@ -873,17 +964,32 @@ struct token_list* program(struct token_list* out)
 {
 	while(NULL != global_token->next)
 	{
+new_type:
 		if(!strcmp(global_token->s, "CONSTANT"))
 		{
-			global_constant_list =  sym_declare(global_token->next->s, CONSTANT, NULL, global_constant_list);
+			global_constant_list =  sym_declare(global_token->next->s, NULL, global_constant_list);
 			global_constant_list->arguments = global_token->next->next;
 			global_token = global_token->next->next->next;
 		}
 		else
 		{
 			struct type* type_size = type_name();
+			if(NULL == type_size)
+			{
+				goto new_type;
+			}
 			global_token = global_token->next;
-			if(global_token->s[0] == ';') out = declare_global(out, type_size);
+			if(global_token->s[0] == ';')
+			{
+				/* Add to global symbol table */
+				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
+
+				/* Ensure 4 bytes are allocated for the global */
+				globals_list = double_emit(":GLOBAL_", global_token->prev->s, globals_list, true);
+				globals_list = emit("NOP\n", globals_list);
+
+				global_token = global_token->next;
+			}
 			else if(global_token->s[0] == '(') out = declare_function(out, type_size);
 			else
 			{
