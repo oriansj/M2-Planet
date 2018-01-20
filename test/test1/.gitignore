@@ -1,8 +1,7 @@
 # Ignore the files created by script
-cc0.M1
-cc0.hex2
-cc1
-cc2
+for.M1
+for.hex2
+proof
 
 # A place to put a good run for comparison
 actual.M1
