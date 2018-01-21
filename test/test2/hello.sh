@@ -1,26 +1,18 @@
 #! /bin/sh
-set -ex
+set -x
 # Build the test
-bin/M2-Planet -f test/test2/cc.h -f test/test2/cc1.c -f test/test2/cc.c -o test/test2/cc0.M1 || exit 1
+bin/M2-Planet -f test/test2/if.c -o test/test2/if.M1 || exit 1
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 -f test/common_x86/libc.M1 -f test/test2/cc0.M1 --LittleEndian --Architecture 1 -o test/test2/cc0.hex2 || exit 2
+M1 -f test/common_x86/x86_defs.M1 -f test/common_x86/libc.M1 -f test/test2/if.M1 --LittleEndian --Architecture 1 -o test/test2/if.hex2 || exit 2
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test2/cc0.hex2 --LittleEndian --Architecture 1 --BaseAddress 0x8048000 -o test/results/test2-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test2/if.hex2 --LittleEndian --Architecture 1 --BaseAddress 0x8048000 -o test/results/test2-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine)" = "x86_64" ]
 then
-	# Verify that the compiled program can compile itself
-	./test/results/test2-binary < test/test0/cc500.c >| test/test2/cc1 || exit 4
-	out=$(sha256sum -c test/test2/proof0.answer)
-	[ "$out" = "test/test2/cc1: OK" ] || exit 5
-
-	# Make it executable
-	exec_enable test/test2/cc1
-
-	# Verify that the result of it compiling itself can compile itself
-	./test/test2/cc1 < test/test0/cc500.c >| test/test2/cc2 || exit 6
-	out=$(sha256sum -c test/test2/proof1.answer)
-	[ "$out" = "test/test2/cc2: OK" ] || exit 7
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test2-binary 2>&1 )
+	[ 42 = $? ] || exit 4
+	[ "$out" = "Hello mes" ] || exit 5
 fi
 exit 0

@@ -1,5 +1,4 @@
 #! /bin/sh
-rm -f test/test1/for.M1
-rm -f test/test1/for.hex2
-rm -f test/test1/proof
+rm -f test/test1/library_call.M1
+rm -f test/test1/library_call.hex2
 exit 0

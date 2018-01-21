@@ -377,6 +377,31 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
 }
 
 /*
+ * unary-expr:
+ *         postfix-expr
+ *         - postfix-expr
+ *         !postfix-expr
+ */
+struct token_list* unary_expr(struct token_list* out, struct token_list* function)
+{
+	if(!strcmp("-", global_token->s))
+	{
+		out = emit("LOAD_IMMEDIATE_eax %0\n", out);
+		out = common_recursion(postfix_expr, out, function);
+		out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", out);
+	}
+	else if(!strcmp("!", global_token->s))
+	{
+		out = emit("LOAD_IMMEDIATE_eax %1\n", out);
+		out = common_recursion(postfix_expr, out, function);
+		out = emit("XOR_ebx_eax_into_eax\n", out);
+	}
+	else out = postfix_expr(out, function);
+
+	return out;
+}
+
+/*
  * additive-expr:
  *         postfix-expr
  *         additive-expr + postfix-expr
@@ -384,16 +409,16 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
  */
 struct token_list* additive_expr(struct token_list* out, struct token_list* function)
 {
-	out = postfix_expr(out, function);
+	out = unary_expr(out, function);
 
 	while(1)
 	{
-		if(global_token->s[0] == '+')
+		if(!strcmp("+", global_token->s))
 		{
 			out = common_recursion(postfix_expr, out, function);
 			out = emit("ADD_ebx_to_eax\n", out);
 		}
-		else if(global_token->s[0] == '-')
+		else if(!strcmp("-", global_token->s))
 		{
 			out = common_recursion(postfix_expr, out, function);
 			out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", out);
