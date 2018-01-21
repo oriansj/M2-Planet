@@ -114,7 +114,15 @@ reset:
 			goto reset;
 		}
 	}
-	else if(c != EOF) c = consume_byte(current, c);
+	else if(c == EOF)
+	{
+		free(current);
+		return c;
+	}
+	else
+	{
+		c = consume_byte(current, c);
+	}
 
 	current->prev = token;
 	current->next = token;
@@ -135,11 +143,12 @@ struct token_list* reverse_list(struct token_list* head)
 	return root;
 }
 
-struct token_list* read_all_tokens(char* source_file)
+struct token_list* read_all_tokens(FILE* a, struct token_list* current)
 {
-	input  = fopen(source_file, "r");
+	input  = a;
+	token = current;
 	int ch =fgetc(input);
 	while(EOF != ch) ch = get_token(ch);
 
-	return reverse_list(token);
+	return token;
 }

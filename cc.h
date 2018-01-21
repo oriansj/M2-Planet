@@ -46,3 +46,10 @@ struct token_list
 	struct token_list* locals;
 	int temps;
 };
+
+/* What we are currently working on */
+struct token_list* global_token;
+
+/* Output reorder collections*/
+struct token_list* strings_list;
+struct token_list* globals_list;

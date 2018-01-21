@@ -1,0 +1,8 @@
+# Ignore the files created by script
+cc0.M1
+cc0.hex2
+cc1
+cc2
+
+# A place to put a good run for comparison
+actual.M1
