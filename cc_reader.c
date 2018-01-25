@@ -40,11 +40,31 @@ char consume_word(struct token_list* current, char c, char frequent)
 	return fgetc(input);
 }
 
+
+void fixup_label(struct token_list* current)
+{
+	int hold = ':';
+	int prev;
+	int i = 0;
+	do
+	{
+		prev = hold;
+		hold = current->s[i];
+		current->s[i] = prev;
+		i = i + 1;
+	} while(0 != hold);
+}
+
 char preserve_keyword(struct token_list* current, char c)
 {
 	while((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
 	{
 		c = consume_byte(current, c);
+	}
+	if(':' == c)
+	{
+		fixup_label(current);
+		return 32;
 	}
 	return c;
 }
@@ -86,9 +106,9 @@ reset:
 	{
 		c = preserve_symbol(current, c);
 	}
-	else if(c == '\'')
-	{
-		c = consume_word(current, c, '\'');
+	else if(c == 39)
+	{ /* 39 == ' */
+		c = consume_word(current, c, 39);
 	}
 	else if(c == '"')
 	{
@@ -114,7 +134,7 @@ reset:
 			goto reset;
 		}
 	}
-	else if(c == EOF)
+	else if(c < 0)
 	{
 		free(current);
 		return c;
@@ -148,7 +168,7 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current)
 	input  = a;
 	token = current;
 	int ch =fgetc(input);
-	while(EOF != ch) ch = get_token(ch);
+	while(0 <= ch) ch = get_token(ch);
 
 	return token;
 }

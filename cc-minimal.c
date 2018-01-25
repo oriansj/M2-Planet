@@ -21,28 +21,22 @@ void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current);
 struct token_list* reverse_list(struct token_list* head);
 struct token_list* program(struct token_list* out);
-void recursive_output(FILE* out, struct token_list* i);
+void recursive_output(struct token_list* i, FILE* out);
 
 /* Our essential organizer */
-int main(int argc, char **argv)
+int main()
 {
-	if (argc < 3)
-	{
-		fprintf(stderr, "We require more arguments\n");
-		exit(EXIT_FAILURE);
-	}
-
 	initialize_types();
-	FILE* input = fopen(argv[1], "r");
+	FILE* input = fopen("input.c", "r");
 	global_token = reverse_list(read_all_tokens(input, NULL));
 	struct token_list* output_list = program(NULL);
-	FILE* output = fopen(argv[2], "w");
-	fprintf(output, "\n# Core program\n\n");
-	recursive_output(output, output_list);
-	fprintf(output, "\n# Program global variables\n\n");
-	recursive_output(output, globals_list);
-	fprintf(output, "\n# Program strings\n\n");
-	recursive_output(output, strings_list);
+	FILE* output = fopen("input.M1", "w");
+	file_print("\n# Core program\n\n", output);
+	recursive_output(output_list, output);
+	file_print("\n# Program global variables\n\n", output);
+	recursive_output(globals_list, output);
+	file_print("\n# Program strings\n\n", output);
+	recursive_output(strings_list, output);
 	fclose(output);
 	return 0;
 }

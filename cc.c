@@ -23,7 +23,7 @@ void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current);
 struct token_list* reverse_list(struct token_list* head);
 struct token_list* program(struct token_list* out);
-void recursive_output(FILE* out, struct token_list* i);
+void recursive_output(struct token_list* i, FILE* out);
 
 #if !__MESC__
 static
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
 	int c;
 	FILE* source_file;
-	FILE* destination_file;
+	FILE* destination_file = stdout;
 	int option_index = 0;
 	while ((c = getopt_long(argc, argv, "f:h:o:V", long_options, &option_index)) != -1)
 	{
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 			case 0: break;
 			case 'h':
 			{
-				fprintf(stderr, "Usage: %s -f FILENAME1 {-f FILENAME2} -o OUTPUT\n", argv[0]);
+				file_print("Usage: M2-Planet -f FILENAME1 {-f FILENAME2} -o OUTPUT\n", stderr);
 				exit(EXIT_SUCCESS);
 			}
 			case 'f':
@@ -66,7 +66,9 @@ int main(int argc, char **argv)
 
 				if(NULL == source_file)
 				{
-					fprintf(stderr, "The file: %s can not be opened!\n", optarg);
+					file_print("The file: ", stderr);
+					file_print(optarg, stderr);
+					file_print(" can not be opened!\n", stderr);
 					exit(EXIT_FAILURE);
 				}
 
@@ -83,19 +85,21 @@ int main(int argc, char **argv)
 
 				if(NULL == destination_file)
 				{
-					fprintf(stderr, "The file: %s can not be opened!\n", optarg);
+					file_print("The file: ", stderr);
+					file_print(optarg, stderr);
+					file_print(" can not be opened!\n", stderr);
 					exit(EXIT_FAILURE);
 				}
 				break;
 			}
 			case 'V':
 			{
-				fprintf(stdout, "M2-Planet 0.1\n");
+				file_print("M2-Planet 0.1\n", stdout);
 				exit(EXIT_SUCCESS);
 			}
 			default:
 			{
-				fprintf(stderr, "Unknown option\n");
+				file_print("Unknown option\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -103,7 +107,7 @@ int main(int argc, char **argv)
 
 	if(NULL == global_token)
 	{
-		fprintf(stderr, "Either no input files were given or they were empty\n");
+		file_print("Either no input files were given or they were empty\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = reverse_list(global_token);
@@ -112,11 +116,11 @@ int main(int argc, char **argv)
 	struct token_list* output_list = program(NULL);
 
 	/* Output the program we have compiled */
-	fprintf(destination_file, "\n# Core program\n\n");
-	recursive_output(destination_file, output_list);
-	fprintf(destination_file, "\n# Program global variables\n\n");
-	recursive_output(destination_file, globals_list);
-	fprintf(destination_file, "\n# Program strings\n\n");
-	recursive_output(destination_file, strings_list);
+	file_print("\n# Core program\n\n", destination_file);
+	recursive_output(output_list, destination_file);
+	file_print("\n# Program global variables\n\n", destination_file);
+	recursive_output(globals_list, destination_file);
+	file_print("\n# Program strings\n\n", destination_file);
+	recursive_output(strings_list, destination_file);
 	return EXIT_SUCCESS;
 }

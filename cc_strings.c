@@ -19,7 +19,6 @@
 #include <stdint.h>
 
 struct token_list* emit(char *s, struct token_list* head);
-int asprintf(char **strp, const char *fmt, ...);
 
 char upcase(char a)
 {
@@ -31,7 +30,7 @@ char upcase(char a)
 	return a;
 }
 
-int8_t hex(int c, bool high)
+int hex(int c, int high)
 {
 	if (c >= '0' && c <= '9')
 	{
@@ -52,38 +51,35 @@ int8_t hex(int c, bool high)
 
 	if(high)
 	{
-		c = c * 16;
+		c = c << 4;
 	}
 	return c;
 }
 
-bool weird(char* string)
+int weird(char* string)
 {
-	if(0 == string[0]) return false;
+	if(0 == string[0]) return FALSE;
 	if('\\' == string[0])
 	{
 		if('x' == string[1])
 		{
-			switch(string[2])
-			{
-				case '0': return true;
-				case '1': return true;
-				case '8': return true;
-				case '9': return true;
-				case 'a': return true;
-				case 'A': return true;
-				case 'b': return true;
-				case 'B': return true;
-				case 'c': return true;
-				case 'C': return true;
-				case 'd': return true;
-				case 'D': return true;
-				case 'e': return true;
-				case 'E': return true;
-				case 'f': return true;
-				case 'F': return true;
-				default: return weird(string+3);
-			}
+			if('0' == string[2]) return TRUE;
+			else if('1' == string[2]) return TRUE;
+			else if('8' == string[2]) return TRUE;
+			else if('9' == string[2]) return TRUE;
+			else if('a' == string[2]) return TRUE;
+			else if('A' == string[2]) return TRUE;
+			else if('b' == string[2]) return TRUE;
+			else if('B' == string[2]) return TRUE;
+			else if('c' == string[2]) return TRUE;
+			else if('C' == string[2]) return TRUE;
+			else if('d' == string[2]) return TRUE;
+			else if('D' == string[2]) return TRUE;
+			else if('e' == string[2]) return TRUE;
+			else if('E' == string[2]) return TRUE;
+			else if('f' == string[2]) return TRUE;
+			else if('F' == string[2]) return TRUE;
+			else return weird(string+3);
 		}
 		else
 		{
@@ -99,13 +95,15 @@ char* collect_regular_string(char* string)
 	int j = 0;
 	int i = 0;
 	char* message = calloc(MAX_STRING, sizeof(char));
-	message[0] = '"';
+
+	/* 34 == " */
+	message[0] = 34;
 	while(string[j] != 0)
 	{
 		if((string[j] == '\\') & (string[j + 1] == 'x'))
 		{
-			int t1 = hex(string[j + 2], true);
-			int t2 = hex(string[j + 3], false);
+			int t1 = hex(string[j + 2], TRUE);
+			int t2 = hex(string[j + 3], FALSE);
 			message[i] = t1 + t2;
 			j = j + 4;
 		}
@@ -118,20 +116,21 @@ char* collect_regular_string(char* string)
 		i = i + 1;
 	}
 
-	message[i] = '"';
+	message[i] = 34;
 	message[i + 1] = '\n';
 	return message;
 }
 
 /* Deal with non-human strings */
-char table[16] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
 char* collect_weird_string(char* string)
 {
 	int j = 1;
 	int k = 1;
+	char* table = "0123456789ABCDEF";
 	char* hold = calloc(MAX_STRING, sizeof(char));
 
-	hold[0] = '\'';
+	/* 39 == ' */
+	hold[0] = 39;
 	while(string[j] != 0)
 	{
 		hold[k] = ' ';
@@ -155,7 +154,7 @@ char* collect_weird_string(char* string)
 	hold[k] = ' ';
 	hold[k + 1] = '0';
 	hold[k + 2] = '0';
-	hold[k + 3] = '\'';
+	hold[k + 3] = 39;
 	hold[k + 4] = '\n';
 	return hold;
 }

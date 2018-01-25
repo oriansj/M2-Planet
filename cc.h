@@ -18,9 +18,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define MAX_STRING 4096
+// CONSTANT MAX_STRING 4096
+#define FALSE 0
+// CONSTANT FALSE 0
+#define TRUE 1
+// CONSTANT TRUE 1
+// CONSTANT NULL 0
+// CONSTANT EXIT_FAILURE 1
+// CONSTANT EXIT_SUCCESS 0
+// CONSTANT stdin 0
+// CONSTANT stdout 1
+// CONSTANT stderr 2
+
+void file_print(char* s, FILE* f);
 
 struct type
 {
@@ -29,23 +41,24 @@ struct type
 	int offset;
 	struct type* indirect;
 	struct type* members;
+	struct type* type;
 	char* name;
 };
 
 struct token_list
 {
 	struct token_list* next;
-	union
-	{
-		struct token_list* prev;
-		struct token_list* entry;
-	};
+	struct token_list* prev;
+	struct token_list* entry;
 	char* s;
 	struct type* type;
 	struct token_list* arguments;
 	struct token_list* locals;
 	int temps;
 };
+
+/* What types we have */
+struct type* global_types;
 
 /* What we are currently working on */
 struct token_list* global_token;

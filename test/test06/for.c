@@ -15,53 +15,22 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Validate that IF statements behave correctly */
+#include <stdio.h>
 int putchar(int);
-void exit(int);
-
-#define TRUE 1
-#define FALSE 0
-// CONSTANT TRUE 1
-// CONSTANT FALSE 0
-
-int foo(int a)
-{
-	if(!a)
-	{
-		putchar(72);
-		putchar(101);
-		putchar(108);
-		putchar(108);
-		putchar(111);
-		putchar(32);
-		return TRUE;
-	}
-	return FALSE;
-}
 
 int main()
 {
-	if(foo(FALSE))
+	int max = 90;
+	int i;
+	int j;
+	for(i = 65; i <= max; i = i + 1)
 	{
-		putchar(109);
-		putchar(101);
-		putchar(115);
+		putchar(i);
+		for(j = i + 1; j <= max; j = j + 1)
+		{
+			putchar(j);
+		}
 		putchar(10);
 	}
-	else
-	{
-		exit(2);
-	}
-
-	if(foo(TRUE))
-	{
-		exit(3);
-	}
-
-	if(2 > -1)
-	{
-		exit(42);
-	}
-
-	return 1;
+	return 0;
 }
