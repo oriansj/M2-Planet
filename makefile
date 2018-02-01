@@ -27,6 +27,9 @@ clean:
 	./test/test08/cleanup.sh
 	./test/test09/cleanup.sh
 	./test/test10/cleanup.sh
+	./test/test11/cleanup.sh
+	./test/test12/cleanup.sh
+	./test/test13/cleanup.sh
 	./test/test99/cleanup.sh
 
 # Directories
@@ -37,7 +40,21 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test00-binary test01-binary test02-binary test03-binary test04-binary test05-binary test06-binary test07-binary test08-binary test09-binary test10-binary test99-binary | results
+test: test00-binary \
+	test01-binary \
+	test02-binary \
+	test03-binary \
+	test04-binary \
+	test05-binary \
+	test06-binary \
+	test07-binary \
+	test08-binary \
+	test09-binary \
+	test10-binary \
+	test11-binary \
+	test12-binary \
+	test13-binary \
+	test99-binary | results
 	sha256sum -c test/test.answers
 
 test00-binary: M2-Planet | results
@@ -72,6 +89,15 @@ test09-binary: M2-Planet | results
 
 test10-binary: M2-Planet | results
 	test/test10/hello.sh
+
+test11-binary: M2-Planet | results
+	test/test11/hello.sh
+
+test12-binary: M2-Planet | results
+	test/test12/hello.sh
+
+test13-binary: M2-Planet | results
+	test/test13/hello.sh
 
 test99-binary: M2-Planet | results
 	test/test99/hello.sh

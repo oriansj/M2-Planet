@@ -25,14 +25,9 @@
 // CONSTANT FALSE 0
 #define TRUE 1
 // CONSTANT TRUE 1
-// CONSTANT NULL 0
-// CONSTANT EXIT_FAILURE 1
-// CONSTANT EXIT_SUCCESS 0
-// CONSTANT stdin 0
-// CONSTANT stdout 1
-// CONSTANT stderr 2
 
 void file_print(char* s, FILE* f);
+int match(char* a, char* b);
 
 struct type
 {
