@@ -14,10 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/* Validate that call statements behave correctly */
-int putchar(int);
-void exit(int);
+#include<stdlib.h>
+#include<stdio.h>
 
 #define TRUE 1
 #define FALSE 0

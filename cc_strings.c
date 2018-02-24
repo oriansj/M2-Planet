@@ -81,6 +81,14 @@ int weird(char* string)
 			else if('F' == string[2]) return TRUE;
 			else return weird(string+3);
 		}
+		else if('n' == string[1])
+		{
+			return weird(string+2);
+		}
+		else if('t' == string[1])
+		{
+			return weird(string+2);
+		}
 		else
 		{
 			return weird(string+3);
@@ -107,6 +115,16 @@ char* collect_regular_string(char* string)
 			message[i] = t1 + t2;
 			j = j + 4;
 		}
+		else if((string[j] == '\\') & (string[j + 1] == 'n'))
+		{
+			message[i] = 10;
+			j = j + 2;
+		}
+		else if((string[j] == '\\') & (string[j + 1] == 't'))
+		{
+			message[i] = 9;
+			j = j + 2;
+		}
 		else
 		{
 			message[i] = string[j];
@@ -117,7 +135,7 @@ char* collect_regular_string(char* string)
 	}
 
 	message[i] = 34;
-	message[i + 1] = '\n';
+	message[i + 1] = LF;
 	return message;
 }
 
@@ -141,6 +159,18 @@ char* collect_weird_string(char* string)
 			hold[k + 2] = upcase(string[j + 3]);
 			j = j + 4;
 		}
+		else if((string[j] == '\\') & (string[j + 1] == 'n'))
+		{
+			hold[k + 1] = '0';
+			hold[k + 2] = 'A';
+			j = j + 2;
+		}
+		else if((string[j] == '\\') & (string[j + 1] == 't'))
+		{
+			hold[k + 1] = '0';
+			hold[k + 2] = '9';
+			j = j + 2;
+		}
 		else
 		{
 			hold[k + 1] = table[(string[j] >> 4)];
@@ -155,7 +185,7 @@ char* collect_weird_string(char* string)
 	hold[k + 1] = '0';
 	hold[k + 2] = '0';
 	hold[k + 3] = 39;
-	hold[k + 4] = '\n';
+	hold[k + 4] = LF;
 	return hold;
 }
 

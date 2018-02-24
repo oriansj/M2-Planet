@@ -95,7 +95,7 @@ void create_struct()
 	global_types = head;
 	global_token = global_token->next;
 	i->size = 4;
-	require_match("ERROR in create_struct\nMissing {\n", "{");
+	require_match("ERROR in create_struct\x0A Missing {\x0A", "{");
 	struct type* last = NULL;
 	while('}' != global_token->s[0])
 	{
@@ -108,12 +108,12 @@ void create_struct()
 		i->offset = offset;
 		offset = offset + member_type->size;
 		global_token = global_token->next;
-		require_match("ERROR in create_struct\nMissing ;\n", ";");
+		require_match("ERROR in create_struct\x0A Missing ;\x0A", ";");
 		last = i;
 	}
 
 	global_token = global_token->next;
-	require_match("ERROR in create_struct\nMissing ;\n", ";");
+	require_match("ERROR in create_struct\x0A Missing ;\x0A", ";");
 
 	head->size = offset;
 	head->members = last;
@@ -145,7 +145,7 @@ struct type* type_name()
 	{
 		file_print("Unknown type ", stderr);
 		file_print(global_token->s, stderr);
-		file_print("\n", stderr);
+		file_print("\x0A", stderr);
 		exit(EXIT_FAILURE);
 	}
 	else if(NULL == ret)

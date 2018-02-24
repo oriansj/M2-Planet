@@ -15,10 +15,8 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Validate that call statements behave correctly */
-void *malloc(int);
-int putchar(int);
-void exit(int);
+#include<stdlib.h>
+#include<stdio.h>
 
 struct foo
 {

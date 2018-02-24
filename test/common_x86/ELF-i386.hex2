@@ -15,9 +15,20 @@
 ### You should have received a copy of the GNU General Public License
 ### along with stage0.  If not, see <http://www.gnu.org/licenses/>.
 
+### stage0's hex2 format for x86
+###    !<label>          1 byte relative
+###    $<label>          2 byte address
+###    @<label>          2 byte relative
+###    &<label>          4 byte address
+###    %<label>          4 byte relative
+###    local_<label>     function-local
+###    string_<index>    string #<index>
+
 ### elf32.hex2: 32 bit elf header in hex2
 
 ## ELF Header
+
+:ELF_base
 7F 45 4C 46                     # e_ident[EI_MAG0-3] ELF's magic number
 
 01                              # e_ident[EI_CLASS] Indicating 32 bit
@@ -28,15 +39,17 @@
 00                              # e_ident[EI_ABIVERSION] See above
 
 00 00 00 00 00 00 00            # e_ident[EI_PAD]
+
 02 00                           # e_type Indicating Executable
 03 00                           # e_machine Indicating 32bit x86
 01 00 00 00                     # e_version Indicating original elf
 
-54 80 04 08                     # e_entry Address of the entry point
-34 00 00 00                     # e_phoff Address of program header table
-00 00 00 00                     # e_shoff Address of section header table
+&ELF_text                      # e_entry Address of the entry point
+%ELF_program_headers>ELF_base  # e_phoff Address of program header table
+00 00 00 00                    # e_shoff Address of section header table
 
 00 00 00 00                     # e_flags
+
 34 00                           # e_ehsize Indicating our 52 Byte header
 
 20 00                           # e_phentsize size of a program header table
@@ -48,14 +61,18 @@
 00 00                           # e_shstrndx index of the section names
 
 ## Program Header
+:ELF_program_headers
+:ELF_program_header__text
 01 00 00 00                     # p_type
 00 00 00 00                     # p_offset
 
-00 80 04 08                     # p_vaddr
-00 80 04 08                     # p_physaddr
+&ELF_base                     # p_vaddr
+&ELF_base                     # p_physaddr
 
-2A 36 00 00                     # p_filesz
-2A 36 00 00                     # p_memsz
+%ELF_end>ELF_base             # p_filesz
+%ELF_end>ELF_base             # p_memsz
 
 07 00 00 00                     # p_flags
 01 00 00 00                     # alignmen
+
+:ELF_text

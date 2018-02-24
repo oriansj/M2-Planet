@@ -16,7 +16,6 @@
  */
 
 #include <stdio.h>
-int putchar(int);
 
 int main()
 {

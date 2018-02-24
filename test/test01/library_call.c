@@ -16,8 +16,6 @@
  */
 
 /* Ensure that C library calls function correctly */
-
-#include <stdio.h>
 int putchar(int);
 void exit(int);
 

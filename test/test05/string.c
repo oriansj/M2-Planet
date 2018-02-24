@@ -14,10 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/* Validate that string statements behave correctly */
-int putchar(int);
-void exit(int);
+#include<stdio.h>
 
 void printc(char* s, int a)
 {

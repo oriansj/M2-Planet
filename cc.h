@@ -25,6 +25,8 @@
 // CONSTANT FALSE 0
 #define TRUE 1
 // CONSTANT TRUE 1
+#define LF 10
+// CONSTANT LF 10
 
 void file_print(char* s, FILE* f);
 int match(char* a, char* b);

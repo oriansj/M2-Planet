@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include "cc.h"
-#include <getopt.h>
+#include<stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include"cc.h"
 
 /* The core functions */
 void initialize_types();
@@ -24,84 +25,77 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current);
 struct token_list* reverse_list(struct token_list* head);
 struct token_list* program(struct token_list* out);
 void recursive_output(struct token_list* i, FILE* out);
+int match(char* a, char* b);
+void file_print(char* s, FILE* f);
+char* parse_string(char* string);
 
-#if !__MESC__
-static
-#endif
-struct option long_options[] = {
-	{"file", required_argument, 0, 'f'},
-	{"output", required_argument, 0, 'o'},
-	{"help", no_argument, 0, 'h'},
-	{"version", no_argument, 0, 'V'},
-	{0, 0, 0, 0}
-};
-
-
-/* Our essential organizer */
-int main(int argc, char **argv)
+void test0(struct token_list* l, FILE* o)
 {
-	global_token = NULL;
-
-	int c;
-	FILE* source_file;
-	FILE* destination_file = stdout;
-	int option_index = 0;
-	while ((c = getopt_long(argc, argv, "f:h:o:V", long_options, &option_index)) != -1)
+	while(NULL != l)
 	{
-		switch(c)
+		if(l->s[0] == 34)
 		{
-			case 0: break;
-			case 'h':
-			{
-				file_print("Usage: M2-Planet -f FILENAME1 {-f FILENAME2} -o OUTPUT\n", stderr);
-				exit(EXIT_SUCCESS);
-			}
-			case 'f':
-			{
-				#if __MESC__
-					source_file = open(optarg, O_RDONLY);
-				#else
-					source_file = fopen(optarg, "r");
-				#endif
+			file_print(parse_string(l->s), o);
+		}
+		else
+		{
+			file_print(l->s, o);
+		}
+		fputc(10, o);
+		l = l->next;
+	}
+}
 
-				if(NULL == source_file)
-				{
-					file_print("The file: ", stderr);
-					file_print(optarg, stderr);
-					file_print(" can not be opened!\n", stderr);
-					exit(EXIT_FAILURE);
-				}
-
-				global_token = read_all_tokens(source_file, global_token);
-				break;
-			}
-			case 'o':
+int main(int argc, char** argv)
+{
+	FILE* in = stdin;
+	FILE* destination_file = stdout;
+	int i = 1;
+	while(i <= argc)
+	{
+		if(NULL == argv[i])
+		{
+			i = i + 1;
+		}
+		else if(match(argv[i], "-f"))
+		{
+			in = fopen(argv[i + 1], "r");
+			if(NULL == in)
 			{
-				#if __MESC__
-					destination_file = open(optarg, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR);
-				#else
-					destination_file = fopen(optarg, "w");
-				#endif
-
-				if(NULL == destination_file)
-				{
-					file_print("The file: ", stderr);
-					file_print(optarg, stderr);
-					file_print(" can not be opened!\n", stderr);
-					exit(EXIT_FAILURE);
-				}
-				break;
-			}
-			case 'V':
-			{
-				file_print("M2-Planet 0.1\n", stdout);
-				exit(EXIT_SUCCESS);
-			}
-			default:
-			{
-				file_print("Unknown option\n", stderr);
+				file_print("Unable to open for reading file: ", stderr);
+				file_print(argv[i + 1], stderr);
+				file_print("\x0A Aborting to avoid problems\x0A", stderr);
 				exit(EXIT_FAILURE);
 			}
+			global_token = read_all_tokens(in, global_token);
+			i = i + 2;
+		}
+		else if(match(argv[i], "-o"))
+		{
+			destination_file = fopen(argv[i + 1], "w");
+			if(NULL == destination_file)
+			{
+				file_print("Unable to open for writing file: ", stderr);
+				file_print(argv[i + 1], stderr);
+				file_print("\x0A Aborting to avoid problems\x0A", stderr);
+				exit(EXIT_FAILURE);
+			}
+			i = i + 2;
+		}
+		else if(match(argv[i], "--help"))
+		{
+			file_print(" -f input file\x0A -o output file\x0A --help for this message\x0A --version for file version\x0A", stdout);
+			exit(EXIT_SUCCESS);
+		}
+		else if(match(argv[i], "--version"))
+		{
+			file_print("Basic test version 0.0.0.1a\x0A", stderr);
+			exit(EXIT_SUCCESS);
+		}
+		else
+		{
+			file_print("UNKNOWN ARGUMENT\x0A", stdout);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -122,5 +116,6 @@ int main(int argc, char **argv)
 	recursive_output(globals_list, destination_file);
 	file_print("\n# Program strings\n\n", destination_file);
 	recursive_output(strings_list, destination_file);
+	file_print("\n:ELF_end\n", destination_file);
 	return EXIT_SUCCESS;
 }

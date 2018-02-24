@@ -6,11 +6,26 @@ all: M2-Planet
 CC=gcc
 CFLAGS=-D_GNU_SOURCE -O0 -std=c99 -ggdb
 
-M2-Planet: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
-	$(CC) $(CFLAGS) cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h -o bin/M2-Planet
+M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
+	$(CC) $(CFLAGS) \
+	test/functions/match.c \
+	test/functions/numerate_number.c \
+	test/functions/file_print.c \
+	test/functions/string.c \
+	functions/require_match.c \
+	cc_reader.c \
+	cc_strings.c \
+	cc_types.c \
+	cc_core.c \
+	cc.c \
+	cc.h \
+	-o bin/M2-Planet-gcc
 
 M2-Planet-minimal: cc_reader.c cc_strings.c cc_core.c cc-minimal.c cc_types.c cc.h | bin
 	$(CC) $(CFLAGS) cc_reader.c cc_strings.c cc_core.c cc-minimal.c cc_types.c cc.h -o bin/M2-Planet-minimal
+
+M2-Planet: M2-Planet-gcc | bin results
+	./test/test100/hello.sh
 
 # Clean up after ourselves
 .PHONY: clean
@@ -30,6 +45,12 @@ clean:
 	./test/test11/cleanup.sh
 	./test/test12/cleanup.sh
 	./test/test13/cleanup.sh
+	./test/test14/cleanup.sh
+	./test/test15/cleanup.sh
+	./test/test16/cleanup.sh
+	./test/test17/cleanup.sh
+	./test/test18/cleanup.sh
+	./test/test19/cleanup.sh
 	./test/test99/cleanup.sh
 
 # Directories
@@ -54,6 +75,12 @@ test: test00-binary \
 	test11-binary \
 	test12-binary \
 	test13-binary \
+	test14-binary \
+	test15-binary \
+	test16-binary \
+	test17-binary \
+	test18-binary \
+	test19-binary \
 	test99-binary | results
 	sha256sum -c test/test.answers
 
@@ -98,6 +125,24 @@ test12-binary: M2-Planet | results
 
 test13-binary: M2-Planet | results
 	test/test13/hello.sh
+
+test14-binary: M2-Planet | results
+	test/test14/hello.sh
+
+test15-binary: M2-Planet | results
+	test/test15/hello.sh
+
+test16-binary: M2-Planet | results
+	test/test16/hello.sh
+
+test17-binary: M2-Planet | results
+	test/test17/hello.sh
+
+test18-binary: M2-Planet | results
+	test/test18/hello.sh
+
+test19-binary: M2-Planet | results
+	test/test19/hello.sh
 
 test99-binary: M2-Planet | results
 	test/test99/hello.sh
