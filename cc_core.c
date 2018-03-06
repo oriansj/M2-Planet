@@ -116,7 +116,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	if(NULL != a)
 	{
 		current_target = a->type;
-		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", postpend_char(numerate_number(stack_index(a, function)), LF)), out);
+		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
 		if(!match("=", global_token->s)) out = emit("LOAD_INTEGER\x0A", out);
 		return out;
 	}
@@ -125,7 +125,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	if(NULL != a)
 	{
 		current_target = a->type;
-		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", postpend_char(numerate_number(stack_index(a, function)), LF)), out);
+		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
 		if(!match("=", global_token->s) && !match("argv", s)) out = emit("LOAD_INTEGER\x0A", out);
 		return out;
 	}

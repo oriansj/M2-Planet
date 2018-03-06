@@ -17,48 +17,36 @@
 #include<stdlib.h>
 #define MAX_STRING 4096
 
+char* copy_string(char* target, char* source)
+{
+	while(0 != source[0])
+	{
+		target[0] = source[0];
+		target = target + 1;
+		source = source + 1;
+	}
+	return target;
+}
+
 char* postpend_char(char* s, char a)
 {
-	int i = 0;
-	while(0 != s[i])
-	{
-		i = i + 1;
-	}
-	s[i] = a;
-	return s;
+	char* ret = calloc(MAX_STRING, sizeof(char));
+	char* hold = copy_string(ret, s);
+	hold[0] = a;
+	return ret;
 }
 
 char* prepend_char(char a, char* s)
 {
-	int hold = a;
-	int prev;
-	int i = 0;
-	do
-	{
-		prev = hold;
-		hold = s[i];
-		s[i] = prev;
-		i = i + 1;
-	} while(0 != hold);
-	return s;
+	char* ret = calloc(MAX_STRING, sizeof(char));
+	ret[0] = a;
+	copy_string((ret+1), s);
+	return ret;
 }
 
 char* prepend_string(char* add, char* base)
 {
 	char* ret = calloc(MAX_STRING, sizeof(char));
-	int i = 0;
-	while(0 != add[i])
-	{
-		ret[i] = add[i];
-		i = i + 1;
-	}
-
-	int j = 0;
-	while(0 != base[j])
-	{
-		ret[i] = base[j];
-		i = i + 1;
-		j = j + 1;
-	}
+	copy_string(copy_string(ret, add), base);
 	return ret;
 }

@@ -52,6 +52,7 @@ clean:
 	./test/test18/cleanup.sh
 	./test/test19/cleanup.sh
 	./test/test99/cleanup.sh
+	./test/test100/cleanup.sh
 
 # Directories
 bin:
@@ -81,7 +82,8 @@ test: test00-binary \
 	test17-binary \
 	test18-binary \
 	test19-binary \
-	test99-binary | results
+	test99-binary \
+	test100-binary | results
 	sha256sum -c test/test.answers
 
 test00-binary: M2-Planet | results
@@ -146,6 +148,9 @@ test19-binary: M2-Planet | results
 
 test99-binary: M2-Planet | results
 	test/test99/hello.sh
+
+test100-binary: M2-Planet | results
+	test/test100/hello.sh
 
 # Generate test answers
 .PHONY: Generate-test-answers

@@ -52,7 +52,7 @@ then
 
 	out=$(sha256sum -c test/test100/proof.answer)
 	[ "$out" = "test/test100/proof: OK" ] || exit 5
-	cp test/results/test100-binary bin/M2-Planet
+	[ ! -e bin/M2-Planet ] && mv test/results/test100-binary bin/M2-Planet
 else
 	cp bin/M2-Planet-gcc bin/M2-Planet
 fi
