@@ -29,23 +29,6 @@ int match(char* a, char* b);
 void file_print(char* s, FILE* f);
 char* parse_string(char* string);
 
-void test0(struct token_list* l, FILE* o)
-{
-	while(NULL != l)
-	{
-		if(l->s[0] == 34)
-		{
-			file_print(parse_string(l->s), o);
-		}
-		else
-		{
-			file_print(l->s, o);
-		}
-		fputc(10, o);
-		l = l->next;
-	}
-}
-
 int main(int argc, char** argv)
 {
 	FILE* in = stdin;

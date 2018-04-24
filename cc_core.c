@@ -239,17 +239,54 @@ struct token_list* process_expression_list(struct token_list* out, struct token_
 	return out;
 }
 
+struct type* last_type;
 
 struct token_list* pre_recursion(struct token_list* out, struct token_list* func)
 {
+	last_type = current_target;
 	global_token = global_token->next;
 	out = emit("PUSH_eax\t#_common_recursion\x0A", out);
 	func->temps = func->temps + 1;
 	return out;
 }
 
+struct type* promote_type(struct type* a, struct type* b)
+{
+	if(NULL == a)
+	{
+		return b;
+	}
+	if(NULL == b)
+	{
+		return a;
+	}
+
+	struct type* i;
+	for(i = global_types; NULL != i; i = i->next)
+	{
+		if(a->name == i->name)
+		{
+			return a;
+		}
+		if(b->name == i->name)
+		{
+			return b;
+		}
+		if(a->name == i->indirect->name)
+		{
+			return a;
+		}
+		if(b->name == i->indirect->name)
+		{
+			return b;
+		}
+	}
+	return NULL;
+}
+
 struct token_list* post_recursion(struct token_list* out, struct token_list* func)
 {
+	current_target = promote_type(current_target, last_type);
 	func->temps = func->temps - 1;
 	out = emit("POP_ebx\t# _common_recursion\x0A", out);
 	return out;
