@@ -82,6 +82,40 @@ struct type* lookup_type(char* s)
 
 struct type* type_name();
 void require_match(char* message, char* required);
+
+int member_size;
+struct type* build_member(struct type* last, int offset)
+{
+	struct type* member_type = type_name();
+	struct type* i = calloc(1, sizeof(struct type));
+	i->name = global_token->s;
+	i->members = last;
+	i->size = member_type->size;
+	member_size = member_type->size;
+	i->type = member_type;
+	i->offset = offset;
+	return i;
+}
+
+struct type* build_union(struct type* last, int offset)
+{
+	int size = 0;
+	global_token = global_token->next;
+	require_match("ERROR in build_union\nMissing {\n", "{");
+	while('}' != global_token->s[0])
+	{
+		last = build_member(last, offset);
+		if(member_size > size)
+		{
+			size = member_size;
+		}
+		global_token = global_token->next;
+		require_match("ERROR in build_union\nMissing ;\n", ";");
+	}
+	member_size = size;
+	return last;
+}
+
 void create_struct()
 {
 	int offset = 0;
@@ -99,17 +133,17 @@ void create_struct()
 	struct type* last = NULL;
 	while('}' != global_token->s[0])
 	{
-		struct type* member_type = type_name();
-		i = calloc(1, sizeof(struct type));
-		i->name = global_token->s;
-		i->members = last;
-		i->size = member_type->size;
-		i->type = member_type;
-		i->offset = offset;
-		offset = offset + member_type->size;
+		if(match(global_token->s, "union"))
+		{
+			last = build_union(last, offset);
+		}
+		else
+		{
+			last = build_member(last, offset);
+		}
+		offset = offset + member_size;
 		global_token = global_token->next;
 		require_match("ERROR in create_struct\x0A Missing ;\x0A", ";");
-		last = i;
 	}
 
 	global_token = global_token->next;

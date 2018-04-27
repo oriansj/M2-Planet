@@ -82,6 +82,12 @@ int main(int argc, char** argv)
 		}
 	}
 
+	/* Deal with special case of wanting to read from standard input */
+	if(stdin == in)
+	{
+		global_token = read_all_tokens(in, global_token);
+	}
+
 	if(NULL == global_token)
 	{
 		file_print("Either no input files were given or they were empty\n", stderr);
