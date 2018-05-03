@@ -61,7 +61,16 @@ void initialize_types()
 	/* FILE* has the same properties as FILE */
 	d->indirect = d;
 
+	/* Define FUNCTION */
+	struct type* e = calloc(1, sizeof(struct type));
+	e->name = "FUNCTION";
+	e->size = 4;
+	e->type = e;
+	/* FUNCTION* has the same properties as FUNCTION */
+	e->indirect = e;
+
 	/* Finalize type list */
+	d->next = e;
 	c->next = d;
 	a->next = c;
 	global_types->next = a;

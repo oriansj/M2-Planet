@@ -97,6 +97,51 @@ int stack_index(struct token_list* a, struct token_list* function)
 	exit(EXIT_FAILURE);
 }
 
+struct token_list* expression(struct token_list* out, struct token_list* function);
+struct token_list* function_call(struct token_list* out, struct token_list* function, char* s, int bool)
+{
+	require_match("ERROR in process_expression_list\nNo ( was found\x0A", "(");
+	int passed = 0;
+
+	if(global_token->s[0] != ')')
+	{
+		out = expression(out, function);
+		out = emit("PUSH_eax\t#_process_expression1\x0A", out);
+		function->temps = function->temps + 1;
+		passed = 1;
+
+		while(global_token->s[0] == ',')
+		{
+			global_token = global_token->next;
+			out = expression(out, function);
+			out = emit("PUSH_eax\t#_process_expression2\x0A", out);
+			function->temps = function->temps + 1;
+			passed = passed + 1;
+		}
+	}
+
+	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
+
+	if(bool)
+	{
+		struct token_list* a = sym_lookup(s, function->arguments);
+		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
+		out = emit("LOAD_INTEGER\n", out);
+		out = emit("CALL_eax\n", out);
+	}
+	else
+	{
+		out = emit(prepend_string("CALL_IMMEDIATE %FUNCTION_", postpend_char(s, LF)), out);
+	}
+
+	for(; passed > 0; passed = passed - 1)
+	{
+		out = emit("POP_ebx\t# _process_expression_locals\x0A", out);
+		function->temps = function->temps - 1;
+	}
+	return out;
+}
+
 struct token_list* sym_get_value(char *s, struct token_list* out, struct token_list* function)
 {
 	global_token = global_token->next;
@@ -104,12 +149,6 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	if(NULL != a)
 	{
 		out = emit(prepend_string("LOAD_IMMEDIATE_eax %", postpend_char(a->arguments->s, LF)), out); return out;
-	}
-
-	a= sym_lookup(s, global_function_list);
-	if(NULL != a)
-	{
-		return out;
 	}
 
 	a= sym_lookup(s, function->locals);
@@ -120,14 +159,38 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 		if(!match("=", global_token->s)) out = emit("LOAD_INTEGER\x0A", out);
 		return out;
 	}
-	a = sym_lookup(s, function->arguments);
 
+	a = sym_lookup(s, function->arguments);
 	if(NULL != a)
 	{
 		current_target = a->type;
+		if(match("FUNCTION", a->type->name))
+		{
+			if(!match("(", global_token->s))
+			{
+				out = emit(prepend_string("#Loading address of function\nLOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
+				out = emit("LOAD_INTEGER\n", out);
+				return out;
+			}
+			return function_call(out, function, s, TRUE);
+		}
 		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
 		if(!match("=", global_token->s) && !match("argv", s)) out = emit("LOAD_INTEGER\x0A", out);
 		return out;
+	}
+
+	a= sym_lookup(s, global_function_list);
+	if(NULL != a)
+	{
+		if(!match("(", global_token->s))
+		{
+			out = emit(prepend_string("LOAD_IMMEDIATE_eax &FUNCTION_", postpend_char(s, LF)), out);
+			return out;
+		}
+		else
+		{
+			return function_call(out, function, s, FALSE);
+		}
 	}
 
 	a = sym_lookup(s, global_symbol_list);
@@ -143,8 +206,6 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	file_print(" is not a defined symbol\x0A", stderr);
 	exit(EXIT_FAILURE);
 }
-
-struct token_list* expression(struct token_list* out, struct token_list* function);
 
 /*
  * primary-expr:
@@ -200,42 +261,6 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 		exit(EXIT_FAILURE);
 	}
 
-	return out;
-}
-
-/* Deal with Expression lists */
-struct token_list* process_expression_list(struct token_list* out, struct token_list* function)
-{
-	char* func = global_token->prev->s;
-	global_token = global_token->next;
-	int temp = function->temps;
-
-	if(global_token->s[0] != ')')
-	{
-		out = expression(out, function);
-		out = emit("PUSH_eax\t#_process_expression1\x0A", out);
-		function->temps = function->temps + 1;
-
-		while(global_token->s[0] == ',')
-		{
-			global_token = global_token->next;
-			out = expression(out, function);
-			out = emit("PUSH_eax\t#_process_expression2\x0A", out);
-			function->temps = function->temps + 1;
-		}
-		require_match("ERROR in process_expression_list\nNo ) was found\x0A", ")");
-	}
-	else global_token = global_token->next;
-
-	out = emit(prepend_string("CALL_IMMEDIATE %FUNCTION_", postpend_char(func, LF)), out);
-
-	int i;
-	for(i = function->temps - temp; 0 != i; i = i - 1)
-	{
-		out = emit("POP_ebx\t# _process_expression_locals\x0A", out);
-	}
-
-	function->temps = temp;
 	return out;
 }
 
@@ -351,10 +376,6 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
 				}
 			}
 			require_match("ERROR in postfix_expr\nMissing ]\x0A", "]");
-		}
-		else if(global_token->s[0] == '(')
-		{
-			out = process_expression_list(out, function);
 		}
 		else if(match("->", global_token->s))
 		{
@@ -744,7 +765,10 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	global_token = global_token->next;
 
 	require_match("ERROR in process_for\nMISSING (\x0A", "(");
-	out = expression(out, function);
+	if(!match(";",global_token->s))
+	{
+		out = expression(out, function);
+	}
 
 	out = emit(prepend_string(":FOR_", number_string), out);
 
