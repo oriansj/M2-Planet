@@ -122,12 +122,17 @@ struct token_list* function_call(struct token_list* out, struct token_list* func
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
 
-	if(bool)
+	if(2 == bool)
+	{
+		struct token_list* a = sym_lookup(s, function->locals);
+		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
+		out = emit("LOAD_INTEGER\nCALL_eax\n", out);
+	}
+	else if(1 == bool)
 	{
 		struct token_list* a = sym_lookup(s, function->arguments);
 		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
-		out = emit("LOAD_INTEGER\n", out);
-		out = emit("CALL_eax\n", out);
+		out = emit("LOAD_INTEGER\nCALL_eax\n", out);
 	}
 	else
 	{
@@ -154,6 +159,16 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	a= sym_lookup(s, function->locals);
 	if(NULL != a)
 	{
+		if(match("FUNCTION", a->type->name))
+		{
+			if(!match("(", global_token->s))
+			{
+				out = emit(prepend_string("#Loading address of function\nLOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
+				out = emit("LOAD_INTEGER\n", out);
+				return out;
+			}
+			return function_call(out, function, s, 2);
+		}
 		current_target = a->type;
 		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
 		if(!match("=", global_token->s)) out = emit("LOAD_INTEGER\x0A", out);
@@ -172,7 +187,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 				out = emit("LOAD_INTEGER\n", out);
 				return out;
 			}
-			return function_call(out, function, s, TRUE);
+			return function_call(out, function, s, 1);
 		}
 		out = emit(prepend_string("LOAD_EFFECTIVE_ADDRESS %", numerate_number(stack_index(a, function))), out);
 		if(!match("=", global_token->s) && !match("argv", s)) out = emit("LOAD_INTEGER\x0A", out);
@@ -189,7 +204,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 		}
 		else
 		{
-			return function_call(out, function, s, FALSE);
+			return function_call(out, function, s, 0);
 		}
 	}
 
