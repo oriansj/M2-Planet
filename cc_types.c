@@ -17,6 +17,7 @@
 
 #include "cc.h"
 #include <stdint.h>
+void line_error();
 
 /* Initialize default types */
 void initialize_types()
@@ -189,6 +190,7 @@ struct type* type_name()
 		file_print("Unknown type ", stderr);
 		file_print(global_token->s, stderr);
 		file_print("\x0A", stderr);
+		line_error();
 		exit(EXIT_FAILURE);
 	}
 	else if(NULL == ret)

@@ -18,6 +18,7 @@
 // CONSTANT stdin 0
 // CONSTANT stdout 1
 // CONSTANT stderr 2
+// CONSTANT EOF 0xFFFFFFFF
 
 int fgetc(FILE* f)
 {
@@ -87,4 +88,16 @@ FILE* fopen(char* filename, char* mode)
 		return 0;
 	}
 	return f;
+}
+
+int close(int fd)
+{
+	asm("LOAD_EFFECTIVE_ADDRESS_ebx %4"
+	"LOAD_IMMEDIATE_eax %6"
+	"INT_80");
+}
+int fclose(FILE* stream)
+{
+	int error = close(stream);
+	return error;
 }

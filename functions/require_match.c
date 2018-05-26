@@ -15,12 +15,22 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../cc.h"
+char* numerate_number(int a);
+
+void line_error()
+{
+	file_print("In file: ", stderr);
+	file_print(global_token->filename, stderr);
+	file_print(" On line: ", stderr);
+	file_print(numerate_number(global_token->linenumber), stderr);
+}
 
 void require_match(char* message, char* required)
 {
 	if(!match(global_token->s, required))
 	{
 		file_print(message, stderr);
+		line_error();
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;

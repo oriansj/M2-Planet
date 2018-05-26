@@ -21,7 +21,7 @@
 
 /* The core functions */
 void initialize_types();
-struct token_list* read_all_tokens(FILE* a, struct token_list* current);
+struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
 struct token_list* program(struct token_list* out);
 void recursive_output(struct token_list* i, FILE* out);
@@ -42,15 +42,16 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-f"))
 		{
-			in = fopen(argv[i + 1], "r");
+			char* name = argv[i + 1];
+			in = fopen(name, "r");
 			if(NULL == in)
 			{
 				file_print("Unable to open for reading file: ", stderr);
-				file_print(argv[i + 1], stderr);
+				file_print(name, stderr);
 				file_print("\x0A Aborting to avoid problems\x0A", stderr);
 				exit(EXIT_FAILURE);
 			}
-			global_token = read_all_tokens(in, global_token);
+			global_token = read_all_tokens(in, global_token, name);
 			i = i + 2;
 		}
 		else if(match(argv[i], "-o"))
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{
-		global_token = read_all_tokens(in, global_token);
+		global_token = read_all_tokens(in, global_token, "STDIN");
 	}
 
 	if(NULL == global_token)

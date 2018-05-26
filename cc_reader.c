@@ -18,10 +18,17 @@
 #include "cc.h"
 FILE* input;
 struct token_list* token;
+int line;
+char* file;
 
 char clearWhiteSpace(char c)
 {
-	if((32 == c) || (10 == c) || (9 == c)) return clearWhiteSpace(fgetc(input));
+	if((32 == c) || (9 == c)) return clearWhiteSpace(fgetc(input));
+	else if (10 == c)
+	{
+		line = line + 1;
+		return clearWhiteSpace(fgetc(input));
+	}
 	return c;
 }
 
@@ -122,8 +129,13 @@ reset:
 			c = fgetc(input);
 			while(c != '/')
 			{
-				while(c != '*') c = fgetc(input);
+				while(c != '*')
+				{
+					c = fgetc(input);
+					if(10 == c) line = line + 1;
+				}
 				c = fgetc(input);
+				if(10 == c) line = line + 1;
 			}
 			c = fgetc(input);
 			goto reset;
@@ -146,6 +158,8 @@ reset:
 
 	current->prev = token;
 	current->next = token;
+	current->linenumber = line;
+	current->filename = file;
 	token = current;
 	return c;
 }
@@ -163,12 +177,14 @@ struct token_list* reverse_list(struct token_list* head)
 	return root;
 }
 
-struct token_list* read_all_tokens(FILE* a, struct token_list* current)
+struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename)
 {
 	input  = a;
+	line = 1;
+	file = filename;
 	token = current;
 	int ch =fgetc(input);
-	while(0 <= ch) ch = get_token(ch);
+	while(EOF != ch) ch = get_token(ch);
 
 	return token;
 }

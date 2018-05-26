@@ -35,6 +35,7 @@ char* postpend_char(char* s, char a);
 char* prepend_char(char a, char* s);
 char* prepend_string(char* add, char* base);
 void require_match(char* message, char* required);
+void line_error();
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -94,6 +95,7 @@ int stack_index(struct token_list* a, struct token_list* function)
 	file_print(" does not exist in function ", stderr);
 	file_print(function->s,stderr);
 	file_print("\x0A",stderr);
+	line_error();
 	exit(EXIT_FAILURE);
 }
 
@@ -219,6 +221,7 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 
 	file_print(s ,stderr);
 	file_print(" is not a defined symbol\x0A", stderr);
+	line_error();
 	exit(EXIT_FAILURE);
 }
 
@@ -273,6 +276,7 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 		file_print("Recieved ", stderr);
 		file_print(global_token->s, stderr);
 		file_print(" in primary_expr\x0A", stderr);
+		line_error();
 		exit(EXIT_FAILURE);
 	}
 
@@ -408,6 +412,7 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
 				file_print("->", stderr);
 				file_print(global_token->s, stderr);
 				file_print(" does not exist\x0A", stderr);
+				line_error();
 				exit(EXIT_FAILURE);
 			}
 			if(0 != i->offset)
@@ -967,7 +972,10 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 		out = emit("\t#C goto label\x0A", out);
 		global_token = global_token->next;
 	}
-	else if((NULL != lookup_type(global_token->s)) || match("struct", global_token->s))
+	else if((NULL == sym_lookup(global_token->s, function->locals)) &&
+	        (NULL == sym_lookup(global_token->s, function->arguments)) &&
+	        (NULL != lookup_type(global_token->s)) ||
+	        match("struct", global_token->s))
 	{
 		out = collect_local(out, function);
 	}
@@ -1007,6 +1015,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 		if(NULL == break_target)
 		{
 			file_print("Not inside of a loop or case statement", stderr);
+			line_error();
 			exit(EXIT_FAILURE);
 		}
 		struct token_list* i = function->locals;
@@ -1139,6 +1148,7 @@ new_type:
 				file_print("Recieved ", stderr);
 				file_print(global_token->s, stderr);
 				file_print(" in program\x0A", stderr);
+				line_error();
 				exit(EXIT_FAILURE);
 			}
 		}

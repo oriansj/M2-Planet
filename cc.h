@@ -46,10 +46,21 @@ struct token_list
 {
 	struct token_list* next;
 	struct token_list* prev;
-	struct token_list* entry;
-	char* s;
-	struct type* type;
-	struct token_list* arguments;
+	union
+	{
+		struct token_list* entry;
+		char* s;
+	};
+	union
+	{
+		struct type* type;
+		char* filename;
+	};
+	union
+	{
+		struct token_list* arguments;
+		int linenumber;
+	};
 	struct token_list* locals;
 	int temps;
 };

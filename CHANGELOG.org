@@ -1,0 +1,84 @@
+## Copyright (C) 2017 Jeremiah Orians
+## This file is part of stage0.
+##
+## stage0 is free software: you an redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## stage0 is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with stage0.  If not, see <http://www.gnu.org/licenses/>.
+
+* Current
+** Added
+Added type promotion to allow progress on mes.c
+Add support for anonymous unions inside of structs
+Added support for passing of function pointers via FUNCTION
+Added support for Local functions
+Added support for EOF
+Added additional debug information to M2-Planet
+Added line numbers and files names for errors in parsing to help debug
+Added support for close and fclose
+
+** Changed
+Improving Documentation to help new programmers get functional
+
+** Fixed
+Minor cleanup and removal of unneeded whitespace
+Fixed outstanding bug when struct foo* foo and foo->bar was used
+
+** Removed
+
+* 0.1 - 2018-02-23
+** Added
+Added example programs
+Added first generation libc
+Added first generation defs.M1
+added FOR Loop support along with example
+Added support for assembly statements
+Added CONSTANT to the language
+Added support for <. >= and > expressions
+Added struct support
+Added unary - and ! support
+Added additional functionality such as mixed structs, do while loops, gotos and tests for the new functionality
+Incorporate breaks into loops
+Became Self-Hosting
+
+** Changed
+Tweaked argument processing to help mescc support
+Isolated global_token to cc.c
+Moved strings to the bottom of the output
+Broke out globals
+Started to move type information out of hard-coded logic
+Started adding tests instead of examples
+Put common x86 platform logic in a shared folder to reduce duplicate code
+Converted from legacy M2-Planet Input.c Output.c to M2-Planet -f input.c ... -f
+Minor reordering of tests
+
+** Fixed
+expanded type support to include integer arrays
+Reduced the memory churn in string creation
+fixed Capitalization problems
+
+** Removed
+Removed need for enum in bootstrapping
+Removed need for global output list
+Eliminated the global stack
+Reduced library dependencies
+
+* 0.0 - 2017-07-05
+** Added
+Added minimal tokenizer
+Added minimal string support
+Added minimal parser
+
+** Changed
+
+** Fixed
+
+** Removed
