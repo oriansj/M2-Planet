@@ -24,15 +24,32 @@ Added support for EOF
 Added additional debug information to M2-Planet
 Added line numbers and files names for errors in parsing to help debug
 Added support for close and fclose
+Added prototype support for chmod
+Added basic support for escape strings
+Added support for continue
+Added string_length function to string.c
+Added function numerate_string for converting string to integer
+Added supporting hex2char, char2hex, dec2char and char2dec functions
+Added support bitwise xor
 
 ** Changed
 Improving Documentation to help new programmers get functional
+Cleaned up numerate_number to make it more general purpose
+Enabled stand alone builds of calloc
+Unified bitwise operations
+Made string.c more independent
 
 ** Fixed
 Minor cleanup and removal of unneeded whitespace
 Fixed outstanding bug when struct foo* foo and foo->bar was used
+Fixed ":foo bug
+Fixed "\n:foo bug
+Adjusted all previous references to numerate_number to ensure output is consistent
+Fixed up reader so that '\'' and "\"" work correctly now
+fixed "\"" bug in string output generation
 
 ** Removed
+Removed need for memset in numerate_number
 
 * 0.1 - 2018-02-23
 ** Added

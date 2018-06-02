@@ -16,6 +16,7 @@
  */
 #include<stdlib.h>
 #define MAX_STRING 4096
+//CONSTANT MAX_STRING 4096
 
 char* copy_string(char* target, char* source)
 {
@@ -49,4 +50,11 @@ char* prepend_string(char* add, char* base)
 	char* ret = calloc(MAX_STRING, sizeof(char));
 	copy_string(copy_string(ret, add), base);
 	return ret;
+}
+
+int string_length(char* a)
+{
+	int i = 0;
+	while(0 != a[i]) i = i + 1;
+	return i;
 }

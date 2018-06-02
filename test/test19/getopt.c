@@ -47,6 +47,7 @@ void sum_file(FILE* input, FILE* output)
 	}
 
 	write_string(numerate_number(sum), output);
+	fputc(10, output);
 }
 
 int match(char* a, char* b);

@@ -70,7 +70,16 @@ void initialize_types()
 	/* FUNCTION* has the same properties as FUNCTION */
 	e->indirect = e;
 
+	/* Define FUNCTION */
+	struct type* f = calloc(1, sizeof(struct type));
+	f->name = "unsigned";
+	f->size = 4;
+	f->type = f;
+	/* unsigned* has the same properties as unsigned */
+	f->indirect = f;
+
 	/* Finalize type list */
+	e->next = f;
 	d->next = e;
 	c->next = d;
 	a->next = c;

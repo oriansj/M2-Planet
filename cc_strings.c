@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 struct token_list* emit(char *s, struct token_list* head);
+int char2hex(int c);
 
 char upcase(char a)
 {
@@ -30,30 +31,21 @@ char upcase(char a)
 	return a;
 }
 
-int hex(int c, int high)
+int hexify(int c, int high)
 {
-	if (c >= '0' && c <= '9')
+	int i = char2hex(c);
+
+	if(0 > i)
 	{
-		c = (c - 48);
-	}
-	else if (c >= 'a' && c <= 'z')
-	{
-		c = (c - 87);
-	}
-	else if (c >= 'A' && c <= 'Z')
-	{
-		c = (c - 55);
-	}
-	else
-	{
+		file_print("Tried to print non-hex number\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
 	if(high)
 	{
-		c = c << 4;
+		i = i << 4;
 	}
-	return c;
+	return i;
 }
 
 int weird(char* string)
@@ -65,6 +57,16 @@ int weird(char* string)
 		{
 			if('0' == string[2]) return TRUE;
 			else if('1' == string[2]) return TRUE;
+			else if('2' == string[2])
+			{
+				if('2' == string[3]) return TRUE;
+				else return weird(string+3);
+			}
+			else if('3' == string[2])
+			{
+				if('A' == string[3]) return TRUE;
+				else return weird(string+3);
+			}
 			else if('8' == string[2]) return TRUE;
 			else if('9' == string[2]) return TRUE;
 			else if('a' == string[2]) return TRUE;
@@ -83,18 +85,42 @@ int weird(char* string)
 		}
 		else if('n' == string[1])
 		{
+			if(':' == string[2]) return TRUE;
 			return weird(string+2);
 		}
 		else if('t' == string[1])
 		{
 			return weird(string+2);
 		}
+		else if('"' == string[1]) return TRUE;
 		else
 		{
 			return weird(string+3);
 		}
 	}
 	return weird(string+1);
+}
+
+/* Lookup escape values */
+int escape_lookup(char* c)
+{
+	if((c[0] == '\\') & (c[1] == 'x'))
+	{
+		int t1 = hexify(c[2], TRUE);
+		int t2 = hexify(c[3], FALSE);
+		return t1 + t2;
+	}
+	else if((c[0] == '\\') & (c[1] == 'n')) return 10;
+	else if((c[0] == '\\') & (c[1] == 't')) return 9;
+	else if((c[0] == '\\') & (c[1] == '\\')) return 92;
+	else if((c[0] == '\\') & (c[1] == '\'')) return 39;
+	else if((c[0] == '\\') & (c[1] == '"')) return 34;
+	else if((c[0] == '\\') & (c[1] == 'r')) return 13;
+
+	file_print("Unknown escape recieved: ", stderr);
+	file_print(c, stderr);
+	file_print(" Unable to process\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 /* Deal with human strings */
@@ -110,19 +136,12 @@ char* collect_regular_string(char* string)
 	{
 		if((string[j] == '\\') & (string[j + 1] == 'x'))
 		{
-			int t1 = hex(string[j + 2], TRUE);
-			int t2 = hex(string[j + 3], FALSE);
-			message[i] = t1 + t2;
+			message[i] = escape_lookup(string + j);
 			j = j + 4;
 		}
-		else if((string[j] == '\\') & (string[j + 1] == 'n'))
+		else if(string[j] == '\\')
 		{
-			message[i] = 10;
-			j = j + 2;
-		}
-		else if((string[j] == '\\') & (string[j + 1] == 't'))
-		{
-			message[i] = 9;
+			message[i] = escape_lookup(string + j);
 			j = j + 2;
 		}
 		else
@@ -193,6 +212,6 @@ char* collect_weird_string(char* string)
 char* parse_string(char* string)
 {
 	/* the string */
-	if(weird(string)) return collect_weird_string(string);
+	if((weird(string)) || ':' == string[1]) return collect_weird_string(string);
 	else return collect_regular_string(string);
 }

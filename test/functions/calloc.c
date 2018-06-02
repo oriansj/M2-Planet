@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
+// void* malloc(int size);
 
 void* memset(void* ptr, int value, int num)
 {

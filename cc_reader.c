@@ -42,8 +42,13 @@ char consume_byte(struct token_list* current, char c)
 
 char consume_word(struct token_list* current, char c, char frequent)
 {
-	c = consume_byte(current, c);
-	while(c != frequent) c = consume_byte(current, c);
+	int escape = FALSE;
+	do
+	{
+		if(!escape && '\\' == c ) escape = TRUE;
+		else escape = FALSE;
+		c = consume_byte(current, c);
+	} while(escape || (c != frequent));
 	return fgetc(input);
 }
 

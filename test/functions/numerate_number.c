@@ -16,11 +16,15 @@
  */
 #include<stdlib.h>
 #include<string.h>
+// void* calloc(int count, int size);
+#define TRUE 1
+//CONSTANT TRUE 1
+#define FALSE 0
+//CONSTANT FALSE 0
 
 char* numerate_number(int a)
 {
-	char* result = malloc(16);
-	memset(result, 0, 16);
+	char* result = calloc(16, sizeof(char));
 	int i = 0;
 
 	/* Deal with Zero case */
@@ -53,6 +57,93 @@ char* numerate_number(int a)
 		i = i + 1;
 	}
 
-	result[i] = 10;
 	return result;
+}
+
+int char2hex(int c)
+{
+	if (c >= '0' && c <= '9') return (c - 48);
+	else if (c >= 'a' && c <= 'f') return (c - 87);
+	else if (c >= 'A' && c <= 'F') return (c - 55);
+	else return -1;
+}
+
+int hex2char(int c)
+{
+	if((c >= 0) && (c <= 9)) return (c + 48);
+	else if((c >= 10) && (c <= 15)) return (c + 55);
+	else return -1;
+}
+
+int char2dec(int c)
+{
+	if (c >= '0' && c <= '9') return (c - 48);
+	else return -1;
+}
+
+int dec2char(int c)
+{
+	if((c >= 0) && (c <= 9)) return (c + 48);
+	else return -1;
+}
+
+int numerate_string(char *a)
+{
+	int count = 0;
+	int index;
+	int negative;
+
+	/* If NULL string */
+	if(0 == a[0])
+	{
+		return 0;
+	}
+	/* Deal with hex */
+	else if (a[0] == '0' && a[1] == 'x')
+	{
+		if('-' == a[2])
+		{
+			negative = TRUE;
+			index = 3;
+		}
+		else
+		{
+			negative = FALSE;
+			index = 2;
+		}
+
+		while(0 != a[index])
+		{
+			if(-1 == char2hex(a[index])) return 0;
+			count = (16 * count) + char2hex(a[index]);
+			index = index + 1;
+		}
+	}
+	/* Deal with decimal */
+	else
+	{
+		if('-' == a[0])
+		{
+			negative = TRUE;
+			index = 1;
+		}
+		else
+		{
+			negative = FALSE;
+			index = 0;
+		}
+
+		while(0 != a[index])
+		{
+			if(-1 == char2dec(a[index])) return 0;
+			count = (10 * count) + char2dec(a[index]);
+			index = index + 1;
+		}
+	}
+
+	if(negative)
+	{
+		count = count * -1;
+	}
+	return count;
 }
