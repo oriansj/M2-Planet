@@ -1,0 +1,625 @@
+/* -*- c-file-style: "linux";indent-tabs-mode:t -*- */
+/* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
+ * This file is part of stage0.
+ *
+ * stage0 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * stage0 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
+#define max_string 4096
+//CONSTANT max_string 4096
+#define MACRO 1
+//CONSTANT MACRO 1
+#define STR 2
+//CONSTANT STR 2
+#define TRUE 1
+//CONSTANT TRUE 1
+#define FALSE 0
+//CONSTANT FALSE 0
+
+void file_print(char* s, FILE* f);
+int match(char* a, char* b);
+int string_length(char* a);
+char* numerate_number(int a);
+int numerate_string(char *a);
+int hex2char(int c);
+
+FILE* source_file;
+FILE* destination_file;
+int BigEndian;
+int BigBitEndian;
+int ByteMode;
+int Architecture;
+
+struct Token
+{
+	struct Token* next;
+	int type;
+	char* Text;
+	char* Expression;
+};
+
+struct Token* newToken()
+{
+	struct Token* p;
+
+	p = calloc (1, sizeof (struct Token));
+	if (NULL == p)
+	{
+		file_print("calloc failed.\n", stderr);
+		exit (EXIT_FAILURE);
+	}
+
+	return p;
+}
+
+struct Token* reverse_list(struct Token* head)
+{
+	struct Token* root = NULL;
+	while(NULL != head)
+	{
+		struct Token* next = head->next;
+		head->next = root;
+		root = head;
+		head = next;
+	}
+	return root;
+}
+
+void purge_lineComment()
+{
+	int c = fgetc(source_file);
+	while((10 != c) && (13 != c))
+	{
+		c = fgetc(source_file);
+	}
+}
+
+char* store_atom(char c)
+{
+	char* store = calloc(max_string + 1, sizeof(char));
+	if(NULL == store)
+	{
+		file_print("Exhusted available memory\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	int ch = c;
+	int i = 0;
+	do
+	{
+		store[i] = ch;
+		ch = fgetc(source_file);
+		i = i + 1;
+	} while ((9 != ch) && (10 != ch) && (32 != ch) && (i <= max_string));
+
+	return store;
+}
+
+char* store_string(char c)
+{
+	char* store = calloc(max_string + 1, sizeof(char));
+	if(NULL == store)
+	{
+		file_print("Exhusted available memory\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	int ch = c;
+	int i = 0;
+	do
+	{
+		store[i] = ch;
+		i = i + 1;
+		ch = fgetc(source_file);
+		if(-1 == ch)
+		{
+			file_print("Unmatched \"!\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+		if(max_string == i)
+		{
+			file_print("String: ", stderr);
+			file_print(store, stderr);
+			file_print(" exceeds max string size\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	} while(ch != c);
+
+	return store;
+}
+
+struct Token* Tokenize_Line(struct Token* head)
+{
+	int c;
+	struct Token* p;
+
+	do
+	{
+restart:
+		c = fgetc(source_file);
+
+		if((35 == c) || (59 == c))
+		{
+			purge_lineComment();
+			goto restart;
+		}
+
+		if((9 == c) || (10 == c) || (32 == c))
+		{
+			goto restart;
+		}
+
+		if(-1 == c)
+		{
+			goto done;
+		}
+
+		p = newToken();
+		if((34 == c) || (39 == c))
+		{
+			p->Text = store_string(c);
+			p->type = STR;
+		}
+		else
+		{
+			p->Text = store_atom(c);
+		}
+
+		p->next = head;
+		head = p;
+	} while(TRUE);
+done:
+	return head;
+}
+
+void setExpression(struct Token* p, char *c, char *Exp)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		/* Leave macros alone */
+		if((i->type & MACRO))
+		{
+			continue;
+		}
+		else if(match(i->Text, c))
+		{ /* Only if there is an exact match replace */
+			i->Expression = Exp;
+		}
+	}
+}
+
+void identify_macros(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if(match(i->Text, "DEFINE"))
+		{
+			i->type = MACRO;
+			i->Text = i->next->Text;
+			if(i->next->next->type & STR)
+			{
+				i->Expression = i->next->next->Text + 1;
+			}
+			else
+			{
+				i->Expression = i->next->next->Text;
+			}
+			i->next = i->next->next->next;
+		}
+	}
+}
+
+void line_macro(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if(i->type & MACRO)
+		{
+			setExpression(i->next, i->Text, i->Expression);
+		}
+	}
+}
+
+void hexify_string(struct Token* p)
+{
+	char* table = "0123456789ABCDEF";
+	int i = ((string_length(p->Text + 1)/4) + 1) * 8;
+
+	char* d = calloc(max_string, sizeof(char));
+	p->Expression = d;
+
+	while(0 < i)
+	{
+		i = i - 1;
+		d[i] = 0x30;
+	}
+
+	while( i < max_string)
+	{
+		if(0 == p->Text[i+1])
+		{
+			i = max_string;
+		}
+		else
+		{
+			d[2*i]  = table[p->Text[i+1] / 16];
+			d[2*i + 1] = table[p->Text[i+1] % 16];
+			i = i + 1;
+		}
+	}
+}
+
+void process_string(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if(i->type & STR)
+		{
+			if('\'' == i->Text[0])
+			{
+				i->Expression = i->Text + 1;
+			}
+			else if('"' == i->Text[0])
+			{
+				hexify_string(i);
+			}
+		}
+	}
+}
+
+
+void preserve_other(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if((NULL == i->Expression) && !(i->type & MACRO))
+		{
+			char c = i->Text[0];
+
+			if(('!' == c) ||('@' == c) ||('$' == c) ||('%' == c) ||('&' == c) ||(':' == c))
+			{
+				i->Expression = i->Text;
+			}
+			else
+			{
+				file_print("Recieved invalid other; ", stderr);
+				file_print(i->Text, stderr);
+				file_print("\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+}
+
+void bound_values(int displacement, int number_of_bytes, int low, int high)
+{
+	if((high < displacement) || (displacement < low))
+	{
+		file_print("A displacement of ", stderr);
+		file_print(numerate_number(displacement), stderr);
+		file_print(" does not fit in ", stderr);
+		file_print(numerate_number(number_of_bytes), stderr);
+		file_print(" bytes\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void range_check(int displacement, int number_of_bytes)
+{
+	if(4 == number_of_bytes) return;
+	else if(3 == number_of_bytes)
+	{
+		bound_values(displacement, number_of_bytes, -8388608, 16777216);
+		return;
+	}
+	else if(2 == number_of_bytes)
+	{
+		bound_values(displacement, number_of_bytes, -32768, 65535);
+		return;
+	}
+	else if(1 == number_of_bytes)
+	{
+		bound_values(displacement, number_of_bytes, -128, 255);
+		return;
+	}
+
+	file_print("Recieved an invalid number of bytes in range_check\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+void reverseBitOrder(char* c)
+{
+	if(NULL == c) return;
+	if(0 == c[1]) return;
+	int hold = c[0];
+
+	if(16 == ByteMode)
+	{
+		c[0] = c[1];
+		c[1] = hold;
+		reverseBitOrder(c+2);
+	}
+	else if(8 == ByteMode)
+	{
+		c[0] = c[2];
+		c[2] = hold;
+		reverseBitOrder(c+3);
+	}
+	else if(2 == ByteMode)
+	{
+		c[0] = c[7];
+		c[7] = hold;
+		hold = c[1];
+		c[1] = c[6];
+		c[6] = hold;
+		hold = c[2];
+		c[2] = c[5];
+		c[5] = hold;
+		hold = c[3];
+		c[3] = c[4];
+		c[4] = hold;
+		reverseBitOrder(c+8);
+	}
+}
+
+void LittleEndian(char* start)
+{
+	char* end = start;
+	char* c = start;
+	while(0 != end[0]) end = end + 1;
+	int hold;
+	for(end = end - 1; start < end; start = start + 1)
+	{
+		hold = start[0];
+		start[0] = end[0];
+		end[0] = hold;
+		end = end - 1;
+	}
+
+	if(BigBitEndian) reverseBitOrder(c);
+}
+
+int stringify(char* s, int digits, int divisor, int value, int shift)
+{
+	int i = value;
+	if(digits > 1)
+	{
+		i = stringify(s+1, (digits - 1), divisor, value, shift);
+	}
+	s[0] = hex2char(i & (divisor - 1));
+	return (i >> shift);
+}
+
+char* express_number(int value, char c)
+{
+	char* ch = calloc(42, sizeof(char));
+	int size;
+	int number_of_bytes;
+	int shift;
+	if('!' == c)
+	{
+		number_of_bytes = 1;
+		value = value & 0xFF;
+	}
+	else if('@' == c)
+	{
+		number_of_bytes = 2;
+		value = value & 0xFFFF;
+	}
+	else if('%' == c)
+	{
+		number_of_bytes = 4;
+		value = value & 0xFFFFFFFF;
+	}
+	else
+	{
+		file_print("Given symbol ", stderr);
+		fputc(c, stderr);
+		file_print(" to express immediate value ", stderr);
+		file_print(numerate_number(value), stderr);
+		fputc('\n', stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	range_check(value, number_of_bytes);
+
+	if(16 == ByteMode)
+	{
+		size = number_of_bytes * 2;
+		shift = 4;
+	}
+	else if(8 == ByteMode)
+	{
+		size = number_of_bytes * 3;
+		shift = 3;
+	}
+	else if(2 == ByteMode)
+	{
+		size = number_of_bytes * 8;
+		shift = 1;
+	}
+	else
+	{
+		file_print("Got invalid ByteMode in express_number\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	stringify(ch, size, ByteMode, value, shift);
+
+	if(!BigEndian) LittleEndian(ch);
+	else if(!BigBitEndian) reverseBitOrder(ch);
+	return ch;
+}
+
+void eval_immediates(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if((NULL == i->Expression) && !(i->type & MACRO))
+		{
+			int value;
+			if((1 == Architecture) || (2 == Architecture))
+			{
+				value = numerate_string(i->Text + 1);
+				if(('0' == i->Text[1]) || (0 != value))
+				{
+					i->Expression = express_number(value, i->Text[0]);
+				}
+			}
+			else if(0 == Architecture)
+			{
+				value = numerate_string(i->Text);
+				if(('0' == i->Text[0]) || (0 != value))
+				{
+					i->Expression = express_number(value, '@');
+				}
+			}
+			else
+			{
+				file_print("Unknown architecture recieved in eval_immediates\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+}
+
+void print_hex(struct Token* p)
+{
+	struct Token* i;
+	for(i = p; NULL != i; i = i->next)
+	{
+		if(i->type ^ MACRO)
+		{
+			fputc('\n', destination_file);
+			file_print(i->Expression, destination_file);
+		}
+	}
+
+	fputc('\n', destination_file);
+}
+
+/* Standard C main program */
+int main(int argc, char **argv)
+{
+	BigEndian = TRUE;
+	struct Token* head = NULL;
+	Architecture = 0;
+	destination_file = stdout;
+	BigBitEndian = TRUE;
+	ByteMode = 16;
+
+	int option_index = 1;
+	while(option_index <= argc)
+	{
+		if(NULL == argv[option_index])
+		{
+			option_index = option_index + 1;
+		}
+		else if(match(argv[option_index], "--BigEndian"))
+		{
+			BigEndian = TRUE;
+			option_index = option_index + 1;
+		}
+		else if(match(argv[option_index], "--LittleEndian"))
+		{
+			BigEndian = FALSE;
+			option_index = option_index + 1;
+		}
+		else if(match(argv[option_index], "-A") || match(argv[option_index], "--Architecture"))
+		{
+			Architecture = numerate_string(argv[option_index + 1]);
+			option_index = option_index + 2;
+		}
+		else if(match(argv[option_index], "-b") || match(argv[option_index], "--binary"))
+		{
+			ByteMode = 2;
+			option_index = option_index + 1;
+		}
+		else if(match(argv[option_index], "-h") || match(argv[option_index], "--help"))
+		{
+			file_print("Usage: ", stderr);
+			file_print(argv[0], stderr);
+			file_print(" -f FILENAME1 {-f FILENAME2} (--BigEndian|--LittleEndian) [--BaseAddress 12345] [--Architecture 12345]\nArchitecture 0: Knight; 1: x86; 2: AMD64", stderr);
+			exit(EXIT_SUCCESS);
+		}
+		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))
+		{
+			source_file = fopen(argv[option_index + 1], "r");
+
+			if(NULL == source_file)
+			{
+				file_print("The file: ", stderr);
+				file_print(argv[option_index + 1], stderr);
+				file_print(" can not be opened!\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			head = Tokenize_Line(head);
+			option_index = option_index + 2;
+		}
+		else if(match(argv[option_index], "-o") || match(argv[option_index], "--output"))
+		{
+			destination_file = fopen(argv[option_index + 1], "w");
+
+			if(NULL == destination_file)
+			{
+				file_print("The file: ", stderr);
+				file_print(argv[option_index + 1], stderr);
+				file_print(" can not be opened!\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			option_index = option_index + 2;
+		}
+		else if(match(argv[option_index], "-O") || match(argv[option_index], "--octal"))
+		{
+			ByteMode = 8;
+			option_index = option_index + 1;
+		}
+		else if(match(argv[option_index], "-V") || match(argv[option_index], "--version"))
+		{
+			file_print("M1 0.3\n", stdout);
+			exit(EXIT_SUCCESS);
+		}
+		else
+		{
+			file_print("Unknown option\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if(NULL == head)
+	{
+		file_print("Either no input files were given or they were empty\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	head = reverse_list(head);
+	identify_macros(head);
+	line_macro(head);
+	process_string(head);
+	eval_immediates(head);
+	preserve_other(head);
+	print_hex(head);
+
+	return EXIT_SUCCESS;
+}
