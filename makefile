@@ -52,6 +52,7 @@ clean:
 	./test/test18/cleanup.sh
 	./test/test19/cleanup.sh
 	./test/test20/cleanup.sh
+	./test/test21/cleanup.sh
 	./test/test99/cleanup.sh
 	./test/test100/cleanup.sh
 
@@ -84,6 +85,7 @@ test: test00-binary \
 	test18-binary \
 	test19-binary \
 	test20-binary \
+	test21-binary \
 	test99-binary \
 	test100-binary | results
 	sha256sum -c test/test.answers
@@ -150,6 +152,9 @@ test19-binary: M2-Planet | results
 
 test20-binary: M2-Planet | results
 	test/test20/hello.sh
+
+test21-binary: M2-Planet | results
+	test/test21/hello.sh
 
 test99-binary: M2-Planet | results
 	test/test99/hello.sh
