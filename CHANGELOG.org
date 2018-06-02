@@ -31,6 +31,8 @@ Added string_length function to string.c
 Added function numerate_string for converting string to integer
 Added supporting hex2char, char2hex, dec2char and char2dec functions
 Added support bitwise xor
+Added Blood-elf test
+Added Hex2_linker test
 
 ** Changed
 Improving Documentation to help new programmers get functional
