@@ -34,6 +34,7 @@ Added support bitwise xor
 Added Blood-elf test
 Added Hex2_linker test
 Added M1-macro test
+Added prototypes to allow functions to be independently built
 
 ** Changed
 Improving Documentation to help new programmers get functional
@@ -41,6 +42,7 @@ Cleaned up numerate_number to make it more general purpose
 Enabled stand alone builds of calloc
 Unified bitwise operations
 Made string.c more independent
+Created a M1-macro stub file to simplify independent builds
 
 ** Fixed
 Minor cleanup and removal of unneeded whitespace
@@ -53,6 +55,7 @@ fixed "\"" bug in string output generation
 
 ** Removed
 Removed need for memset in numerate_number
+Removed minimal build target as it no longer serves a purpose
 
 * 0.1 - 2018-02-23
 ** Added

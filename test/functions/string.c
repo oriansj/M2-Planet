@@ -17,6 +17,7 @@
 #include<stdlib.h>
 #define MAX_STRING 4096
 //CONSTANT MAX_STRING 4096
+// void* calloc(int count, int size);
 
 char* copy_string(char* target, char* source)
 {

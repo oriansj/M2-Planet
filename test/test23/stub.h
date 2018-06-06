@@ -1,4 +1,6 @@
+/* -*- c-file-style: "linux";indent-tabs-mode:t -*- */
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
  * This file is part of stage0.
  *
  * stage0 is free software: you can redistribute it and/or modify
@@ -14,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include<stdio.h>
-// void fputc(char s, FILE* f);
 
-void file_print(char* s, FILE* f)
-{
-	while(0 != s[0])
-	{
-		fputc(s[0], f);
-		s = s + 1;
-	}
-}
+CONSTANT NULL 0
+CONSTANT stdout 1
+CONSTANT stderr 2
+CONSTANT EXIT_SUCCESS 0
+CONSTANT EXIT_FAILURE 1
+void* calloc(int count, int size);
+void exit(int value);
+int fgetc(FILE* f);
+void fputc(char s, FILE* f);
+FILE* fopen(char* filename, char* mode);

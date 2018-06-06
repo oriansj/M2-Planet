@@ -21,9 +21,6 @@ M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
 	cc.h \
 	-o bin/M2-Planet-gcc
 
-M2-Planet-minimal: cc_reader.c cc_strings.c cc_core.c cc-minimal.c cc_types.c cc.h | bin
-	$(CC) $(CFLAGS) cc_reader.c cc_strings.c cc_core.c cc-minimal.c cc_types.c cc.h -o bin/M2-Planet-minimal
-
 M2-Planet: M2-Planet-gcc | bin results
 	./test/test100/hello.sh
 
