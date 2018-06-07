@@ -31,6 +31,7 @@ char* parse_string(char* string);
 
 int main(int argc, char** argv)
 {
+	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
 	int i = 1;
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
 		{
 			i = i + 1;
 		}
-		else if(match(argv[i], "-f"))
+		else if(match(argv[i], "-f") || match(argv[i], "--file"))
 		{
 			char* name = argv[i + 1];
 			in = fopen(name, "r");
@@ -54,7 +55,7 @@ int main(int argc, char** argv)
 			global_token = read_all_tokens(in, global_token, name);
 			i = i + 2;
 		}
-		else if(match(argv[i], "-o"))
+		else if(match(argv[i], "-o") || match(argv[i], "--output"))
 		{
 			destination_file = fopen(argv[i + 1], "w");
 			if(NULL == destination_file)
@@ -66,12 +67,17 @@ int main(int argc, char** argv)
 			}
 			i = i + 2;
 		}
-		else if(match(argv[i], "--help"))
+		else if(match(argv[i], "-g") || match(argv[i], "--debug"))
+		{
+			DEBUG = TRUE;
+			i = i + 1;
+		}
+		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
 			file_print(" -f input file\x0A -o output file\x0A --help for this message\x0A --version for file version\x0A", stdout);
 			exit(EXIT_SUCCESS);
 		}
-		else if(match(argv[i], "--version"))
+		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
 			file_print("Basic test version 0.0.0.1a\x0A", stderr);
 			exit(EXIT_SUCCESS);
@@ -102,10 +108,11 @@ int main(int argc, char** argv)
 	/* Output the program we have compiled */
 	file_print("\n# Core program\n\n", destination_file);
 	recursive_output(output_list, destination_file);
+	if(DEBUG) file_print("\n:ELF_data\n", destination_file);
 	file_print("\n# Program global variables\n\n", destination_file);
 	recursive_output(globals_list, destination_file);
 	file_print("\n# Program strings\n\n", destination_file);
 	recursive_output(strings_list, destination_file);
-	file_print("\n:ELF_end\n", destination_file);
+	if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
 	return EXIT_SUCCESS;
 }

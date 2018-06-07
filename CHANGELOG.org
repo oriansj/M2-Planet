@@ -35,6 +35,7 @@ Added Blood-elf test
 Added Hex2_linker test
 Added M1-macro test
 Added prototypes to allow functions to be independently built
+Added support for debug format output to help debugging
 
 ** Changed
 Improving Documentation to help new programmers get functional
@@ -43,6 +44,8 @@ Enabled stand alone builds of calloc
 Unified bitwise operations
 Made string.c more independent
 Created a M1-macro stub file to simplify independent builds
+Created a hex2_linker stub file to simplify independent builds
+Created a blood-elf stub file to simplify independent builds
 
 ** Fixed
 Minor cleanup and removal of unneeded whitespace
