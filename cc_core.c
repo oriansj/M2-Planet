@@ -27,6 +27,8 @@ struct token_list* global_constant_list;
 struct token_list* break_locals;
 struct type* current_target;
 char* break_target;
+char* current_function;
+int current_count;
 
 /* Imported functions */
 char* parse_string(char* string);
@@ -762,13 +764,14 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 struct token_list* statement(struct token_list* out, struct token_list* function);
 
 /* Evaluate if statements */
-int if_count;
 struct token_list* process_if(struct token_list* out, struct token_list* function)
 {
-	char* number_string = numerate_number(if_count);
-	if_count = if_count + 1;
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 
 	out = emit("# IF_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -777,6 +780,8 @@ struct token_list* process_if(struct token_list* out, struct token_list* functio
 	out = expression(out, function);
 
 	out = emit("TEST\nJUMP_EQ %ELSE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -784,8 +789,12 @@ struct token_list* process_if(struct token_list* out, struct token_list* functio
 	out = statement(out, function);
 
 	out = emit("JUMP %_END_IF_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:ELSE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -795,23 +804,26 @@ struct token_list* process_if(struct token_list* out, struct token_list* functio
 		out = statement(out, function);
 	}
 	out = emit(":_END_IF_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 	return out;
 }
 
-int for_count;
 struct token_list* process_for(struct token_list* out, struct token_list* function)
 {
-	char* number_string = numerate_number(for_count);
-	for_count = for_count + 1;
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 
 	char* nested_break = break_target;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
-	break_target = prepend_string("FOR_END_", number_string);
+	break_target = prepend_string("FOR_END_", prepend_string(current_function, prepend_string("_", number_string)));
 
 	out = emit("# FOR_initialization_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -824,6 +836,8 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	}
 
 	out = emit(":FOR_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -831,10 +845,16 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	out = expression(out, function);
 
 	out = emit("TEST\nJUMP_EQ %FOR_END_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\nJUMP %FOR_THEN_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:FOR_ITER_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -842,8 +862,12 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	out = expression(out, function);
 
 	out = emit("JUMP %FOR_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:FOR_THEN_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -851,8 +875,12 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	out = statement(out, function);
 
 	out = emit("JUMP %FOR_ITER_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:FOR_END_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -878,18 +906,19 @@ struct token_list* process_asm(struct token_list* out)
 }
 
 /* Process do while loops */
-int do_count;
 struct token_list* process_do(struct token_list* out, struct token_list* function)
 {
-	char* number_string = numerate_number(do_count);
-	do_count = do_count + 1;
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 
 	char* nested_break = break_target;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
-	break_target = prepend_string("DO_END_", number_string);
+	break_target = prepend_string("DO_END_", prepend_string(current_function, prepend_string("_", number_string)));
 
 	out = emit(":DO_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -903,8 +932,12 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
 	out = emit("TEST\nJUMP_NE %DO_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:DO_END_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -915,19 +948,20 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 
 
 /* Process while loops */
-int while_count;
 struct token_list* process_while(struct token_list* out, struct token_list* function)
 {
-	char* number_string = numerate_number(while_count);
-	while_count = while_count + 1;
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 
 	char* nested_break = break_target;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
 
-	break_target = prepend_string("END_WHILE_", number_string);
+	break_target = prepend_string("END_WHILE_", prepend_string(current_function, prepend_string("_", number_string)));
 
 	out = emit(":WHILE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -936,8 +970,12 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	out = expression(out, function);
 
 	out = emit("TEST\nJUMP_EQ %END_WHILE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n# THEN_while_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -945,8 +983,12 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	out = statement(out, function);
 
 	out = emit("JUMP %WHILE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n:END_WHILE_", out);
+	out = emit(current_function, out);
+	out = emit("_", out);
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
@@ -1133,6 +1175,8 @@ void collect_arguments(struct token_list* function)
 struct token_list* declare_function(struct token_list* out, struct type* type)
 {
 	char* essential = global_token->prev->s;
+	current_function = essential;
+	current_count = 0;
 	struct token_list* func = sym_declare(global_token->prev->s, calloc(1, sizeof(struct type)), global_function_list);
 	func->type = type;
 	collect_arguments(func);

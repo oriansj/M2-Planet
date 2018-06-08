@@ -36,6 +36,7 @@ Added Hex2_linker test
 Added M1-macro test
 Added prototypes to allow functions to be independently built
 Added support for debug format output to help debugging
+Added function specific counters to make output even more deterministic
 
 ** Changed
 Improving Documentation to help new programmers get functional
@@ -59,6 +60,7 @@ fixed "\"" bug in string output generation
 ** Removed
 Removed need for memset in numerate_number
 Removed minimal build target as it no longer serves a purpose
+Removed independent counters for for, while and if jumps
 
 * 0.1 - 2018-02-23
 ** Added
