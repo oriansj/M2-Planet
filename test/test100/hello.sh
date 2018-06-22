@@ -1,6 +1,25 @@
 #! /bin/sh
 set -ex
 # Build the test
+if [ -f bin/M2-Planet ]
+then
+bin/M2-Planet -f test/functions/file.c \
+	-f test/functions/malloc.c \
+	-f test/functions/calloc.c \
+	-f test/functions/exit.c \
+	-f test/functions/match.c \
+	-f test/functions/numerate_number.c \
+	-f test/functions/file_print.c \
+	-f cc.h \
+	-f test/functions/string.c \
+	-f cc_reader.c \
+	-f cc_strings.c \
+	-f cc_types.c \
+	-f functions/require_match.c \
+	-f cc_core.c \
+	-f cc.c \
+	-o test/test100/cc.M1 || exit 1
+else
 bin/M2-Planet-gcc -f test/functions/file.c \
 	-f test/functions/malloc.c \
 	-f test/functions/calloc.c \
@@ -17,6 +36,7 @@ bin/M2-Planet-gcc -f test/functions/file.c \
 	-f cc_core.c \
 	-f cc.c \
 	-o test/test100/cc.M1 || exit 1
+fi
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \

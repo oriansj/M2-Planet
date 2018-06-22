@@ -37,6 +37,7 @@ Added M1-macro test
 Added prototypes to allow functions to be independently built
 Added support for debug format output to help debugging
 Added function specific counters to make output even more deterministic
+Added M1-macro seed to eliminate C compiler dependency for bootstrap
 
 ** Changed
 Improving Documentation to help new programmers get functional
