@@ -16,6 +16,18 @@
 
 * Current
 ** Added
+Added support for global intializers
+
+** Changed
+Made String naming 100% deterministic
+
+** Fixed
+Correct bug in how \" is treated
+
+** Removed
+
+* 0.2 - 2018-06-21
+** Added
 Added type promotion to allow progress on mes.c
 Add support for anonymous unions inside of structs
 Added support for passing of function pointers via FUNCTION

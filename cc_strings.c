@@ -163,6 +163,7 @@ char* collect_weird_string(char* string)
 {
 	int j = 1;
 	int k = 1;
+	int temp;
 	char* table = "0123456789ABCDEF";
 	char* hold = calloc(MAX_STRING, sizeof(char));
 
@@ -178,16 +179,11 @@ char* collect_weird_string(char* string)
 			hold[k + 2] = upcase(string[j + 3]);
 			j = j + 4;
 		}
-		else if((string[j] == '\\') & (string[j + 1] == 'n'))
+		else if(string[j] == '\\')
 		{
-			hold[k + 1] = '0';
-			hold[k + 2] = 'A';
-			j = j + 2;
-		}
-		else if((string[j] == '\\') & (string[j + 1] == 't'))
-		{
-			hold[k + 1] = '0';
-			hold[k + 2] = '9';
+			temp = escape_lookup(string + j);
+			hold[k + 1] = table[(temp >> 4)];
+			hold[k + 2] = table[(temp & 15)];
 			j = j + 2;
 		}
 		else

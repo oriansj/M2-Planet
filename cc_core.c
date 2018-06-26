@@ -242,7 +242,6 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
  *     constant
  *     ( expression )
  */
-int string_num;
 struct token_list* primary_expr(struct token_list* out, struct token_list* function)
 {
 	if(('0' <= global_token->s[0]) & (global_token->s[0] <= '9'))
@@ -276,13 +275,17 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 	}
 	else if(global_token->s[0] == 34)
 	{ /* 34 == " */
-		char* number_string = numerate_number(string_num);
+		char* number_string = numerate_number(current_count);
 		out = emit("LOAD_IMMEDIATE_eax &STRING_", out);
+		out = emit(current_function, out);
+		out = emit("_", out);
 		out = emit(number_string, out);
 		out = emit("\n", out);
 
 		/* The target */
 		strings_list = emit(":STRING_", strings_list);
+		strings_list = emit(current_function, strings_list);
+		strings_list = emit("_", strings_list);
 		strings_list = emit(number_string, strings_list);
 		strings_list = emit("\n", strings_list);
 
@@ -290,7 +293,7 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 		strings_list = emit(parse_string(global_token->s), strings_list);
 		global_token = global_token->next;
 
-		string_num = string_num + 1;
+		current_count = current_count + 1;
 	}
 	else
 	{
@@ -1249,6 +1252,36 @@ new_type:
 				globals_list = emit("NOP\n", globals_list);
 
 				global_token = global_token->next;
+			}
+			else if(global_token->s[0] == '=')
+			{
+				/* Add to global symbol table */
+				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
+
+				/* Store the global's value*/
+				globals_list = emit(prepend_string(":GLOBAL_", prepend_string(global_token->prev->s, "\n")), globals_list);
+				global_token = global_token->next;
+				if(('0' <= global_token->s[0]) & (global_token->s[0] <= '9'))
+				{ /* Assume Int */
+					globals_list = emit("%", globals_list);
+					globals_list = emit(global_token->s, globals_list);
+					globals_list = emit("\n", globals_list);
+				}
+				else if(('"' <= global_token->s[0]))
+				{ /* Assume a string*/
+					globals_list = emit(parse_string(global_token->s), globals_list);
+				}
+				else
+				{
+					file_print("Recieved ", stderr);
+					file_print(global_token->s, stderr);
+					file_print(" in program\n", stderr);
+					line_error();
+					exit(EXIT_FAILURE);
+				}
+
+				global_token = global_token->next;
+				require_match("ERROR in Program\nMissing ;\n", ";");
 			}
 			else if(global_token->s[0] == '(') out = declare_function(out, type_size);
 			else

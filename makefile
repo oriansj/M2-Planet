@@ -24,9 +24,6 @@ M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
 M2-Planet: M2-Planet-gcc | bin results
 	./test/test100/hello.sh
 
-Bootstrap: bootstrap.sh
-	./bootstrap.sh
-
 # Clean up after ourselves
 .PHONY: clean
 clean:

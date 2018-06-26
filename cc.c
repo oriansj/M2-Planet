@@ -106,12 +106,12 @@ int main(int argc, char** argv)
 	struct token_list* output_list = program(NULL);
 
 	/* Output the program we have compiled */
-	file_print("\n# Core program\n\n", destination_file);
+	file_print("\n# Core program\n", destination_file);
 	recursive_output(output_list, destination_file);
 	if(DEBUG) file_print("\n:ELF_data\n", destination_file);
-	file_print("\n# Program global variables\n\n", destination_file);
+	file_print("\n# Program global variables\n", destination_file);
 	recursive_output(globals_list, destination_file);
-	file_print("\n# Program strings\n\n", destination_file);
+	file_print("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
 	if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
 	return EXIT_SUCCESS;

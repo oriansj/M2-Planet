@@ -3,7 +3,7 @@ set -ex
 # Build the test
 if [ -f bin/M2-Planet ]
 then
-bin/M2-Planet -f test/functions/file.c \
+./bin/M2-Planet -f test/functions/file.c \
 	-f test/functions/malloc.c \
 	-f test/functions/calloc.c \
 	-f test/functions/exit.c \
@@ -20,7 +20,7 @@ bin/M2-Planet -f test/functions/file.c \
 	-f cc.c \
 	-o test/test100/cc.M1 || exit 1
 else
-bin/M2-Planet-gcc -f test/functions/file.c \
+./bin/M2-Planet-gcc -f test/functions/file.c \
 	-f test/functions/malloc.c \
 	-f test/functions/calloc.c \
 	-f test/functions/exit.c \
