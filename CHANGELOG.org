@@ -25,6 +25,7 @@ Made String naming 100% deterministic
 Correct bug in how \" is treated
 
 ** Removed
+Removed need for string copying in M2-Planet
 
 * 0.2 - 2018-06-21
 ** Added

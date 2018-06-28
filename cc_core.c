@@ -26,7 +26,9 @@ struct token_list* global_constant_list;
 /* What we are currently working on */
 struct token_list* break_locals;
 struct type* current_target;
-char* break_target;
+char* break_target_head;
+char* break_target_func;
+char* break_target_num;
 char* current_function;
 int current_count;
 
@@ -34,9 +36,6 @@ int current_count;
 char* parse_string(char* string);
 int escape_lookup(char* c);
 char* numerate_number(int a);
-char* postpend_char(char* s, char a);
-char* prepend_char(char a, char* s);
-char* prepend_string(char* add, char* base);
 void require_match(char* message, char* required);
 void line_error();
 
@@ -143,7 +142,9 @@ struct token_list* function_call(struct token_list* out, struct token_list* func
 	}
 	else
 	{
-		out = emit(prepend_string("CALL_IMMEDIATE %FUNCTION_", postpend_char(s, LF)), out);
+		out = emit("CALL_IMMEDIATE %FUNCTION_", out);
+		out = emit(s, out);
+		out = emit("\n", out);
 	}
 
 	for(; passed > 0; passed = passed - 1)
@@ -160,7 +161,10 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
-		out = emit(prepend_string("LOAD_IMMEDIATE_eax %", postpend_char(a->arguments->s, LF)), out); return out;
+		out = emit("LOAD_IMMEDIATE_eax %", out);
+		out = emit(a->arguments->s, out);
+		out = emit("\n", out);
+		return out;
 	}
 
 	a= sym_lookup(s, function->locals);
@@ -212,7 +216,9 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	{
 		if(!match("(", global_token->s))
 		{
-			out = emit(prepend_string("LOAD_IMMEDIATE_eax &FUNCTION_", postpend_char(s, LF)), out);
+			out = emit("LOAD_IMMEDIATE_eax &FUNCTION_", out);
+			out = emit(s, out);
+			out = emit("\n", out);
 			return out;
 		}
 		else
@@ -225,7 +231,9 @@ struct token_list* sym_get_value(char *s, struct token_list* out, struct token_l
 	if(NULL != a)
 	{
 		current_target = a->type;
-		out = emit(prepend_string("LOAD_IMMEDIATE_eax &GLOBAL_", postpend_char(s, LF)), out);
+		out = emit("LOAD_IMMEDIATE_eax &GLOBAL_", out);
+		out = emit(s, out);
+		out = emit("\n", out);
 		if(!match("=", global_token->s)) out = emit("LOAD_INTEGER\n", out);
 		return out;
 	}
@@ -246,7 +254,9 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 {
 	if(('0' <= global_token->s[0]) & (global_token->s[0] <= '9'))
 	{
-		out = emit(prepend_string("LOAD_IMMEDIATE_eax %", postpend_char(global_token->s, LF)), out);
+		out = emit("LOAD_IMMEDIATE_eax %", out);
+		out = emit(global_token->s, out);
+		out = emit("\n", out);
 		global_token = global_token->next;
 	}
 	else if((('a' <= global_token->s[0]) & (global_token->s[0] <= 'z')) | (('A' <= global_token->s[0]) & (global_token->s[0] <= 'Z')))
@@ -744,7 +754,9 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 struct token_list* collect_local(struct token_list* out, struct token_list* function)
 {
 	struct type* type_size = type_name();
-	out = emit(prepend_string("# Defining local ", prepend_string(global_token->s, "\n")), out);
+	out = emit("# Defining local ", out);
+	out = emit(global_token->s, out);
+	out = emit("\n", out);
 
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	function->locals = a;
@@ -760,7 +772,9 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
 
-	out = emit(prepend_string("PUSH_eax\t#", prepend_string(a->s, "\n")), out);
+	out = emit("PUSH_eax\t#", out);
+	out = emit(a->s, out);
+	out = emit("\n", out);
 	return out;
 }
 
@@ -819,10 +833,14 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
-	char* nested_break = break_target;
+	char* nested_break_head = break_target_head;
+	char* nested_break_func = break_target_func;
+	char* nested_break_num = break_target_num;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
-	break_target = prepend_string("FOR_END_", prepend_string(current_function, prepend_string("_", number_string)));
+	break_target_head = "FOR_END_";
+	break_target_func = current_function;
+	break_target_num = number_string;
 
 	out = emit("# FOR_initialization_", out);
 	out = emit(current_function, out);
@@ -887,7 +905,9 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	out = emit(number_string, out);
 	out = emit("\n", out);
 
-	break_target = nested_break;
+	break_target_head = nested_break_head;
+	break_target_func = nested_break_func;
+	break_target_num = nested_break_num;
 	break_locals = nested_locals;
 	return out;
 }
@@ -914,10 +934,14 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
-	char* nested_break = break_target;
+	char* nested_break_head = break_target_head;
+	char* nested_break_func = break_target_func;
+	char* nested_break_num = break_target_num;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
-	break_target = prepend_string("DO_END_", prepend_string(current_function, prepend_string("_", number_string)));
+	break_target_head = "DO_END_";
+	break_target_func = current_function;
+	break_target_num = number_string;
 
 	out = emit(":DO_", out);
 	out = emit(current_function, out);
@@ -945,7 +969,9 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	out = emit("\n", out);
 
 	break_locals = nested_locals;
-	break_target = nested_break;
+	break_target_head = nested_break_head;
+	break_target_func = nested_break_func;
+	break_target_num = nested_break_num;
 	return out;
 }
 
@@ -956,11 +982,15 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
-	char* nested_break = break_target;
+	char* nested_break_head = break_target_head;
+	char* nested_break_func = break_target_func;
+	char* nested_break_num = break_target_num;
 	struct token_list* nested_locals = break_locals;
 	break_locals = function->locals;
 
-	break_target = prepend_string("END_WHILE_", prepend_string(current_function, prepend_string("_", number_string)));
+	break_target_head = "END_WHILE_";
+	break_target_func = current_function;
+	break_target_num = number_string;
 
 	out = emit(":WHILE_", out);
 	out = emit(current_function, out);
@@ -996,7 +1026,9 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	out = emit("\n", out);
 
 	break_locals = nested_locals;
-	break_target = nested_break;
+	break_target_head = nested_break_head;
+	break_target_func = nested_break_func;
+	break_target_num = nested_break_num;
 	return out;
 }
 
@@ -1075,9 +1107,9 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 		out = emit("\t#C goto label\n", out);
 		global_token = global_token->next;
 	}
-	else if((NULL == sym_lookup(global_token->s, function->locals)) &&
+	else if(((NULL == sym_lookup(global_token->s, function->locals)) &&
 	        (NULL == sym_lookup(global_token->s, function->arguments)) &&
-	        (NULL != lookup_type(global_token->s)) ||
+	        (NULL != lookup_type(global_token->s))) ||
 	        match("struct", global_token->s))
 	{
 		out = collect_local(out, function);
@@ -1105,7 +1137,9 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 	else if(match("goto", global_token->s))
 	{
 		global_token = global_token->next;
-		out = emit(prepend_string("JUMP %", prepend_string(global_token->s, "\n")), out);
+		out = emit("JUMP %", out);
+		out = emit(global_token->s, out);
+		out = emit("\n", out);
 		global_token = global_token->next;
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
@@ -1115,7 +1149,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 	}
 	else if(match("break", global_token->s))
 	{
-		if(NULL == break_target)
+		if(NULL == break_target_head)
 		{
 			file_print("Not inside of a loop or case statement", stderr);
 			line_error();
@@ -1129,7 +1163,12 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 			i = i->next;
 		}
 		global_token = global_token->next;
-		out = emit(prepend_string("JUMP %", prepend_string(break_target, "\n")), out);
+		out = emit("JUMP %", out);
+		out = emit(break_target_head, out);
+		out = emit(break_target_func, out);
+		out = emit("_", out);
+		out = emit(break_target_num, out);
+		out = emit("\n", out);
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
 	else if(match("continue", global_token->s))
@@ -1191,8 +1230,12 @@ struct token_list* declare_function(struct token_list* out, struct type* type)
 	if(global_token->s[0] == ';') global_token = global_token->next;
 	else
 	{
-		out = emit(prepend_string("# Defining function ", prepend_string(essential, "\n")), out);
-		out = emit(prepend_string(":FUNCTION_", prepend_string(essential, "\n")), out);
+		out = emit("# Defining function ", out);
+		out = emit(essential, out);
+		out = emit("\n", out);
+		out = emit(":FUNCTION_", out);
+		out = emit(essential, out);
+		out = emit("\n", out);
 		out = statement(out, func);
 
 		/* Prevent duplicate RETURNS */
@@ -1248,8 +1291,9 @@ new_type:
 				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
 
 				/* Ensure 4 bytes are allocated for the global */
-				globals_list = emit(prepend_string(":GLOBAL_", prepend_string(global_token->prev->s, "\n")), globals_list);
-				globals_list = emit("NOP\n", globals_list);
+				globals_list = emit(":GLOBAL_", globals_list);
+				globals_list = emit(global_token->prev->s, globals_list);
+				globals_list = emit("\nNOP\n", globals_list);
 
 				global_token = global_token->next;
 			}
@@ -1259,7 +1303,9 @@ new_type:
 				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
 
 				/* Store the global's value*/
-				globals_list = emit(prepend_string(":GLOBAL_", prepend_string(global_token->prev->s, "\n")), globals_list);
+				globals_list = emit(":GLOBAL_", globals_list);
+				globals_list = emit(global_token->prev->s, globals_list);
+				globals_list = emit("\n", globals_list);
 				global_token = global_token->next;
 				if(('0' <= global_token->s[0]) & (global_token->s[0] <= '9'))
 				{ /* Assume Int */

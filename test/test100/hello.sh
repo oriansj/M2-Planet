@@ -11,7 +11,6 @@ then
 	-f test/functions/numerate_number.c \
 	-f test/functions/file_print.c \
 	-f cc.h \
-	-f test/functions/string.c \
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
@@ -28,7 +27,6 @@ else
 	-f test/functions/numerate_number.c \
 	-f test/functions/file_print.c \
 	-f cc.h \
-	-f test/functions/string.c \
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
@@ -61,7 +59,6 @@ then
 		-f test/functions/numerate_number.c \
 		-f test/functions/file_print.c \
 		-f cc.h \
-		-f test/functions/string.c \
 		-f cc_reader.c \
 		-f cc_strings.c \
 		-f cc_types.c \
