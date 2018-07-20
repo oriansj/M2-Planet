@@ -53,6 +53,7 @@ struct token_list
 	};
 	union
 	{
+		struct token_list* frame;
 		struct type* type;
 		char* filename;
 	};
@@ -62,7 +63,7 @@ struct token_list
 		int linenumber;
 	};
 	struct token_list* locals;
-	int temps;
+	int depth;
 };
 
 /* What types we have */

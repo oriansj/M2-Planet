@@ -151,7 +151,7 @@ reset:
 			goto reset;
 		}
 	}
-	else if(c < 0)
+	else if(c == EOF)
 	{
 		free(current);
 		return c;

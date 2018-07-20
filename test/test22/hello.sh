@@ -45,7 +45,7 @@ then
 
 	# Verify that the resulting file works
 	./test/results/test22-binary -f test/common_x86/ELF-i386-debug.hex2 \
-	-f test/test22/hex2_linker.hex2 \
+	-f test/test22/test.hex2 \
 	--LittleEndian \
 	--Architecture 1 \
 	--BaseAddress 0x8048000 \

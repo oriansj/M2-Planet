@@ -18,6 +18,7 @@ M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
 	cc_core.c \
 	cc.c \
 	cc.h \
+	gcc_req.h \
 	-o bin/M2-Planet-gcc
 
 M2-Planet: M2-Planet-gcc | bin results
@@ -51,6 +52,7 @@ clean:
 	./test/test21/cleanup.sh
 	./test/test22/cleanup.sh
 	./test/test23/cleanup.sh
+	./test/test24/cleanup.sh
 	./test/test99/cleanup.sh
 	./test/test100/cleanup.sh
 
@@ -86,6 +88,7 @@ test: test00-binary \
 	test21-binary \
 	test22-binary \
 	test23-binary \
+	test24-binary \
 	test99-binary \
 	test100-binary | results
 	sha256sum -c test/test.answers
@@ -161,6 +164,9 @@ test22-binary: M2-Planet | results
 
 test23-binary: M2-Planet | results
 	test/test23/hello.sh
+
+test24-binary: M2-Planet | results
+	test/test24/hello.sh
 
 test99-binary: M2-Planet | results
 	test/test99/hello.sh

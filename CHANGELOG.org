@@ -17,15 +17,38 @@
 * Current
 ** Added
 Added support for global intializers
+Introduced base offset local and argument load/store
+Added function pointer requirement into M2-Planet
+Added test24 - get_machine
+Added General_Recursion to reduce complexity
+Added uniqueID to purge all code segments that recreate it's functionality
+Added struct Char arrays for structs
 
 ** Changed
 Made String naming 100% deterministic
+Broke up all_expr to simplify any manual implementations
+Cleaned up function calls
+Simplify variable looksup
+Reused a union to reduce globals
+Brought back common recursion
+Reorged logic tree to reduce complexity
+Simplified expression
+Changed EOF detection logic to deal with unsigned bits
 
 ** Fixed
 Correct bug in how \" is treated
+Clean up of & when && should have been used
+Made test22 for consistent
+Fixed !c->a regression
 
 ** Removed
 Removed need for string copying in M2-Planet
+Wasted steps in stack offsets
+Need for stack relative offsets
+Extra stack walks
+Removed need for current_function
+Removed unused values
+Removed legacy x86 << >> hacks at the cost of more instructions
 
 * 0.2 - 2018-06-21
 ** Added

@@ -18,6 +18,7 @@
 #include "cc.h"
 #include <stdint.h>
 void line_error();
+int numerate_string(char *a);
 
 /* Initialize default types */
 void initialize_types()
@@ -50,35 +51,43 @@ void initialize_types()
 	c->size = 1;
 	c->type = c;
 
-	/* char** is char */
-	c->indirect = b;
-	b->indirect = c;
-
-	/* Define FILE */
+	/* Define char** */
 	struct type* d = calloc(1, sizeof(struct type));
-	d->name = "FILE";
+	d->name = "char**";
 	d->size = 4;
-	d->type = d;
-	/* FILE* has the same properties as FILE */
+	d->type = c;
 	d->indirect = d;
 
-	/* Define FUNCTION */
+	/*fix up indrects for chars */
+	c->indirect = b;
+	b->indirect = d;
+
+	/* Define FILE */
 	struct type* e = calloc(1, sizeof(struct type));
-	e->name = "FUNCTION";
+	e->name = "FILE";
 	e->size = 4;
 	e->type = e;
-	/* FUNCTION* has the same properties as FUNCTION */
+	/* FILE* has the same properties as FILE */
 	e->indirect = e;
 
 	/* Define FUNCTION */
 	struct type* f = calloc(1, sizeof(struct type));
-	f->name = "unsigned";
+	f->name = "FUNCTION";
 	f->size = 4;
 	f->type = f;
-	/* unsigned* has the same properties as unsigned */
+	/* FUNCTION* has the same properties as FUNCTION */
 	f->indirect = f;
 
+	/* Define FUNCTION */
+	struct type* g = calloc(1, sizeof(struct type));
+	g->name = "unsigned";
+	g->size = 4;
+	g->type = g;
+	/* unsigned* has the same properties as unsigned */
+	g->indirect = g;
+
 	/* Finalize type list */
+	f->next = g;
 	e->next = f;
 	d->next = e;
 	c->next = d;
@@ -108,9 +117,22 @@ struct type* build_member(struct type* last, int offset)
 	struct type* member_type = type_name();
 	struct type* i = calloc(1, sizeof(struct type));
 	i->name = global_token->s;
+	global_token = global_token->next;
 	i->members = last;
-	i->size = member_type->size;
-	member_size = member_type->size;
+
+	/* Check to see if array */
+	if(match( "[", global_token->s))
+	{
+		global_token = global_token->next;
+		i->size = member_type->type->size * numerate_string(global_token->s);
+		global_token = global_token->next;
+		require_match("Struct only supports [num] form\n", "]");
+	}
+	else
+	{
+		i->size = member_type->size;
+	}
+	member_size = i->size;
 	i->type = member_type;
 	i->offset = offset;
 	return i;
@@ -128,10 +150,10 @@ struct type* build_union(struct type* last, int offset)
 		{
 			size = member_size;
 		}
-		global_token = global_token->next;
 		require_match("ERROR in build_union\nMissing ;\n", ";");
 	}
 	member_size = size;
+	global_token = global_token->next;
 	return last;
 }
 
@@ -148,7 +170,7 @@ void create_struct()
 	global_types = head;
 	global_token = global_token->next;
 	i->size = 4;
-	require_match("ERROR in create_struct\x0A Missing {\x0A", "{");
+	require_match("ERROR in create_struct\n Missing {\n", "{");
 	struct type* last = NULL;
 	while('}' != global_token->s[0])
 	{
@@ -161,12 +183,11 @@ void create_struct()
 			last = build_member(last, offset);
 		}
 		offset = offset + member_size;
-		global_token = global_token->next;
-		require_match("ERROR in create_struct\x0A Missing ;\x0A", ";");
+		require_match("ERROR in create_struct\n Missing ;\n", ";");
 	}
 
 	global_token = global_token->next;
-	require_match("ERROR in create_struct\x0A Missing ;\x0A", ";");
+	require_match("ERROR in create_struct\n Missing ;\n", ";");
 
 	head->size = offset;
 	head->members = last;
@@ -198,7 +219,7 @@ struct type* type_name()
 	{
 		file_print("Unknown type ", stderr);
 		file_print(global_token->s, stderr);
-		file_print("\x0A", stderr);
+		file_print("\n", stderr);
 		line_error();
 		exit(EXIT_FAILURE);
 	}
