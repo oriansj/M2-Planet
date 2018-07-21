@@ -21,7 +21,7 @@ struct token_list* token;
 int line;
 char* file;
 
-char clearWhiteSpace(char c)
+int clearWhiteSpace(int c)
 {
 	if((32 == c) || (9 == c)) return clearWhiteSpace(fgetc(input));
 	else if (10 == c)
@@ -33,14 +33,14 @@ char clearWhiteSpace(char c)
 }
 
 int string_index;
-char consume_byte(struct token_list* current, char c)
+int consume_byte(struct token_list* current, int c)
 {
 	current->s[string_index] = c;
 	string_index = string_index + 1;
 	return fgetc(input);
 }
 
-char consume_word(struct token_list* current, char c, char frequent)
+int consume_word(struct token_list* current, int c, int frequent)
 {
 	int escape = FALSE;
 	do
@@ -67,7 +67,7 @@ void fixup_label(struct token_list* current)
 	} while(0 != hold);
 }
 
-char preserve_keyword(struct token_list* current, char c)
+int preserve_keyword(struct token_list* current, int c)
 {
 	while((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
 	{
@@ -81,7 +81,7 @@ char preserve_keyword(struct token_list* current, char c)
 	return c;
 }
 
-char preserve_symbol(struct token_list* current, char c)
+int preserve_symbol(struct token_list* current, int c)
 {
 	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | (c == '-'))
 	{
@@ -90,7 +90,7 @@ char preserve_symbol(struct token_list* current, char c)
 	return c;
 }
 
-char purge_macro(int ch)
+int purge_macro(int ch)
 {
 	while(10 != ch) ch = fgetc(input);
 	return ch;

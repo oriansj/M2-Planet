@@ -40,6 +40,7 @@ Correct bug in how \" is treated
 Clean up of & when && should have been used
 Made test22 for consistent
 Fixed !c->a regression
+Fixed ARM platform build
 
 ** Removed
 Removed need for string copying in M2-Planet
