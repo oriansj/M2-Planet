@@ -1133,7 +1133,7 @@ new_type:
 					globals_list = emit(global_token->s, globals_list);
 					globals_list = emit("\n", globals_list);
 				}
-				else if(('"' <= global_token->s[0]))
+				else if(('"' == global_token->s[0]))
 				{ /* Assume a string*/
 					globals_list = emit(parse_string(global_token->s), globals_list);
 				}
