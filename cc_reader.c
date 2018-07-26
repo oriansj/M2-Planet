@@ -33,27 +33,27 @@ int clearWhiteSpace(int c)
 }
 
 int string_index;
-int consume_byte(struct token_list* current, int c)
+int consume_byte(int c)
 {
-	current->s[string_index] = c;
+	hold_string[string_index] = c;
 	string_index = string_index + 1;
 	return fgetc(input);
 }
 
-int consume_word(struct token_list* current, int c, int frequent)
+int consume_word(int c, int frequent)
 {
 	int escape = FALSE;
 	do
 	{
 		if(!escape && '\\' == c ) escape = TRUE;
 		else escape = FALSE;
-		c = consume_byte(current, c);
+		c = consume_byte(c);
 	} while(escape || (c != frequent));
 	return fgetc(input);
 }
 
 
-void fixup_label(struct token_list* current)
+void fixup_label()
 {
 	int hold = ':';
 	int prev;
@@ -61,31 +61,31 @@ void fixup_label(struct token_list* current)
 	do
 	{
 		prev = hold;
-		hold = current->s[i];
-		current->s[i] = prev;
+		hold = hold_string[i];
+		hold_string[i] = prev;
 		i = i + 1;
 	} while(0 != hold);
 }
 
-int preserve_keyword(struct token_list* current, int c)
+int preserve_keyword(int c)
 {
 	while((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
 	{
-		c = consume_byte(current, c);
+		c = consume_byte(c);
 	}
 	if(':' == c)
 	{
-		fixup_label(current);
+		fixup_label();
 		return 32;
 	}
 	return c;
 }
 
-int preserve_symbol(struct token_list* current, int c)
+int preserve_symbol(int c)
 {
 	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | (c == '-'))
 	{
-		c = consume_byte(current, c);
+		c = consume_byte(c);
 	}
 	return c;
 }
@@ -96,12 +96,22 @@ int purge_macro(int ch)
 	return ch;
 }
 
+void reset_hold_string()
+{
+	int i = string_index + 2;
+	while(0 != i)
+	{
+		hold_string[i] = 0;
+		i = i - 1;
+	}
+}
+
 int get_token(int c)
 {
 	struct token_list* current = calloc(1, sizeof(struct token_list));
-	current->s = calloc(MAX_STRING, sizeof(char));
 
 reset:
+	reset_hold_string();
 	string_index = 0;
 
 	c = clearWhiteSpace(c);
@@ -112,23 +122,23 @@ reset:
 	}
 	else if((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
 	{
-		c = preserve_keyword(current, c);
+		c = preserve_keyword(c);
 	}
 	else if((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | ( c == '-'))
 	{
-		c = preserve_symbol(current, c);
+		c = preserve_symbol(c);
 	}
-	else if(c == 39)
+	else if(c == '\'')
 	{ /* 39 == ' */
-		c = consume_word(current, c, 39);
+		c = consume_word(c, '\'');
 	}
 	else if(c == '"')
 	{
-		c = consume_word(current, c, '"');
+		c = consume_word(c, '"');
 	}
 	else if(c == '/')
 	{
-		c = consume_byte(current, c);
+		c = consume_byte(c);
 		if(c == '*')
 		{
 			c = fgetc(input);
@@ -158,8 +168,12 @@ reset:
 	}
 	else
 	{
-		c = consume_byte(current, c);
+		c = consume_byte(c);
 	}
+
+	/* More efficiently allocate memory for string */
+	current->s = calloc(string_index + 2, sizeof(char));
+	copy_string(current->s, hold_string);
 
 	current->prev = token;
 	current->next = token;

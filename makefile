@@ -11,6 +11,7 @@ M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
 	test/functions/match.c \
 	test/functions/numerate_number.c \
 	test/functions/file_print.c \
+	test/functions/string.c \
 	functions/require_match.c \
 	cc_reader.c \
 	cc_strings.c \

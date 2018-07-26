@@ -10,6 +10,7 @@ then
 	-f test/functions/match.c \
 	-f test/functions/numerate_number.c \
 	-f test/functions/file_print.c \
+	-f test/functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
 	-f cc_strings.c \
@@ -26,6 +27,7 @@ else
 	-f test/functions/match.c \
 	-f test/functions/numerate_number.c \
 	-f test/functions/file_print.c \
+	-f test/functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
 	-f cc_strings.c \
@@ -58,6 +60,7 @@ then
 		-f test/functions/match.c \
 		-f test/functions/numerate_number.c \
 		-f test/functions/file_print.c \
+		-f test/functions/string.c \
 		-f cc.h \
 		-f cc_reader.c \
 		-f cc_strings.c \

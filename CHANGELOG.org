@@ -41,6 +41,7 @@ Clean up of & when && should have been used
 Made test22 for consistent
 Fixed !c->a regression
 Fixed ARM platform build
+Reduced Memory usage per Token to size of string plus fixed padding
 
 ** Removed
 Removed need for string copying in M2-Planet

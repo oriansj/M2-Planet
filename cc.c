@@ -31,6 +31,7 @@ char* parse_string(char* string);
 
 int main(int argc, char** argv)
 {
+	hold_string = calloc(MAX_STRING, sizeof(char));
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
