@@ -34,6 +34,7 @@ Brought back common recursion
 Reorged logic tree to reduce complexity
 Simplified expression
 Changed EOF detection logic to deal with unsigned bits
+Reduced Memory usage down from 50MB to 2MB
 
 ** Fixed
 Correct bug in how \" is treated

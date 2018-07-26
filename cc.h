@@ -31,6 +31,7 @@
 void file_print(char* s, FILE* f);
 int match(char* a, char* b);
 char* copy_string(char* target, char* source);
+void reset_hold_string();
 
 struct type
 {
@@ -79,3 +80,4 @@ struct token_list* globals_list;
 
 /* Make our string collection more efficient */
 char* hold_string;
+int string_index;

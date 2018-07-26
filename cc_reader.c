@@ -32,7 +32,6 @@ int clearWhiteSpace(int c)
 	return c;
 }
 
-int string_index;
 int consume_byte(int c)
 {
 	hold_string[string_index] = c;

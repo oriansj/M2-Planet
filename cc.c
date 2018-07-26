@@ -104,6 +104,7 @@ int main(int argc, char** argv)
 	global_token = reverse_list(global_token);
 
 	initialize_types();
+	reset_hold_string();
 	struct token_list* output_list = program(NULL);
 
 	/* Output the program we have compiled */

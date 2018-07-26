@@ -127,34 +127,36 @@ int escape_lookup(char* c)
 char* collect_regular_string(char* string)
 {
 	int j = 0;
-	int i = 0;
-	char* message = calloc(MAX_STRING, sizeof(char));
+	string_index = 0;
 
 	/* 34 == " */
-	message[0] = 34;
+	hold_string[0] = 34;
 	while(string[j] != 0)
 	{
 		if((string[j] == '\\') & (string[j + 1] == 'x'))
 		{
-			message[i] = escape_lookup(string + j);
+			hold_string[string_index] = escape_lookup(string + j);
 			j = j + 4;
 		}
 		else if(string[j] == '\\')
 		{
-			message[i] = escape_lookup(string + j);
+			hold_string[string_index] = escape_lookup(string + j);
 			j = j + 2;
 		}
 		else
 		{
-			message[i] = string[j];
+			hold_string[string_index] = string[j];
 			j = j + 1;
 		}
 
-		i = i + 1;
+		string_index = string_index + 1;
 	}
 
-	message[i] = 34;
-	message[i + 1] = LF;
+	char* message = calloc(string_index + 3, sizeof(char));
+	copy_string(message, hold_string);
+	reset_hold_string();
+	message[string_index] = 34;
+	message[string_index + 1] = LF;
 	return message;
 }
 
@@ -162,45 +164,47 @@ char* collect_regular_string(char* string)
 char* collect_weird_string(char* string)
 {
 	int j = 1;
-	int k = 1;
+	string_index = 1;
 	int temp;
 	char* table = "0123456789ABCDEF";
-	char* hold = calloc(MAX_STRING, sizeof(char));
 
 	/* 39 == ' */
-	hold[0] = 39;
+	hold_string[0] = 39;
 	while(string[j] != 0)
 	{
-		hold[k] = ' ';
+		hold_string[string_index] = ' ';
 
 		if((string[j] == '\\') & (string[j + 1] == 'x'))
 		{
-			hold[k + 1] = upcase(string[j + 2]);
-			hold[k + 2] = upcase(string[j + 3]);
+			hold_string[string_index + 1] = upcase(string[j + 2]);
+			hold_string[string_index + 2] = upcase(string[j + 3]);
 			j = j + 4;
 		}
 		else if(string[j] == '\\')
 		{
 			temp = escape_lookup(string + j);
-			hold[k + 1] = table[(temp >> 4)];
-			hold[k + 2] = table[(temp & 15)];
+			hold_string[string_index + 1] = table[(temp >> 4)];
+			hold_string[string_index + 2] = table[(temp & 15)];
 			j = j + 2;
 		}
 		else
 		{
-			hold[k + 1] = table[(string[j] >> 4)];
-			hold[k + 2] = table[(string[j] & 15)];
+			hold_string[string_index + 1] = table[(string[j] >> 4)];
+			hold_string[string_index + 2] = table[(string[j] & 15)];
 			j = j + 1;
 		}
 
-		k = k + 3;
+		string_index = string_index + 3;
 	}
 
-	hold[k] = ' ';
-	hold[k + 1] = '0';
-	hold[k + 2] = '0';
-	hold[k + 3] = 39;
-	hold[k + 4] = LF;
+	char* hold = calloc(string_index + 6, sizeof(char));
+	copy_string(hold, hold_string);
+	reset_hold_string();
+	hold[string_index] = ' ';
+	hold[string_index + 1] = '0';
+	hold[string_index + 2] = '0';
+	hold[string_index + 3] = 39;
+	hold[string_index + 4] = LF;
 	return hold;
 }
 
