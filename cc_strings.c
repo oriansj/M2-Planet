@@ -126,27 +126,26 @@ int escape_lookup(char* c)
 /* Deal with human strings */
 char* collect_regular_string(char* string)
 {
-	int j = 0;
+	int i = 0;
 	string_index = 0;
 
-	/* 34 == " */
-	hold_string[0] = 34;
-	while(string[j] != 0)
+	hold_string[0] = '"';
+	while(string[i] != 0)
 	{
-		if((string[j] == '\\') & (string[j + 1] == 'x'))
+		if((string[i] == '\\') & (string[i + 1] == 'x'))
 		{
-			hold_string[string_index] = escape_lookup(string + j);
-			j = j + 4;
+			hold_string[string_index] = escape_lookup(string + i);
+			i = i + 4;
 		}
-		else if(string[j] == '\\')
+		else if(string[i] == '\\')
 		{
-			hold_string[string_index] = escape_lookup(string + j);
-			j = j + 2;
+			hold_string[string_index] = escape_lookup(string + i);
+			i = i + 2;
 		}
 		else
 		{
-			hold_string[string_index] = string[j];
-			j = j + 1;
+			hold_string[string_index] = string[i];
+			i = i + 1;
 		}
 
 		string_index = string_index + 1;
@@ -155,43 +154,42 @@ char* collect_regular_string(char* string)
 	char* message = calloc(string_index + 3, sizeof(char));
 	copy_string(message, hold_string);
 	reset_hold_string();
-	message[string_index] = 34;
-	message[string_index + 1] = LF;
+	message[string_index] = '"';
+	message[string_index + 1] = '\n';
 	return message;
 }
 
 /* Deal with non-human strings */
 char* collect_weird_string(char* string)
 {
-	int j = 1;
+	int i = 1;
 	string_index = 1;
 	int temp;
 	char* table = "0123456789ABCDEF";
 
-	/* 39 == ' */
-	hold_string[0] = 39;
-	while(string[j] != 0)
+	hold_string[0] = '\'';
+	while(string[i] != 0)
 	{
 		hold_string[string_index] = ' ';
 
-		if((string[j] == '\\') & (string[j + 1] == 'x'))
+		if((string[i] == '\\') & (string[i + 1] == 'x'))
 		{
-			hold_string[string_index + 1] = upcase(string[j + 2]);
-			hold_string[string_index + 2] = upcase(string[j + 3]);
-			j = j + 4;
+			hold_string[string_index + 1] = upcase(string[i + 2]);
+			hold_string[string_index + 2] = upcase(string[i + 3]);
+			i = i + 4;
 		}
-		else if(string[j] == '\\')
+		else if(string[i] == '\\')
 		{
-			temp = escape_lookup(string + j);
+			temp = escape_lookup(string + i);
 			hold_string[string_index + 1] = table[(temp >> 4)];
 			hold_string[string_index + 2] = table[(temp & 15)];
-			j = j + 2;
+			i = i + 2;
 		}
 		else
 		{
-			hold_string[string_index + 1] = table[(string[j] >> 4)];
-			hold_string[string_index + 2] = table[(string[j] & 15)];
-			j = j + 1;
+			hold_string[string_index + 1] = table[(string[i] >> 4)];
+			hold_string[string_index + 2] = table[(string[i] & 15)];
+			i = i + 1;
 		}
 
 		string_index = string_index + 3;
@@ -203,8 +201,8 @@ char* collect_weird_string(char* string)
 	hold[string_index] = ' ';
 	hold[string_index + 1] = '0';
 	hold[string_index + 2] = '0';
-	hold[string_index + 3] = 39;
-	hold[string_index + 4] = LF;
+	hold[string_index + 3] = '\'';
+	hold[string_index + 4] = '\n';
 	return hold;
 }
 

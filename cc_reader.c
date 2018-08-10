@@ -66,9 +66,19 @@ void fixup_label()
 	} while(0 != hold);
 }
 
+int in_set(int c, char* s)
+{
+	while(0 != s[0])
+	{
+		if(c == s[0]) return TRUE;
+		s = s + 1;
+	}
+	return FALSE;
+}
+
 int preserve_keyword(int c)
 {
-	while((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
+	while(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
 	{
 		c = consume_byte(c);
 	}
@@ -82,7 +92,7 @@ int preserve_keyword(int c)
 
 int preserve_symbol(int c)
 {
-	while((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | (c == '-'))
+	while(in_set(c, "<=>|&!-"))
 	{
 		c = consume_byte(c);
 	}
@@ -119,11 +129,11 @@ reset:
 		c = purge_macro(c);
 		goto reset;
 	}
-	else if((('a' <= c) & (c <= 'z')) | (('A' <= c) & (c <= 'Z')) | (('0' <= c) & (c <= '9')) | (c == '_'))
+	else if(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
 	{
 		c = preserve_keyword(c);
 	}
-	else if((c == '<') | (c == '=') | (c == '>') | (c == '|') | (c == '&') | (c == '!') | ( c == '-'))
+	else if(in_set(c, "<=>|&!-"))
 	{
 		c = preserve_symbol(c);
 	}

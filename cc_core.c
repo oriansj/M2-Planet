@@ -29,6 +29,7 @@ struct type* current_target;
 char* break_target_head;
 char* break_target_func;
 char* break_target_num;
+struct token_list* break_frame;
 int current_count;
 struct type* last_type;
 
@@ -687,8 +688,8 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = function->frame;
-	function->frame = function->locals;
+	struct token_list* nested_locals = break_frame;
+	break_frame = function->locals;
 	break_target_head = "FOR_END_";
 	break_target_func = function->s;
 	break_target_num = number_string;
@@ -736,7 +737,7 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
-	function->frame = nested_locals;
+	break_frame = nested_locals;
 	return out;
 }
 
@@ -765,8 +766,8 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = function->frame;
-	function->frame = function->locals;
+	struct token_list* nested_locals = break_frame;
+	break_frame = function->locals;
 	break_target_head = "DO_END_";
 	break_target_func = function->s;
 	break_target_num = number_string;
@@ -788,7 +789,7 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	out = emit(":DO_END_", out);
 	out = uniqueID(function->s, out, number_string);
 
-	function->frame = nested_locals;
+	break_frame = nested_locals;
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
@@ -805,8 +806,8 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = function->frame;
-	function->frame = function->locals;
+	struct token_list* nested_locals = break_frame;
+	break_frame = function->locals;
 
 	break_target_head = "END_WHILE_";
 	break_target_func = function->s;
@@ -832,7 +833,7 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	out = emit(":END_WHILE_", out);
 	out = uniqueID(function->s, out, number_string);
 
-	function->frame = nested_locals;
+	break_frame = nested_locals;
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
@@ -961,7 +962,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 			exit(EXIT_FAILURE);
 		}
 		struct token_list* i = function->locals;
-		while(i != function->frame)
+		while(i != break_frame)
 		{
 			if(NULL == i) break;
 			out = emit("POP_ebx\t# break_cleanup_locals\n", out);

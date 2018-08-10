@@ -25,8 +25,6 @@
 // CONSTANT FALSE 0
 #define TRUE 1
 // CONSTANT TRUE 1
-#define LF 10
-// CONSTANT LF 10
 
 void file_print(char* s, FILE* f);
 int match(char* a, char* b);
@@ -47,25 +45,23 @@ struct type
 struct token_list
 {
 	struct token_list* next;
-	struct token_list* prev;
 	union
 	{
-		struct token_list* entry;
-		char* s;
+		struct token_list* locals;
+		struct token_list* prev;
 	};
+	char* s;
 	union
 	{
-		struct token_list* frame;
 		struct type* type;
 		char* filename;
 	};
 	union
 	{
 		struct token_list* arguments;
+		int depth;
 		int linenumber;
 	};
-	struct token_list* locals;
-	int depth;
 };
 
 /* What types we have */

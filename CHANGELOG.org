@@ -35,6 +35,7 @@ Reorged logic tree to reduce complexity
 Simplified expression
 Changed EOF detection logic to deal with unsigned bits
 Reduced Memory usage down from 50MB to 2MB
+Simplified Tokenizer logic for easier implementation and understanding
 
 ** Fixed
 Correct bug in how \" is treated
