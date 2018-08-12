@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 0.3 - 2018-08-12
+** Added
 Added support for global intializers
 Introduced base offset local and argument load/store
 Added function pointer requirement into M2-Planet
