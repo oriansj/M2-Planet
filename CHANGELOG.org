@@ -23,6 +23,7 @@ Added test24 - get_machine
 Added General_Recursion to reduce complexity
 Added uniqueID to purge all code segments that recreate it's functionality
 Added struct Char arrays for structs
+Added in_set to make complex conditional logic into a simple char search
 
 ** Changed
 Made String naming 100% deterministic
@@ -36,6 +37,10 @@ Simplified expression
 Changed EOF detection logic to deal with unsigned bits
 Reduced Memory usage down from 50MB to 2MB
 Simplified Tokenizer logic for easier implementation and understanding
+Simplified program logic
+Significantly reduced weird string detection logic
+Trimmed escape_lookup down to a key core
+Eliminated Several Minor unneeded steps
 
 ** Fixed
 Correct bug in how \" is treated

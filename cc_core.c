@@ -1089,68 +1089,52 @@ struct token_list* declare_function(struct token_list* out)
 struct token_list* program(struct token_list* out)
 {
 	struct type* type_size;
-	while(NULL != global_token)
-	{
+
 new_type:
-		if(match("CONSTANT", global_token->s))
+	if (NULL == global_token)return out;
+	if(match("CONSTANT", global_token->s))
+	{
+		global_constant_list = sym_declare(global_token->next->s, NULL, global_constant_list);
+		global_constant_list->arguments = global_token->next->next;
+		global_token = global_token->next->next->next;
+	}
+	else
+	{
+		type_size = type_name();
+		if(NULL == type_size)
 		{
-			global_constant_list =  sym_declare(global_token->next->s, NULL, global_constant_list);
-			global_constant_list->arguments = global_token->next->next;
-			global_token = global_token->next->next->next;
+			goto new_type;
 		}
-		else
+		/* Add to global symbol table */
+		global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
+		global_token = global_token->next;
+		if(match(";", global_token->s))
 		{
-			type_size = type_name();
-			if(NULL == type_size)
-			{
-				goto new_type;
-			}
+			/* Ensure 4 bytes are allocated for the global */
+			globals_list = emit(":GLOBAL_", globals_list);
+			globals_list = emit(global_token->prev->s, globals_list);
+			globals_list = emit("\nNOP\n", globals_list);
+
 			global_token = global_token->next;
-			if(global_token->s[0] == ';')
-			{
-				/* Add to global symbol table */
-				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
-
-				/* Ensure 4 bytes are allocated for the global */
-				globals_list = emit(":GLOBAL_", globals_list);
-				globals_list = emit(global_token->prev->s, globals_list);
-				globals_list = emit("\nNOP\n", globals_list);
-
-				global_token = global_token->next;
-			}
-			else if(match("=",global_token->s))
-			{
-				/* Add to global symbol table */
-				global_symbol_list = sym_declare(global_token->prev->s, type_size, global_symbol_list);
-
-				/* Store the global's value*/
-				globals_list = emit(":GLOBAL_", globals_list);
-				globals_list = emit(global_token->prev->s, globals_list);
+		}
+		else if(match("(", global_token->s)) out = declare_function(out);
+		else if(match("=",global_token->s))
+		{
+			/* Store the global's value*/
+			globals_list = emit(":GLOBAL_", globals_list);
+			globals_list = emit(global_token->prev->s, globals_list);
+			globals_list = emit("\n", globals_list);
+			global_token = global_token->next;
+			if(in_set(global_token->s[0], "0123456789"))
+			{ /* Assume Int */
+				globals_list = emit("%", globals_list);
+				globals_list = emit(global_token->s, globals_list);
 				globals_list = emit("\n", globals_list);
-				global_token = global_token->next;
-				if(('0' <= global_token->s[0]) & (global_token->s[0] <= '9'))
-				{ /* Assume Int */
-					globals_list = emit("%", globals_list);
-					globals_list = emit(global_token->s, globals_list);
-					globals_list = emit("\n", globals_list);
-				}
-				else if(('"' == global_token->s[0]))
-				{ /* Assume a string*/
-					globals_list = emit(parse_string(global_token->s), globals_list);
-				}
-				else
-				{
-					file_print("Recieved ", stderr);
-					file_print(global_token->s, stderr);
-					file_print(" in program\n", stderr);
-					line_error();
-					exit(EXIT_FAILURE);
-				}
-
-				global_token = global_token->next;
-				require_match("ERROR in Program\nMissing ;\n", ";");
 			}
-			else if(global_token->s[0] == '(') out = declare_function(out);
+			else if(('"' == global_token->s[0]))
+			{ /* Assume a string*/
+				globals_list = emit(parse_string(global_token->s), globals_list);
+			}
 			else
 			{
 				file_print("Recieved ", stderr);
@@ -1159,9 +1143,20 @@ new_type:
 				line_error();
 				exit(EXIT_FAILURE);
 			}
+
+			global_token = global_token->next;
+			require_match("ERROR in Program\nMissing ;\n", ";");
+		}
+		else
+		{
+			file_print("Recieved ", stderr);
+			file_print(global_token->s, stderr);
+			file_print(" in program\n", stderr);
+			line_error();
+			exit(EXIT_FAILURE);
 		}
 	}
-	return out;
+	goto new_type;
 }
 
 void recursive_output(struct token_list* i, FILE* out)

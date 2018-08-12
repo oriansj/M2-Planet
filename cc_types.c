@@ -78,7 +78,7 @@ void initialize_types()
 	/* FUNCTION* has the same properties as FUNCTION */
 	f->indirect = f;
 
-	/* Define FUNCTION */
+	/* Define UNSIGNED */
 	struct type* g = calloc(1, sizeof(struct type));
 	g->name = "unsigned";
 	g->size = 4;
@@ -90,7 +90,7 @@ void initialize_types()
 	f->next = g;
 	e->next = f;
 	d->next = e;
-	c->next = d;
+	c->next = e;
 	a->next = c;
 	global_types->next = a;
 }
@@ -160,6 +160,7 @@ struct type* build_union(struct type* last, int offset)
 void create_struct()
 {
 	int offset = 0;
+	member_size = 0;
 	struct type* head = calloc(1, sizeof(struct type));
 	struct type* i = calloc(1, sizeof(struct type));
 	head->name = global_token->s;
@@ -191,7 +192,7 @@ void create_struct()
 
 	head->size = offset;
 	head->members = last;
-	head->indirect->members = last;
+	i->members = last;
 }
 
 
@@ -205,11 +206,10 @@ void create_struct()
  */
 struct type* type_name()
 {
-	int structure = FALSE;
+	int structure = match("struct", global_token->s);
 
-	if(match("struct", global_token->s))
+	if(structure)
 	{
-		structure = TRUE;
 		global_token = global_token->next;
 	}
 
