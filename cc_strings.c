@@ -125,27 +125,26 @@ collect_regular_string_reset:
 /* Deal with non-human strings */
 char* collect_weird_string(char* string)
 {
-	int i = 1;
 	string_index = 1;
 	int temp;
 	char* table = "0123456789ABCDEF";
 
 	hold_string[0] = '\'';
-collect_weird_string:
+collect_weird_string_reset:
+	string = string + 1;
 	hold_string[string_index] = ' ';
-	temp = escape_lookup(string + i);
+	temp = escape_lookup(string);
 	hold_string[string_index + 1] = table[(temp >> 4)];
 	hold_string[string_index + 2] = table[(temp & 15)];
 
-	if(string[i] == '\\')
+	if(string[0] == '\\')
 	{
-		if(string[i + 1] == 'x') i = i + 2;
-		i = i + 1;
+		if(string[1] == 'x') string = string + 2;
+		string = string + 1;
 	}
-	i = i + 1;
 
 	string_index = string_index + 3;
-	if(string[i] != 0) goto collect_weird_string;
+	if(string[1] != 0) goto collect_weird_string_reset;
 
 	hold_string[string_index] = ' ';
 	hold_string[string_index + 1] = '0';

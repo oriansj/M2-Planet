@@ -551,21 +551,6 @@ struct token_list* bitwise_expr(struct token_list* out, struct token_list* funct
 {
 	out = relational_expr(out, function);
 	out = bitwise_expr_stub(out, function);
-	if(match("=", global_token->s))
-	{
-		char* store;
-		if(match("]", global_token->prev->s) && match("char*", current_target->name))
-		{
-			store = "STORE_CHAR\n";
-		}
-		else
-		{
-			store = "STORE_INTEGER\n";
-		}
-
-		out = common_recursion(out, function, expression);
-		out = emit(store, out);
-	}
 	return out;
 }
 
@@ -597,6 +582,21 @@ struct token_list* primary_expr(struct token_list* out, struct token_list* funct
 struct token_list* expression(struct token_list* out, struct token_list* function)
 {
 	out = bitwise_expr(out, function);
+	if(match("=", global_token->s))
+	{
+		char* store;
+		if(match("]", global_token->prev->s) && match("char*", current_target->name))
+		{
+			store = "STORE_CHAR\n";
+		}
+		else
+		{
+			store = "STORE_INTEGER\n";
+		}
+
+		out = common_recursion(out, function, expression);
+		out = emit(store, out);
+	}
 	return out;
 }
 
@@ -605,10 +605,6 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 struct token_list* collect_local(struct token_list* out, struct token_list* function)
 {
 	struct type* type_size = type_name();
-	out = emit("# Defining local ", out);
-	out = emit(global_token->s, out);
-	out = emit("\n", out);
-
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
@@ -628,6 +624,11 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 	}
 
 	function->locals = a;
+
+	out = emit("# Defining local ", out);
+	out = emit(global_token->s, out);
+	out = emit("\n", out);
+
 	global_token = global_token->next;
 
 	if(match("=", global_token->s))
@@ -857,6 +858,32 @@ struct token_list* return_result(struct token_list* out, struct token_list* func
 	return out;
 }
 
+struct token_list* process_break(struct token_list* out, struct token_list* function)
+{
+	if(NULL == break_target_head)
+	{
+		file_print("Not inside of a loop or case statement", stderr);
+		line_error();
+		exit(EXIT_FAILURE);
+	}
+	struct token_list* i = function->locals;
+	while(i != break_frame)
+	{
+		if(NULL == i) break;
+		out = emit("POP_ebx\t# break_cleanup_locals\n", out);
+		i = i->next;
+	}
+	global_token = global_token->next;
+	out = emit("JUMP %", out);
+	out = emit(break_target_head, out);
+	out = emit(break_target_func, out);
+	out = emit("_", out);
+	out = emit(break_target_num, out);
+	out = emit("\n", out);
+	require_match("ERROR in statement\nMissing ;\n", ";");
+	return out;
+}
+
 struct token_list* recursive_statement(struct token_list* out, struct token_list* function)
 {
 	global_token = global_token->next;
@@ -869,16 +896,15 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
 	global_token = global_token->next;
 
 	/* Clean up any locals added */
-	struct token_list* i;
-	for(i = function->locals; frame != i; i = i->next)
+	if(!match("RETURN\n", out->s))
 	{
-		if(NULL == function->locals) return out;
-		if(!match("RETURN\n", out->s))
+		struct token_list* i;
+		for(i = function->locals; frame != i; i = i->next)
 		{
 			out = emit( "POP_ebx\t# _recursive_statement_locals\n", out);
 		}
-		function->locals = function->locals->next;
 	}
+	function->locals = frame;
 	return out;
 }
 
@@ -900,7 +926,7 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
  *     expr ;
  */
 
-struct type* lookup_type(char* s);
+struct type* lookup_type(char* s, struct type* start);
 struct token_list* statement(struct token_list* out, struct token_list* function)
 {
 	if(global_token->s[0] == '{')
@@ -913,9 +939,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 		out = emit("\t#C goto label\n", out);
 		global_token = global_token->next;
 	}
-	else if(((NULL == sym_lookup(global_token->s, function->locals)) &&
-	         (NULL == sym_lookup(global_token->s, function->arguments)) &&
-	         (NULL != lookup_type(global_token->s))) ||
+	else if((NULL != lookup_type(global_token->s, prim_types)) ||
 	          match("struct", global_token->s))
 	{
 		out = collect_local(out, function);
@@ -955,27 +979,7 @@ struct token_list* statement(struct token_list* out, struct token_list* function
 	}
 	else if(match("break", global_token->s))
 	{
-		if(NULL == break_target_head)
-		{
-			file_print("Not inside of a loop or case statement", stderr);
-			line_error();
-			exit(EXIT_FAILURE);
-		}
-		struct token_list* i = function->locals;
-		while(i != break_frame)
-		{
-			if(NULL == i) break;
-			out = emit("POP_ebx\t# break_cleanup_locals\n", out);
-			i = i->next;
-		}
-		global_token = global_token->next;
-		out = emit("JUMP %", out);
-		out = emit(break_target_head, out);
-		out = emit(break_target_func, out);
-		out = emit("_", out);
-		out = emit(break_target_num, out);
-		out = emit("\n", out);
-		require_match("ERROR in statement\nMissing ;\n", ";");
+		out = process_break(out, function);
 	}
 	else if(match("continue", global_token->s))
 	{
@@ -1001,8 +1005,8 @@ void collect_arguments(struct token_list* function)
 		struct type* type_size = type_name();
 		if(global_token->s[0] == ')')
 		{
-			/* deal with foo(int|char|void) */
-			global_token = global_token->prev;
+			/* foo(int,char,void) doesn't need anything done */
+			continue;
 		}
 		else if(global_token->s[0] != ',')
 		{
@@ -1022,11 +1026,9 @@ void collect_arguments(struct token_list* function)
 				a->depth = function->arguments->depth - 4;
 			}
 
+			global_token = global_token->next;
 			function->arguments = a;
 		}
-
-		/* foo(int,char,void) doesn't need anything done */
-		global_token = global_token->next;
 
 		/* ignore trailing comma (needed for foo(bar(), 1); expressions*/
 		if(global_token->s[0] == ',') global_token = global_token->next;
@@ -1037,11 +1039,11 @@ void collect_arguments(struct token_list* function)
 struct token_list* declare_function(struct token_list* out)
 {
 	current_count = 0;
-	struct token_list* func = sym_declare(global_token->prev->s, calloc(1, sizeof(struct type)), global_function_list);
-	collect_arguments(func);
+	struct token_list* func = sym_declare(global_token->prev->s, NULL, global_function_list);
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = func;
+	collect_arguments(func);
 
 	/* If just a prototype don't waste time */
 	if(global_token->s[0] == ';') global_token = global_token->next;

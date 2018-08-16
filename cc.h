@@ -67,6 +67,7 @@ struct token_list
 
 /* What types we have */
 struct type* global_types;
+struct type* prim_types;
 
 /* What we are currently working on */
 struct token_list* global_token;

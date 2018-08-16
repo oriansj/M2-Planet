@@ -16,12 +16,22 @@
 
 * Current
 ** Added
+Added more generic logic to lookup_type
+Added prim_types to simply the task of reducing search space to primitives
 
 ** Changed
+Reorganized Primitive expression evaluation
+Reorganized Collect_local to better match implementation
+Broke out process_break
+Changed ordering in declare_function to reduce stack operations
+Converted weird_string collection into a simpler form
 
 ** Fixed
+Fixed detection of locals to screen out all non-primitive name space collisions
 
 ** Removed
+Removed redundent steps in Recursive statement
+Removed several redundent steps in Collect_arguments
 
 * 0.3 - 2018-08-12
 ** Added

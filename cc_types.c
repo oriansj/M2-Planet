@@ -93,12 +93,13 @@ void initialize_types()
 	c->next = e;
 	a->next = c;
 	global_types->next = a;
+	prim_types = global_types;
 }
 
-struct type* lookup_type(char* s)
+struct type* lookup_type(char* s, struct type* start)
 {
 	struct type* i;
-	for(i = global_types; NULL != i; i = i->next)
+	for(i = start; NULL != i; i = i->next)
 	{
 		if(match(i->name, s))
 		{
@@ -213,7 +214,7 @@ struct type* type_name()
 		global_token = global_token->next;
 	}
 
-	struct type* ret = lookup_type(global_token->s);
+	struct type* ret = lookup_type(global_token->s, global_types);
 
 	if(NULL == ret && !structure)
 	{
