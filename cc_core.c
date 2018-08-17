@@ -426,23 +426,6 @@ struct token_list* unary_expr_sizeof(struct token_list* out)
 	return out;
 }
 
-struct token_list* postfix_expr(struct token_list* out, struct token_list* function);
-struct token_list* unary_expr_not(struct token_list* out, struct token_list* function)
-{
-	out = emit("LOAD_IMMEDIATE_eax %1\n", out);
-	out = common_recursion(out, function, postfix_expr);
-	out = emit("XOR_ebx_eax_into_eax\n", out);
-	return out;
-}
-
-struct token_list* unary_expr_negation(struct token_list* out, struct token_list* function)
-{
-	out = emit("LOAD_IMMEDIATE_eax %0\n", out);
-	out = common_recursion(out, function, primary_expr);
-	out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", out);
-	return out;
-}
-
 struct token_list* postfix_expr_stub(struct token_list* out, struct token_list* function)
 {
 	if(match("[", global_token->s))
@@ -562,19 +545,29 @@ struct token_list* bitwise_expr(struct token_list* out, struct token_list* funct
 
 struct token_list* primary_expr(struct token_list* out, struct token_list* function)
 {
-	if(match("-", global_token->s)) out = unary_expr_negation(out, function);
-	else if(match("!", global_token->s)) out = unary_expr_not(out, function);
-	else if(match("sizeof", global_token->s)) out = unary_expr_sizeof(out);
+	if(match("sizeof", global_token->s)) out = unary_expr_sizeof(out);
+	else if('-' == global_token->s[0])
+	{
+		out = emit("LOAD_IMMEDIATE_eax %0\n", out);
+		out = common_recursion(out, function, primary_expr);
+		out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", out);
+	}
+	else if('!' == global_token->s[0])
+	{
+		out = emit("LOAD_IMMEDIATE_eax %1\n", out);
+		out = common_recursion(out, function, postfix_expr);
+		out = emit("XOR_ebx_eax_into_eax\n", out);
+	}
 	else if(global_token->s[0] == '(')
 	{
 		global_token = global_token->next;
 		out = expression(out, function);
 		require_match("Error in Primary expression\nDidn't get )\n", ")");
 	}
-	else if((('a' <= global_token->s[0]) && (global_token->s[0] <= 'z')) || (('A' <= global_token->s[0]) && (global_token->s[0] <= 'Z'))) out = primary_expr_variable(out, function);
-	else if(('0' <= global_token->s[0]) && (global_token->s[0] <= '9')) out = primary_expr_number(out);
 	else if(global_token->s[0] == '\'') out = primary_expr_char(out);
 	else if(global_token->s[0] == '"') out = primary_expr_string(out, function);
+	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) out = primary_expr_variable(out, function);
+	else if(in_set(global_token->s[0], "0123456789")) out = primary_expr_number(out);
 	else primary_expr_failure();
 	return out;
 }
@@ -585,17 +578,18 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 	if(match("=", global_token->s))
 	{
 		char* store;
-		if(match("]", global_token->prev->s) && match("char*", current_target->name))
+		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
 		{
-			store = "STORE_CHAR\n";
+			store = "STORE_INTEGER\n";
 		}
 		else
 		{
-			store = "STORE_INTEGER\n";
+			store = "STORE_CHAR\n";
 		}
 
 		out = common_recursion(out, function, expression);
 		out = emit(store, out);
+		current_target = NULL;
 	}
 	return out;
 }

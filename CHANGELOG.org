@@ -25,6 +25,8 @@ Reorganized Collect_local to better match implementation
 Broke out process_break
 Changed ordering in declare_function to reduce stack operations
 Converted weird_string collection into a simpler form
+Inlined 2 small stubs as breaking them out wouldn't help implementation
+Reordered conditionals for easier implementation and reduced operations
 
 ** Fixed
 Fixed detection of locals to screen out all non-primitive name space collisions
