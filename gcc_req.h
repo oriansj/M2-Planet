@@ -18,4 +18,4 @@
 // Exists only because gcc doesn't support naked Function pointers
 // And thus adds just enough support that M2-Plant can leverage the feature
 // in its self-host
-typedef struct token_list* (*FUNCTION) (struct token_list*, struct token_list*);
+typedef void (*FUNCTION) ();
