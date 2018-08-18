@@ -24,6 +24,10 @@ struct token_list* global_symbol_list;
 struct token_list* global_function_list;
 struct token_list* global_constant_list;
 
+/* Core lists for this file */
+struct token_list* function;
+struct token_list* out;
+
 /* What we are currently working on */
 struct type* current_target;
 char* break_target_head;
@@ -48,6 +52,29 @@ struct token_list* emit(char *s, struct token_list* head)
 	return t;
 }
 
+void emit_out(char* s)
+{
+	out =  emit(s, out);
+}
+
+struct token_list* uniqueID(char* s, struct token_list* l, char* num)
+{
+	l = emit(s, l);
+	l = emit("_", l);
+	l = emit(num, l);
+	l = emit("\n", l);
+	return l;
+}
+
+void uniqueID_out(char* s, char* num)
+{
+	emit_out(s);
+	emit_out("_");
+	emit_out(num);
+	emit_out("\n");
+}
+
+
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
@@ -67,26 +94,26 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 	return NULL;
 }
 
-struct token_list* expression(struct token_list* out, struct token_list* function);
-struct token_list* function_call(struct token_list* out, struct token_list* function, char* s, int bool)
+void expression();
+void function_call(char* s, int bool)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	int passed = 0;
-	out = emit("PUSH_edi\t# Prevent overwriting in recursion\n", out);
-	out = emit("PUSH_ebp\t# Protect the old base pointer\n", out);
-	out = emit("COPY_esp_to_edi\t# Copy new base pointer\n", out);
+	emit_out("PUSH_edi\t# Prevent overwriting in recursion\n");
+	emit_out("PUSH_ebp\t# Protect the old base pointer\n");
+	emit_out("COPY_esp_to_edi\t# Copy new base pointer\n");
 
 	if(global_token->s[0] != ')')
 	{
-		out = expression(out, function);
-		out = emit("PUSH_eax\t#_process_expression1\n", out);
+		expression();
+		emit_out("PUSH_eax\t#_process_expression1\n");
 		passed = 1;
 
 		while(global_token->s[0] == ',')
 		{
 			global_token = global_token->next;
-			out = expression(out, function);
-			out = emit("PUSH_eax\t#_process_expression2\n", out);
+			expression();
+			emit_out("PUSH_eax\t#_process_expression2\n");
 			passed = passed + 1;
 		}
 	}
@@ -95,69 +122,69 @@ struct token_list* function_call(struct token_list* out, struct token_list* func
 
 	if(TRUE == bool)
 	{
-		out = emit("LOAD_BASE_ADDRESS_eax %", out);
-		out = emit(s, out);
-		out = emit("\nLOAD_INTEGER\n", out);
-		out = emit("COPY_edi_to_ebp\n", out);
-		out = emit("CALL_eax\n", out);
+		emit_out("LOAD_BASE_ADDRESS_eax %");
+		emit_out(s);
+		emit_out("\nLOAD_INTEGER\n");
+		emit_out("COPY_edi_to_ebp\n");
+		emit_out("CALL_eax\n");
 	}
 	else
 	{
-		out = emit("COPY_edi_to_ebp\n", out);
-		out = emit("CALL_IMMEDIATE %FUNCTION_", out);
-		out = emit(s, out);
-		out = emit("\n", out);
+		emit_out("COPY_edi_to_ebp\n");
+		emit_out("CALL_IMMEDIATE %FUNCTION_");
+		emit_out(s);
+		emit_out("\n");
 	}
 
 	for(; passed > 0; passed = passed - 1)
 	{
-		out = emit("POP_ebx\t# _process_expression_locals\n", out);
+		emit_out("POP_ebx\t# _process_expression_locals\n");
 	}
-	out = emit("POP_ebp\t# Restore old base pointer\n", out);
-	out = emit("POP_edi\t# Prevent overwrite\n", out);
-	return out;
+	emit_out("POP_ebp\t# Restore old base pointer\n");
+	emit_out("POP_edi\t# Prevent overwrite\n");
 }
 
-struct token_list* constant_load(struct token_list* a, struct token_list* out)
+void constant_load(struct token_list* a)
 {
-	out = emit("LOAD_IMMEDIATE_eax %", out);
-	out = emit(a->arguments->s, out);
-	out = emit("\n", out);
-	return out;
+	emit_out("LOAD_IMMEDIATE_eax %");
+	emit_out(a->arguments->s);
+	emit_out("\n");
 }
 
-struct token_list* variable_load(struct token_list* a, struct token_list* out, struct token_list* function)
+void variable_load(struct token_list* a)
 {
 	if(match("FUNCTION", a->type->name) && match("(", global_token->s))
 	{
-		return function_call(out, function, numerate_number(a->depth), TRUE);
+		function_call(numerate_number(a->depth), TRUE);
+		return;
 	}
 	current_target = a->type;
-	out = emit("LOAD_BASE_ADDRESS_eax %", out);
-	out = emit(numerate_number(a->depth), out);
-	out = emit("\n", out);
-	if(!match("=", global_token->s) && !match("char**", a->type->name)) out = emit("LOAD_INTEGER\n", out);
-	return out;
+	emit_out("LOAD_BASE_ADDRESS_eax %");
+	emit_out(numerate_number(a->depth));
+	emit_out("\n");
+	if(!match("=", global_token->s) && !match("char**", a->type->name)) emit_out("LOAD_INTEGER\n");
 }
 
-struct token_list* function_load(struct token_list* a, struct token_list* out, struct token_list* function)
+void function_load(struct token_list* a)
 {
-	if(match("(", global_token->s)) return function_call(out, function, a->s, FALSE);
+	if(match("(", global_token->s))
+	{
+		function_call(a->s, FALSE);
+		return;
+	}
 
-	out = emit("LOAD_IMMEDIATE_eax &FUNCTION_", out);
-	out = emit(a->s, out);
-	out = emit("\n", out);
-	return out;
+	emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
+	emit_out(a->s);
+	emit_out("\n");
 }
 
-struct token_list* global_load(struct token_list* a, struct token_list* out)
+void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	out = emit("LOAD_IMMEDIATE_eax &GLOBAL_", out);
-	out = emit(a->s, out);
-	out = emit("\n", out);
-	if(!match("=", global_token->s)) out = emit("LOAD_INTEGER\n", out);
-	return out;
+	emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
+	emit_out(a->s);
+	emit_out("\n");
+	if(!match("=", global_token->s)) emit_out("LOAD_INTEGER\n");
 }
 
 /*
@@ -170,7 +197,7 @@ struct token_list* global_load(struct token_list* a, struct token_list* out)
  * ( expression )
  */
 
-struct token_list* primary_expr_failure()
+void primary_expr_failure()
 {
 	file_print("Recieved ", stderr);
 	file_print(global_token->s, stderr);
@@ -179,20 +206,11 @@ struct token_list* primary_expr_failure()
 	exit(EXIT_FAILURE);
 }
 
-struct token_list* uniqueID(char* s, struct token_list* out, char* num)
-{
-	out = emit(s, out);
-	out = emit("_", out);
-	out = emit(num, out);
-	out = emit("\n", out);
-	return out;
-}
-
-struct token_list* primary_expr_string(struct token_list* out, struct token_list* function)
+void primary_expr_string()
 {
 	char* number_string = numerate_number(current_count);
-	out = emit("LOAD_IMMEDIATE_eax &STRING_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("LOAD_IMMEDIATE_eax &STRING_");
+	uniqueID_out(function->s, number_string);
 
 	/* The target */
 	strings_list = emit(":STRING_", strings_list);
@@ -203,52 +221,69 @@ struct token_list* primary_expr_string(struct token_list* out, struct token_list
 	global_token = global_token->next;
 
 	current_count = current_count + 1;
-	return out;
 }
 
-struct token_list* primary_expr_char(struct token_list* out)
+void primary_expr_char()
 {
-	out = emit("LOAD_IMMEDIATE_eax %", out);
+	emit_out("LOAD_IMMEDIATE_eax %");
 	if('\\' == global_token->s[1])
 	{
-		out = emit(numerate_number(escape_lookup(global_token->s + 1)), out);
+		emit_out(numerate_number(escape_lookup(global_token->s + 1)));
 	}
 	else
 	{
-		out = emit(numerate_number(global_token->s[1]), out);
+		emit_out(numerate_number(global_token->s[1]));
 	}
-	out = emit("\n", out);
+	emit_out("\n");
 	global_token = global_token->next;
-	return out;
 }
 
-struct token_list* primary_expr_number(struct token_list* out)
+void primary_expr_number()
 {
-	out = emit("LOAD_IMMEDIATE_eax %", out);
-	out = emit(global_token->s, out);
-	out = emit("\n", out);
+	emit_out("LOAD_IMMEDIATE_eax %");
+	emit_out(global_token->s);
+	emit_out("\n");
 	global_token = global_token->next;
-	return out;
 }
 
-struct token_list* primary_expr_variable(struct token_list* out, struct token_list* function)
+void primary_expr_variable()
 {
 	char* s = global_token->s;
 	global_token = global_token->next;
 	struct token_list* a = sym_lookup(s, global_constant_list);
-	if(NULL != a) return constant_load(a, out);
+	if(NULL != a)
+	{
+		constant_load(a);
+		return;
+	}
 
 	a= sym_lookup(s, function->locals);
-	if(NULL != a) return variable_load(a, out, function);
+	if(NULL != a)
+	{
+		variable_load(a);
+		return;
+	}
 
 	a = sym_lookup(s, function->arguments);
-	if(NULL != a) return variable_load(a, out, function);
+	if(NULL != a)
+	{
+		variable_load(a);
+		return;
+	}
 
 	a= sym_lookup(s, global_function_list);
-	if(NULL != a) return function_load(a, out, function);
+	if(NULL != a)
+	{
+		function_load(a);
+		return;
+	}
 
 	a = sym_lookup(s, global_symbol_list);
-	if(NULL != a) return global_load(a, out);
+	if(NULL != a)
+	{
+		global_load(a);
+		return;
+	}
 
 	file_print(s ,stderr);
 	file_print(" is not a defined symbol\n", stderr);
@@ -256,7 +291,7 @@ struct token_list* primary_expr_variable(struct token_list* out, struct token_li
 	exit(EXIT_FAILURE);
 }
 
-struct token_list* primary_expr(struct token_list* out, struct token_list* function);
+void primary_expr();
 struct type* promote_type(struct type* a, struct type* b)
 {
 	if(NULL == a)
@@ -291,26 +326,24 @@ struct type* promote_type(struct type* a, struct type* b)
 	return NULL;
 }
 
-struct token_list* common_recursion(struct token_list* out, struct token_list* function, FUNCTION f)
+void common_recursion(FUNCTION f)
 {
 	last_type = current_target;
 	global_token = global_token->next;
-	out = emit("PUSH_eax\t#_common_recursion\n", out);
-	out = f(out, function);
+	emit_out("PUSH_eax\t#_common_recursion\n");
+	f();
 	current_target = promote_type(current_target, last_type);
-	out = emit("POP_ebx\t# _common_recursion\n", out);
-	return out;
+	emit_out("POP_ebx\t# _common_recursion\n");
 }
 
-struct token_list* general_recursion(struct token_list* out, struct token_list* function, FUNCTION f, char* s, char* name, FUNCTION iterate)
+void general_recursion( FUNCTION f, char* s, char* name, FUNCTION iterate)
 {
 	if(match(name, global_token->s))
 	{
-		out = common_recursion(out, function, f);
-		out = emit(s, out);
-		out = iterate(out, function);
+		common_recursion(f);
+		emit_out(s);
+		iterate();
 	}
-	return out;
 }
 
 int ceil_log2(int a)
@@ -338,9 +371,9 @@ int ceil_log2(int a)
  *         postfix-expr -> member
  */
 
-struct token_list* postfix_expr_arrow(struct token_list* out)
+void postfix_expr_arrow()
 {
-	out = emit("# looking up offset\n", out);
+	emit_out("# looking up offset\n");
 	global_token = global_token->next;
 	struct type* i;
 	for(i = current_target->members; NULL != i; i = i->members)
@@ -359,33 +392,32 @@ struct token_list* postfix_expr_arrow(struct token_list* out)
 	}
 	if(0 != i->offset)
 	{
-		out = emit("# -> offset calculation\n", out);
-		out = emit("LOAD_IMMEDIATE_ebx %", out);
-		out = emit(numerate_number(i->offset), out);
-		out = emit("\nADD_ebx_to_eax\n", out);
+		emit_out("# -> offset calculation\n");
+		emit_out("LOAD_IMMEDIATE_ebx %");
+		emit_out(numerate_number(i->offset));
+		emit_out("\nADD_ebx_to_eax\n");
 	}
 	if(!match("=", global_token->next->s) && !match("char**",i->type->name))
 	{
-		out = emit("LOAD_INTEGER\n", out);
+		emit_out("LOAD_INTEGER\n");
 	}
 	current_target = i->type;
 	global_token = global_token->next;
-	return out;
 }
 
-struct token_list* postfix_expr_array(struct token_list* out, struct token_list* function)
+void postfix_expr_array()
 {
 	struct type* array = current_target;
-	out = common_recursion(out, function, expression);
+	common_recursion(expression);
 	current_target = array;
 	char* assign;
 
 	/* Add support for Ints */
 	if(!match("char*",  current_target->name))
 	{
-		out = emit("SAL_eax_Immediate8 !", out);
-		out = emit(numerate_number(ceil_log2(current_target->indirect->size)), out);
-		out = emit("\n", out);
+		emit_out("SAL_eax_Immediate8 !");
+		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
+		emit_out("\n");
 		assign = "LOAD_INTEGER\n";
 	}
 	else
@@ -393,7 +425,7 @@ struct token_list* postfix_expr_array(struct token_list* out, struct token_list*
 		assign = "LOAD_BYTE\n";
 	}
 
-	out = emit("ADD_ebx_to_eax\n", out);
+	emit_out("ADD_ebx_to_eax\n");
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 
 	if(match("=", global_token->s))
@@ -401,8 +433,7 @@ struct token_list* postfix_expr_array(struct token_list* out, struct token_list*
 		assign = "";
 	}
 
-	out = emit(assign, out);
-	return out;
+	emit_out(assign);
 }
 
 /*
@@ -413,41 +444,37 @@ struct token_list* postfix_expr_array(struct token_list* out, struct token_list*
  *         sizeof ( type )
  */
 struct type* type_name();
-struct token_list* unary_expr_sizeof(struct token_list* out)
+void unary_expr_sizeof()
 {
 	global_token = global_token->next;
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct type* a = type_name();
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
 
-	out = emit("LOAD_IMMEDIATE_eax %", out);
-	out = emit(numerate_number(a->size), out);
-	out = emit("\n", out);
-	return out;
+	emit_out("LOAD_IMMEDIATE_eax %");
+	emit_out(numerate_number(a->size));
+	emit_out("\n");
 }
 
-struct token_list* postfix_expr_stub(struct token_list* out, struct token_list* function)
+void postfix_expr_stub()
 {
 	if(match("[", global_token->s))
 	{
-		out = postfix_expr_array(out, function);
-		out = postfix_expr_stub(out, function);
+		postfix_expr_array();
+		postfix_expr_stub();
 	}
 
 	if(match("->", global_token->s))
 	{
-		out = postfix_expr_arrow(out);
-		out = postfix_expr_stub(out, function);
+		postfix_expr_arrow();
+		postfix_expr_stub();
 	}
-
-	return out;
 }
 
-struct token_list* postfix_expr(struct token_list* out, struct token_list* function)
+void postfix_expr()
 {
-	out = primary_expr(out, function);
-	out = postfix_expr_stub(out, function);
-	return out;
+	primary_expr();
+	postfix_expr_stub();
 }
 
 /*
@@ -461,25 +488,22 @@ struct token_list* postfix_expr(struct token_list* out, struct token_list* funct
  *         additive-expr << postfix-expr
  *         additive-expr >> postfix-expr
  */
-struct token_list* additive_expr_stub(struct token_list* out, struct token_list* function)
+void additive_expr_stub()
 {
-	out = general_recursion(out, function, postfix_expr, "ADD_ebx_to_eax\n", "+", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "<<", additive_expr_stub);
-	out = general_recursion(out, function, postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", ">>", additive_expr_stub);
-
-	return out;
+	general_recursion(postfix_expr, "ADD_ebx_to_eax\n", "+", additive_expr_stub);
+	general_recursion(postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
+	general_recursion(postfix_expr, "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
+	general_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
+	general_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
+	general_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "<<", additive_expr_stub);
+	general_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", ">>", additive_expr_stub);
 }
 
 
-struct token_list* additive_expr(struct token_list* out, struct token_list* function)
+void additive_expr()
 {
-	out = postfix_expr(out, function);
-	out = additive_expr_stub(out, function);
-	return out;
+	postfix_expr();
+	additive_expr_stub();
 }
 
 
@@ -492,22 +516,20 @@ struct token_list* additive_expr(struct token_list* out, struct token_list* func
  *         relational-expr > additive_expr
  */
 
-struct token_list* relational_expr_stub(struct token_list* out, struct token_list* function)
+void relational_expr_stub()
 {
-	out = general_recursion(out, function, additive_expr, "CMP\nSETL\nMOVEZBL\n", "<", relational_expr_stub);
-	out = general_recursion(out, function, additive_expr, "CMP\nSETLE\nMOVEZBL\n", "<=", relational_expr_stub);
-	out = general_recursion(out, function, additive_expr, "CMP\nSETGE\nMOVEZBL\n", ">=", relational_expr_stub);
-	out = general_recursion(out, function, additive_expr, "CMP\nSETG\nMOVEZBL\n", ">", relational_expr_stub);
-	out = general_recursion(out, function, additive_expr, "CMP\nSETE\nMOVEZBL\n", "==", relational_expr_stub);
-	out = general_recursion(out, function, additive_expr, "CMP\nSETNE\nMOVEZBL\n", "!=", relational_expr_stub);
-	return out;
+	general_recursion(additive_expr, "CMP\nSETL\nMOVEZBL\n", "<", relational_expr_stub);
+	general_recursion(additive_expr, "CMP\nSETLE\nMOVEZBL\n", "<=", relational_expr_stub);
+	general_recursion(additive_expr, "CMP\nSETGE\nMOVEZBL\n", ">=", relational_expr_stub);
+	general_recursion(additive_expr, "CMP\nSETG\nMOVEZBL\n", ">", relational_expr_stub);
+	general_recursion(additive_expr, "CMP\nSETE\nMOVEZBL\n", "==", relational_expr_stub);
+	general_recursion(additive_expr, "CMP\nSETNE\nMOVEZBL\n", "!=", relational_expr_stub);
 }
 
-struct token_list* relational_expr(struct token_list* out, struct token_list* function)
+void relational_expr()
 {
-	out = additive_expr(out, function);
-	out = relational_expr_stub(out, function);
-	return out;
+	additive_expr();
+	relational_expr_stub();
 }
 
 /*
@@ -519,22 +541,20 @@ struct token_list* relational_expr(struct token_list* out, struct token_list* fu
  *         bitwise-expr || bitwise-expr
  *         bitwise-expr ^ bitwise-expr
  */
-struct token_list* bitwise_expr_stub(struct token_list* out, struct token_list* function)
+void bitwise_expr_stub()
 {
-	out = general_recursion(out, function, relational_expr, "AND_eax_ebx\n", "&", bitwise_expr_stub);
-	out = general_recursion(out, function, relational_expr, "AND_eax_ebx\n", "&&", bitwise_expr_stub);
-	out = general_recursion(out, function, relational_expr, "OR_eax_ebx\n", "|", bitwise_expr_stub);
-	out = general_recursion(out, function, relational_expr, "OR_eax_ebx\n", "||", bitwise_expr_stub);
-	out = general_recursion(out, function, relational_expr, "XOR_ebx_eax_into_eax\n", "^", bitwise_expr_stub);
-	return out;
+	general_recursion(relational_expr, "AND_eax_ebx\n", "&", bitwise_expr_stub);
+	general_recursion(relational_expr, "AND_eax_ebx\n", "&&", bitwise_expr_stub);
+	general_recursion(relational_expr, "OR_eax_ebx\n", "|", bitwise_expr_stub);
+	general_recursion(relational_expr, "OR_eax_ebx\n", "||", bitwise_expr_stub);
+	general_recursion(relational_expr, "XOR_ebx_eax_into_eax\n", "^", bitwise_expr_stub);
 }
 
 
-struct token_list* bitwise_expr(struct token_list* out, struct token_list* function)
+void bitwise_expr()
 {
-	out = relational_expr(out, function);
-	out = bitwise_expr_stub(out, function);
-	return out;
+	relational_expr();
+	bitwise_expr_stub();
 }
 
 /*
@@ -543,38 +563,37 @@ struct token_list* bitwise_expr(struct token_list* out, struct token_list* funct
  *         bitwise-or-expr = expression
  */
 
-struct token_list* primary_expr(struct token_list* out, struct token_list* function)
+void primary_expr()
 {
-	if(match("sizeof", global_token->s)) out = unary_expr_sizeof(out);
+	if(match("sizeof", global_token->s)) unary_expr_sizeof();
 	else if('-' == global_token->s[0])
 	{
-		out = emit("LOAD_IMMEDIATE_eax %0\n", out);
-		out = common_recursion(out, function, primary_expr);
-		out = emit("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", out);
+		emit_out("LOAD_IMMEDIATE_eax %0\n");
+		common_recursion(primary_expr);
+		emit_out("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n");
 	}
 	else if('!' == global_token->s[0])
 	{
-		out = emit("LOAD_IMMEDIATE_eax %1\n", out);
-		out = common_recursion(out, function, postfix_expr);
-		out = emit("XOR_ebx_eax_into_eax\n", out);
+		emit_out("LOAD_IMMEDIATE_eax %1\n");
+		common_recursion(postfix_expr);
+		emit_out("XOR_ebx_eax_into_eax\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
 		global_token = global_token->next;
-		out = expression(out, function);
+		expression();
 		require_match("Error in Primary expression\nDidn't get )\n", ")");
 	}
-	else if(global_token->s[0] == '\'') out = primary_expr_char(out);
-	else if(global_token->s[0] == '"') out = primary_expr_string(out, function);
-	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) out = primary_expr_variable(out, function);
-	else if(in_set(global_token->s[0], "0123456789")) out = primary_expr_number(out);
+	else if(global_token->s[0] == '\'') primary_expr_char();
+	else if(global_token->s[0] == '"') primary_expr_string();
+	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) primary_expr_variable();
+	else if(in_set(global_token->s[0], "0123456789")) primary_expr_number();
 	else primary_expr_failure();
-	return out;
 }
 
-struct token_list* expression(struct token_list* out, struct token_list* function)
+void expression()
 {
-	out = bitwise_expr(out, function);
+	bitwise_expr();
 	if(match("=", global_token->s))
 	{
 		char* store;
@@ -587,16 +606,15 @@ struct token_list* expression(struct token_list* out, struct token_list* functio
 			store = "STORE_CHAR\n";
 		}
 
-		out = common_recursion(out, function, expression);
-		out = emit(store, out);
+		common_recursion(expression);
+		emit_out(store);
 		current_target = NULL;
 	}
-	return out;
 }
 
 
 /* Process local variable */
-struct token_list* collect_local(struct token_list* out, struct token_list* function)
+void collect_local()
 {
 	struct type* type_size = type_name();
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
@@ -619,63 +637,61 @@ struct token_list* collect_local(struct token_list* out, struct token_list* func
 
 	function->locals = a;
 
-	out = emit("# Defining local ", out);
-	out = emit(global_token->s, out);
-	out = emit("\n", out);
+	emit_out("# Defining local ");
+	emit_out(global_token->s);
+	emit_out("\n");
 
 	global_token = global_token->next;
 
 	if(match("=", global_token->s))
 	{
 		global_token = global_token->next;
-		out = expression(out, function);
+		expression();
 	}
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
 
-	out = emit("PUSH_eax\t#", out);
-	out = emit(a->s, out);
-	out = emit("\n", out);
-	return out;
+	emit_out("PUSH_eax\t#");
+	emit_out(a->s);
+	emit_out("\n");
 }
 
-struct token_list* statement(struct token_list* out, struct token_list* function);
+void statement();
 
 /* Evaluate if statements */
-struct token_list* process_if(struct token_list* out, struct token_list* function)
+void process_if()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
-	out = emit("# IF_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("# IF_");
+	uniqueID_out(function->s, number_string);
 
 	global_token = global_token->next;
 	require_match("ERROR in process_if\nMISSING (\n", "(");
-	out = expression(out, function);
+	expression();
 
-	out = emit("TEST\nJUMP_EQ %ELSE_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("TEST\nJUMP_EQ %ELSE_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
-	out = statement(out, function);
+	statement();
 
-	out = emit("JUMP %_END_IF_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":ELSE_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("JUMP %_END_IF_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":ELSE_");
+	uniqueID_out(function->s, number_string);
 
 	if(match("else", global_token->s))
 	{
 		global_token = global_token->next;
-		out = statement(out, function);
+		statement();
 	}
-	out = emit(":_END_IF_", out);
-	out = uniqueID(function->s, out, number_string);
-	return out;
+	emit_out(":_END_IF_");
+	uniqueID_out(function->s, number_string);
 }
 
-struct token_list* process_for(struct token_list* out, struct token_list* function)
+void process_for()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
@@ -689,71 +705,69 @@ struct token_list* process_for(struct token_list* out, struct token_list* functi
 	break_target_func = function->s;
 	break_target_num = number_string;
 
-	out = emit("# FOR_initialization_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("# FOR_initialization_");
+	uniqueID_out(function->s, number_string);
 
 	global_token = global_token->next;
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
 	if(!match(";",global_token->s))
 	{
-		out = expression(out, function);
+		expression();
 	}
 
-	out = emit(":FOR_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out(":FOR_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
-	out = expression(out, function);
+	expression();
 
-	out = emit("TEST\nJUMP_EQ %FOR_END_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit("JUMP %FOR_THEN_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":FOR_ITER_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("TEST\nJUMP_EQ %FOR_END_");
+	uniqueID_out(function->s, number_string);
+	emit_out("JUMP %FOR_THEN_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":FOR_ITER_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
-	out = expression(out, function);
+	expression();
 
-	out = emit("JUMP %FOR_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":FOR_THEN_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("JUMP %FOR_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":FOR_THEN_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_for\nMISSING )\n", ")");
-	out = statement(out, function);
+	statement();
 
-	out = emit("JUMP %FOR_ITER_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":FOR_END_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("JUMP %FOR_ITER_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":FOR_END_");
+	uniqueID_out(function->s, number_string);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
 	break_frame = nested_locals;
-	return out;
 }
 
 /* Process Assembly statements */
-struct token_list* process_asm(struct token_list* out)
+void process_asm()
 {
 	global_token = global_token->next;
 	require_match("ERROR in process_asm\nMISSING (\n", "(");
 	while(34 == global_token->s[0])
 	{/* 34 == " */
-		out = emit((global_token->s + 1), out);
-		out = emit("\n", out);
+		emit_out((global_token->s + 1));
+		emit_out("\n");
 		global_token = global_token->next;
 	}
 	require_match("ERROR in process_asm\nMISSING )\n", ")");
 	require_match("ERROR in process_asm\nMISSING ;\n", ";");
-	return out;
 }
 
 /* Process do while loops */
-struct token_list* process_do(struct token_list* out, struct token_list* function)
+void process_do()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
@@ -767,33 +781,32 @@ struct token_list* process_do(struct token_list* out, struct token_list* functio
 	break_target_func = function->s;
 	break_target_num = number_string;
 
-	out = emit(":DO_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out(":DO_");
+	uniqueID_out(function->s, number_string);
 
 	global_token = global_token->next;
-	out = statement(out, function);
+	statement();
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
-	out = expression(out, function);
+	expression();
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
-	out = emit("TEST\nJUMP_NE %DO_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":DO_END_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("TEST\nJUMP_NE %DO_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":DO_END_");
+	uniqueID_out(function->s, number_string);
 
 	break_frame = nested_locals;
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
-	return out;
 }
 
 
 /* Process while loops */
-struct token_list* process_while(struct token_list* out, struct token_list* function)
+void process_while()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
@@ -808,51 +821,49 @@ struct token_list* process_while(struct token_list* out, struct token_list* func
 	break_target_func = function->s;
 	break_target_num = number_string;
 
-	out = emit(":WHILE_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out(":WHILE_");
+	uniqueID_out(function->s, number_string);
 
 	global_token = global_token->next;
 	require_match("ERROR in process_while\nMISSING (\n", "(");
-	out = expression(out, function);
+	expression();
 
-	out = emit("TEST\nJUMP_EQ %END_WHILE_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit("# THEN_while_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("TEST\nJUMP_EQ %END_WHILE_");
+	uniqueID_out(function->s, number_string);
+	emit_out("# THEN_while_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_while\nMISSING )\n", ")");
-	out = statement(out, function);
+	statement();
 
-	out = emit("JUMP %WHILE_", out);
-	out = uniqueID(function->s, out, number_string);
-	out = emit(":END_WHILE_", out);
-	out = uniqueID(function->s, out, number_string);
+	emit_out("JUMP %WHILE_");
+	uniqueID_out(function->s, number_string);
+	emit_out(":END_WHILE_");
+	uniqueID_out(function->s, number_string);
 
 	break_frame = nested_locals;
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
-	return out;
 }
 
 /* Ensure that functions return */
-struct token_list* return_result(struct token_list* out, struct token_list* function)
+void return_result()
 {
 	global_token = global_token->next;
-	if(global_token->s[0] != ';') out = expression(out, function);
+	if(global_token->s[0] != ';') expression();
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
 	struct token_list* i;
 	for(i = function->locals; NULL != i; i = i->next)
 	{
-		out = emit("POP_ebx\t# _return_result_locals\n", out);
+		emit_out("POP_ebx\t# _return_result_locals\n");
 	}
-	out = emit("RETURN\n", out);
-	return out;
+	emit_out("RETURN\n");
 }
 
-struct token_list* process_break(struct token_list* out, struct token_list* function)
+void process_break()
 {
 	if(NULL == break_target_head)
 	{
@@ -864,28 +875,27 @@ struct token_list* process_break(struct token_list* out, struct token_list* func
 	while(i != break_frame)
 	{
 		if(NULL == i) break;
-		out = emit("POP_ebx\t# break_cleanup_locals\n", out);
+		emit_out("POP_ebx\t# break_cleanup_locals\n");
 		i = i->next;
 	}
 	global_token = global_token->next;
-	out = emit("JUMP %", out);
-	out = emit(break_target_head, out);
-	out = emit(break_target_func, out);
-	out = emit("_", out);
-	out = emit(break_target_num, out);
-	out = emit("\n", out);
+	emit_out("JUMP %");
+	emit_out(break_target_head);
+	emit_out(break_target_func);
+	emit_out("_");
+	emit_out(break_target_num);
+	emit_out("\n");
 	require_match("ERROR in statement\nMissing ;\n", ";");
-	return out;
 }
 
-struct token_list* recursive_statement(struct token_list* out, struct token_list* function)
+void recursive_statement()
 {
 	global_token = global_token->next;
 	struct token_list* frame = function->locals;
 
 	while(!match("}", global_token->s))
 	{
-		out = statement(out, function);
+		statement();
 	}
 	global_token = global_token->next;
 
@@ -895,11 +905,10 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			out = emit( "POP_ebx\t# _recursive_statement_locals\n", out);
+			emit_out( "POP_ebx\t# _recursive_statement_locals\n");
 		}
 	}
 	function->locals = frame;
-	return out;
 }
 
 /*
@@ -921,76 +930,75 @@ struct token_list* recursive_statement(struct token_list* out, struct token_list
  */
 
 struct type* lookup_type(char* s, struct type* start);
-struct token_list* statement(struct token_list* out, struct token_list* function)
+void statement()
 {
 	if(global_token->s[0] == '{')
 	{
-		out = recursive_statement(out, function);
+		recursive_statement();
 	}
 	else if(':' == global_token->s[0])
 	{
-		out = emit(global_token->s, out);
-		out = emit("\t#C goto label\n", out);
+		emit_out(global_token->s);
+		emit_out("\t#C goto label\n");
 		global_token = global_token->next;
 	}
 	else if((NULL != lookup_type(global_token->s, prim_types)) ||
 	          match("struct", global_token->s))
 	{
-		out = collect_local(out, function);
+		collect_local();
 	}
 	else if(match("if", global_token->s))
 	{
-		out = process_if(out, function);
+		process_if();
 	}
 	else if(match("do", global_token->s))
 	{
-		out = process_do(out, function);
+		process_do();
 	}
 	else if(match("while", global_token->s))
 	{
-		out = process_while(out, function);
+		process_while();
 	}
 	else if(match("for", global_token->s))
 	{
-		out = process_for(out, function);
+		process_for();
 	}
 	else if(match("asm", global_token->s))
 	{
-		out = process_asm(out);
+		process_asm();
 	}
 	else if(match("goto", global_token->s))
 	{
 		global_token = global_token->next;
-		out = emit("JUMP %", out);
-		out = emit(global_token->s, out);
-		out = emit("\n", out);
+		emit_out("JUMP %");
+		emit_out(global_token->s);
+		emit_out("\n");
 		global_token = global_token->next;
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
 	else if(match("return", global_token->s))
 	{
-		out = return_result(out, function);
+		return_result();
 	}
 	else if(match("break", global_token->s))
 	{
-		out = process_break(out, function);
+		process_break();
 	}
 	else if(match("continue", global_token->s))
 	{
 		global_token = global_token->next;
-		out = emit("\n#continue statement\n",out);
+		emit_out("\n#continue statement\n");
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
 	else
 	{
-		out = expression(out, function);
+		expression();
 		require_match("ERROR in statement\nMISSING ;\n", ";");
 	}
-	return out;
 }
 
 /* Collect function arguments */
-void collect_arguments(struct token_list* function)
+void collect_arguments()
 {
 	global_token = global_token->next;
 
@@ -1030,38 +1038,37 @@ void collect_arguments(struct token_list* function)
 	global_token = global_token->next;
 }
 
-struct token_list* declare_function(struct token_list* out)
+void declare_function()
 {
 	current_count = 0;
-	struct token_list* func = sym_declare(global_token->prev->s, NULL, global_function_list);
+	function = sym_declare(global_token->prev->s, NULL, global_function_list);
 
 	/* allow previously defined functions to be looked up */
-	global_function_list = func;
-	collect_arguments(func);
+	global_function_list = function;
+	collect_arguments();
 
 	/* If just a prototype don't waste time */
 	if(global_token->s[0] == ';') global_token = global_token->next;
 	else
 	{
-		out = emit("# Defining function ", out);
-		out = emit(func->s, out);
-		out = emit("\n", out);
-		out = emit(":FUNCTION_", out);
-		out = emit(func->s, out);
-		out = emit("\n", out);
-		if(match("main", func->s))
+		emit_out("# Defining function ");
+		emit_out(function->s);
+		emit_out("\n");
+		emit_out(":FUNCTION_");
+		emit_out(function->s);
+		emit_out("\n");
+		if(match("main", function->s))
 		{
-			out = emit("COPY_esp_to_ebp\t# Deal with special case\n", out);
+			emit_out("COPY_esp_to_ebp\t# Deal with special case\n");
 		}
-		out = statement(out, func);
+		statement();
 
 		/* Prevent duplicate RETURNS */
 		if(!match("RETURN\n", out->s))
 		{
-			out = emit("RETURN\n", out);
+			emit_out("RETURN\n");
 		}
 	}
-	return out;
 }
 
 /*
@@ -1082,12 +1089,14 @@ struct token_list* declare_function(struct token_list* out)
  * parameter-declaration:
  *     type-name identifier-opt
  */
-struct token_list* program(struct token_list* out)
+struct token_list* program()
 {
+	out = NULL;
+	function = NULL;
 	struct type* type_size;
 
 new_type:
-	if (NULL == global_token)return out;
+	if (NULL == global_token) return out;
 	if(match("CONSTANT", global_token->s))
 	{
 		global_constant_list = sym_declare(global_token->next->s, NULL, global_constant_list);
@@ -1113,7 +1122,7 @@ new_type:
 
 			global_token = global_token->next;
 		}
-		else if(match("(", global_token->s)) out = declare_function(out);
+		else if(match("(", global_token->s)) declare_function();
 		else if(match("=",global_token->s))
 		{
 			/* Store the global's value*/

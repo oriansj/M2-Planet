@@ -23,7 +23,7 @@
 void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
-struct token_list* program(struct token_list* out);
+struct token_list* program();
 void recursive_output(struct token_list* i, FILE* out);
 int match(char* a, char* b);
 void file_print(char* s, FILE* f);
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
 	initialize_types();
 	reset_hold_string();
-	struct token_list* output_list = program(NULL);
+	struct token_list* output_list = program();
 
 	/* Output the program we have compiled */
 	file_print("\n# Core program\n", destination_file);
