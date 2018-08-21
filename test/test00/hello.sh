@@ -6,7 +6,7 @@ bin/M2-Planet -f test/test00/return.c \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test00/return.M1 \
 	--LittleEndian \
 	--Architecture 1 \

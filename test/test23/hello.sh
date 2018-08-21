@@ -1,14 +1,14 @@
 #! /bin/sh
 set -x
 # Build the test
-./bin/M2-Planet -f test/functions/exit.c \
-	-f test/functions/file.c \
-	-f test/functions/file_print.c \
-	-f test/functions/malloc.c \
-	-f test/functions/calloc.c \
-	-f test/functions/match.c \
-	-f test/functions/numerate_number.c \
-	-f test/functions/string.c \
+./bin/M2-Planet -f functions/exit.c \
+	-f functions/file.c \
+	-f functions/file_print.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
+	-f functions/match.c \
+	-f functions/numerate_number.c \
+	-f functions/string.c \
 	-f test/test23/M1-macro.c \
 	--debug \
 	-o test/test23/M1-macro.M1 || exit 1
@@ -19,7 +19,7 @@ blood-elf -f test/test23/M1-macro.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test23/M1-macro.M1 \
 	-f test/test23/M1-macro-footer.M1 \
 	--LittleEndian \
@@ -46,7 +46,7 @@ then
 	# Verify that the resulting file works
 	./test/results/test23-binary -f \
 		test/common_x86/x86_defs.M1 \
-		-f test/functions/libc-core.M1 \
+		-f functions/libc-core.M1 \
 		-f test/test21/test.M1 \
 		--LittleEndian \
 		--Architecture 1 \

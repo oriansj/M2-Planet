@@ -28,6 +28,8 @@ Converted weird_string collection into a simpler form
 Inlined 2 small stubs as breaking them out wouldn't help implementation
 Reordered conditionals for easier implementation and reduced operations
 Broke out OUT and FUNCTION to silence a single GCC warning
+Moved required_match and line_error into cc_core.c and removed required_match.c
+Relocated contents of test/functions to functions
 
 ** Fixed
 Fixed detection of locals to screen out all non-primitive name space collisions

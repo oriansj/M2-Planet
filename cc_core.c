@@ -41,8 +41,9 @@ struct type* last_type;
 char* parse_string(char* string);
 int escape_lookup(char* c);
 char* numerate_number(int a);
-void require_match(char* message, char* required);
-void line_error();
+
+
+
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -54,7 +55,7 @@ struct token_list* emit(char *s, struct token_list* head)
 
 void emit_out(char* s)
 {
-	out =  emit(s, out);
+	out = emit(s, out);
 }
 
 struct token_list* uniqueID(char* s, struct token_list* l, char* num)
@@ -68,12 +69,8 @@ struct token_list* uniqueID(char* s, struct token_list* l, char* num)
 
 void uniqueID_out(char* s, char* num)
 {
-	emit_out(s);
-	emit_out("_");
-	emit_out(num);
-	emit_out("\n");
+	out = uniqueID(s, out, num);
 }
-
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 {
@@ -92,6 +89,25 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 		if(match(i->s, s)) return i;
 	}
 	return NULL;
+}
+
+void line_error()
+{
+	file_print("In file: ", stderr);
+	file_print(global_token->filename, stderr);
+	file_print(" On line: ", stderr);
+	file_print(numerate_number(global_token->linenumber), stderr);
+}
+
+void require_match(char* message, char* required)
+{
+	if(!match(global_token->s, required))
+	{
+		file_print(message, stderr);
+		line_error();
+		exit(EXIT_FAILURE);
+	}
+	global_token = global_token->next;
 }
 
 void expression();
@@ -162,7 +178,10 @@ void variable_load(struct token_list* a)
 	emit_out("LOAD_BASE_ADDRESS_eax %");
 	emit_out(numerate_number(a->depth));
 	emit_out("\n");
-	if(!match("=", global_token->s) && !match("char**", a->type->name)) emit_out("LOAD_INTEGER\n");
+	if(match("=", global_token->s)) return;
+	if(match("char**", a->type->name)) return;
+
+	emit_out("LOAD_INTEGER\n");
 }
 
 void function_load(struct token_list* a)
@@ -209,6 +228,7 @@ void primary_expr_failure()
 void primary_expr_string()
 {
 	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 	emit_out("LOAD_IMMEDIATE_eax &STRING_");
 	uniqueID_out(function->s, number_string);
 
@@ -219,21 +239,12 @@ void primary_expr_string()
 	/* Parse the string */
 	strings_list = emit(parse_string(global_token->s), strings_list);
 	global_token = global_token->next;
-
-	current_count = current_count + 1;
 }
 
 void primary_expr_char()
 {
 	emit_out("LOAD_IMMEDIATE_eax %");
-	if('\\' == global_token->s[1])
-	{
-		emit_out(numerate_number(escape_lookup(global_token->s + 1)));
-	}
-	else
-	{
-		emit_out(numerate_number(global_token->s[1]));
-	}
+	emit_out(numerate_number(escape_lookup(global_token->s + 1)));
 	emit_out("\n");
 	global_token = global_token->next;
 }
@@ -1099,9 +1110,10 @@ new_type:
 	if (NULL == global_token) return out;
 	if(match("CONSTANT", global_token->s))
 	{
-		global_constant_list = sym_declare(global_token->next->s, NULL, global_constant_list);
-		global_constant_list->arguments = global_token->next->next;
-		global_token = global_token->next->next->next;
+		global_token = global_token->next;
+		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+		global_constant_list->arguments = global_token->next;
+		global_token = global_token->next->next;
 	}
 	else
 	{

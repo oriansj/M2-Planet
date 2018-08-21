@@ -1,14 +1,14 @@
 #! /bin/sh
 set -x
 # Build the test
-bin/M2-Planet -f test/functions/putchar.c \
-	-f test/functions/exit.c \
+bin/M2-Planet -f functions/putchar.c \
+	-f functions/exit.c \
 	-f test/test01/library_call.c \
 	-o test/test01/library_call.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test01/library_call.M1 \
 	--LittleEndian \
 	--Architecture 1 \

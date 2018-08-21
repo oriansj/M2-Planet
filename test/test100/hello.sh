@@ -3,36 +3,34 @@ set -ex
 # Build the test
 if [ -f bin/M2-Planet ]
 then
-./bin/M2-Planet -f test/functions/file.c \
-	-f test/functions/malloc.c \
-	-f test/functions/calloc.c \
-	-f test/functions/exit.c \
-	-f test/functions/match.c \
-	-f test/functions/numerate_number.c \
-	-f test/functions/file_print.c \
-	-f test/functions/string.c \
+./bin/M2-Planet -f functions/file.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
+	-f functions/exit.c \
+	-f functions/match.c \
+	-f functions/numerate_number.c \
+	-f functions/file_print.c \
+	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
-	-f functions/require_match.c \
 	-f cc_core.c \
 	-f cc.c \
 	-o test/test100/cc.M1 || exit 1
 else
-./bin/M2-Planet-gcc -f test/functions/file.c \
-	-f test/functions/malloc.c \
-	-f test/functions/calloc.c \
-	-f test/functions/exit.c \
-	-f test/functions/match.c \
-	-f test/functions/numerate_number.c \
-	-f test/functions/file_print.c \
-	-f test/functions/string.c \
+./bin/M2-Planet-gcc -f functions/file.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
+	-f functions/exit.c \
+	-f functions/match.c \
+	-f functions/numerate_number.c \
+	-f functions/file_print.c \
+	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
-	-f functions/require_match.c \
 	-f cc_core.c \
 	-f cc.c \
 	-o test/test100/cc.M1 || exit 1
@@ -40,7 +38,7 @@ fi
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test100/cc.M1 \
 	--LittleEndian \
 	--Architecture 1 \
@@ -53,19 +51,18 @@ hex2 -f test/common_x86/ELF-i386.hex2 -f test/test100/cc.hex2 --LittleEndian --A
 if [ "$(get_machine)" = "x86_64" ]
 then
 	# Verify that the resulting file works
-	./test/results/test100-binary -f test/functions/file.c \
-		-f test/functions/malloc.c \
-		-f test/functions/calloc.c \
-		-f test/functions/exit.c \
-		-f test/functions/match.c \
-		-f test/functions/numerate_number.c \
-		-f test/functions/file_print.c \
-		-f test/functions/string.c \
+	./test/results/test100-binary -f functions/file.c \
+		-f functions/malloc.c \
+		-f functions/calloc.c \
+		-f functions/exit.c \
+		-f functions/match.c \
+		-f functions/numerate_number.c \
+		-f functions/file_print.c \
+		-f functions/string.c \
 		-f cc.h \
 		-f cc_reader.c \
 		-f cc_strings.c \
 		-f cc_types.c \
-		-f functions/require_match.c \
 		-f cc_core.c \
 		-f cc.c \
 		-o test/test100/proof || exit 4

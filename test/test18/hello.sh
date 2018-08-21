@@ -1,15 +1,15 @@
 #! /bin/sh
 set -ex
 # Build the test
-bin/M2-Planet -f test/functions/file.c \
-	-f test/functions/malloc.c \
-	-f test/functions/calloc.c \
+bin/M2-Planet -f functions/file.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
 	-f test/test18/math.c \
 	-o test/test18/math.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test18/math.M1 \
 	--LittleEndian \
 	--Architecture 1 \

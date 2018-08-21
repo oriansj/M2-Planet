@@ -1,12 +1,12 @@
 #! /bin/sh
 set -x
 # Build the test
-./bin/M2-Planet -f test/functions/exit.c \
-	-f test/functions/file.c \
-	-f test/functions/file_print.c \
-	-f test/functions/malloc.c \
-	-f test/functions/calloc.c \
-	-f test/functions/uname.c \
+./bin/M2-Planet -f functions/exit.c \
+	-f functions/file.c \
+	-f functions/file_print.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
+	-f functions/uname.c \
 	-f test/test24/get_machine.c \
 	--debug \
 	-o test/test24/get_machine.M1 || exit 1
@@ -17,7 +17,7 @@ blood-elf -f test/test24/get_machine.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f test/functions/libc-core.M1 \
+	-f functions/libc-core.M1 \
 	-f test/test24/get_machine.M1 \
 	-f test/test24/get_machine-footer.M1 \
 	--LittleEndian \
