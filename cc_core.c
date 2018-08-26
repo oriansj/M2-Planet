@@ -305,36 +305,24 @@ void primary_expr_variable()
 void primary_expr();
 struct type* promote_type(struct type* a, struct type* b)
 {
-	if(NULL == a)
-	{
-		return b;
-	}
 	if(NULL == b)
 	{
 		return a;
+	}
+	if(NULL == a)
+	{
+		return b;
 	}
 
 	struct type* i;
 	for(i = global_types; NULL != i; i = i->next)
 	{
-		if(a->name == i->name)
-		{
-			return a;
-		}
-		if(b->name == i->name)
-		{
-			return b;
-		}
-		if(a->name == i->indirect->name)
-		{
-			return a;
-		}
-		if(b->name == i->indirect->name)
-		{
-			return b;
-		}
+		if(a->name == i->name) break;
+		if(b->name == i->name) break;
+		if(a->name == i->indirect->name) break;
+		if(b->name == i->indirect->name) break;
 	}
-	return NULL;
+	return i;
 }
 
 void common_recursion(FUNCTION f)
@@ -381,26 +369,16 @@ int ceil_log2(int a)
  *         postfix-expr ( expression-list-opt )
  *         postfix-expr -> member
  */
-
+struct type* lookup_member(struct type* parent, char* name);
 void postfix_expr_arrow()
 {
 	emit_out("# looking up offset\n");
 	global_token = global_token->next;
-	struct type* i;
-	for(i = current_target->members; NULL != i; i = i->members)
-	{
-		if(match(i->name, global_token->s)) break;
-	}
-	if(NULL == i)
-	{
-		file_print("ERROR in postfix_expr ", stderr);
-		file_print(current_target->name, stderr);
-		file_print("->", stderr);
-		file_print(global_token->s, stderr);
-		file_print(" does not exist\n", stderr);
-		line_error();
-		exit(EXIT_FAILURE);
-	}
+
+	struct type* i = lookup_member(current_target, global_token->s);
+	current_target = i->type;
+	global_token = global_token->next;
+
 	if(0 != i->offset)
 	{
 		emit_out("# -> offset calculation\n");
@@ -408,12 +386,11 @@ void postfix_expr_arrow()
 		emit_out(numerate_number(i->offset));
 		emit_out("\nADD_ebx_to_eax\n");
 	}
-	if(!match("=", global_token->next->s) && !match("char**",i->type->name))
+
+	if(!match("=", global_token->s) && !match("char**", current_target->name))
 	{
 		emit_out("LOAD_INTEGER\n");
 	}
-	current_target = i->type;
-	global_token = global_token->next;
 }
 
 void postfix_expr_array()
@@ -421,19 +398,18 @@ void postfix_expr_array()
 	struct type* array = current_target;
 	common_recursion(expression);
 	current_target = array;
-	char* assign;
+	char* assign = "LOAD_INTEGER\n";
 
 	/* Add support for Ints */
-	if(!match("char*",  current_target->name))
+	if(match("char*",  current_target->name))
+	{
+		assign = "LOAD_BYTE\n";
+	}
+	else
 	{
 		emit_out("SAL_eax_Immediate8 !");
 		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
 		emit_out("\n");
-		assign = "LOAD_INTEGER\n";
-	}
-	else
-	{
-		assign = "LOAD_BYTE\n";
 	}
 
 	emit_out("ADD_ebx_to_eax\n");
@@ -704,17 +680,18 @@ void process_if()
 
 void process_for()
 {
-	char* number_string = numerate_number(current_count);
-	current_count = current_count + 1;
-
+	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = break_frame;
-	break_frame = function->locals;
+
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
+
 	break_target_head = "FOR_END_";
-	break_target_func = function->s;
 	break_target_num = number_string;
+	break_frame = function->locals;
+	break_target_func = function->s;
 
 	emit_out("# FOR_initialization_");
 	uniqueID_out(function->s, number_string);
@@ -780,17 +757,18 @@ void process_asm()
 /* Process do while loops */
 void process_do()
 {
-	char* number_string = numerate_number(current_count);
-	current_count = current_count + 1;
-
+	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = break_frame;
-	break_frame = function->locals;
+
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
+
 	break_target_head = "DO_END_";
-	break_target_func = function->s;
 	break_target_num = number_string;
+	break_frame = function->locals;
+	break_target_func = function->s;
 
 	emit_out(":DO_");
 	uniqueID_out(function->s, number_string);
@@ -819,18 +797,18 @@ void process_do()
 /* Process while loops */
 void process_while()
 {
-	char* number_string = numerate_number(current_count);
-	current_count = current_count + 1;
-
+	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
-	struct token_list* nested_locals = break_frame;
-	break_frame = function->locals;
+
+	char* number_string = numerate_number(current_count);
+	current_count = current_count + 1;
 
 	break_target_head = "END_WHILE_";
-	break_target_func = function->s;
 	break_target_num = number_string;
+	break_frame = function->locals;
+	break_target_func = function->s;
 
 	emit_out(":WHILE_");
 	uniqueID_out(function->s, number_string);
@@ -852,10 +830,10 @@ void process_while()
 	emit_out(":END_WHILE_");
 	uniqueID_out(function->s, number_string);
 
-	break_frame = nested_locals;
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
+	break_frame = nested_locals;
 }
 
 /* Ensure that functions return */
@@ -896,7 +874,7 @@ void process_break()
 	emit_out("_");
 	emit_out(break_target_num);
 	emit_out("\n");
-	require_match("ERROR in statement\nMissing ;\n", ";");
+	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
 
 void recursive_statement()

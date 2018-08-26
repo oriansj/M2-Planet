@@ -31,7 +31,6 @@ char* numerate_number(int a)
 	if(0 == a)
 	{
 		result[0] = '0';
-		result[1] = 10;
 		return result;
 	}
 

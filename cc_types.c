@@ -109,6 +109,24 @@ struct type* lookup_type(char* s, struct type* start)
 	return NULL;
 }
 
+struct type* lookup_member(struct type* parent, char* name)
+{
+	struct type* i;
+	for(i = parent->members; NULL != i; i = i->members)
+	{
+		if(match(i->name, name)) return i;
+	}
+
+	file_print("ERROR in lookup_member ", stderr);
+	file_print(parent->name, stderr);
+	file_print("->", stderr);
+	file_print(global_token->s, stderr);
+	file_print(" does not exist\n", stderr);
+	line_error();
+	file_print("\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
 struct type* type_name();
 void require_match(char* message, char* required);
 

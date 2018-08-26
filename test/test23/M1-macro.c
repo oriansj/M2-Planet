@@ -1,20 +1,20 @@
 /* -*- c-file-style: "linux";indent-tabs-mode:t -*- */
 /* Copyright (C) 2016 Jeremiah Orians
  * Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
- * This file is part of stage0.
+ * This file is part of mescc-tools.
  *
- * stage0 is free software: you can redistribute it and/or modify
+ * mescc-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * stage0 is distributed in the hope that it will be useful,
+ * mescc-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
+ * along with mescc-tools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -478,7 +478,7 @@ void eval_immediates(struct Token* p)
 		if((NULL == i->Expression) && !(i->type & MACRO))
 		{
 			int value;
-			if((1 == Architecture) || (2 == Architecture))
+			if((1 == Architecture) || (2 == Architecture) || (40 == Architecture))
 			{
 				value = numerate_string(i->Text + 1);
 				if(('0' == i->Text[1]) || (0 != value))
@@ -559,7 +559,8 @@ int main(int argc, char **argv)
 		{
 			file_print("Usage: ", stderr);
 			file_print(argv[0], stderr);
-			file_print(" -f FILENAME1 {-f FILENAME2} (--BigEndian|--LittleEndian) [--BaseAddress 12345] [--Architecture 12345]\nArchitecture 0: Knight; 1: x86; 2: AMD64", stderr);
+			file_print(" -f FILENAME1 {-f FILENAME2} (--BigEndian|--LittleEndian) ", stderr);
+			file_print("[--Architecture 12345]\nArchitecture 0: Knight; 1: x86; 2: AMD64; 40: armv7", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))

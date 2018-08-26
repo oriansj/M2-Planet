@@ -1,20 +1,20 @@
 /* -*- c-file-style: "linux";indent-tabs-mode:t -*- */
 /* Copyright (C) 2017 Jeremiah Orians
  * Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
- * This file is part of MES
+ * This file is part of mescc-tools
  *
- * MES is free software: you can redistribute it and/or modify
+ * mescc-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * MES is distributed in the hope that it will be useful,
+ * mescc-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
+ * along with mescc-tools.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -179,6 +179,7 @@ int Architectural_displacement(int target, int base)
 	if(0 == Architecture) return (target - base);
 	else if(1 == Architecture) return (target - base);
 	else if(2 == Architecture) return (target - base);
+	else if(40 == Architecture) return (target - base);
 
 	file_print("Unknown Architecture, aborting before harm is done\n", stderr);
 	exit(EXIT_FAILURE);
@@ -221,7 +222,11 @@ void storePointer(char ch, FILE* source_file)
 	displacement = Architectural_displacement(target, base);
 
 	/* output calculated difference */
-	if(33 == ch) outputPointer(displacement, 1); /* Deal with ! */
+	if(33 == ch)
+	{
+		if(40 == Architecture) outputPointer(displacement - 7, 1); /* Deal with ! */
+		else outputPointer(displacement, 1); /* Deal with ! */
+	}
 	else if(36 == ch) outputPointer(target, 2); /* Deal with $ */
 	else if(64 == ch) outputPointer(displacement, 2); /* Deal with @ */
 	else if(38 == ch) outputPointer(target, 4); /* Deal with & */
@@ -457,7 +462,8 @@ int main(int argc, char **argv)
 			file_print(argv[0], stderr);
 			file_print(" -f FILENAME1 {-f FILENAME2} (--BigEndian|--LittleEndian)", stderr);
 			file_print(" [--BaseAddress 12345] [--Architecture 12345]\nArchitecture", stderr);
-			file_print(" 0: Knight; 1: x86; 2: AMD64\nTo leverage octal or binary", stderr);
+			file_print(" 0: Knight; 1: x86; 2: AMD64; 40: armv7", stderr);
+			file_print("\nTo leverage octal or binary", stderr);
 			file_print(" input: --octal, --binary\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
