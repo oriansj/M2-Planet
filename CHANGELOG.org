@@ -16,6 +16,17 @@
 
 * Current
 ** Added
+Added support for \f, \v and \e
+
+** Changed
+Converted M2-Planet to use GNU style error message
+
+** Fixed
+
+** Removed
+
+* 1.0 - 2018-08-26
+** Added
 Added more generic logic to lookup_type
 Added prim_types to simply the task of reducing search space to primitives
 

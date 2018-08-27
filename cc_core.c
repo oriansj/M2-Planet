@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2018 Jan (janneke) Nieuwenhuizen <janneke@gnu.org>
  * This file is part of stage0.
  *
  * stage0 is free software: you can redistribute it and/or modify
@@ -93,18 +94,18 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 
 void line_error()
 {
-	file_print("In file: ", stderr);
 	file_print(global_token->filename, stderr);
-	file_print(" On line: ", stderr);
+	file_print(":", stderr);
 	file_print(numerate_number(global_token->linenumber), stderr);
+	file_print(":", stderr);
 }
 
 void require_match(char* message, char* required)
 {
 	if(!match(global_token->s, required))
 	{
-		file_print(message, stderr);
 		line_error();
+		file_print(message, stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
@@ -218,10 +219,10 @@ void global_load(struct token_list* a)
 
 void primary_expr_failure()
 {
+	line_error();
 	file_print("Recieved ", stderr);
 	file_print(global_token->s, stderr);
 	file_print(" in primary_expr\n", stderr);
-	line_error();
 	exit(EXIT_FAILURE);
 }
 
@@ -296,9 +297,9 @@ void primary_expr_variable()
 		return;
 	}
 
+	line_error();
 	file_print(s ,stderr);
 	file_print(" is not a defined symbol\n", stderr);
-	line_error();
 	exit(EXIT_FAILURE);
 }
 
@@ -856,8 +857,8 @@ void process_break()
 {
 	if(NULL == break_target_head)
 	{
-		file_print("Not inside of a loop or case statement", stderr);
 		line_error();
+		file_print("Not inside of a loop or case statement", stderr);
 		exit(EXIT_FAILURE);
 	}
 	struct token_list* i = function->locals;
@@ -1132,10 +1133,10 @@ new_type:
 			}
 			else
 			{
+				line_error();
 				file_print("Recieved ", stderr);
 				file_print(global_token->s, stderr);
 				file_print(" in program\n", stderr);
-				line_error();
 				exit(EXIT_FAILURE);
 			}
 
@@ -1144,10 +1145,10 @@ new_type:
 		}
 		else
 		{
+			line_error();
 			file_print("Recieved ", stderr);
 			file_print(global_token->s, stderr);
 			file_print(" in program\n", stderr);
-			line_error();
 			exit(EXIT_FAILURE);
 		}
 	}

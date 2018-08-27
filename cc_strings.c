@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2018 Jan (janneke) Nieuwenhuizen <janneke@gnu.org>
  * This file is part of stage0.
  *
  * stage0 is free software: you can redistribute it and/or modify
@@ -80,12 +81,15 @@ int escape_lookup(char* c)
 		int t2 = hexify(c[3], FALSE);
 		return t1 + t2;
 	}
-	else if(c[1] == 'n') return 10;
 	else if(c[1] == 't') return 9;
-	else if(c[1] == '\\') return 92;
-	else if(c[1] == '\'') return 39;
-	else if(c[1] == '"') return 34;
+	else if(c[1] == 'n') return 10;
+	else if(c[1] == 'v') return 11;
+	else if(c[1] == 'f') return 12;
 	else if(c[1] == 'r') return 13;
+	else if(c[1] == 'e') return 27;
+	else if(c[1] == '"') return 34;
+	else if(c[1] == '\'') return 39;
+	else if(c[1] == '\\') return 92;
 
 	file_print("Unknown escape recieved: ", stderr);
 	file_print(c, stderr);
