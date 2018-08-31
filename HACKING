@@ -1,15 +1,12 @@
 -*-mode:org-*-
 
-M2-Planet being based on the goal of bootstrapping the Minimal C compiler required to support structs, arrays, inline assembly and self hosting;
+M2-Planet being based on the goal of bootstrapping the Minimal C compiler
+required to support structs, arrays, inline assembly and self hosting;
 is rather small, under 1.7Kloc according to sloccount
 
 * SETUP
 The most obvious way to setup for M2-Planet development is to clone and setup mescc-tools first (https://github.com/oriansj/mescc-tools.git)
 Then be sure to install any C compiler and make clone of your choice.
-
-Should you wish to verify or leverage the M2-Moon bootstrap path;
-please make sure to setup M2-Moon (https://github.com/oriansj/M2-Moon.git)
-and then setup the knight-vm (https://github.com/oriansj/knight-vm.git)
 
 * BUILD
 The standard C based approach to building M2-Planet is simply running:
@@ -19,11 +16,16 @@ Should you wish to verify that M2-Planet was built correctly run:
 make test
 
 * ROADMAP
-The current outstanding work for M2-Planet involves porting M2-Planet into M2-Moon and extending its functionality
+M2-Planet V1.0 is the bedrock of all future M2-Planet versions. Any future
+release that will depend upon a more advanced version to be compiled, will
+require the version prior to it to be named V2.0 and the same properties apply
+To all future release of M2-Planet. All minor releases are buildable by the last
+major release and All major releases are buildable by the last major release.
 
 * DEBUG
-To get a properly debuggable binary:
-make M2-Planet-gcc
+To get a properly debuggable binary: make M2-Planet-gcc
+However if you are comfortable with gdb, knowing that function names are
+prefixed with FUNCTION_ the M2-Planet binary is quite debuggable.
 
 * Bugs
 M2-Planet assumes a very heavily restricted subset of the C language and many C

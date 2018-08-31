@@ -5,10 +5,17 @@ Building and Installing M2-Planet
 
 * Prerequisites
 ** Bootstrapping
-M2-Planet will be bootstrappable by M2-Moon and mescc-tools
+M2-Planet will be bootstrappable by stage0
+(https://git.savannah.nongnu.org/git/stage0.git)
+and mescc-tools (https://git.savannah.nongnu.org/git/mescc-tools.git)
 
 ** Development
-The tools required for easier development include binutils, gcc and make; along with the above bootstrapping programs
+The tools required for easier development include binutils, gcc and make;
+along with the above bootstrapping programs
+
+** Dependencies
+M2-Planet depends upon mescc-tools to convert the files it outputs into working
+binaries and for it to build itself
 
 * Build it
 	make
