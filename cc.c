@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 			{
 				file_print("Unable to open for reading file: ", stderr);
 				file_print(name, stderr);
-				file_print("\x0A Aborting to avoid problems\x0A", stderr);
+				file_print("\n Aborting to avoid problems\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			global_token = read_all_tokens(in, global_token, name);
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 			{
 				file_print("Unable to open for writing file: ", stderr);
 				file_print(argv[i + 1], stderr);
-				file_print("\x0A Aborting to avoid problems\x0A", stderr);
+				file_print("\n Aborting to avoid problems\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
@@ -75,17 +75,17 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			file_print(" -f input file\x0A -o output file\x0A --help for this message\x0A --version for file version\x0A", stdout);
+			file_print(" -f input file\n -o output file\n --help for this message\n --version for file version\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
-			file_print("Basic test version 0.0.0.1a\x0A", stderr);
+			file_print("M2-Planet v1.0.0\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else
 		{
-			file_print("UNKNOWN ARGUMENT\x0A", stdout);
+			file_print("UNKNOWN ARGUMENT\n", stdout);
 			exit(EXIT_FAILURE);
 		}
 	}

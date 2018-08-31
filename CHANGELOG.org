@@ -23,6 +23,8 @@ Converted M2-Planet to use GNU style error message
 
 ** Fixed
 Fixed typo in file headers
+Fixed version number to reflect current version
+Thanks to akkartik several documentation issues were identified and fixed
 
 ** Removed
 
