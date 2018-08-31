@@ -17,9 +17,11 @@
 * Current
 ** Added
 Added support for \f, \v and \e
+Added refresh to bootstrap.sh to build seed from cc_x86.s
 
 ** Changed
 Converted M2-Planet to use GNU style error message
+Seed.M1 when built will now have the same checksum as M2-Planet self-hosted
 
 ** Fixed
 Fixed typo in file headers
