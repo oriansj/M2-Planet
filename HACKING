@@ -18,7 +18,7 @@ make test
 * ROADMAP
 M2-Planet V1.0 is the bedrock of all future M2-Planet versions. Any future
 release that will depend upon a more advanced version to be compiled, will
-require the version prior to it to be named V2.0 and the same properties apply
+require the version prior to it to be named. V2.0 and the same properties apply
 To all future release of M2-Planet. All minor releases are buildable by the last
 major release and All major releases are buildable by the last major release.
 
@@ -34,3 +34,38 @@ programs will break hard when passed to M2-Planet.
 M2-Planet does not actually implement any primitive functionality, it is assumed
 that will be written in inline assembly by the programmer or provided by the
 programmer durring the assembly and linking stages
+
+* Magic
+** argument and local stack
+In M2-Planet the stack is first the EDI pointer which is preserved as should an
+argument be a function which returns a value, it may be overwritten and cause
+issues, this is followed by the previous frame's base pointer (EBP) as it will
+need to be restored upon return from the function call. This is then followed by
+the arguments which are pushed onto the stack from the left to the right,
+followed by the RETURN Pointer generated from the function call, after which the
+locals are placed upon the stack first to last followed by any Temporary values:
+       +----------------------+
+EDI -> | Previous EDI pointer |
+       +----------------------+
+EBP -> | Previous EBP pointer |
+       +----------------------+
+1st -> | Argument 1           |
+       +----------------------+
+2nd -> | Argument 2           |
+       +----------------------+
+... -> ........................
+       +----------------------+
+Nth -> | Argument N           |
+       +----------------------+
+RET -> | RETURN Pointer       |
+       +----------------------+
+1st -> | Local 1              |
+       +----------------------+
+2nd -> | Local 2              |
+       +----------------------+
+... -> ........................
+       +----------------------+
+Nth -> | Local N              |
+       +----------------------+
+temps-> .......................
+
