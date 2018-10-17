@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /usr/bin/env bash
 ## Copyright (C) 2017 Jeremiah Orians
 ## This file is part of M2-Planet.
 ##
@@ -15,7 +15,26 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-rm -f test/test06/for.M1
-rm -f test/test06/for.hex2
-rm -f test/test06/proof
-exit 0
+# Make the required bin directry
+mkdir -p bin
+
+# Build debug footer
+blood-elf -f seed.M1 -o bin/seed-footer.M1
+
+# Macro assemble with libc written in M1-Macro
+M1 -f test/common_x86/x86_defs.M1 \
+	-f functions/libc-core.M1 \
+	-f seed.M1 \
+	-f bin/seed-footer.M1 \
+	--LittleEndian \
+	--Architecture 1 \
+	-o bin/seed.hex2
+
+# Resolve all linkages
+hex2 -f test/common_x86/ELF-i386-debug.hex2 \
+	-f bin/seed.hex2 \
+	--LittleEndian \
+	--Architecture 1 \
+	--BaseAddress 0x8048000 \
+	-o bin/M2-Planet \
+	--exec_enable

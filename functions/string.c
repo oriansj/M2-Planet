@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include<stdlib.h>
 #define MAX_STRING 4096
 //CONSTANT MAX_STRING 4096
