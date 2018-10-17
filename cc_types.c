@@ -55,7 +55,7 @@ void initialize_types()
 	struct type* d = calloc(1, sizeof(struct type));
 	d->name = "char**";
 	d->size = 4;
-	d->type = c;
+	d->type = b;
 	d->indirect = d;
 
 	/*fix up indrects for chars */

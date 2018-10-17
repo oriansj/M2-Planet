@@ -37,13 +37,12 @@ char* break_target_num;
 struct token_list* break_frame;
 int current_count;
 struct type* last_type;
+int Address_of;
 
 /* Imported functions */
 char* parse_string(char* string);
 int escape_lookup(char* c);
 char* numerate_number(int a);
-
-
 
 
 struct token_list* emit(char *s, struct token_list* head)
@@ -179,8 +178,8 @@ void variable_load(struct token_list* a)
 	emit_out("LOAD_BASE_ADDRESS_eax %");
 	emit_out(numerate_number(a->depth));
 	emit_out("\n");
+	if(TRUE == Address_of) return;
 	if(match("=", global_token->s)) return;
-	if(match("char**", a->type->name)) return;
 
 	emit_out("LOAD_INTEGER\n");
 }
@@ -388,7 +387,7 @@ void postfix_expr_arrow()
 		emit_out("\nADD_ebx_to_eax\n");
 	}
 
-	if(!match("=", global_token->s) && !match("char**", current_target->name))
+	if((!match("=", global_token->s) && (4 >= i->size)))
 	{
 		emit_out("LOAD_INTEGER\n");
 	}
@@ -553,6 +552,16 @@ void bitwise_expr()
 
 void primary_expr()
 {
+	if(match("&", global_token->s))
+	{
+		Address_of = TRUE;
+		global_token = global_token->next;
+	}
+	else
+	{
+		Address_of = FALSE;
+	}
+
 	if(match("sizeof", global_token->s)) unary_expr_sizeof();
 	else if('-' == global_token->s[0])
 	{
@@ -608,7 +617,7 @@ void collect_local()
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
-		a->depth = -4;
+		a->depth = -20;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
@@ -1004,12 +1013,7 @@ void collect_arguments()
 		{
 			/* deal with foo(int a, char b) */
 			struct token_list* a = sym_declare(global_token->s, type_size, function->arguments);
-			if(match("main", function->s))
-			{
-				if(match("argc", a->s)) a->depth = 4;
-				if(match("argv", a->s)) a->depth = 8;
-			}
-			else if(NULL == function->arguments)
+			if(NULL == function->arguments)
 			{
 				a->depth = -4;
 			}
@@ -1047,10 +1051,6 @@ void declare_function()
 		emit_out(":FUNCTION_");
 		emit_out(function->s);
 		emit_out("\n");
-		if(match("main", function->s))
-		{
-			emit_out("COPY_esp_to_ebp\t# Deal with special case\n");
-		}
 		statement();
 
 		/* Prevent duplicate RETURNS */
@@ -1083,6 +1083,7 @@ struct token_list* program()
 {
 	out = NULL;
 	function = NULL;
+	Address_of = FALSE;
 	struct type* type_size;
 
 new_type:
