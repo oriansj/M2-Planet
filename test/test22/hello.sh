@@ -60,7 +60,7 @@ then
 	[ "$out" = "hex2 0.3" ] || exit 6
 
 	# Verify that the resulting file works
-	./test/results/test22-binary -f test/common_x86/ELF-i386-debug.hex2 \
+	./test/results/test22-binary -f test/common_x86/ELF-i386.hex2 \
 	-f test/test22/test.hex2 \
 	--LittleEndian \
 	--Architecture 1 \

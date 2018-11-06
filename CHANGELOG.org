@@ -30,6 +30,7 @@ Fixed typo in file headers
 Fixed version number to reflect current version
 Thanks to akkartik several documentation issues were identified and fixed
 Corrected missed license headers
+Fix regression caused by Linux 4.17
 
 ** Removed
 
