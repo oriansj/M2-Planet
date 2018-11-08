@@ -33,6 +33,7 @@ Corrected missed license headers
 Fix regression caused by Linux 4.17
 
 ** Removed
+Removed redundent x86 definitions
 
 * 1.0 - 2018-08-26
 ** Added
