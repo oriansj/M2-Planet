@@ -575,6 +575,11 @@ void primary_expr()
 		common_recursion(postfix_expr);
 		emit_out("XOR_ebx_eax_into_eax\n");
 	}
+	else if('~' == global_token->s[0])
+	{
+		common_recursion(postfix_expr);
+		emit_out("NOT_eax\n");
+	}
 	else if(global_token->s[0] == '(')
 	{
 		global_token = global_token->next;

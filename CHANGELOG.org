@@ -19,6 +19,8 @@
 Added support for \f, \v and \e
 Added refresh to bootstrap.sh to build seed from cc_x86.s
 Added missing license headers
+Added support for ~expressions
+Added prototype for Slow_Lisp build test
 
 ** Changed
 Converted M2-Planet to use GNU style error message
