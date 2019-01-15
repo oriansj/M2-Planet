@@ -86,7 +86,14 @@ void initialize_types()
 	/* unsigned* has the same properties as unsigned */
 	g->indirect = g;
 
+	/* Custom type for mescc*/
+	struct type* h = calloc(1, sizeof(struct type));
+	h->name = "SCM";
+	h->size = 4;
+	h->indirect = h;
+
 	/* Finalize type list */
+	g->next = h;
 	f->next = g;
 	e->next = f;
 	d->next = e;
