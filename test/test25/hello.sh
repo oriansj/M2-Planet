@@ -23,6 +23,7 @@ set -x
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/match.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/fork.c \
 	-f functions/execve.c \

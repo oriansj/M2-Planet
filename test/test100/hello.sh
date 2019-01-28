@@ -24,6 +24,7 @@ then
 	-f functions/calloc.c \
 	-f functions/exit.c \
 	-f functions/match.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
 	-f functions/string.c \
@@ -41,6 +42,7 @@ else
 	-f functions/calloc.c \
 	-f functions/exit.c \
 	-f functions/match.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
 	-f functions/string.c \
@@ -84,6 +86,7 @@ then
 		-f functions/calloc.c \
 		-f functions/exit.c \
 		-f functions/match.c \
+		-f functions/in_set.c \
 		-f functions/numerate_number.c \
 		-f functions/file_print.c \
 		-f functions/string.c \

@@ -20,6 +20,7 @@ set -x
 ./bin/M2-Planet -f test/test26/lisp.h \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/match.c \
 	-f functions/file.c \

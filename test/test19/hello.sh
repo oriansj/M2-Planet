@@ -22,6 +22,7 @@ bin/M2-Planet -f functions/file.c \
 	-f functions/calloc.c \
 	-f functions/exit.c \
 	-f functions/match.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f test/test19/getopt.c \
 	-o test/test19/getopt.M1 || exit 1

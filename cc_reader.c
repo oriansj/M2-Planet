@@ -20,6 +20,7 @@ FILE* input;
 struct token_list* token;
 int line;
 char* file;
+int in_set(int c, char* s);
 
 int clearWhiteSpace(int c)
 {
@@ -51,8 +52,7 @@ int consume_word(int c, int frequent)
 	return fgetc(input);
 }
 
-
-void fixup_label()
+ void fixup_label()
 {
 	int hold = ':';
 	int prev;
@@ -64,16 +64,6 @@ void fixup_label()
 		hold_string[i] = prev;
 		i = i + 1;
 	} while(0 != hold);
-}
-
-int in_set(int c, char* s)
-{
-	while(0 != s[0])
-	{
-		if(c == s[0]) return TRUE;
-		s = s + 1;
-	}
-	return FALSE;
 }
 
 int preserve_keyword(int c)

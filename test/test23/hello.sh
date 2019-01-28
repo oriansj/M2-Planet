@@ -23,6 +23,7 @@ set -x
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/match.c \
+	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/string.c \
 	-f test/test23/M1-macro.c \

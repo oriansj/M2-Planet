@@ -25,6 +25,7 @@ CFLAGS=-D_GNU_SOURCE -O0 -std=c99 -ggdb
 M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
 	$(CC) $(CFLAGS) \
 	functions/match.c \
+	functions/in_set.c \
 	functions/numerate_number.c \
 	functions/file_print.c \
 	functions/string.c \

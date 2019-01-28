@@ -22,6 +22,7 @@
 //CONSTANT TRUE 1
 #define FALSE 0
 //CONSTANT FALSE 0
+int in_set(int c, char* s);
 
 char* numerate_number(int a)
 {
@@ -87,63 +88,80 @@ int dec2char(int c)
 	else return -1;
 }
 
+int index_number(char* s, char c)
+{
+	int i = 0;
+	while(s[i] != c)
+	{
+		i = i + 1;
+		if(0 == s[i]) return -1;
+	}
+	return i;
+}
+
+int toupper(int c)
+{
+	if(in_set(c, "abcdefghijklmnopqrstuvwxyz")) return (c & 0xDF);
+	return c;
+}
+
+int set_reader(char* set, int mult, char* input)
+{
+	int n = 0;
+	int i = 0;
+	int hold;
+	int negative_p = 0;
+
+	if(input[0] == '-')
+	{
+		negative_p = 1;
+		i = i + 1;
+	}
+
+	while(in_set(input[i], set))
+	{
+		n = n * mult;
+		hold = index_number(set, toupper(input[i]));
+		if(-1 == hold) return 0;
+		n = n + hold;
+		i = i + 1;
+	}
+
+	if(0 != input[i]) return 0;
+
+	if(negative_p)
+	{
+		n = 0 - n;
+	}
+
+	return n;
+}
+
 int numerate_string(char *a)
 {
-	int count = 0;
-	int index;
-	int negative;
-
 	/* If NULL string */
 	if(0 == a[0])
 	{
 		return 0;
 	}
-	/* Deal with hex */
-	else if (a[0] == '0' && a[1] == 'x')
+	/* Deal with binary*/
+	else if ('0' == a[0] && 'b' == a[1])
 	{
-		if('-' == a[2])
-		{
-			negative = TRUE;
-			index = 3;
-		}
-		else
-		{
-			negative = FALSE;
-			index = 2;
-		}
-
-		while(0 != a[index])
-		{
-			if(-1 == char2hex(a[index])) return 0;
-			count = (16 * count) + char2hex(a[index]);
-			index = index + 1;
-		}
+		return set_reader("01", 2, a+2);
+	}
+	/* Deal with hex */
+	else if ('0' == a[0] &&  'x' == a[1])
+	{
+		return set_reader("0123456789ABCDEFabcdef", 16, a+2);
+	}
+	/* Deal with ocal */
+	else if('0' == a[0])
+	{
+		return set_reader("01234567", 8, a+1);
 	}
 	/* Deal with decimal */
 	else
 	{
-		if('-' == a[0])
-		{
-			negative = TRUE;
-			index = 1;
-		}
-		else
-		{
-			negative = FALSE;
-			index = 0;
-		}
-
-		while(0 != a[index])
-		{
-			if(-1 == char2dec(a[index])) return 0;
-			count = (10 * count) + char2dec(a[index]);
-			index = index + 1;
-		}
+		return set_reader("0123456789", 10, a);
 	}
-
-	if(negative)
-	{
-		count = count * -1;
-	}
-	return count;
 }

@@ -22,6 +22,7 @@ Added missing license headers
 Added support for ~expressions
 Added prototype for Slow_Lisp build test
 Added Custom type for mes.h
+Added support for octal and binary numbers
 
 ** Changed
 Converted M2-Planet to use GNU style error message
