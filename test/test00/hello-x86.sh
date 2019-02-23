@@ -29,13 +29,13 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-o test/test00/return.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test00/return.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test00-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test00/return.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test00-x86-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program returns the correct result
-	./test/results/test00-binary
+	./test/results/test00-x86-binary
 	[ 42 = $? ] || exit 3
 fi
 exit 0

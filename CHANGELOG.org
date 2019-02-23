@@ -26,6 +26,7 @@ Added support for octal and binary numbers
 Added support for \0
 Added support for GET_MACHINE_FLAGS in tests
 Added --architecture flag
+Added first knight-posix test
 
 ** Changed
 Converted M2-Planet to use GNU style error message

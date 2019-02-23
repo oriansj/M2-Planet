@@ -62,7 +62,8 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test00-binary \
+test: test00-x86-binary \
+	test00-knight-posix-binary \
 	test01-binary \
 	test02-binary \
 	test03-binary \
@@ -91,8 +92,11 @@ test: test00-binary \
 	test100-binary | results
 	sha256sum -c test/test.answers
 
-test00-binary: M2-Planet | results
-	test/test00/hello.sh
+test00-x86-binary: M2-Planet | results
+	test/test00/hello-x86.sh
+
+test00-knight-posix-binary: M2-Planet | results
+	test/test00/hello-knight-posix.sh
 
 test01-binary: M2-Planet | results
 	test/test01/hello.sh

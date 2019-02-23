@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 	}
 
 	/* Temp solution to aborting when an architecture isn't supported yet but is expected to be fully supported */
-	if(!in_set(Architecture, "\x02"))
+	if(!in_set(Architecture, "\x01\x02"))
 	{
 		file_print("ALL IS FIRE\n\n", stderr);
 		exit(EXIT_FAILURE);
