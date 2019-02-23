@@ -17,7 +17,7 @@
 
 set -ex
 # Build the test
-bin/M2-Planet -f functions/file.c \
+bin/M2-Planet --architecture x86 -f functions/file.c \
 	-f functions/putchar.c \
 	-f test/test15/file_read.c \
 	-o test/test15/file_read.M1 || exit 1
@@ -34,7 +34,7 @@ M1 -f test/common_x86/x86_defs.M1 \
 hex2 -f test/common_x86/ELF-i386.hex2 -f test/test15/file_read.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test15-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine)" = "x86_64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the resulting file works
 	./test/results/test15-binary test/test15/file_read.c >| test/test15/proof || exit 4

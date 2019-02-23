@@ -24,6 +24,8 @@ Added prototype for Slow_Lisp build test
 Added Custom type for mes.h
 Added support for octal and binary numbers
 Added support for \0
+Added support for GET_MACHINE_FLAGS in tests
+Added --architecture flag
 
 ** Changed
 Converted M2-Planet to use GNU style error message
@@ -31,7 +33,9 @@ Seed.M1 when built will now have the same checksum as M2-Planet self-hosted
 Harmonized license headers
 Updated M1 to current version
 Updated hex2 to current version
+Updated get_machine to current version
 Updated to mescc-tools 0.6.0 syntax
+Changed default architecture to knight-native
 
 ** Fixed
 Fixed typo in file headers

@@ -79,3 +79,6 @@ struct token_list* globals_list;
 /* Make our string collection more efficient */
 char* hold_string;
 int string_index;
+
+/* Our Target Architecture */
+int Architecture;

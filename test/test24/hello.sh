@@ -17,12 +17,13 @@
 
 set -x
 # Build the test
-./bin/M2-Planet -f functions/exit.c \
+./bin/M2-Planet --architecture x86 -f functions/exit.c \
 	-f functions/file.c \
 	-f functions/file_print.c \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/uname.c \
+	-f functions/match.c \
 	-f test/test24/get_machine.c \
 	--debug \
 	-o test/test24/get_machine.M1 || exit 1
@@ -50,11 +51,11 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine)" = "x86_64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test24-binary 2>&1 )
+	out=$(./test/results/test24-binary ${GET_MACHINE_FLAGS} 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "x86_64" ] || exit 6
+	[ "$out" = "x86" ] || exit 6
 fi
 exit 0

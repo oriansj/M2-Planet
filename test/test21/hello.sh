@@ -17,7 +17,7 @@
 
 set -x
 # Build the test
-./bin/M2-Planet -f functions/exit.c \
+./bin/M2-Planet --architecture x86 -f functions/exit.c \
 	-f functions/file.c \
 	-f functions/file_print.c \
 	-f functions/malloc.c \
@@ -50,7 +50,7 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	 --exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine)" = "x86_64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test21-binary --version 2>&1 )

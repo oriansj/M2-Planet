@@ -35,6 +35,9 @@ int main(int argc, char** argv)
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
+	Architecture = 0; /* Assume Knight-native */
+	char* arch;
+
 	int i = 1;
 	while(i <= argc)
 	{
@@ -68,6 +71,22 @@ int main(int argc, char** argv)
 			}
 			i = i + 2;
 		}
+		else if(match(argv[i], "-A") || match(argv[i], "--architecture"))
+		{
+			arch = argv[i + 1];
+			if(match("knight-native", arch)) Architecture = 0;
+			else if(match("knight-posix", arch)) Architecture = 1;
+			else if(match("x86", arch)) Architecture = 2;
+			else if(match("amd64", arch)) Architecture = 3;
+			else if(match("armv7l", arch)) Architecture = 40;
+			else
+			{
+				file_print("Unknown architecture: ", stderr);
+				file_print(arch, stderr);
+				file_print(" know values are: knight-native, knight-posix, x86, amd64 and armv7l", stderr);
+			}
+			i = i + 2;
+		}
 		else if(match(argv[i], "-g") || match(argv[i], "--debug"))
 		{
 			DEBUG = TRUE;
@@ -88,6 +107,13 @@ int main(int argc, char** argv)
 			file_print("UNKNOWN ARGUMENT\n", stdout);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	/* Temp solution to aborting when an architecture isn't supported yet but is expected to be fully supported */
+	if(!in_set(Architecture, "\x02"))
+	{
+		file_print("ALL IS FIRE\n\n", stderr);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Deal with special case of wanting to read from standard input */

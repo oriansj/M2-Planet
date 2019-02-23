@@ -19,7 +19,7 @@ set -ex
 # Build the test
 if [ -f bin/M2-Planet ]
 then
-./bin/M2-Planet -f functions/file.c \
+./bin/M2-Planet --architecture x86 -f functions/file.c \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/exit.c \
@@ -39,7 +39,7 @@ then
 elif [ -f bin/M2-Planet-seed ]
 then
 [ ! -f test/results ] && mkdir test/results
-./bin/M2-Planet-seed -f functions/file.c \
+./bin/M2-Planet-seed --architecture x86 -f functions/file.c \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/exit.c \
@@ -75,7 +75,7 @@ ${CC} ${CFLAGS} \
 	gcc_req.h \
 	-o bin/M2-Planet-gcc
 
-./bin/M2-Planet-gcc -f functions/file.c \
+./bin/M2-Planet-gcc --architecture x86 -f functions/file.c \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/exit.c \
@@ -116,10 +116,10 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-o test/results/test100-binary --exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine)" = "x86_64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the resulting file works
-	./test/results/test100-binary -f functions/file.c \
+	./test/results/test100-binary --architecture x86 -f functions/file.c \
 		-f functions/malloc.c \
 		-f functions/calloc.c \
 		-f functions/exit.c \
@@ -140,6 +140,9 @@ then
 	[ "$out" = "test/test100/proof: OK" ] || exit 6
 	[ ! -e bin/M2-Planet ] && mv test/results/test100-binary bin/M2-Planet
 else
-	cp bin/M2-Planet-gcc bin/M2-Planet
+	[ -e bin/M2-Planet-gcc ] && cp bin/M2-Planet-gcc bin/M2-Planet
+
+	# Seeds only exist if you can build natively
+	[ -e bin/M2-Planet-seed ] && cp test/results/test100-binary bin/M2-Planet
 fi
 exit 0

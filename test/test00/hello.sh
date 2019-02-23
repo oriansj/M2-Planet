@@ -17,7 +17,7 @@
 
 set -x
 # Build the test
-bin/M2-Planet -f test/test00/return.c \
+bin/M2-Planet --architecture x86 -f test/test00/return.c \
 	-o test/test00/return.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
@@ -32,7 +32,7 @@ M1 -f test/common_x86/x86_defs.M1 \
 hex2 -f test/common_x86/ELF-i386.hex2 -f test/test00/return.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test00-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine)" = "x86_64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program returns the correct result
 	./test/results/test00-binary
