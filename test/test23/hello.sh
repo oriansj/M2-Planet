@@ -40,14 +40,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test23/M1-macro.M1 \
 	-f test/test23/M1-macro-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test23/M1-macro.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f test/test23/M1-macro.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test23-binary \
 	--exec_enable || exit 4
@@ -66,7 +66,7 @@ then
 		-f functions/libc-core.M1 \
 		-f test/test21/test.M1 \
 		--LittleEndian \
-		--Architecture 1 \
+		--architecture x86 \
 		-o test/test23/proof || exit 7
 
 	out=$(sha256sum -c test/test23/proof.answer)

@@ -40,14 +40,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test22/hex2_linker.M1 \
 	-f test/test22/hex2_linker-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test22/hex2_linker.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f test/test22/hex2_linker.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test22-binary \
 	--exec_enable || exit 4
@@ -64,7 +64,7 @@ then
 	./test/results/test22-binary -f test/common_x86/ELF-i386.hex2 \
 	-f test/test22/test.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/test22/proof || exit 7
 	out=$(sha256sum -c test/test22/proof.answer)

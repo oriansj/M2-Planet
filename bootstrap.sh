@@ -18,6 +18,8 @@
 set -eux
 stage0_PREFIX=${stage0_PREFIX-../stage0}
 
+[ -e bin/M2-Planet ] && rm bin/M2-Planet
+
 # Refresh stage0's M2-Planet_x86.c
 # To execute this block ./bootstrap.sh refresh
 if [ "refresh" = "${1-NOPE}" ]
@@ -88,14 +90,17 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f seed.M1 \
 	-f bin/seed-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o bin/seed.hex2 || exit 2
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f bin/seed.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
-	-o bin/M2-Planet \
+	-o bin/M2-Planet-seed \
 	--exec_enable || exit 2
+
+# self-host
+./test/test100/hello.sh

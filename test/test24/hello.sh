@@ -37,14 +37,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test24/get_machine.M1 \
 	-f test/test24/get_machine-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test24/get_machine.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f test/test24/get_machine.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test24-binary \
 	--exec_enable || exit 4

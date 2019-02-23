@@ -36,7 +36,45 @@ then
 	-f cc.c \
 	--debug \
 	-o test/test100/cc.M1 || exit 1
+elif [ -f bin/M2-Planet-seed ]
+then
+[ ! -f test/results ] && mkdir test/results
+./bin/M2-Planet-seed -f functions/file.c \
+	-f functions/malloc.c \
+	-f functions/calloc.c \
+	-f functions/exit.c \
+	-f functions/match.c \
+	-f functions/in_set.c \
+	-f functions/numerate_number.c \
+	-f functions/file_print.c \
+	-f functions/string.c \
+	-f cc.h \
+	-f cc_reader.c \
+	-f cc_strings.c \
+	-f cc_types.c \
+	-f cc_core.c \
+	-f cc.c \
+	--debug \
+	-o test/test100/cc.M1 || exit 1
 else
+[ -z "${CC+x}" ] && export CC=gcc
+[ -z "${CFLAGS+x}" ] && export CFLAGS=" -D_GNU_SOURCE -O0 -std=c99 -ggdb"
+
+${CC} ${CFLAGS} \
+	functions/match.c \
+	functions/in_set.c \
+	functions/numerate_number.c \
+	functions/file_print.c \
+	functions/string.c \
+	cc_reader.c \
+	cc_strings.c \
+	cc_types.c \
+	cc_core.c \
+	cc.c \
+	cc.h \
+	gcc_req.h \
+	-o bin/M2-Planet-gcc
+
 ./bin/M2-Planet-gcc -f functions/file.c \
 	-f functions/malloc.c \
 	-f functions/calloc.c \
@@ -66,14 +104,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test100/cc.M1 \
 	-f test/test100/cc-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test100/cc.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f test/test100/cc.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test100-binary --exec_enable || exit 4
 

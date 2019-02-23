@@ -44,14 +44,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test26/lisp.M1 \
 	-f test/test26/lisp-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test26/lisp.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-f test/test26/lisp.hex2 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test26-binary \
 	--exec_enable || exit 4

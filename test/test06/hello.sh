@@ -26,11 +26,11 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f functions/libc-core.M1 \
 	-f test/test06/for.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test06/for.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test06/for.hex2 --LittleEndian --Architecture 1 --BaseAddress 0x8048000 -o test/results/test06-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test06/for.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test06-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine)" = "x86_64" ]

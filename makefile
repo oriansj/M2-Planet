@@ -19,26 +19,7 @@ VPATH = bin:test:test/results
 
 all: M2-Planet
 
-CC=gcc
-CFLAGS=-D_GNU_SOURCE -O0 -std=c99 -ggdb
-
-M2-Planet-gcc: cc_reader.c cc_strings.c cc_core.c cc.c cc_types.c cc.h | bin
-	$(CC) $(CFLAGS) \
-	functions/match.c \
-	functions/in_set.c \
-	functions/numerate_number.c \
-	functions/file_print.c \
-	functions/string.c \
-	cc_reader.c \
-	cc_strings.c \
-	cc_types.c \
-	cc_core.c \
-	cc.c \
-	cc.h \
-	gcc_req.h \
-	-o bin/M2-Planet-gcc
-
-M2-Planet: M2-Planet-gcc | bin results
+M2-Planet: bin results
 	./test/test100/hello.sh
 
 # Clean up after ourselves

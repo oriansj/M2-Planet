@@ -37,14 +37,14 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-f test/test21/blood-elf.M1 \
 	-f test/test21/blood-elf-footer.M1 \
 	--LittleEndian \
-	--Architecture 1 \
+	--architecture x86 \
 	-o test/test21/blood-elf.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	 -f test/test21/blood-elf.hex2 \
 	 --LittleEndian \
-	 --Architecture 1 \
+	 --architecture x86 \
 	 --BaseAddress 0x8048000 \
 	 -o test/results/test21-binary \
 	 --exec_enable || exit 4

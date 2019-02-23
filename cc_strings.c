@@ -81,6 +81,7 @@ int escape_lookup(char* c)
 		int t2 = hexify(c[3], FALSE);
 		return t1 + t2;
 	}
+	else if(c[1] == '0') return 0;
 	else if(c[1] == 't') return 9;
 	else if(c[1] == 'n') return 10;
 	else if(c[1] == 'v') return 11;
