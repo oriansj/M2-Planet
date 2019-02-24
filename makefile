@@ -64,7 +64,8 @@ results:
 # tests
 test: test00-x86-binary \
 	test00-knight-posix-binary \
-	test01-binary \
+	test01-x86-binary \
+	test01-knight-posix-binary \
 	test02-binary \
 	test03-binary \
 	test04-binary \
@@ -98,8 +99,11 @@ test00-x86-binary: M2-Planet | results
 test00-knight-posix-binary: M2-Planet | results
 	test/test00/hello-knight-posix.sh
 
-test01-binary: M2-Planet | results
-	test/test01/hello.sh
+test01-x86-binary: M2-Planet | results
+	test/test01/hello-x86.sh
+
+test01-knight-posix-binary: M2-Planet | results
+	test/test01/hello-knight-posix.sh
 
 test02-binary: M2-Planet | results
 	test/test02/hello.sh

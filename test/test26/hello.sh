@@ -25,7 +25,7 @@ set -x
 	-f functions/match.c \
 	-f functions/file.c \
 	-f functions/file_print.c \
-	-f functions/exit.c \
+	-f test/common_x86/functions/exit.c \
 	-f test/test26/lisp.c \
 	-f test/test26/lisp_cell.c \
 	-f test/test26/lisp_eval.c \

@@ -17,9 +17,9 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f functions/putchar.c \
+bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
 	-f functions/getchar.c \
-	-f functions/exit.c \
+	-f test/common_x86/functions/exit.c \
 	-f functions/malloc.c \
 	-f test/test99/cc500.c \
 	-o test/test99/cc0.M1 || exit 1

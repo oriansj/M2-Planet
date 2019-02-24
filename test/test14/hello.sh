@@ -17,7 +17,7 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f functions/putchar.c \
+bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
 	-f test/test14/basic_args.c \
 	-o test/test14/basic_args.M1 || exit 1
 

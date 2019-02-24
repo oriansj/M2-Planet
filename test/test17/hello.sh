@@ -19,7 +19,7 @@ set -ex
 # Build the test
 bin/M2-Planet --architecture x86 -f functions/malloc.c \
 	-f functions/calloc.c \
-	-f functions/putchar.c \
+	-f test/common_x86/functions/putchar.c \
 	-f test/test17/memset.c \
 	-o test/test17/memset.M1 || exit 1
 

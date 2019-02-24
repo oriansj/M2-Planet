@@ -15,30 +15,30 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-set -ex
+set -x
 # Build the test
 bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
 	-f test/common_x86/functions/exit.c \
-	-f test/test13/break-while.c \
-	-o test/test13/break-while.M1 || exit 1
+	-f test/test01/library_call.c \
+	-o test/test01/library_call.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
 	-f functions/libc-core.M1 \
-	-f test/test13/break-while.M1 \
+	-f test/test01/library_call.M1 \
 	--LittleEndian \
 	--architecture x86 \
-	-o test/test13/break-while.hex2 || exit 2
+	-o test/test01/library_call.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test13/break-while.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test13-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test01/library_call.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test01-x86-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
-	# Verify that the resulting file works
-	./test/results/test13-binary >| test/test13/proof || exit 4
-	out=$(sha256sum -c test/test13/proof.answer)
-	[ "$out" = "test/test13/proof: OK" ] || exit 5
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test01-x86-binary 2>&1)
+	[ 42 = $? ] || exit 3
+	[ "$out" = "Hello mes" ] || exit 4
 fi
 exit 0

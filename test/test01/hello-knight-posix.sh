@@ -17,27 +17,27 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture x86 -f functions/putchar.c \
-	-f functions/exit.c \
+bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/putchar.c \
+	-f test/common_knight/functions/exit.c \
 	-f test/test01/library_call.c \
 	-o test/test01/library_call.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
 	-f test/test01/library_call.M1 \
-	--LittleEndian \
-	--architecture x86 \
+	--BigEndian \
+	--architecture knight-posix \
 	-o test/test01/library_call.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test01/library_call.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test01-binary --exec_enable || exit 3
+hex2 -f test/common_knight/ELF-knight.hex2 -f test/test01/library_call.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x0 -o test/results/test01-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test01-binary 2>&1)
+	out=$(./test/results/test01-knight-posix-binary 2>&1)
 	[ 42 = $? ] || exit 3
 	[ "$out" = "Hello mes" ] || exit 4
 fi

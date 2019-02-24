@@ -17,7 +17,7 @@
 
 set -x
 # Build the test
-./bin/M2-Planet --architecture x86 -f functions/exit.c \
+./bin/M2-Planet --architecture x86 -f test/common_x86/functions/exit.c \
 	-f functions/file.c \
 	-f functions/file_print.c \
 	-f functions/malloc.c \

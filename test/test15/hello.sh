@@ -18,7 +18,7 @@
 set -ex
 # Build the test
 bin/M2-Planet --architecture x86 -f functions/file.c \
-	-f functions/putchar.c \
+	-f test/common_x86/functions/putchar.c \
 	-f test/test15/file_read.c \
 	-o test/test15/file_read.M1 || exit 1
 

@@ -17,8 +17,8 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture x86 -f functions/putchar.c \
-	-f functions/exit.c \
+bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
+	-f test/common_x86/functions/exit.c \
 	-f test/test02/if.c \
 	-o test/test02/if.M1 || exit 1
 
