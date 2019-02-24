@@ -216,7 +216,7 @@ void variable_load(struct token_list* a)
 	}
 	current_target = a->type;
 
-	if(1 == Architecture) emit_out("ADDI R0 R14 @");
+	if(1 == Architecture) emit_out("ADDI R0 R14 ");
 	else if(2 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
 
 	emit_out(numerate_number(a->depth));
@@ -596,12 +596,12 @@ void relational_expr_stub()
 {
 	if(1 == Architecture)
 	{
-		general_recursion(additive_expr, "CMPSKIP.GE R0 R1\nLOADUI R0 1\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.G R0 R1\nLOADUI R0 1\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.L R0 R1\nLOADUI R0 1\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.LE R0 R1\nLOADUI R0 1\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.NE R0 R1\nLOADUI R0 1\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.E R0 R1\nLOADUI R0 1\n", "!=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.GE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.G R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.L R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.LE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.NE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.E R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "!=", relational_expr_stub);
 	}
 	else if(2 == Architecture)
 	{
@@ -744,12 +744,12 @@ void collect_local()
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
-		if(1 == Architecture) a->depth = 20;
+		if(1 == Architecture) a->depth = 4;
 		else if(2 == Architecture) a->depth = -20;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
-		if(1 == Architecture) a->depth = 8;
+		if(1 == Architecture) a->depth = 4;
 		else if(2 == Architecture) a->depth = -8;
 	}
 	else if(NULL == function->locals)
@@ -1168,7 +1168,7 @@ void collect_arguments()
 			struct token_list* a = sym_declare(global_token->s, type_size, function->arguments);
 			if(NULL == function->arguments)
 			{
-				if(1 == Architecture) a->depth = 4;
+				if(1 == Architecture) a->depth = 0;
 				else if(2 == Architecture) a->depth = -4;
 			}
 			else

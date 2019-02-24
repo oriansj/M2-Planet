@@ -28,8 +28,8 @@ void printc(char* s, int a)
 
 int main()
 {
-	char* string = "mes Hello ";
+	char* string = "mes\nHello ";
 	printc(string + 4, 99);
-	printc(string, 3);
+	printc(string, 4);
 	return 42;
 }

@@ -30,6 +30,7 @@ Added first knight-posix test
 Added second knight-posix test
 Added third knight-posix test
 Added fourth knight-posix test
+Added fifth knight-posix test
 
 ** Changed
 Converted M2-Planet to use GNU style error message
