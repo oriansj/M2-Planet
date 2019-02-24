@@ -28,6 +28,7 @@ Added support for GET_MACHINE_FLAGS in tests
 Added --architecture flag
 Added first knight-posix test
 Added second knight-posix test
+Added third knight-posix test
 
 ** Changed
 Converted M2-Planet to use GNU style error message
@@ -46,6 +47,7 @@ Fixed version number to reflect current version
 Thanks to akkartik several documentation issues were identified and fixed
 Corrected missed license headers
 Fix regression caused by Linux 4.17
+Fixed broken logic comparions for knight-posix
 
 ** Removed
 Removed redundent x86 definitions

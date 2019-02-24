@@ -596,12 +596,12 @@ void relational_expr_stub()
 {
 	if(1 == Architecture)
 	{
-		general_recursion(additive_expr, "CMPSKIP.L R0 R1\nLOADUI R0 1\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.LE R0 R1\nLOADUI R0 1\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.GE R0 R1\nLOADUI R0 1\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.G R0 R1\nLOADUI R0 1\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.E R0 R1\nLOADUI R0 1\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.NE R0 R1\nLOADUI R0 1\n", "!=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.GE R0 R1\nLOADUI R0 1\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.G R0 R1\nLOADUI R0 1\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.L R0 R1\nLOADUI R0 1\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.LE R0 R1\nLOADUI R0 1\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.NE R0 R1\nLOADUI R0 1\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "CMPSKIP.E R0 R1\nLOADUI R0 1\n", "!=", relational_expr_stub);
 	}
 	else if(2 == Architecture)
 	{
