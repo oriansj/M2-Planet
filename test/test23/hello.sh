@@ -36,7 +36,7 @@ blood-elf -f test/test23/M1-macro.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+	-f test/common_x86/libc-core.M1 \
 	-f test/test23/M1-macro.M1 \
 	-f test/test23/M1-macro-footer.M1 \
 	--LittleEndian \
@@ -63,7 +63,7 @@ then
 	# Verify that the resulting file works
 	./test/results/test23-binary -f \
 		test/common_x86/x86_defs.M1 \
-		-f functions/libc-core.M1 \
+		-f test/common_x86/libc-core.M1 \
 		-f test/test21/test.M1 \
 		--LittleEndian \
 		--architecture x86 \

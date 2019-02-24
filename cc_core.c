@@ -201,7 +201,7 @@ void function_call(char* s, int bool)
 
 void constant_load(struct token_list* a)
 {
-	if(1 == Architecture) emit_out("LOADI R0 @");
+	if(1 == Architecture) emit_out("LOADI R0 ");
 	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
 	emit_out(a->arguments->s);
 	emit_out("\n");

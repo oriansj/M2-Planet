@@ -24,7 +24,7 @@ bin/M2-Planet --architecture x86 -f functions/file.c \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+	-f test/common_x86/libc-core.M1 \
 	-f test/test15/file_read.M1 \
 	--LittleEndian \
 	--architecture x86 \

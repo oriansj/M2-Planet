@@ -62,13 +62,14 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test00-x86-binary \
-	test00-knight-posix-binary \
-	test01-x86-binary \
+test: test00-knight-posix-binary \
 	test01-knight-posix-binary \
-	test02-x86-binary \
 	test02-knight-posix-binary \
-	test03-binary \
+	test03-knight-posix-binary \
+	test00-x86-binary \
+	test01-x86-binary \
+	test02-x86-binary \
+	test03-x86-binary \
 	test04-binary \
 	test05-binary \
 	test06-binary \
@@ -94,26 +95,29 @@ test: test00-x86-binary \
 	test100-binary | results
 	sha256sum -c test/test.answers
 
-test00-x86-binary: M2-Planet | results
-	test/test00/hello-x86.sh
-
 test00-knight-posix-binary: M2-Planet | results
 	test/test00/hello-knight-posix.sh
-
-test01-x86-binary: M2-Planet | results
-	test/test01/hello-x86.sh
 
 test01-knight-posix-binary: M2-Planet | results
 	test/test01/hello-knight-posix.sh
 
-test02-x86-binary: M2-Planet | results
-	test/test02/hello-x86.sh
-
 test02-knight-posix-binary: M2-Planet | results
 	test/test02/hello-knight-posix.sh
 
-test03-binary: M2-Planet | results
-	test/test03/hello.sh
+test03-knight-posix-binary: M2-Planet | results
+	test/test03/hello-knight-posix.sh
+
+test00-x86-binary: M2-Planet | results
+	test/test00/hello-x86.sh
+
+test01-x86-binary: M2-Planet | results
+	test/test01/hello-x86.sh
+
+test02-x86-binary: M2-Planet | results
+	test/test02/hello-x86.sh
+
+test03-x86-binary: M2-Planet | results
+	test/test03/hello-x86.sh
 
 test04-binary: M2-Planet | results
 	test/test04/hello.sh

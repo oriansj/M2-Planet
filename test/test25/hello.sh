@@ -37,7 +37,7 @@ blood-elf -f test/test25/kaem.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+	-f test/common_x86/libc-core.M1 \
 	-f test/test25/kaem.M1 \
 	-f test/test25/kaem-footer.M1 \
 	--LittleEndian \

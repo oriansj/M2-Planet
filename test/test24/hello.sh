@@ -34,7 +34,7 @@ blood-elf -f test/test24/get_machine.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+	-f test/common_x86/libc-core.M1 \
 	-f test/test24/get_machine.M1 \
 	-f test/test24/get_machine-footer.M1 \
 	--LittleEndian \

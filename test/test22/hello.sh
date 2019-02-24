@@ -36,7 +36,7 @@ blood-elf -f test/test22/hex2_linker.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
-	-f functions/libc-core.M1 \
+	-f test/common_x86/libc-core.M1 \
 	-f test/test22/hex2_linker.M1 \
 	-f test/test22/hex2_linker-footer.M1 \
 	--LittleEndian \

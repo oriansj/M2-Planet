@@ -15,31 +15,30 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-set -ex
+set -x
 # Build the test
-bin/M2-Planet --architecture x86 -f functions/file.c \
-	-f functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/test18/math.c \
-	-o test/test18/math.M1 || exit 1
+bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/putchar.c \
+	-f test/common_knight/functions/exit.c \
+	-f test/test03/constant.c \
+	-o test/test03/constant.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
-	-f test/test18/math.M1 \
-	--LittleEndian \
-	--architecture x86 \
-	-o test/test18/math.hex2 || exit 2
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
+	-f test/test03/constant.M1 \
+	--BigEndian \
+	--architecture knight-posix \
+	-o test/test03/constant.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test18/math.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test18-binary --exec_enable || exit 3
+hex2 -f test/common_knight/ELF-knight.hex2 -f test/test03/constant.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x00 -o test/results/test03-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
-	# Verify that the resulting file works
-	./test/results/test18-binary >| test/test18/proof || exit 4
-	out=$(sha256sum -c test/test18/proof.answer)
-	[ "$out" = "test/test18/proof: OK" ] || exit 5
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test03-knight-posix-binary 2>&1 )
+	[ 42 = $? ] || exit 4
+	[ "$out" = "Hello mes" ] || exit 5
 fi
 exit 0

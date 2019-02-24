@@ -29,6 +29,7 @@ Added --architecture flag
 Added first knight-posix test
 Added second knight-posix test
 Added third knight-posix test
+Added fourth knight-posix test
 
 ** Changed
 Converted M2-Planet to use GNU style error message
@@ -48,6 +49,7 @@ Thanks to akkartik several documentation issues were identified and fixed
 Corrected missed license headers
 Fix regression caused by Linux 4.17
 Fixed broken logic comparions for knight-posix
+Fixed CONSTANT logic for knight-posix
 
 ** Removed
 Removed redundent x86 definitions
