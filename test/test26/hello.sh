@@ -18,7 +18,7 @@
 set -x
 # Build the test
 ./bin/M2-Planet --architecture x86 -f test/test26/lisp.h \
-	-f functions/malloc.c \
+	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \

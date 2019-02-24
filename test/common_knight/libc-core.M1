@@ -15,7 +15,7 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 :_start
-
+	LOADR32 R12 @HEAP           ; Setup HEAP pointer
 	LOADUI R15 $ELF_end         ; Setup Stack pointer
 	COPY R14 R15                ; Protect esp
 
@@ -26,4 +26,5 @@
 	HALT                        ; Simply halt for now
 
 	;; Our default heap pointer
+:HEAP
 	'00080000'

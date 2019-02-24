@@ -20,13 +20,14 @@ set -ex
 if [ -f bin/M2-Planet ]
 then
 ./bin/M2-Planet --architecture x86 -f functions/file.c \
-	-f functions/malloc.c \
+	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
+	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
@@ -40,13 +41,14 @@ elif [ -f bin/M2-Planet-seed ]
 then
 [ ! -f test/results ] && mkdir test/results
 ./bin/M2-Planet-seed --architecture x86 -f functions/file.c \
-	-f functions/malloc.c \
+	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
+	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
@@ -65,6 +67,7 @@ ${CC} ${CFLAGS} \
 	functions/in_set.c \
 	functions/numerate_number.c \
 	functions/file_print.c \
+	functions/number_pack.c \
 	functions/string.c \
 	cc_reader.c \
 	cc_strings.c \
@@ -76,13 +79,14 @@ ${CC} ${CFLAGS} \
 	-o bin/M2-Planet-gcc
 
 ./bin/M2-Planet-gcc --architecture x86 -f functions/file.c \
-	-f functions/malloc.c \
+	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
+	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
@@ -120,13 +124,14 @@ if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the resulting file works
 	./test/results/test100-binary --architecture x86 -f functions/file.c \
-		-f functions/malloc.c \
+		-f test/common_x86/functions/malloc.c \
 		-f functions/calloc.c \
 		-f test/common_x86/functions/exit.c \
 		-f functions/match.c \
 		-f functions/in_set.c \
 		-f functions/numerate_number.c \
 		-f functions/file_print.c \
+		-f functions/number_pack.c \
 		-f functions/string.c \
 		-f cc.h \
 		-f cc_reader.c \

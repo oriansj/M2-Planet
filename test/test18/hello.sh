@@ -18,7 +18,7 @@
 set -ex
 # Build the test
 bin/M2-Planet --architecture x86 -f functions/file.c \
-	-f functions/malloc.c \
+	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/test18/math.c \
 	-o test/test18/math.M1 || exit 1

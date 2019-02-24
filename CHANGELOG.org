@@ -31,6 +31,9 @@ Added second knight-posix test
 Added third knight-posix test
 Added fourth knight-posix test
 Added fifth knight-posix test
+Added sixth knight-posix test
+Added seventh knight-posix test
+Added working HEAP/malloc to knight-posix
 
 ** Changed
 Converted M2-Planet to use GNU style error message

@@ -43,7 +43,8 @@ int Address_of;
 char* parse_string(char* string);
 int escape_lookup(char* c);
 char* numerate_number(int a);
-
+int numerate_string(char *a);
+char* number_to_hex(int a, int bytes);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -303,10 +304,28 @@ void primary_expr_char()
 
 void primary_expr_number()
 {
-	if(1 == Architecture) emit_out("LOADI R0 ");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
-	emit_out(global_token->s);
-	emit_out("\n");
+	if(1 == Architecture)
+	{
+		int size = numerate_string(global_token->s);
+		if((32768 > size) && (size > -32768))
+		{
+			emit_out("LOADI R0 ");
+			emit_out(global_token->s);
+			emit_out("\n");
+		}
+		else
+		{
+			emit_out("LOADR R0 4\nJUMP 4\n'");
+			emit_out(number_to_hex(size, 4));
+			emit_out("'\n");
+		}
+	}
+	else if(2 == Architecture)
+	{
+		emit_out("LOAD_IMMEDIATE_eax %");
+		emit_out(global_token->s);
+		emit_out("\n");
+	}
 	global_token = global_token->next;
 }
 
@@ -1055,7 +1074,7 @@ void recursive_statement()
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			if(1 == Architecture) emit_out("POPR R1 R15\t@ _recursive_statement_locals\n");
+			if(1 == Architecture) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
 			else if(2 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
 		}
 	}
