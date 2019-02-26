@@ -74,11 +74,11 @@ int main(int argc, char** argv)
 		else if(match(argv[i], "-A") || match(argv[i], "--architecture"))
 		{
 			arch = argv[i + 1];
-			if(match("knight-native", arch)) Architecture = 0;
-			else if(match("knight-posix", arch)) Architecture = 1;
-			else if(match("x86", arch)) Architecture = 2;
-			else if(match("amd64", arch)) Architecture = 3;
-			else if(match("armv7l", arch)) Architecture = 40;
+			if(match("knight-native", arch)) Architecture = KNIGHT_NATIVE;
+			else if(match("knight-posix", arch)) Architecture = KNIGHT_POSIX;
+			else if(match("x86", arch)) Architecture = X86;
+			else if(match("amd64", arch)) Architecture = AMD64;
+			else if(match("armv7l", arch)) Architecture = ARMV7L;
 			else
 			{
 				file_print("Unknown architecture: ", stderr);

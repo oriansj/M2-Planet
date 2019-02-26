@@ -16,8 +16,12 @@
 
 :_start
 	LOADR32 R12 @HEAP           ; Setup HEAP pointer
-	LOADUI R15 $ELF_end         ; Setup Stack pointer
-	COPY R14 R15                ; Protect esp
+	;; Kernel Setup R15 as Stack pointer after the initial stack frame
+
+	;; Default stack frame is:
+	;; ARGC, ARGV, ENVP, NULL
+
+	SUBI R14 R15 16             ; Set our base pointer
 
 	;; Perform the main loop
 	CALLI R15 @FUNCTION_main

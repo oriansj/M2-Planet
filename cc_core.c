@@ -114,13 +114,13 @@ void function_call(char* s, int bool)
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	int passed = 0;
 
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		emit_out("PUSHR R13 R15\t# Prevent overwriting in recursion\n");
 		emit_out("PUSHR R14 R15\t# Protect the old base pointer\n");
 		emit_out("COPY R13 R15\t# Copy new base pointer\n");
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		emit_out("PUSH_edi\t# Prevent overwriting in recursion\n");
 		emit_out("PUSH_ebp\t# Protect the old base pointer\n");
@@ -130,16 +130,16 @@ void function_call(char* s, int bool)
 	if(global_token->s[0] != ')')
 	{
 		expression();
-		if(1 == Architecture) emit_out("PUSHR R0 R15\t#_process_expression1\n");
-		else if(2 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_process_expression1\n");
+		else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
 		passed = 1;
 
 		while(global_token->s[0] == ',')
 		{
 			global_token = global_token->next;
 			expression();
-			if(1 == Architecture) emit_out("PUSHR R0 R15\t#_process_expression2\n");
-			else if(2 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
+			if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_process_expression2\n");
+			else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
 			passed = passed + 1;
 		}
 	}
@@ -148,14 +148,14 @@ void function_call(char* s, int bool)
 
 	if(TRUE == bool)
 	{
-		if(1 == Architecture)
+		if(KNIGHT_POSIX == Architecture)
 		{
 			emit_out("LOAD R0 R15 @");
 			emit_out(s);
 			emit_out("MOVE R14 R13\n");
 			emit_out("CALL R0 R15\n");
 		}
-		else if(2 == Architecture)
+		else if(X86 == Architecture)
 		{
 			emit_out("LOAD_BASE_ADDRESS_eax %");
 			emit_out(s);
@@ -166,14 +166,14 @@ void function_call(char* s, int bool)
 	}
 	else
 	{
-		if(1 == Architecture)
+		if(KNIGHT_POSIX == Architecture)
 		{
 			emit_out("MOVE R14 R13\n");
 			emit_out("CALLI R15 @FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
 		}
-		else if(2 == Architecture)
+		else if(X86 == Architecture)
 		{
 			emit_out("COPY_edi_to_ebp\n");
 			emit_out("CALL_IMMEDIATE %FUNCTION_");
@@ -184,16 +184,16 @@ void function_call(char* s, int bool)
 
 	for(; passed > 0; passed = passed - 1)
 	{
-		if(1 == Architecture) emit_out("POPR R1 R15\t# _process_expression_locals\n");
-		else if(2 == Architecture) emit_out("POP_ebx\t# _process_expression_locals\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _process_expression_locals\n");
+		else if(X86 == Architecture) emit_out("POP_ebx\t# _process_expression_locals\n");
 	}
 
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		emit_out("POPR R14 R15\t# Restore old base pointer\n");
 		emit_out("POPR R13 R15\t# Prevent overwrite\n");
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		emit_out("POP_ebp\t# Restore old base pointer\n");
 		emit_out("POP_edi\t# Prevent overwrite\n");
@@ -202,8 +202,8 @@ void function_call(char* s, int bool)
 
 void constant_load(struct token_list* a)
 {
-	if(1 == Architecture) emit_out("LOADI R0 ");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADI R0 ");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
 	emit_out(a->arguments->s);
 	emit_out("\n");
 }
@@ -217,16 +217,16 @@ void variable_load(struct token_list* a)
 	}
 	current_target = a->type;
 
-	if(1 == Architecture) emit_out("ADDI R0 R14 ");
-	else if(2 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
+	if(KNIGHT_POSIX == Architecture) emit_out("ADDI R0 R14 ");
+	else if(X86 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
 
 	emit_out(numerate_number(a->depth));
 	emit_out("\n");
 	if(TRUE == Address_of) return;
 	if(match("=", global_token->s)) return;
 
-	if(1 == Architecture) emit_out("LOAD R0 R0 0\n");
-	else if(2 == Architecture) emit_out("LOAD_INTEGER\n");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
+	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 }
 
 void function_load(struct token_list* a)
@@ -237,8 +237,8 @@ void function_load(struct token_list* a)
 		return;
 	}
 
-	if(1 == Architecture) emit_out("LOADUI R0 $FUNCTION_");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $FUNCTION_");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -246,14 +246,14 @@ void function_load(struct token_list* a)
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	if(1 == Architecture) emit_out("LOADUI R0 $GLOBAL_");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $GLOBAL_");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
 	emit_out(a->s);
 	emit_out("\n");
 	if(!match("=", global_token->s))
 	{
-		if(1 == Architecture) emit_out("LOAD R0 R0 0\n");
-		else if(2 == Architecture) emit_out("LOAD_INTEGER\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
+		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 	}
 }
 
@@ -280,8 +280,8 @@ void primary_expr_string()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
-	if(1 == Architecture) emit_out("LOADUI R0 $STRING_");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $STRING_");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
 	uniqueID_out(function->s, number_string);
 
 	/* The target */
@@ -295,8 +295,8 @@ void primary_expr_string()
 
 void primary_expr_char()
 {
-	if(1 == Architecture) emit_out("LOADI R0 ");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADI R0 ");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
 	emit_out(numerate_number(escape_lookup(global_token->s + 1)));
 	emit_out("\n");
 	global_token = global_token->next;
@@ -304,7 +304,7 @@ void primary_expr_char()
 
 void primary_expr_number()
 {
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		int size = numerate_string(global_token->s);
 		if((32768 > size) && (size > -32768))
@@ -320,7 +320,7 @@ void primary_expr_number()
 			emit_out("'\n");
 		}
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		emit_out("LOAD_IMMEDIATE_eax %");
 		emit_out(global_token->s);
@@ -402,14 +402,14 @@ void common_recursion(FUNCTION f)
 	last_type = current_target;
 	global_token = global_token->next;
 
-	if(1 == Architecture) emit_out("PUSHR R0 R15\t#_common_recursion\n");
-	else if(2 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
+	if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_common_recursion\n");
+	else if(X86 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
 
 	f();
 	current_target = promote_type(current_target, last_type);
 
-	if(1 == Architecture) emit_out("POPR R1 R15\t# _common_recursion\n");
-	else if(2 == Architecture) emit_out("POP_ebx\t# _common_recursion\n");
+	if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _common_recursion\n");
+	else if(X86 == Architecture) emit_out("POP_ebx\t# _common_recursion\n");
 }
 
 void general_recursion( FUNCTION f, char* s, char* name, FUNCTION iterate)
@@ -459,13 +459,13 @@ void postfix_expr_arrow()
 	if(0 != i->offset)
 	{
 		emit_out("# -> offset calculation\n");
-		if(1 == Architecture)
+		if(KNIGHT_POSIX == Architecture)
 		{
 			emit_out("ADDUI R0 R0 ");
 			emit_out(numerate_number(i->offset));
 			emit_out("\n");
 		}
-		else if(2 == Architecture)
+		else if(X86 == Architecture)
 		{
 			emit_out("LOAD_IMMEDIATE_ebx %");
 			emit_out(numerate_number(i->offset));
@@ -475,8 +475,8 @@ void postfix_expr_arrow()
 
 	if((!match("=", global_token->s) && (4 >= i->size)))
 	{
-		if(1 == Architecture) emit_out("LOAD R0 R0 0\n");
-		else if(2 == Architecture) emit_out("LOAD_INTEGER\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
+		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 	}
 }
 
@@ -486,26 +486,26 @@ void postfix_expr_array()
 	common_recursion(expression);
 	current_target = array;
 	char* assign;
-	if(1 == Architecture) assign = "LOAD R0 R0 0\n";
-	else if(2 == Architecture) assign = "LOAD_INTEGER\n";
+	if(KNIGHT_POSIX == Architecture) assign = "LOAD R0 R0 0\n";
+	else if(X86 == Architecture) assign = "LOAD_INTEGER\n";
 
 	/* Add support for Ints */
 	if(match("char*", current_target->name))
 	{
-		if(1 == Architecture) assign = "LOAD8 R0 R0 0\n";
-		else if(2 == Architecture) assign = "LOAD_BYTE\n";
+		if(KNIGHT_POSIX == Architecture) assign = "LOAD8 R0 R0 0\n";
+		else if(X86 == Architecture) assign = "LOAD_BYTE\n";
 	}
 	else
 	{
-		if(1 == Architecture) emit_out("SALI R0 ");
-		else if(2 == Architecture) emit_out("SAL_eax_Immediate8 !");
+		if(KNIGHT_POSIX == Architecture) emit_out("SALI R0 ");
+		else if(X86 == Architecture) emit_out("SAL_eax_Immediate8 !");
 
 		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
 		emit_out("\n");
 	}
 
-	if(1 == Architecture) emit_out("ADD R0 R0 R1\n");
-	else if(2 == Architecture) emit_out("ADD_ebx_to_eax\n");
+	if(KNIGHT_POSIX == Architecture) emit_out("ADD R0 R0 R1\n");
+	else if(X86 == Architecture) emit_out("ADD_ebx_to_eax\n");
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 
@@ -532,8 +532,8 @@ void unary_expr_sizeof()
 	struct type* a = type_name();
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
 
-	if(1 == Architecture) emit_out("LOADUI R0 ");
-	else if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 ");
+	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
 	emit_out(numerate_number(a->size));
 	emit_out("\n");
 }
@@ -572,7 +572,7 @@ void postfix_expr()
  */
 void additive_expr_stub()
 {
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		general_recursion(postfix_expr, "ADD R0 R0 R1\n", "+", additive_expr_stub);
 		general_recursion(postfix_expr, "SUB R0 R1 R0\n", "-", additive_expr_stub);
@@ -582,7 +582,7 @@ void additive_expr_stub()
 		general_recursion(postfix_expr, "SAL R0 R1 R0\n", "<<", additive_expr_stub);
 		general_recursion(postfix_expr, "SAR R0 R1 R0\n", ">>", additive_expr_stub);
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		general_recursion(postfix_expr, "ADD_ebx_to_eax\n", "+", additive_expr_stub);
 		general_recursion(postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
@@ -613,7 +613,7 @@ void additive_expr()
 
 void relational_expr_stub()
 {
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		general_recursion(additive_expr, "CMPSKIP.GE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<", relational_expr_stub);
 		general_recursion(additive_expr, "CMPSKIP.G R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<=", relational_expr_stub);
@@ -622,7 +622,7 @@ void relational_expr_stub()
 		general_recursion(additive_expr, "CMPSKIP.NE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "==", relational_expr_stub);
 		general_recursion(additive_expr, "CMPSKIP.E R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "!=", relational_expr_stub);
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		general_recursion(additive_expr, "CMP\nSETL\nMOVEZBL\n", "<", relational_expr_stub);
 		general_recursion(additive_expr, "CMP\nSETLE\nMOVEZBL\n", "<=", relational_expr_stub);
@@ -650,7 +650,7 @@ void relational_expr()
  */
 void bitwise_expr_stub()
 {
-	if(1 == Architecture)
+	if(KNIGHT_POSIX == Architecture)
 	{
 		general_recursion(relational_expr, "AND R0 R0 R1\n", "&", bitwise_expr_stub);
 		general_recursion(relational_expr, "AND R0 R0 R1\n", "&&", bitwise_expr_stub);
@@ -658,7 +658,7 @@ void bitwise_expr_stub()
 		general_recursion(relational_expr, "OR R0 R0 R1\n", "||", bitwise_expr_stub);
 		general_recursion(relational_expr, "XOR R0 R0 R1\n", "^", bitwise_expr_stub);
 	}
-	else if(2 == Architecture)
+	else if(X86 == Architecture)
 	{
 		general_recursion(relational_expr, "AND_eax_ebx\n", "&", bitwise_expr_stub);
 		general_recursion(relational_expr, "AND_eax_ebx\n", "&&", bitwise_expr_stub);
@@ -696,28 +696,28 @@ void primary_expr()
 	if(match("sizeof", global_token->s)) unary_expr_sizeof();
 	else if('-' == global_token->s[0])
 	{
-		if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %0\n");
+		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %0\n");
 
 		common_recursion(primary_expr);
 
-		if(1 == Architecture) emit_out("NEG R0 R0\n");
-		else if(2 == Architecture) emit_out("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("NEG R0 R0\n");
+		else if(X86 == Architecture) emit_out("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n");
 	}
 	else if('!' == global_token->s[0])
 	{
-		if(2 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
+		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
 
 		common_recursion(postfix_expr);
 
-		if(1 == Architecture) emit_out("XORI R0 R0 1\n");
-		else if(2 == Architecture) emit_out("XOR_ebx_eax_into_eax\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("XORI R0 R0 1\n");
+		else if(X86 == Architecture) emit_out("XOR_ebx_eax_into_eax\n");
 	}
 	else if('~' == global_token->s[0])
 	{
 		common_recursion(postfix_expr);
 
-		if(1 == Architecture) emit_out("NOT R0 R0\n");
-		else if(2 == Architecture) emit_out("NOT_eax\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("NOT R0 R0\n");
+		else if(X86 == Architecture) emit_out("NOT_eax\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
@@ -740,13 +740,13 @@ void expression()
 		char* store = "";
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
 		{
-			if(1 == Architecture) store = "STORE R0 R1 0\n";
-			else if(2 == Architecture) store = "STORE_INTEGER\n";
+			if(KNIGHT_POSIX == Architecture) store = "STORE R0 R1 0\n";
+			else if(X86 == Architecture) store = "STORE_INTEGER\n";
 		}
 		else
 		{
-			if(1 == Architecture) store = "STORE8 R0 R1 0\n";
-			else if(2 == Architecture) store = "STORE_CHAR\n";
+			if(KNIGHT_POSIX == Architecture) store = "STORE8 R0 R1 0\n";
+			else if(X86 == Architecture) store = "STORE_CHAR\n";
 		}
 
 		common_recursion(expression);
@@ -763,23 +763,23 @@ void collect_local()
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
-		if(1 == Architecture) a->depth = 4;
-		else if(2 == Architecture) a->depth = -20;
+		if(KNIGHT_POSIX == Architecture) a->depth = 20;
+		else if(X86 == Architecture) a->depth = -20;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
-		if(1 == Architecture) a->depth = 4;
-		else if(2 == Architecture) a->depth = -8;
+		if(KNIGHT_POSIX == Architecture) a->depth = 4;
+		else if(X86 == Architecture) a->depth = -8;
 	}
 	else if(NULL == function->locals)
 	{
-		if(1 == Architecture) a->depth = function->arguments->depth + 8;
-		else if(2 == Architecture) a->depth = function->arguments->depth - 8;
+		if(KNIGHT_POSIX == Architecture) a->depth = function->arguments->depth + 8;
+		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
 	}
 	else
 	{
-		if(1 == Architecture) a->depth = function->locals->depth + 4;
-		else if(2 == Architecture) a->depth = function->locals->depth - 4;
+		if(KNIGHT_POSIX == Architecture) a->depth = function->locals->depth + 4;
+		else if(X86 == Architecture) a->depth = function->locals->depth - 4;
 	}
 
 	function->locals = a;
@@ -798,8 +798,8 @@ void collect_local()
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
 
-	if(1 == Architecture) emit_out("PUSHR R0 R15\t#");
-	else if(2 == Architecture) emit_out("PUSH_eax\t#");
+	if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#");
+	else if(X86 == Architecture) emit_out("PUSH_eax\t#");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -819,16 +819,16 @@ void process_if()
 	require_match("ERROR in process_if\nMISSING (\n", "(");
 	expression();
 
-	if(1 == Architecture) emit_out("JUMP.Z R0 @ELSE_");
-	else if(2 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @ELSE_");
+	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
 
 	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
 
-	if(1 == Architecture) emit_out("JUMP @_END_IF_");
-	else if(2 == Architecture) emit_out("JUMP %_END_IF_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @_END_IF_");
+	else if(X86 == Architecture) emit_out("JUMP %_END_IF_");
 
 	uniqueID_out(function->s, number_string);
 	emit_out(":ELSE_");
@@ -875,11 +875,11 @@ void process_for()
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
 
-	if(1 == Architecture) emit_out("JUMP.Z R0 @FOR_END_");
-	else if(2 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @FOR_END_");
+	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
 	uniqueID_out(function->s, number_string);
-	if(1 == Architecture) emit_out("JUMP @FOR_THEN_");
-	else if(2 == Architecture) emit_out("JUMP %FOR_THEN_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_THEN_");
+	else if(X86 == Architecture) emit_out("JUMP %FOR_THEN_");
 	uniqueID_out(function->s, number_string);
 	emit_out(":FOR_ITER_");
 	uniqueID_out(function->s, number_string);
@@ -887,8 +887,8 @@ void process_for()
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
 	expression();
 
-	if(1 == Architecture) emit_out("JUMP @FOR_");
-	else if(2 == Architecture) emit_out("JUMP %FOR_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_");
+	else if(X86 == Architecture) emit_out("JUMP %FOR_");
 	uniqueID_out(function->s, number_string);
 	emit_out(":FOR_THEN_");
 	uniqueID_out(function->s, number_string);
@@ -896,8 +896,8 @@ void process_for()
 	require_match("ERROR in process_for\nMISSING )\n", ")");
 	statement();
 
-	if(1 == Architecture) emit_out("JUMP @FOR_ITER_");
-	else if(2 == Architecture) emit_out("JUMP %FOR_ITER_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_ITER_");
+	else if(X86 == Architecture) emit_out("JUMP %FOR_ITER_");
 	uniqueID_out(function->s, number_string);
 	emit_out(":FOR_END_");
 	uniqueID_out(function->s, number_string);
@@ -951,8 +951,8 @@ void process_do()
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
-	if(1 == Architecture) emit_out("JUMP.NZ R0 @DO_");
-	else if(2 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.NZ R0 @DO_");
+	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	uniqueID_out(function->s, number_string);
 	emit_out(":DO_END_");
 	uniqueID_out(function->s, number_string);
@@ -987,8 +987,8 @@ void process_while()
 	require_match("ERROR in process_while\nMISSING (\n", "(");
 	expression();
 
-	if(1 == Architecture) emit_out("JUMP.Z R0 @END_WHILE_");
-	else if(2 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @END_WHILE_");
+	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
 	uniqueID_out(function->s, number_string);
 	emit_out("# THEN_while_");
 	uniqueID_out(function->s, number_string);
@@ -996,8 +996,8 @@ void process_while()
 	require_match("ERROR in process_while\nMISSING )\n", ")");
 	statement();
 
-	if(1 == Architecture) emit_out("JUMP @WHILE_");
-	else if(2 == Architecture) emit_out("JUMP %WHILE_");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @WHILE_");
+	else if(X86 == Architecture) emit_out("JUMP %WHILE_");
 	uniqueID_out(function->s, number_string);
 	emit_out(":END_WHILE_");
 	uniqueID_out(function->s, number_string);
@@ -1019,12 +1019,12 @@ void return_result()
 	struct token_list* i;
 	for(i = function->locals; NULL != i; i = i->next)
 	{
-		if(1 == Architecture) emit_out("POPR R1 R15\t# _return_result_locals\n");
-		else if(2 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _return_result_locals\n");
+		else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
 	}
 
-	if(1 == Architecture) emit_out("RET R15\n");
-	else if(2 == Architecture) emit_out("RETURN\n");
+	if(KNIGHT_POSIX == Architecture) emit_out("RET R15\n");
+	else if(X86 == Architecture) emit_out("RETURN\n");
 }
 
 void process_break()
@@ -1039,14 +1039,14 @@ void process_break()
 	while(i != break_frame)
 	{
 		if(NULL == i) break;
-		if(1 == Architecture) emit_out("POPR R1 R15\t# break_cleanup_locals\n");
-		else if(2 == Architecture) emit_out("POP_ebx\t# break_cleanup_locals\n");
+		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# break_cleanup_locals\n");
+		else if(X86 == Architecture) emit_out("POP_ebx\t# break_cleanup_locals\n");
 		i = i->next;
 	}
 	global_token = global_token->next;
 
-	if(1 == Architecture) emit_out("JUMP @");
-	else if(2 == Architecture) emit_out("JUMP %");
+	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @");
+	else if(X86 == Architecture) emit_out("JUMP %");
 
 	emit_out(break_target_head);
 	emit_out(break_target_func);
@@ -1069,13 +1069,13 @@ void recursive_statement()
 
 	/* Clean up any locals added */
 
-	if(((2 == Architecture) && !match("RETURN\n", out->s)) || ((1 == Architecture) && !match("RET R15\n", out->s)))
+	if(((X86 == Architecture) && !match("RETURN\n", out->s)) || ((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)))
 	{
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			if(1 == Architecture) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
-			else if(2 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
+			if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
+			else if(X86 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
 		}
 	}
 	function->locals = frame;
@@ -1140,8 +1140,8 @@ void statement()
 	else if(match("goto", global_token->s))
 	{
 		global_token = global_token->next;
-		if(1 == Architecture) emit_out("JUMP @");
-		else if(2 == Architecture) emit_out("JUMP %");
+		if(KNIGHT_POSIX == Architecture) emit_out("JUMP @");
+		else if(X86 == Architecture) emit_out("JUMP %");
 		emit_out(global_token->s);
 		emit_out("\n");
 		global_token = global_token->next;
@@ -1187,13 +1187,13 @@ void collect_arguments()
 			struct token_list* a = sym_declare(global_token->s, type_size, function->arguments);
 			if(NULL == function->arguments)
 			{
-				if(1 == Architecture) a->depth = 0;
-				else if(2 == Architecture) a->depth = -4;
+				if(KNIGHT_POSIX == Architecture) a->depth = 0;
+				else if(X86 == Architecture) a->depth = -4;
 			}
 			else
 			{
-				if(1 == Architecture) a->depth = function->arguments->depth + 4;
-				else if(2 == Architecture) a->depth = function->arguments->depth - 4;
+				if(KNIGHT_POSIX == Architecture) a->depth = function->arguments->depth + 4;
+				else if(X86 == Architecture) a->depth = function->arguments->depth - 4;
 			}
 
 			global_token = global_token->next;
@@ -1228,8 +1228,8 @@ void declare_function()
 		statement();
 
 		/* Prevent duplicate RETURNS */
-		if((1 == Architecture) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
-		else if((2 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
+		if((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
+		else if((X86 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
 	}
 }
 

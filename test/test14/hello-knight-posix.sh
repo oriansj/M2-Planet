@@ -17,28 +17,27 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
-	-f test/common_x86/functions/exit.c \
-	-f test/test12/break-for.c \
-	-o test/test12/break-for.M1 || exit 1
+bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/putchar.c \
+	-f test/test14/basic_args.c \
+	-o test/test14/basic_args.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
-	-f test/test12/break-for.M1 \
-	--LittleEndian \
-	--architecture x86 \
-	-o test/test12/break-for.hex2 || exit 2
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
+	-f test/test14/basic_args.M1 \
+	--BigEndian \
+	--architecture knight-posix \
+	-o test/test14/basic_args.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test12/break-for.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test12-binary --exec_enable || exit 3
+hex2 -f test/common_knight/ELF-knight.hex2 -f test/test14/basic_args.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x00 -o test/results/test14-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
 	# Verify that the resulting file works
-	./test/results/test12-binary >| test/test12/proof || exit 4
-	out=$(sha256sum -c test/test12/proof.answer)
-	[ "$out" = "test/test12/proof: OK" ] || exit 5
+	./test/results/test14-knight-posix-binary 314 1 5926 5 35897 932384626 43 383279 50288 419 71693 99375105 820974944 >| test/test14/proof || exit 4
+	out=$(sha256sum -c test/test14/proof-knight-posix.answer)
+	[ "$out" = "test/test14/proof: OK" ] || exit 5
 fi
 exit 0

@@ -19,12 +19,24 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_STRING 4096
 // CONSTANT MAX_STRING 4096
-#define FALSE 0
+#define MAX_STRING 4096
 // CONSTANT FALSE 0
-#define TRUE 1
+#define FALSE 0
 // CONSTANT TRUE 1
+#define TRUE 1
+
+// CONSTANT KNIGHT_NATIVE 0
+#define KNIGHT_NATIVE 0
+// CONSTANT KNIGHT_POSIX 1
+#define KNIGHT_POSIX 1
+// CONSTANT X86 2
+#define X86 2
+// CONSTANT AMD64 3
+#define AMD64 3
+// CONSTANT ARMV7L 4
+#define ARMV7L 4
+
 
 void file_print(char* s, FILE* f);
 int match(char* a, char* b);

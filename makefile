@@ -73,6 +73,10 @@ test: test00-knight-posix-binary \
 	test08-knight-posix-binary \
 	test09-knight-posix-binary \
 	test10-knight-posix-binary \
+	test11-knight-posix-binary \
+	test12-knight-posix-binary \
+	test13-knight-posix-binary \
+	test14-knight-posix-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -84,10 +88,10 @@ test: test00-knight-posix-binary \
 	test08-x86-binary \
 	test09-x86-binary \
 	test10-x86-binary \
-	test11-binary \
-	test12-binary \
-	test13-binary \
-	test14-binary \
+	test11-x86-binary \
+	test12-x86-binary \
+	test13-x86-binary \
+	test14-x86-binary \
 	test15-binary \
 	test16-binary \
 	test17-binary \
@@ -135,6 +139,18 @@ test09-knight-posix-binary: M2-Planet | results
 test10-knight-posix-binary: M2-Planet | results
 	test/test10/hello-knight-posix.sh
 
+test11-knight-posix-binary: M2-Planet | results
+	test/test11/hello-knight-posix.sh
+
+test12-knight-posix-binary: M2-Planet | results
+	test/test12/hello-knight-posix.sh
+
+test13-knight-posix-binary: M2-Planet | results
+	test/test13/hello-knight-posix.sh
+
+test14-knight-posix-binary: M2-Planet | results
+	test/test14/hello-knight-posix.sh
+
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh
 
@@ -168,17 +184,17 @@ test09-x86-binary: M2-Planet | results
 test10-x86-binary: M2-Planet | results
 	test/test10/hello-x86.sh
 
-test11-binary: M2-Planet | results
-	test/test11/hello.sh
+test11-x86-binary: M2-Planet | results
+	test/test11/hello-x86.sh
 
-test12-binary: M2-Planet | results
-	test/test12/hello.sh
+test12-x86-binary: M2-Planet | results
+	test/test12/hello-x86.sh
 
-test13-binary: M2-Planet | results
-	test/test13/hello.sh
+test13-x86-binary: M2-Planet | results
+	test/test13/hello-x86.sh
 
-test14-binary: M2-Planet | results
-	test/test14/hello.sh
+test14-x86-binary: M2-Planet | results
+	test/test14/hello-x86.sh
 
 test15-binary: M2-Planet | results
 	test/test15/hello.sh

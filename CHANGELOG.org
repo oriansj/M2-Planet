@@ -26,7 +26,7 @@ Added support for octal and binary numbers
 Added support for \0
 Added support for GET_MACHINE_FLAGS in tests
 Added --architecture flag
-Added 10/24 working tests for knight-posix
+Added 14/24 working tests for knight-posix
 Added working HEAP/malloc to knight-posix
 
 ** Changed
@@ -40,6 +40,7 @@ Updated to mescc-tools 0.6.0 syntax
 Changed default architecture to knight-native
 Moved x86 specific exit.c and putchar.c to test/common_x86/functions
 Relocated x86 specific libc.M1 to test/common_x86
+Formalized Knight-posix execve standard
 
 ** Fixed
 Fixed typo in file headers
