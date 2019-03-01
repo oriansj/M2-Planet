@@ -19,7 +19,7 @@ set -ex
 # Build the test
 if [ -f bin/M2-Planet ]
 then
-./bin/M2-Planet --architecture x86 -f functions/file.c \
+./bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
@@ -40,7 +40,7 @@ then
 elif [ -f bin/M2-Planet-seed ]
 then
 [ ! -f test/results ] && mkdir test/results
-./bin/M2-Planet-seed --architecture x86 -f functions/file.c \
+./bin/M2-Planet-seed --architecture x86 -f test/common_x86/functions/file.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
@@ -78,7 +78,7 @@ ${CC} ${CFLAGS} \
 	gcc_req.h \
 	-o bin/M2-Planet-gcc
 
-./bin/M2-Planet-gcc --architecture x86 -f functions/file.c \
+./bin/M2-Planet-gcc --architecture x86 -f test/common_x86/functions/file.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
@@ -123,7 +123,7 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the resulting file works
-	./test/results/test100-binary --architecture x86 -f functions/file.c \
+	./test/results/test100-binary --architecture x86 -f test/common_x86/functions/file.c \
 		-f test/common_x86/functions/malloc.c \
 		-f functions/calloc.c \
 		-f test/common_x86/functions/exit.c \

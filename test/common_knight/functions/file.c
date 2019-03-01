@@ -15,9 +15,58 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void putchar(int c)
+// CONSTANT stdin 0
+// CONSTANT stdout 1
+// CONSTANT stderr 2
+// CONSTANT EOF 0xFFFFFFFF
+
+int fgetc(FILE* f)
+{
+	asm("LOAD R1 R14 0"
+	    "FGETC");
+}
+
+void fputc(char s, FILE* f)
 {
 	asm("LOAD R0 R14 0"
-	    "LOADUI R1 1"
+	    "LOAD R1 R14 4"
 	    "FPUTC");
+}
+
+FILE* open_write(char* filename)
+{
+	asm("LOAD R0 R14 0"
+	    "FOPEN_WRITE");
+}
+
+FILE* open_read(char* filename)
+{
+	asm("LOAD R0 R14 0"
+	    "FOPEN_READ");
+}
+
+FILE* fopen(char* filename, char* mode)
+{
+	FILE* f;
+	if('w' == mode[0])
+	{
+		f = open_write(filename);
+	}
+	else
+	{ /* Everything else is a read */
+		f = open_read(filename);
+	}
+
+	/* Negative numbers are error codes */
+	if(0 > f)
+	{
+		return 0;
+	}
+	return f;
+}
+
+int fclose(FILE* stream)
+{
+	asm("LOAD R0 R14 0"
+	    "FCLOSE");
 }

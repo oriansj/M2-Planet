@@ -23,7 +23,7 @@ set -x
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/match.c \
-	-f functions/file.c \
+	-f test/common_x86/functions/file.c \
 	-f functions/file_print.c \
 	-f test/common_x86/functions/exit.c \
 	-f test/test26/lisp.c \

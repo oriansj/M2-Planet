@@ -17,33 +17,28 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f test/test19/getopt.c \
-	-o test/test19/getopt.M1 || exit 1
+bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/file.c \
+	-f test/common_knight/functions/putchar.c \
+	-f test/test15/file_read.c \
+	-o test/test15/file_read.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
-	-f test/test19/getopt.M1 \
-	--LittleEndian \
-	--architecture x86 \
-	-o test/test19/getopt.hex2 || exit 2
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
+	-f test/test15/file_read.M1 \
+	--BigEndian \
+	--architecture knight-posix \
+	-o test/test15/file_read.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test19/getopt.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test19-binary --exec_enable || exit 3
+hex2 -f test/common_knight/ELF-knight.hex2 -f test/test15/file_read.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x00 -o test/results/test15-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "Knight*" ]
 then
 	# Verify that the resulting file works
-	./test/results/test19-binary -f test/test19/input -o test/test19/proof || exit 4
-	out=$(sha256sum -c test/test19/proof.answer)
-	[ "$out" = "test/test19/proof: OK" ] || exit 5
+	./test/results/test15-knight-posix-binary test/test15/file_read.c >| test/test15/proof || exit 4
+	out=$(sha256sum -c test/test15/proof.answer)
+	[ "$out" = "test/test15/proof: OK" ] || exit 5
 fi
 exit 0
