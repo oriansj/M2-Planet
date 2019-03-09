@@ -17,8 +17,9 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
-	-f functions/getchar.c \
+bin/M2-Planet --architecture x86 \
+	-f test/common_x86/functions/putchar.c \
+	-f test/common_x86/functions/getchar.c \
 	-f test/common_x86/functions/exit.c \
 	-f test/common_x86/functions/malloc.c \
 	-f test/test99/cc500.c \
@@ -33,13 +34,13 @@ M1 -f test/common_x86/x86_defs.M1 \
 	-o test/test99/cc0.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test99/cc0.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test99-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test99/cc0.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test99-x86-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program can compile itself
-	./test/results/test99-binary < test/test99/cc500.c >| test/test99/cc1 || exit 4
+	./test/results/test99-x86-binary < test/test99/cc500.c >| test/test99/cc1 || exit 4
 	out=$(sha256sum -c test/test99/proof0.answer)
 	[ "$out" = "test/test99/cc1: OK" ] || exit 5
 

@@ -15,11 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-CONSTANT NULL 0
-
-void* malloc(int size)
+int getchar()
 {
-	asm("LOAD R0 R14 0"
-	    "ADDU R0 R12 R0"
-	    "SWAP R0 R12");
+	asm("LOADUI R1 0"
+	    "FGETC");
 }

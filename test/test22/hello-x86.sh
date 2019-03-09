@@ -22,40 +22,52 @@ set -x
 	-f functions/file_print.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
-	-f functions/uname.c \
 	-f functions/match.c \
-	-f test/test24/get_machine.c \
+	-f functions/in_set.c \
+	-f functions/numerate_number.c \
+	-f test/common_x86/functions/stat.c \
+	-f test/test22/hex2_linker.c \
 	--debug \
-	-o test/test24/get_machine.M1 || exit 1
+	-o test/test22/hex2_linker.M1 || exit 1
 
 # Build debug footer
-blood-elf -f test/test24/get_machine.M1 \
-	-o test/test24/get_machine-footer.M1 || exit 2
+blood-elf -f test/test22/hex2_linker.M1 \
+	-o test/test22/hex2_linker-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
 	-f test/common_x86/libc-core.M1 \
-	-f test/test24/get_machine.M1 \
-	-f test/test24/get_machine-footer.M1 \
+	-f test/test22/hex2_linker.M1 \
+	-f test/test22/hex2_linker-footer.M1 \
 	--LittleEndian \
 	--architecture x86 \
-	-o test/test24/get_machine.hex2 || exit 3
+	-o test/test22/hex2_linker.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_x86/ELF-i386-debug.hex2 \
-	-f test/test24/get_machine.hex2 \
+	-f test/test22/hex2_linker.hex2 \
 	--LittleEndian \
 	--architecture x86 \
 	--BaseAddress 0x8048000 \
-	-o test/results/test24-binary \
+	-o test/results/test22-x86-binary \
 	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test24-binary ${GET_MACHINE_FLAGS} 2>&1 )
+	out=$(./test/results/test22-x86-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "x86" ] || exit 6
+	[ "$out" = "hex2 0.3" ] || exit 6
+
+	# Verify that the resulting file works
+	./test/results/test22-x86-binary -f test/common_x86/ELF-i386.hex2 \
+	-f test/test22/test.hex2 \
+	--LittleEndian \
+	--architecture x86 \
+	--BaseAddress 0x8048000 \
+	-o test/test22/proof || exit 7
+	out=$(sha256sum -c test/test22/proof.answer)
+	[ "$out" = "test/test22/proof: OK" ] || exit 8
 fi
 exit 0

@@ -15,11 +15,17 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-CONSTANT NULL 0
+struct utsname
+{
+	char sysname[65];    /* Operating system name (e.g., "Linux") */
+	char nodename[65];   /* Name within "some implementation-defined network" */
+	char release[65];    /* Operating system release (e.g., "2.6.28") */
+	char version[65];    /* Operating system version */
+	char machine[65];    /* Hardware identifier */
+};
 
-void* malloc(int size)
+int uname(struct utsname* unameData)
 {
 	asm("LOAD R0 R14 0"
-	    "ADDU R0 R12 R0"
-	    "SWAP R0 R12");
+	    "UNAME");
 }

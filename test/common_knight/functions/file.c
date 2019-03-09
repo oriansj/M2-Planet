@@ -33,28 +33,37 @@ void fputc(char s, FILE* f)
 	    "FPUTC");
 }
 
-FILE* open_write(char* filename)
-{
-	asm("LOAD R0 R14 0"
-	    "FOPEN_WRITE");
-}
+/* Important values needed for open
+ * O_RDONLY => 0
+ * O_WRONLY => 1
+ * O_RDWR => 2
+ * O_CREAT => 64
+ * O_TRUNC => 512
+ * S_IRWXU => 00700
+ * S_IXUSR => 00100
+ * S_IWUSR => 00200
+ * S_IRUSR => 00400
+ */
 
-FILE* open_read(char* filename)
+FILE* open(char* filename, int flag, int mode)
 {
 	asm("LOAD R0 R14 0"
-	    "FOPEN_READ");
+	    "LOAD R1 R14 4"
+	    "LOAD R2 R14 8"
+	    "FOPEN"
+	    "FALSE R2");
 }
 
 FILE* fopen(char* filename, char* mode)
 {
 	FILE* f;
 	if('w' == mode[0])
-	{
-		f = open_write(filename);
+	{ /* 577 is O_WRONLY|O_CREAT|O_TRUNC, 384 is 600 in octal */
+		f = open(filename, 577, 384);
 	}
 	else
 	{ /* Everything else is a read */
-		f = open_read(filename);
+		f = open(filename, 0, 0);
 	}
 
 	/* Negative numbers are error codes */

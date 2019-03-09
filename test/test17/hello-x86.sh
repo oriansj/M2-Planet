@@ -17,33 +17,29 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
+bin/M2-Planet --architecture x86 -f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f test/test19/getopt.c \
-	-o test/test19/getopt.M1 || exit 1
+	-f test/common_x86/functions/putchar.c \
+	-f test/test17/memset.c \
+	-o test/test17/memset.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_x86/x86_defs.M1 \
 	-f test/common_x86/libc-core.M1 \
-	-f test/test19/getopt.M1 \
+	-f test/test17/memset.M1 \
 	--LittleEndian \
 	--architecture x86 \
-	-o test/test19/getopt.hex2 || exit 2
+	-o test/test17/memset.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test19/getopt.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test19-binary --exec_enable || exit 3
+hex2 -f test/common_x86/ELF-i386.hex2 -f test/test17/memset.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test17-x86-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
 	# Verify that the resulting file works
-	./test/results/test19-binary -f test/test19/input -o test/test19/proof || exit 4
-	out=$(sha256sum -c test/test19/proof.answer)
-	[ "$out" = "test/test19/proof: OK" ] || exit 5
+	./test/results/test17-x86-binary >| test/test17/proof || exit 4
+	out=$(sha256sum -c test/test17/proof.answer)
+	[ "$out" = "test/test17/proof: OK" ] || exit 5
 fi
 exit 0

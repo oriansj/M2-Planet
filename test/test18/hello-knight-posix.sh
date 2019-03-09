@@ -17,28 +17,28 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
+bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/file.c \
+	-f test/common_knight/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/test18/math.c \
 	-o test/test18/math.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
 	-f test/test18/math.M1 \
-	--LittleEndian \
-	--architecture x86 \
+	--BigEndian \
+	--architecture knight-posix \
 	-o test/test18/math.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test18/math.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test18-binary --exec_enable || exit 3
+hex2 -f test/common_knight/ELF-knight.hex2 -f test/test18/math.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x00 -o test/results/test18-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
 	# Verify that the resulting file works
-	./test/results/test18-binary >| test/test18/proof || exit 4
+	./test/results/test18-knight-posix-binary >| test/test18/proof || exit 4
 	out=$(sha256sum -c test/test18/proof.answer)
 	[ "$out" = "test/test18/proof: OK" ] || exit 5
 fi

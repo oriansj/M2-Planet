@@ -27,7 +27,7 @@
 	CALLI R15 @FUNCTION_main
 
 	;; Exit to kernel
-	HALT                        ; Simply halt for now
+	EXIT                        ; Return what is in R0
 
 	;; Our default heap pointer
 :HEAP

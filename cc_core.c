@@ -150,9 +150,9 @@ void function_call(char* s, int bool)
 	{
 		if(KNIGHT_POSIX == Architecture)
 		{
-			emit_out("LOAD R0 R15 @");
+			emit_out("LOAD R0 R14 ");
 			emit_out(s);
-			emit_out("MOVE R14 R13\n");
+			emit_out("\nMOVE R14 R13\n");
 			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
@@ -574,11 +574,11 @@ void additive_expr_stub()
 {
 	if(KNIGHT_POSIX == Architecture)
 	{
-		general_recursion(postfix_expr, "ADD R0 R0 R1\n", "+", additive_expr_stub);
+		general_recursion(postfix_expr, "ADD R0 R1 R0\n", "+", additive_expr_stub);
 		general_recursion(postfix_expr, "SUB R0 R1 R0\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "MUL R0 R0 R1\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "DIV R0 R0 R1\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "MOD R0 R0 R1\n", "%", additive_expr_stub);
+		general_recursion(postfix_expr, "MUL R0 R1 R0\n", "*", additive_expr_stub);
+		general_recursion(postfix_expr, "DIVU R0 R1 R0\n", "/", additive_expr_stub);
+		general_recursion(postfix_expr, "MODU R0 R1 R0\n", "%", additive_expr_stub);
 		general_recursion(postfix_expr, "SAL R0 R1 R0\n", "<<", additive_expr_stub);
 		general_recursion(postfix_expr, "SAR R0 R1 R0\n", ">>", additive_expr_stub);
 	}

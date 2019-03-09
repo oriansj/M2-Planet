@@ -20,7 +20,7 @@ VPATH = bin:test:test/results
 all: M2-Planet
 
 M2-Planet: bin results
-	./test/test100/hello.sh
+	./test/test100/hello-x86.sh
 
 # Clean up after ourselves
 .PHONY: clean
@@ -79,6 +79,15 @@ test: test00-knight-posix-binary \
 	test14-knight-posix-binary \
 	test15-knight-posix-binary \
 	test16-knight-posix-binary \
+	test17-knight-posix-binary \
+	test18-knight-posix-binary \
+	test19-knight-posix-binary \
+	test20-knight-posix-binary \
+	test21-knight-posix-binary \
+	test22-knight-posix-binary \
+	test23-knight-posix-binary \
+	test24-knight-posix-binary \
+	test99-knight-posix-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -96,16 +105,16 @@ test: test00-knight-posix-binary \
 	test14-x86-binary \
 	test15-x86-binary \
 	test16-x86-binary \
-	test17-binary \
-	test18-binary \
-	test19-binary \
-	test20-binary \
-	test21-binary \
-	test22-binary \
-	test23-binary \
-	test24-binary \
-	test99-binary \
-	test100-binary | results
+	test17-x86-binary \
+	test18-x86-binary \
+	test19-x86-binary \
+	test20-x86-binary \
+	test21-x86-binary \
+	test22-x86-binary \
+	test23-x86-binary \
+	test24-x86-binary \
+	test99-x86-binary \
+	test100-x86-binary | results
 	sha256sum -c test/test.answers
 
 test00-knight-posix-binary: M2-Planet | results
@@ -159,6 +168,33 @@ test15-knight-posix-binary: M2-Planet | results
 test16-knight-posix-binary: M2-Planet | results
 	test/test16/hello-knight-posix.sh
 
+test17-knight-posix-binary: M2-Planet | results
+	test/test17/hello-knight-posix.sh
+
+test18-knight-posix-binary: M2-Planet | results
+	test/test18/hello-knight-posix.sh
+
+test19-knight-posix-binary: M2-Planet | results
+	test/test19/hello-knight-posix.sh
+
+test20-knight-posix-binary: M2-Planet | results
+	test/test20/hello-knight-posix.sh
+
+test21-knight-posix-binary: M2-Planet | results
+	test/test21/hello-knight-posix.sh
+
+test22-knight-posix-binary: M2-Planet | results
+	test/test22/hello-knight-posix.sh
+
+test23-knight-posix-binary: M2-Planet | results
+	test/test23/hello-knight-posix.sh
+
+test24-knight-posix-binary: M2-Planet | results
+	test/test24/hello-knight-posix.sh
+
+test99-knight-posix-binary: M2-Planet | results
+	test/test99/hello-knight-posix.sh
+
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh
 
@@ -210,35 +246,35 @@ test15-x86-binary: M2-Planet | results
 test16-x86-binary: M2-Planet | results
 	test/test16/hello-x86.sh
 
-test17-binary: M2-Planet | results
-	test/test17/hello.sh
+test17-x86-binary: M2-Planet | results
+	test/test17/hello-x86.sh
 
-test18-binary: M2-Planet | results
-	test/test18/hello.sh
+test18-x86-binary: M2-Planet | results
+	test/test18/hello-x86.sh
 
-test19-binary: M2-Planet | results
-	test/test19/hello.sh
+test19-x86-binary: M2-Planet | results
+	test/test19/hello-x86.sh
 
-test20-binary: M2-Planet | results
-	test/test20/hello.sh
+test20-x86-binary: M2-Planet | results
+	test/test20/hello-x86.sh
 
-test21-binary: M2-Planet | results
-	test/test21/hello.sh
+test21-x86-binary: M2-Planet | results
+	test/test21/hello-x86.sh
 
-test22-binary: M2-Planet | results
-	test/test22/hello.sh
+test22-x86-binary: M2-Planet | results
+	test/test22/hello-x86.sh
 
-test23-binary: M2-Planet | results
-	test/test23/hello.sh
+test23-x86-binary: M2-Planet | results
+	test/test23/hello-x86.sh
 
-test24-binary: M2-Planet | results
-	test/test24/hello.sh
+test24-x86-binary: M2-Planet | results
+	test/test24/hello-x86.sh
 
-test99-binary: M2-Planet | results
-	test/test99/hello.sh
+test99-x86-binary: M2-Planet | results
+	test/test99/hello-x86.sh
 
-test100-binary: M2-Planet | results
-	test/test100/hello.sh
+test100-x86-binary: M2-Planet | results
+	test/test100/hello-x86.sh
 
 # Generate test answers
 .PHONY: Generate-test-answers

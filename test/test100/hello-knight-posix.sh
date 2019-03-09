@@ -19,10 +19,11 @@ set -ex
 # Build the test
 if [ -f bin/M2-Planet ]
 then
-./bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
+./bin/M2-Planet --architecture knight-posix \
+	-f test/common_knight/functions/file.c \
+	-f test/common_knight/functions/malloc.c \
 	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
+	-f test/common_knight/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -39,11 +40,11 @@ then
 	-o test/test100/cc.M1 || exit 1
 elif [ -f bin/M2-Planet-seed ]
 then
-[ ! -f test/results ] && mkdir test/results
-./bin/M2-Planet-seed --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
+[ ! -f test/results ] && mkdir -p test/results
+./bin/M2-Planet-seed -f test/common_knight/functions/file.c \
+	-f test/common_knight/functions/malloc.c \
 	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
+	-f test/common_knight/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -78,10 +79,11 @@ ${CC} ${CFLAGS} \
 	gcc_req.h \
 	-o bin/M2-Planet-gcc
 
-./bin/M2-Planet-gcc --architecture x86 -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
+./bin/M2-Planet-gcc --architecture knight-posix \
+	-f test/common_knight/functions/file.c \
+	-f test/common_knight/functions/malloc.c \
 	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
+	-f test/common_knight/functions/exit.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -98,32 +100,28 @@ ${CC} ${CFLAGS} \
 	-o test/test100/cc.M1 || exit 1
 fi
 
-# Build debug footer
-blood-elf -f test/test100/cc.M1 \
-	-o test/test100/cc-footer.M1 || exit 2
-
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+M1 -f test/common_knight/knight_defs.M1 \
+	-f test/common_knight/libc-core.M1 \
 	-f test/test100/cc.M1 \
-	-f test/test100/cc-footer.M1 \
-	--LittleEndian \
-	--architecture x86 \
+	--BigEndian \
+	--architecture knight-posix \
 	-o test/test100/cc.hex2 || exit 3
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386-debug.hex2 \
+hex2 -f test/common_knight/ELF-knight.hex2 \
 	-f test/test100/cc.hex2 \
-	--LittleEndian \
-	--architecture x86 \
-	--BaseAddress 0x8048000 \
-	-o test/results/test100-binary --exec_enable || exit 4
+	--BigEndian \
+	--architecture knight-posix \
+	--BaseAddress 0x00 \
+	-o test/results/test100-knight-posix-binary --exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
 	# Verify that the resulting file works
-	./test/results/test100-binary --architecture x86 -f test/common_x86/functions/file.c \
+	./test/results/test100-knight-posix-binary --architecture x86 \
+		-f test/common_x86/functions/file.c \
 		-f test/common_x86/functions/malloc.c \
 		-f functions/calloc.c \
 		-f test/common_x86/functions/exit.c \
@@ -143,11 +141,11 @@ then
 
 	out=$(sha256sum -c test/test100/proof.answer)
 	[ "$out" = "test/test100/proof: OK" ] || exit 6
-	[ ! -e bin/M2-Planet ] && mv test/results/test100-binary bin/M2-Planet
+	[ ! -e bin/M2-Planet ] && mv test/results/test100-knight-posix-binary bin/M2-Planet
 else
 	[ -e bin/M2-Planet-gcc ] && cp bin/M2-Planet-gcc bin/M2-Planet
 
 	# Seeds only exist if you can build natively
-	[ -e bin/M2-Planet-seed ] && cp test/results/test100-binary bin/M2-Planet
+	[ -e bin/M2-Planet-seed ] && cp test/results/test100-knight-posix-binary bin/M2-Planet
 fi
 exit 0

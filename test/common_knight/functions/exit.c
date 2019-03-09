@@ -20,6 +20,6 @@
 
 void exit(int value)
 {
-	/* Until we need to do a better job */
-	asm("HALT");
+	asm("LOAD R0 R14 0"
+	    "EXIT");
 }
