@@ -169,9 +169,9 @@ void function_call(char* s, int bool)
 		if(KNIGHT_POSIX == Architecture)
 		{
 			emit_out("MOVE R14 R13\n");
-			emit_out("CALLI R15 @FUNCTION_");
+			emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
 			emit_out(s);
-			emit_out("\n");
+			emit_out("\nCALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
@@ -237,7 +237,7 @@ void function_load(struct token_list* a)
 		return;
 	}
 
-	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $FUNCTION_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
 	emit_out(a->s);
 	emit_out("\n");
@@ -246,7 +246,7 @@ void function_load(struct token_list* a)
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $GLOBAL_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
 	emit_out(a->s);
 	emit_out("\n");
@@ -280,7 +280,7 @@ void primary_expr_string()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
-	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 $STRING_");
+	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
 	uniqueID_out(function->s, number_string);
 

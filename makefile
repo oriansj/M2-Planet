@@ -88,6 +88,7 @@ test: test00-knight-posix-binary \
 	test23-knight-posix-binary \
 	test24-knight-posix-binary \
 	test99-knight-posix-binary \
+	test100-knight-posix-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -194,6 +195,9 @@ test24-knight-posix-binary: M2-Planet | results
 
 test99-knight-posix-binary: M2-Planet | results
 	test/test99/hello-knight-posix.sh
+
+test100-knight-posix-binary: M2-Planet | results
+	test/test100/hello-knight-posix.sh
 
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh

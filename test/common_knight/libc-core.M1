@@ -24,11 +24,14 @@
 	SUBI R14 R15 16             ; Set our base pointer
 
 	;; Perform the main loop
-	CALLI R15 @FUNCTION_main
+	LOADR R0 4
+	JUMP 4
+	&FUNCTION_main
+	CALL R0 R15
 
 	;; Exit to kernel
 	EXIT                        ; Return what is in R0
 
 	;; Our default heap pointer
 :HEAP
-	'00080000'
+	'00100000'
