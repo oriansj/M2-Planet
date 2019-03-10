@@ -16,9 +16,11 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
-# Build the test
-./bin/M2-Planet --architecture x86 \
-	-f test/common_x86/functions/file.c \
+# Build using seed if possible
+if [ -f bin/M2-Planet-seed ]
+then
+[ ! -f test/results ] && mkdir -p test/results
+./bin/M2-Planet-seed -f test/common_x86/functions/file.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_x86/functions/exit.c \
@@ -58,31 +60,25 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test100-x86-binary --exec_enable || exit 4
 
-# Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
-then
-	# Verify that the resulting file works
-	./test/results/test100-x86-binary --architecture x86 \
-		-f test/common_x86/functions/file.c \
-		-f test/common_x86/functions/malloc.c \
-		-f functions/calloc.c \
-		-f test/common_x86/functions/exit.c \
-		-f functions/match.c \
-		-f functions/in_set.c \
-		-f functions/numerate_number.c \
-		-f functions/file_print.c \
-		-f functions/number_pack.c \
-		-f functions/string.c \
-		-f cc.h \
-		-f cc_reader.c \
-		-f cc_strings.c \
-		-f cc_types.c \
-		-f cc_core.c \
-		-f cc.c \
-		-o test/test100/proof || exit 5
+else
+[ -z "${CC+x}" ] && export CC=gcc
+[ -z "${CFLAGS+x}" ] && export CFLAGS=" -D_GNU_SOURCE -O0 -std=c99 -ggdb"
 
-	out=$(sha256sum -c test/test100/proof.answer)
-	[ "$out" = "test/test100/proof: OK" ] || exit 6
-	[ ! -e bin/M2-Planet ] && mv test/results/test100-x86-binary bin/M2-Planet
+${CC} ${CFLAGS} \
+	functions/match.c \
+	functions/in_set.c \
+	functions/numerate_number.c \
+	functions/file_print.c \
+	functions/number_pack.c \
+	functions/string.c \
+	cc_reader.c \
+	cc_strings.c \
+	cc_types.c \
+	cc_core.c \
+	cc.c \
+	cc.h \
+	gcc_req.h \
+	-o bin/M2-Planet || exit 5
 fi
+
 exit 0

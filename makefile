@@ -20,7 +20,7 @@ VPATH = bin:test:test/results
 all: M2-Planet
 
 M2-Planet: bin results
-	./test/test100/hello-x86.sh
+	./test/test100/hello.sh
 
 # Clean up after ourselves
 .PHONY: clean
@@ -89,6 +89,7 @@ test: test00-knight-posix-binary \
 	test24-knight-posix-binary \
 	test99-knight-posix-binary \
 	test100-knight-posix-binary \
+	test00-armv7l-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -198,6 +199,9 @@ test99-knight-posix-binary: M2-Planet | results
 
 test100-knight-posix-binary: M2-Planet | results
 	test/test100/hello-knight-posix.sh
+
+test00-armv7l-binary: M2-Planet | results
+	test/test00/hello-armv7l.sh
 
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh

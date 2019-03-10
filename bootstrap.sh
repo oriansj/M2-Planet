@@ -104,4 +104,4 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	--exec_enable || exit 2
 
 # self-host
-./test/test100/hello-x86.sh
+./test/test100/hello.sh

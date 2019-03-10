@@ -1,0 +1,54 @@
+## Copyright (C) 2016 Jeremiah Orians
+## This file is part of stage0.
+##
+## stage0 is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## stage0 is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with stage0.  If not, see <http://www.gnu.org/licenses/>.
+
+#Registers
+DEFINE R0 0
+DEFINE R1 1
+DEFINE R2 2
+DEFINE R3 3
+DEFINE R4 4
+DEFINE R5 5
+DEFINE R6 6
+DEFINE R7 7
+DEFINE R8 8
+DEFINE R9 9
+DEFINE R10 A
+DEFINE R11 B
+DEFINE R12 C
+DEFINE R13 D
+DEFINE SP D
+DEFINE R14 E
+DEFINE LR E
+DEFINE R15 F
+DEFINE PC F
+
+# LOAD/STORE
+DEFINE MEMORY E5
+DEFINE STORE32 08
+DEFINE STORE8 0C
+DEFINE LOAD32 09
+DEFINE LOAD8 0D
+DEFINE LOADI8_ALWAYS 0A0E3
+
+# JUMP/BRANCH
+DEFINE JUMP EA
+DEFINE BL_ALWAYS EB
+
+# Data movement
+DEFINE MOVE_ALWAYS 0A0E1
+
+# SYSCALL
+DEFINE SYSCALL_ALWAYS 000000EF

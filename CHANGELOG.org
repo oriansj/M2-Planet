@@ -16,6 +16,16 @@
 
 * Current
 ** Added
+Added 1/24 working tests for armv7l
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.1 - 2019-03-09
+** Added
 Added support for \f, \v and \e
 Added refresh to bootstrap.sh to build seed from cc_x86.s
 Added missing license headers

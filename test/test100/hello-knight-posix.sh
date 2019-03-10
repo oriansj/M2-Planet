@@ -17,8 +17,6 @@
 
 set -ex
 # Build the test
-if [ -f bin/M2-Planet ]
-then
 ./bin/M2-Planet --architecture knight-posix \
 	-f test/common_knight/functions/file.c \
 	-f test/common_knight/functions/malloc.c \
@@ -38,67 +36,6 @@ then
 	-f cc.c \
 	--debug \
 	-o test/test100/cc.M1 || exit 1
-elif [ -f bin/M2-Planet-seed ]
-then
-[ ! -f test/results ] && mkdir -p test/results
-./bin/M2-Planet-seed -f test/common_knight/functions/file.c \
-	-f test/common_knight/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_knight/functions/exit.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/file_print.c \
-	-f functions/number_pack.c \
-	-f functions/string.c \
-	-f cc.h \
-	-f cc_reader.c \
-	-f cc_strings.c \
-	-f cc_types.c \
-	-f cc_core.c \
-	-f cc.c \
-	--debug \
-	-o test/test100/cc.M1 || exit 1
-else
-[ -z "${CC+x}" ] && export CC=gcc
-[ -z "${CFLAGS+x}" ] && export CFLAGS=" -D_GNU_SOURCE -O0 -std=c99 -ggdb"
-
-${CC} ${CFLAGS} \
-	functions/match.c \
-	functions/in_set.c \
-	functions/numerate_number.c \
-	functions/file_print.c \
-	functions/number_pack.c \
-	functions/string.c \
-	cc_reader.c \
-	cc_strings.c \
-	cc_types.c \
-	cc_core.c \
-	cc.c \
-	cc.h \
-	gcc_req.h \
-	-o bin/M2-Planet-gcc
-
-./bin/M2-Planet-gcc --architecture knight-posix \
-	-f test/common_knight/functions/file.c \
-	-f test/common_knight/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_knight/functions/exit.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/file_print.c \
-	-f functions/number_pack.c \
-	-f functions/string.c \
-	-f cc.h \
-	-f cc_reader.c \
-	-f cc_strings.c \
-	-f cc_types.c \
-	-f cc_core.c \
-	-f cc.c \
-	--debug \
-	-o test/test100/cc.M1 || exit 1
-fi
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_knight/knight_defs.M1 \
@@ -106,7 +43,7 @@ M1 -f test/common_knight/knight_defs.M1 \
 	-f test/test100/cc.M1 \
 	--BigEndian \
 	--architecture knight-posix \
-	-o test/test100/cc.hex2 || exit 3
+	-o test/test100/cc.hex2 || exit 2
 
 # Resolve all linkages
 hex2 -f test/common_knight/ELF-knight.hex2 \
@@ -114,7 +51,7 @@ hex2 -f test/common_knight/ELF-knight.hex2 \
 	--BigEndian \
 	--architecture knight-posix \
 	--BaseAddress 0x00 \
-	-o test/results/test100-knight-posix-binary --exec_enable || exit 4
+	-o test/results/test100-knight-posix-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
@@ -137,15 +74,10 @@ then
 		-f cc_types.c \
 		-f cc_core.c \
 		-f cc.c \
-		-o test/test100/proof || exit 5
+		-o test/test100/proof || exit 4
 
 	out=$(sha256sum -c test/test100/proof.answer)
-	[ "$out" = "test/test100/proof: OK" ] || exit 6
+	[ "$out" = "test/test100/proof: OK" ] || exit 5
 	[ ! -e bin/M2-Planet ] && mv test/results/test100-knight-posix-binary bin/M2-Planet
-else
-	[ -e bin/M2-Planet-gcc ] && cp bin/M2-Planet-gcc bin/M2-Planet
-
-	# Seeds only exist if you can build natively
-	[ -e bin/M2-Planet-seed ] && cp test/results/test100-knight-posix-binary bin/M2-Planet
 fi
 exit 0
