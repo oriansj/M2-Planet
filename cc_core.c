@@ -445,14 +445,14 @@ void common_recursion(FUNCTION f)
 
 	if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_common_recursion\n");
 	else if(X86 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#common_recursion\n");
+	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_common_recursion\n");
 
 	f();
 	current_target = promote_type(current_target, last_type);
 
 	if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _common_recursion\n");
 	else if(X86 == Architecture) emit_out("POP_ebx\t# _common_recursion\n");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#common_recursion\n");
+	else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _common_recursion\n");
 }
 
 void general_recursion( FUNCTION f, char* s, char* name, FUNCTION iterate)
@@ -693,12 +693,12 @@ void relational_expr_stub()
 	}
 	else if(ARMV7L == Architecture)
 	{
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "PLACEHOLDER\t#relational_expr_stub\n", "!=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_L\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_LE\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_GE\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_G\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_EQUAL\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_NE\n", "!=", relational_expr_stub);
 	}
 }
 
@@ -906,18 +906,21 @@ void process_if()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @ELSE_");
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
 
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @_END_IF_");
 	else if(X86 == Architecture) emit_out("JUMP %_END_IF_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
 
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP\n");
+
 	emit_out(":ELSE_");
 	uniqueID_out(function->s, number_string);
 
