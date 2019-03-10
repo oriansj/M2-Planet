@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with stage0.  If not, see <http://www.gnu.org/licenses/>.
 
-#Registers
+# Registers
 DEFINE R0 0
 DEFINE R1 1
 DEFINE R2 2
@@ -35,6 +35,12 @@ DEFINE LR E
 DEFINE R15 F
 DEFINE PC F
 
+# Register masks for push/pop16
+DEFINE {R0} 0100
+DEFINE {R1} 0200
+DEFINE {R12} 0010
+DEFINE {R14} 0040
+
 # LOAD/STORE
 DEFINE MEMORY E5
 DEFINE STORE32 08
@@ -45,10 +51,16 @@ DEFINE LOADI8_ALWAYS 0A0E3
 
 # JUMP/BRANCH
 DEFINE JUMP EA
-DEFINE BL_ALWAYS EB
+DEFINE CALL_ALWAYS EB
 
 # Data movement
 DEFINE MOVE_ALWAYS 0A0E1
+DEFINE PUSH_ALWAYS 2DE9
+DEFINE POP_ALWAYS bde8
+
+# Arithmetic
+DEFINE ARITH_ALWAYS E2
+DEFINE ADD 08
 
 # SYSCALL
 DEFINE SYSCALL_ALWAYS 000000EF

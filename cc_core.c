@@ -128,8 +128,8 @@ void function_call(char* s, int bool)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' R14 PUSH_ALWAYS\t# Protect the old link register\n");
-		emit_out("'0' R12 PUSH_ALWAYS\t# Protect the old base pointer\n");
+		emit_out("{R14} PUSH_ALWAYS\t# Protect the old link register\n");
+		emit_out("{R12} PUSH_ALWAYS\t# Protect the old base pointer\n");
 	}
 
 	if(global_token->s[0] != ')')
@@ -137,7 +137,7 @@ void function_call(char* s, int bool)
 		expression();
 		if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_process_expression1\n");
 		else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
-		else if(ARMV7L == Architecture) emit_out("REG R0 PUSH_ALWAYS\t#_process_expression1\n");
+		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
 		passed = 1;
 
 		while(global_token->s[0] == ',')
@@ -146,7 +146,7 @@ void function_call(char* s, int bool)
 			expression();
 			if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#_process_expression2\n");
 			else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
-			else if(ARMV7L == Architecture) emit_out("REG R0 PUSH_ALWAYS\t#_process_expression2\n");
+			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression2\n");
 			passed = passed + 1;
 		}
 	}
@@ -175,7 +175,7 @@ void function_call(char* s, int bool)
 			emit_out("!");
 			emit_out(s);
 			emit_out("\nR0 LOAD32 R12\n");
-			emit_out("'0' R12 R13 MOVE_ALWAYS\n");
+			emit_out("'0' R13 R12 MOVE_ALWAYS\n");
 		}
 	}
 	else
@@ -196,7 +196,7 @@ void function_call(char* s, int bool)
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_out("'0' R12 R13 MOVE_ALWAYS\n");
+			emit_out("'0' R13 R12 MOVE_ALWAYS\n");
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
@@ -207,7 +207,7 @@ void function_call(char* s, int bool)
 	{
 		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _process_expression_locals\n");
 		else if(X86 == Architecture) emit_out("POP_ebx\t# _process_expression_locals\n");
-		else if(ARMV7L == Architecture) emit_out("'0' R1 POP_ALWAYS\t# _process_expression_locals\n");
+		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _process_expression_locals\n");
 	}
 
 	if(KNIGHT_POSIX == Architecture)
@@ -222,8 +222,8 @@ void function_call(char* s, int bool)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' R12 POP_ALWAYS\t# Restore old base pointer\n");
-		emit_out("'0' R14 POP_ALWAYS\t# Prevent overwrite\n");
+		emit_out("{R12} POP_ALWAYS\t# Restore old base pointer\n");
+		emit_out("{R14} POP_ALWAYS\t# Prevent overwrite\n");
 	}
 }
 
@@ -884,7 +884,7 @@ void collect_local()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("PUSHR R0 R15\t#");
 	else if(X86 == Architecture) emit_out("PUSH_eax\t#");
-	else if(ARMV7L == Architecture) emit_out("'0' R0 PUSH_ALWAYS\t#");
+	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -1115,7 +1115,7 @@ void return_result()
 	{
 		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _return_result_locals\n");
 		else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
-		else if(ARMV7L == Architecture) emit_out("'0' R1 POP_ALWAYS\t# _return_result_locals\n");
+		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
 	}
 
 	if(KNIGHT_POSIX == Architecture) emit_out("RET R15\n");
@@ -1137,7 +1137,7 @@ void process_break()
 		if(NULL == i) break;
 		if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# break_cleanup_locals\n");
 		else if(X86 == Architecture) emit_out("POP_ebx\t# break_cleanup_locals\n");
-		else if(ARMV7L == Architecture) emit_out("'0' R1 POP_ALWAYS\t# break_cleanup_locals\n");
+		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# break_cleanup_locals\n");
 		i = i->next;
 	}
 	global_token = global_token->next;
@@ -1176,7 +1176,7 @@ void recursive_statement()
 		{
 			if(KNIGHT_POSIX == Architecture) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
 			else if(X86 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
-			else if(ARMV7L == Architecture) emit_out("'0' R1 POP_ALWAYS\t# _recursive_statement_locals\n");
+			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
 		}
 	}
 	function->locals = frame;

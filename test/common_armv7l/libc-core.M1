@@ -15,6 +15,6 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 :_start
-^~FUNCTION_main BL_ALWAYS
+^~FUNCTION_main CALL_ALWAYS
 !1 R7 LOADI8_ALWAYS
 SYSCALL_ALWAYS
