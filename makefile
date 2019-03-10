@@ -92,6 +92,8 @@ test: test00-knight-posix-binary \
 	test00-armv7l-binary \
 	test01-armv7l-binary \
 	test02-armv7l-binary \
+	test03-armv7l-binary \
+	test04-armv7l-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -210,6 +212,12 @@ test01-armv7l-binary: M2-Planet | results
 
 test02-armv7l-binary: M2-Planet | results
 	test/test02/hello-armv7l.sh
+
+test03-armv7l-binary: M2-Planet | results
+	test/test03/hello-armv7l.sh
+
+test04-armv7l-binary: M2-Planet | results
+	test/test04/hello-armv7l.sh
 
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh

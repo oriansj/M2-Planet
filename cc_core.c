@@ -231,7 +231,7 @@ void constant_load(struct token_list* a)
 {
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADI R0 ");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#constant_load\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP\n%");
 	emit_out(a->arguments->s);
 	emit_out("\n");
 }
@@ -247,16 +247,18 @@ void variable_load(struct token_list* a)
 
 	if(KNIGHT_POSIX == Architecture) emit_out("ADDI R0 R14 ");
 	else if(X86 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#variable_load\n");
+	else if(ARMV7L == Architecture) emit_out("!");
 
 	emit_out(numerate_number(a->depth));
+	if(ARMV7L == Architecture) emit_out(" R0 ADD R12 ARITH_ALWAYS");
 	emit_out("\n");
+
 	if(TRUE == Address_of) return;
 	if(match("=", global_token->s)) return;
 
 	if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
 	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#variable_load\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 }
 
 void function_load(struct token_list* a)
@@ -774,24 +776,24 @@ void primary_expr()
 	else if('-' == global_token->s[0])
 	{
 		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %0\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr\n");
+		else if(ARMV7L == Architecture) emit_out("!0 R0 LOADI8_ALWAYS\n");
 
 		common_recursion(primary_expr);
 
 		if(KNIGHT_POSIX == Architecture) emit_out("NEG R0 R0\n");
 		else if(X86 == Architecture) emit_out("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr\n");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
 	}
 	else if('!' == global_token->s[0])
 	{
 		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr\n");
+		else if(ARMV7L == Architecture) emit_out("!1 R0 LOADI8_ALWAYS\n");
 
 		common_recursion(postfix_expr);
 
 		if(KNIGHT_POSIX == Architecture) emit_out("XORI R0 R0 1\n");
 		else if(X86 == Architecture) emit_out("XOR_ebx_eax_into_eax\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr\n");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 XOR R1 ARITH2_ALWAYS\n");
 	}
 	else if('~' == global_token->s[0])
 	{
@@ -799,7 +801,7 @@ void primary_expr()
 
 		if(KNIGHT_POSIX == Architecture) emit_out("NOT R0 R0\n");
 		else if(X86 == Architecture) emit_out("NOT_eax\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr\n");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 MVN_ALWAYS\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
@@ -1335,7 +1337,7 @@ void declare_function()
 		/* Prevent duplicate RETURNS */
 		if((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
 		else if((X86 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
-		else if(ARMV7L == Architecture) emit_out("'0' R14 R15 MOVE_ALWAYS\n");
+		else if((ARMV7L == Architecture) && !match("'0' R14 R15 MOVE_ALWAYS\n", out->s)) emit_out("'0' R14 R15 MOVE_ALWAYS\n");
 	}
 }
 
