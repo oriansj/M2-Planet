@@ -128,8 +128,9 @@ void function_call(char* s, int bool)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("{R14} PUSH_ALWAYS\t# Protect the old link register\n");
-		emit_out("{R12} PUSH_ALWAYS\t# Protect the old base pointer\n");
+		emit_out("{R11} PUSH_ALWAYS\t# Prevent overwriting in recursion\n");
+		emit_out("{BP} PUSH_ALWAYS\t# Protect the old base pointer\n");
+		emit_out("'0' SP R11 NO_SHIFT MOVE_ALWAYS\t# Copy new base pointer\n");
 	}
 
 	if(global_token->s[0] != ')')
@@ -174,8 +175,11 @@ void function_call(char* s, int bool)
 		{
 			emit_out("!");
 			emit_out(s);
-			emit_out("\nR0 LOAD32 R12\n");
-			emit_out("'0' R13 R12 MOVE_ALWAYS\n");
+			emit_out("\nR0 LOAD32 BP MEMORY\n");
+			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
+			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
+			emit_out("PLACEHOLDER\t# Calling function in R0");
+			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
 		}
 	}
 	else
@@ -196,10 +200,12 @@ void function_call(char* s, int bool)
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_out("'0' R13 R12 MOVE_ALWAYS\n");
+			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
+			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
+			emit_out("{LR} POP_ALWAYS\t# Restore the old link register\n");
 		}
 	}
 
@@ -222,8 +228,8 @@ void function_call(char* s, int bool)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("{R12} POP_ALWAYS\t# Restore old base pointer\n");
-		emit_out("{R14} POP_ALWAYS\t# Prevent overwrite\n");
+		emit_out("{BP} POP_ALWAYS\t# Restore old base pointer\n");
+		emit_out("{R11} POP_ALWAYS\t# Prevent overwrite\n");
 	}
 }
 
@@ -231,7 +237,7 @@ void constant_load(struct token_list* a)
 {
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADI R0 ");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP\n%");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 	emit_out(a->arguments->s);
 	emit_out("\n");
 }
@@ -250,7 +256,7 @@ void variable_load(struct token_list* a)
 	else if(ARMV7L == Architecture) emit_out("!");
 
 	emit_out(numerate_number(a->depth));
-	if(ARMV7L == Architecture) emit_out(" R0 ADD R12 ARITH_ALWAYS");
+	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
@@ -317,7 +323,7 @@ void primary_expr_string()
 	current_count = current_count + 1;
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr_string\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
 	uniqueID_out(function->s, number_string);
 
 	/* The target */
@@ -365,7 +371,7 @@ void primary_expr_number()
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP\n%");
+		emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 		emit_out(global_token->s);
 		emit_out("\n");
 	}
@@ -481,6 +487,7 @@ int ceil_log2(int a)
 		a = a >> 1;
 	}
 
+	if(ARMV7L == Architecture) return (result >> 1);
 	return result;
 }
 
@@ -535,28 +542,29 @@ void postfix_expr_array()
 	char* assign;
 	if(KNIGHT_POSIX == Architecture) assign = "LOAD R0 R0 0\n";
 	else if(X86 == Architecture) assign = "LOAD_INTEGER\n";
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_array\n");
+	else if(ARMV7L == Architecture) assign = "!0 R0 LOAD32 R0 MEMORY\n";
 
 	/* Add support for Ints */
 	if(match("char*", current_target->name))
 	{
 		if(KNIGHT_POSIX == Architecture) assign = "LOAD8 R0 R0 0\n";
 		else if(X86 == Architecture) assign = "LOAD_BYTE\n";
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_array\n");
+		else if(ARMV7L == Architecture) assign = "!0 R0 LOAD8 R0 MEMORY\n";
 	}
 	else
 	{
 		if(KNIGHT_POSIX == Architecture) emit_out("SALI R0 ");
 		else if(X86 == Architecture) emit_out("SAL_eax_Immediate8 !");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_array\n");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 '");
 
 		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
+		if(ARMV7L == Architecture) emit_out("' MOVE_ALWAYS");
 		emit_out("\n");
 	}
 
 	if(KNIGHT_POSIX == Architecture) emit_out("ADD R0 R0 R1\n");
 	else if(X86 == Architecture) emit_out("ADD_ebx_to_eax\n");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_array\n");
+	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 
@@ -646,13 +654,13 @@ void additive_expr_stub()
 	}
 	else if(ARMV7L == Architecture)
 	{
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "+", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "PLACEHOLDER\t#additive_expr_stub\n", ">>", additive_expr_stub);
+		general_recursion(postfix_expr, "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "+", additive_expr_stub);
+		general_recursion(postfix_expr, "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "-", additive_expr_stub);
+		general_recursion(postfix_expr, "'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n", "*", additive_expr_stub);
+		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n", "/", additive_expr_stub);
+		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n", "%", additive_expr_stub);
+		general_recursion(postfix_expr, "LEFT R0 R0 R1 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
+		general_recursion(postfix_expr, "RIGHT R0 R0 R1 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
 	}
 }
 
@@ -695,12 +703,12 @@ void relational_expr_stub()
 	}
 	else if(ARMV7L == Architecture)
 	{
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_L\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_LE\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_GE\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_G\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_EQUAL\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!1 R0 LOADI8_NE\n", "!=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_L\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_LE\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_GE\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_G\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_EQUAL\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_NE\n", "!=", relational_expr_stub);
 	}
 }
 
@@ -739,11 +747,11 @@ void bitwise_expr_stub()
 	}
 	else if(ARMV7L == Architecture)
 	{
-		general_recursion(relational_expr, "PLACEHOLDER\t#bitwise_expr_stub\n", "&", bitwise_expr_stub);
-		general_recursion(relational_expr, "PLACEHOLDER\t#bitwise_expr_stub\n", "&&", bitwise_expr_stub);
-		general_recursion(relational_expr, "PLACEHOLDER\t#bitwise_expr_stub\n", "|", bitwise_expr_stub);
-		general_recursion(relational_expr, "PLACEHOLDER\t#bitwise_expr_stub\n", "||", bitwise_expr_stub);
-		general_recursion(relational_expr, "PLACEHOLDER\t#bitwise_expr_stub\n", "^", bitwise_expr_stub);
+		general_recursion(relational_expr, "NO_SHIFT R0 R0 AND R1 ARITH2_ALWAYS\n", "&", bitwise_expr_stub);
+		general_recursion(relational_expr, "NO_SHIFT R0 R0 AND R1 ARITH2_ALWAYS\n", "&&", bitwise_expr_stub);
+		general_recursion(relational_expr, "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n", "|", bitwise_expr_stub);
+		general_recursion(relational_expr, "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n", "||", bitwise_expr_stub);
+		general_recursion(relational_expr, "'0' R0 R0 XOR R1 ARITH2_ALWAYS\n", "^", bitwise_expr_stub);
 	}
 }
 
@@ -826,13 +834,13 @@ void expression()
 		{
 			if(KNIGHT_POSIX == Architecture) store = "STORE R0 R1 0\n";
 			else if(X86 == Architecture) store = "STORE_INTEGER\n";
-			else if(ARMV7L == Architecture) emit_out("!0 R0 STORE32 R1 MEMORY\n");
+			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
 		}
 		else
 		{
 			if(KNIGHT_POSIX == Architecture) store = "STORE8 R0 R1 0\n";
 			else if(X86 == Architecture) store = "STORE_CHAR\n";
-			else if(ARMV7L == Architecture) emit_out("!0 R0 STORE8 R1 MEMORY\n");
+			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
 		}
 
 		common_recursion(expression);
@@ -851,21 +859,25 @@ void collect_local()
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = 20;
 		else if(X86 == Architecture) a->depth = -20;
+		else if(ARMV7L == Architecture) a->depth = 4;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = 4;
 		else if(X86 == Architecture) a->depth = -8;
+		else if(ARMV7L == Architecture) a->depth = 4;
 	}
 	else if(NULL == function->locals)
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = function->arguments->depth + 8;
 		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
+		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 4;
 	}
 	else
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = function->locals->depth + 4;
 		else if(X86 == Architecture) a->depth = function->locals->depth - 4;
+		else if(ARMV7L == Architecture) a->depth = function->locals->depth + 4;
 	}
 
 	function->locals = a;
@@ -921,7 +933,7 @@ void process_if()
 	else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
 
 	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP\n");
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 
 	emit_out(":ELSE_");
 	uniqueID_out(function->s, number_string);
@@ -969,12 +981,16 @@ void process_for()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @FOR_END_");
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
+
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_THEN_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_THEN_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+
 	emit_out(":FOR_ITER_");
 	uniqueID_out(function->s, number_string);
 
@@ -983,8 +999,10 @@ void process_for()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("^~FOR_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+
 	emit_out(":FOR_THEN_");
 	uniqueID_out(function->s, number_string);
 
@@ -993,8 +1011,10 @@ void process_for()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @FOR_ITER_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_ITER_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+
 	emit_out(":FOR_END_");
 	uniqueID_out(function->s, number_string);
 
@@ -1049,8 +1069,10 @@ void process_do()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.NZ R0 @DO_");
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_if\n");
+	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
+
 	emit_out(":DO_END_");
 	uniqueID_out(function->s, number_string);
 
@@ -1086,8 +1108,9 @@ void process_while()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP.Z R0 @END_WHILE_");
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_while\n");
+	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
 	emit_out("# THEN_while_");
 	uniqueID_out(function->s, number_string);
 
@@ -1096,8 +1119,9 @@ void process_while()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @WHILE_");
 	else if(X86 == Architecture) emit_out("JUMP %WHILE_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_while\n");
+	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
 	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	emit_out(":END_WHILE_");
 	uniqueID_out(function->s, number_string);
 
@@ -1125,7 +1149,7 @@ void return_result()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("RETURN\n");
-	else if(ARMV7L == Architecture) emit_out("'0' R14 R15 MOVE_ALWAYS\n");
+	else if(ARMV7L == Architecture) emit_out("'0' LR PC NO_SHIFT MOVE_ALWAYS\n");
 }
 
 void process_break()
@@ -1296,11 +1320,13 @@ void collect_arguments()
 			{
 				if(KNIGHT_POSIX == Architecture) a->depth = 0;
 				else if(X86 == Architecture) a->depth = -4;
+				else if(ARMV7L == Architecture) a->depth = 4;
 			}
 			else
 			{
 				if(KNIGHT_POSIX == Architecture) a->depth = function->arguments->depth + 4;
 				else if(X86 == Architecture) a->depth = function->arguments->depth - 4;
+				else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 4;
 			}
 
 			global_token = global_token->next;
@@ -1337,7 +1363,7 @@ void declare_function()
 		/* Prevent duplicate RETURNS */
 		if((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
 		else if((X86 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
-		else if((ARMV7L == Architecture) && !match("'0' R14 R15 MOVE_ALWAYS\n", out->s)) emit_out("'0' R14 R15 MOVE_ALWAYS\n");
+		else if((ARMV7L == Architecture) && !match("'0' LR PC NO_SHIFT MOVE_ALWAYS\n", out->s)) emit_out("'0' LR PC NO_SHIFT MOVE_ALWAYS\n");
 	}
 }
 

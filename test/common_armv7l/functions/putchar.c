@@ -20,6 +20,6 @@ void putchar(int c)
 	asm("!1 R0 LOADI8_ALWAYS"
 	    "!1 R2 LOADI8_ALWAYS"
 	    "!4 R7 LOADI8_ALWAYS"
-	    "!0 R1 ADD R12 ARITH_ALWAYS"
+	    "!4 R1 SUB R12 ARITH_ALWAYS"
 	    "SYSCALL_ALWAYS");
 }

@@ -20,7 +20,8 @@
 
 void exit(int value)
 {
-	asm("!0 R0 LOAD32 R13 MEMORY"
+	asm("!4 R0 SUB R12 ARITH_ALWAYS"
+	    "!0 R0 LOAD32 R0 MEMORY"
 	    "!1 R7 LOADI8_ALWAYS"
 	    "SYSCALL_ALWAYS");
 }

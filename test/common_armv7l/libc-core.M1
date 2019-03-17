@@ -15,7 +15,15 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 :_start
-'0' R13 R12 MOVE_ALWAYS
+'0' R13 R12 NO_SHIFT MOVE_ALWAYS
 ^~FUNCTION_main CALL_ALWAYS
 !1 R7 LOADI8_ALWAYS
 SYSCALL_ALWAYS
+
+# Stub that simply returns
+:divide
+'0' R14 R15 NO_SHIFT MOVE_ALWAYS
+
+# Stub that simply returns
+:modulus
+'0' R14 R15 NO_SHIFT MOVE_ALWAYS
