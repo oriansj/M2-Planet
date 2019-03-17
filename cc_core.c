@@ -1077,7 +1077,7 @@ void process_do()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_NE\t");
+	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
 
 	emit_out(":DO_END_");
 	uniqueID_out(function->s, number_string);
@@ -1179,12 +1179,13 @@ void process_break()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("JUMP @");
 	else if(X86 == Architecture) emit_out("JUMP %");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#process_break\n");
+	else if(ARMV7L == Architecture) emit_out("^~");
 
 	emit_out(break_target_head);
 	emit_out(break_target_func);
 	emit_out("_");
 	emit_out(break_target_num);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
 	emit_out("\n");
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
@@ -1278,8 +1279,9 @@ void statement()
 		global_token = global_token->next;
 		if(KNIGHT_POSIX == Architecture) emit_out("JUMP @");
 		else if(X86 == Architecture) emit_out("JUMP %");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#\n");
+		else if(ARMV7L == Architecture) emit_out("^~");
 		emit_out(global_token->s);
+		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
 		emit_out("\n");
 		global_token = global_token->next;
 		require_match("ERROR in statement\nMissing ;\n", ";");
