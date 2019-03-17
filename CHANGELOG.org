@@ -16,7 +16,7 @@
 
 * Current
 ** Added
-Added 8/24 working tests for armv7l
+Added 10/24 working tests for armv7l
 
 ** Changed
 
