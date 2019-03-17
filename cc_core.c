@@ -523,14 +523,19 @@ void postfix_expr_arrow()
 			emit_out(numerate_number(i->offset));
 			emit_out("\nADD_ebx_to_eax\n");
 		}
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_arrow\n");
+		else if(ARMV7L == Architecture)
+		{
+			emit_out("!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+			emit_out(numerate_number(i->offset));
+			emit_out("\n'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
+		}
 	}
 
 	if((!match("=", global_token->s) && (4 >= i->size)))
 	{
 		if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#postfix_expr_arrow\n");
+		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 	}
 }
 
@@ -593,8 +598,9 @@ void unary_expr_sizeof()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADUI R0 ");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#unary_expr_sizeof\n");
+	else if(ARMV7L == Architecture) emit_out("!");
 	emit_out(numerate_number(a->size));
+	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
 	emit_out("\n");
 }
 
@@ -659,8 +665,8 @@ void additive_expr_stub()
 		general_recursion(postfix_expr, "'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n", "*", additive_expr_stub);
 		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n", "/", additive_expr_stub);
 		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "LEFT R0 R0 R1 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "RIGHT R0 R0 R1 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
+		general_recursion(postfix_expr, "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
+		general_recursion(postfix_expr, "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
 	}
 }
 
@@ -1071,7 +1077,7 @@ void process_do()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
+	if(ARMV7L == Architecture) emit_out(" JUMP_NE\t");
 
 	emit_out(":DO_END_");
 	uniqueID_out(function->s, number_string);
