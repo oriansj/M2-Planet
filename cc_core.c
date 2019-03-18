@@ -178,7 +178,7 @@ void function_call(char* s, int bool)
 			emit_out("\nR0 LOAD32 BP MEMORY\n");
 			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
 			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
-			emit_out("PLACEHOLDER\t# Calling function in R0");
+			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
 		}
 	}
@@ -277,7 +277,7 @@ void function_load(struct token_list* a)
 
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#function_load\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -339,8 +339,9 @@ void primary_expr_char()
 {
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADI R0 ");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#primary_expr_char\n");
+	else if(ARMV7L == Architecture) emit_out("!");
 	emit_out(numerate_number(escape_lookup(global_token->s + 1)));
+	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
 	emit_out("\n");
 	global_token = global_token->next;
 }
@@ -877,7 +878,7 @@ void collect_local()
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = function->arguments->depth + 8;
 		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
-		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 4;
+		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
 	}
 	else
 	{
