@@ -175,7 +175,8 @@ void function_call(char* s, int bool)
 		{
 			emit_out("!");
 			emit_out(s);
-			emit_out("\nR0 LOAD32 BP MEMORY\n");
+			emit_out(" R0 SUB BP ARITH_ALWAYS\n");
+			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
 			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
