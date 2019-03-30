@@ -91,7 +91,6 @@ FILE* fopen(char* filename, char* mode)
 int close(int fd)
 {
 	asm("!4 R0 SUB R12 ARITH_ALWAYS"
-	    "!0 R0 LOAD32 R0 MEMORY"
 	    "!6 R7 LOADI8_ALWAYS"
 	    "SYSCALL_ALWAYS");
 }

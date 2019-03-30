@@ -19,7 +19,7 @@ VPATH = bin:test:test/results
 
 all: M2-Planet
 
-M2-Planet: bin results
+M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
 	./test/test100/hello.sh
 
 # Clean up after ourselves
@@ -109,6 +109,9 @@ test: test00-knight-posix-binary \
 	test17-armv7l-binary \
 	test18-armv7l-binary \
 	test19-armv7l-binary \
+	test20-armv7l-binary \
+	test21-armv7l-binary \
+	test22-armv7l-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -278,6 +281,15 @@ test18-armv7l-binary: M2-Planet | results
 
 test19-armv7l-binary: M2-Planet | results
 	test/test19/hello-armv7l.sh
+
+test20-armv7l-binary: M2-Planet | results
+	test/test20/hello-armv7l.sh
+
+test21-armv7l-binary: M2-Planet | results
+	test/test21/hello-armv7l.sh
+
+test22-armv7l-binary: M2-Planet | results
+	test/test22/hello-armv7l.sh
 
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh

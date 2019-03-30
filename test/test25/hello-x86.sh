@@ -25,8 +25,8 @@ set -x
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
-	-f functions/fork.c \
-	-f functions/execve.c \
+	-f test/common_x86/functions/fork.c \
+	-f test/common_x86/functions/execve.c \
 	-f test/test25/kaem.c \
 	--debug \
 	-o test/test25/kaem.M1 || exit 1

@@ -21,6 +21,7 @@ Added 15/24 working tests for armv7l
 ** Changed
 
 ** Fixed
+Fixed unsigned division in ARMv7l port
 
 ** Removed
 

@@ -14,6 +14,9 @@
 ## You should have received a copy of the GNU General Public License
 ## along with stage0.  If not, see <http://www.gnu.org/licenses/>.
 
+# M2-Planet standards
+DEFINE NOP 00000000
+
 # Registers
 DEFINE R0 0
 DEFINE R1 1
@@ -72,6 +75,7 @@ DEFINE JUMP_EQUAL 0A
 DEFINE JUMP_NE 1A
 DEFINE CALL_ALWAYS EB
 DEFINE CALL_REG_ALWAYS FF2FE1
+DEFINE RETURN FF2FE1
 
 # Data movement
 DEFINE MOVE_ALWAYS A0E1
@@ -90,6 +94,7 @@ DEFINE ARITH_LT B2
 DEFINE ARITH_NE 12
 DEFINE ARITH2_ALWAYS E0
 DEFINE ARITH2_GE A0
+DEFINE ADC 0A
 DEFINE ADCS 0B
 DEFINE ADD 08
 DEFINE ADDS 09

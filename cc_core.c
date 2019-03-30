@@ -177,8 +177,8 @@ void function_call(char* s, int bool)
 			emit_out(s);
 			emit_out(" R0 SUB BP ARITH_ALWAYS\n");
 			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
 			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
+			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
 		}
@@ -288,14 +288,14 @@ void global_load(struct token_list* a)
 	current_target = a->type;
 	if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
-	else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#global_load\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
 	emit_out(a->s);
 	emit_out("\n");
 	if(!match("=", global_token->s))
 	{
 		if(KNIGHT_POSIX == Architecture) emit_out("LOAD R0 R0 0\n");
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
-		else if(ARMV7L == Architecture) emit_out("PLACEHOLDER\t#global_load\n");
+		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 	}
 }
 
@@ -1157,7 +1157,7 @@ void return_result()
 
 	if(KNIGHT_POSIX == Architecture) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("RETURN\n");
-	else if(ARMV7L == Architecture) emit_out("'0' LR PC NO_SHIFT MOVE_ALWAYS\n");
+	else if(ARMV7L == Architecture) emit_out("'1' LR RETURN\n");
 }
 
 void process_break()
@@ -1207,7 +1207,7 @@ void recursive_statement()
 
 	if(((X86 == Architecture) && !match("RETURN\n", out->s)) ||
 	   ((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)) ||
-	   (ARMV7L == Architecture))
+	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", out->s)))
 	{
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
@@ -1373,7 +1373,7 @@ void declare_function()
 		/* Prevent duplicate RETURNS */
 		if((KNIGHT_POSIX == Architecture) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
 		else if((X86 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
-		else if((ARMV7L == Architecture) && !match("'0' LR PC NO_SHIFT MOVE_ALWAYS\n", out->s)) emit_out("'0' LR PC NO_SHIFT MOVE_ALWAYS\n");
+		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", out->s)) emit_out("'1' LR RETURN\n");
 	}
 }
 
