@@ -36,9 +36,10 @@ hex2 -f test/common_x86/ELF-i386.hex2 -f test/test07/do.hex2 --LittleEndian --ar
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test07-x86-binary >| test/test07/proof || exit 4
-	out=$(sha256sum -c test/test07/proof.answer)
+	out=$(sha256_check test/test07/proof.answer)
 	[ "$out" = "test/test07/proof: OK" ] || exit 5
 fi
 exit 0

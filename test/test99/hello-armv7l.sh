@@ -17,28 +17,32 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
-	-f test/test06/for.c \
-	-o test/test06/for.M1 || exit 1
+bin/M2-Planet --architecture armv7l \
+	-f test/common_armv7l/functions/putchar.c \
+	-f test/common_armv7l/functions/getchar.c \
+	-f test/common_armv7l/functions/exit.c \
+	-f test/common_armv7l/functions/malloc.c \
+	-f test/test99/cc500.c \
+	-o test/test99/cc0.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
-	-f test/test06/for.M1 \
+M1 -f test/common_armv7l/armv7l_defs.M1 \
+	-f test/common_armv7l/libc-core.M1 \
+	-f test/test99/cc0.M1 \
 	--LittleEndian \
-	--architecture x86 \
-	-o test/test06/for.hex2 || exit 2
+	--architecture armv7l \
+	-o test/test99/cc0.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_x86/ELF-i386.hex2 -f test/test06/for.hex2 --LittleEndian --architecture x86 --BaseAddress 0x8048000 -o test/results/test06-x86-binary --exec_enable || exit 3
+hex2 -f test/common_armv7l/ELF-armv7l.hex2 -f test/test99/cc0.hex2 --LittleEndian --architecture armv7l --BaseAddress 0x10000 -o test/results/test99-armv7l-binary --exec_enable || exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
 then
 	. ./sha256.sh
-	# Verify that the resulting file works
-	./test/results/test06-x86-binary >| test/test06/proof || exit 4
-	out=$(sha256_check test/test06/proof.answer)
-	[ "$out" = "test/test06/proof: OK" ] || exit 5
+	# Verify that the compiled program can compile itself
+	./test/results/test99-armv7l-binary < test/test99/cc500.c >| test/test99/cc1 || exit 4
+	out=$(sha256_check test/test99/proof0.answer)
+	[ "$out" = "test/test99/cc1: OK" ] || exit 5
 fi
 exit 0

@@ -36,9 +36,10 @@ hex2 -f test/common_knight/ELF-knight.hex2 -f test/test16/file_write.hex2 --BigE
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test16-knight-posix-binary test/test16/proof || exit 4
-	out=$(sha256sum -c test/test16/proof.answer)
+	out=$(sha256_check test/test16/proof.answer)
 	[ "$out" = "test/test16/proof: OK" ] || exit 5
 fi
 exit 0

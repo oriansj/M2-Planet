@@ -37,9 +37,10 @@ hex2 -f test/common_knight/ELF-knight.hex2 -f test/test18/math.hex2 --BigEndian 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test18-knight-posix-binary >| test/test18/proof || exit 4
-	out=$(sha256sum -c test/test18/proof.answer)
+	out=$(sha256_check test/test18/proof.answer)
 	[ "$out" = "test/test18/proof: OK" ] || exit 5
 fi
 exit 0

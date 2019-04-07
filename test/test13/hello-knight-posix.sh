@@ -36,9 +36,10 @@ hex2 -f test/common_knight/ELF-knight.hex2 -f test/test13/break-while.hex2 --Big
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test13-kight-posix-binary >| test/test13/proof || exit 4
-	out=$(sha256sum -c test/test13/proof.answer)
+	out=$(sha256_check test/test13/proof.answer)
 	[ "$out" = "test/test13/proof: OK" ] || exit 5
 fi
 exit 0

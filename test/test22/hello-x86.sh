@@ -60,6 +60,7 @@ then
 	[ 0 = $? ] || exit 5
 	[ "$out" = "hex2 0.3" ] || exit 6
 
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test22-x86-binary -f test/common_x86/ELF-i386.hex2 \
 	-f test/test22/test.hex2 \
@@ -67,7 +68,7 @@ then
 	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/test22/proof || exit 7
-	out=$(sha256sum -c test/test22/proof.answer)
+	out=$(sha256_check test/test22/proof.answer)
 	[ "$out" = "test/test22/proof: OK" ] || exit 8
 fi
 exit 0

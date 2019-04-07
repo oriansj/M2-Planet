@@ -81,7 +81,8 @@ then
 		-f cc.c \
 		-o test/test100/proof || exit 5
 
-	out=$(sha256sum -c test/test100/proof.answer)
+	. ./sha256.sh
+	out=$(sha256_check test/test100/proof.answer)
 	[ "$out" = "test/test100/proof: OK" ] || exit 6
 	[ ! -e bin/M2-Planet ] && mv test/results/test100-x86-binary bin/M2-Planet
 fi

@@ -16,12 +16,13 @@
 
 * Current
 ** Added
-Added 15/24 working tests for armv7l
+Added 17/24 working tests for armv7l
 
 ** Changed
 
 ** Fixed
 Fixed unsigned division in ARMv7l port
+Fixed non-uniform behavior across locales and *BSDs
 
 ** Removed
 

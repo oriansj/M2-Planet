@@ -15,31 +15,47 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-set -ex
+set -x
 # Build the test
-bin/M2-Planet --architecture armv7l -f test/common_armv7l/functions/putchar.c \
-	-f test/common_armv7l/functions/exit.c \
-	-f test/test13/break-while.c \
-	-o test/test13/break-while.M1 || exit 1
+./bin/M2-Planet --architecture armv7l -f test/common_armv7l/functions/exit.c \
+	-f test/common_armv7l/functions/file.c \
+	-f functions/file_print.c \
+	-f test/common_armv7l/functions/malloc.c \
+	-f functions/calloc.c \
+	-f test/common_armv7l/functions/uname.c \
+	-f functions/match.c \
+	-f test/test24/get_machine.c \
+	--debug \
+	-o test/test24/get_machine.M1 || exit 1
+
+# Build debug footer
+blood-elf -f test/test24/get_machine.M1 \
+	-o test/test24/get_machine-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_armv7l/armv7l_defs.M1 \
 	-f test/common_armv7l/libc-core.M1 \
-	-f test/test13/break-while.M1 \
+	-f test/test24/get_machine.M1 \
+	-f test/test24/get_machine-footer.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test13/break-while.hex2 || exit 2
+	-o test/test24/get_machine.hex2 || exit 3
 
 # Resolve all linkages
-hex2 -f test/common_armv7l/ELF-armv7l.hex2 -f test/test13/break-while.hex2 --LittleEndian --architecture armv7l --BaseAddress 0x10000 -o test/results/test13-armv7l-binary --exec_enable || exit 3
+hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
+	-f test/test24/get_machine.hex2 \
+	--LittleEndian \
+	--architecture armv7l \
+	--BaseAddress 0x10000 \
+	-o test/results/test24-armv7l-binary \
+	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
 then
-	. ./sha256.sh
-	# Verify that the resulting file works
-	./test/results/test13-armv7l-binary >| test/test13/proof || exit 4
-	out=$(sha256_check test/test13/proof.answer)
-	[ "$out" = "test/test13/proof: OK" ] || exit 5
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test24-armv7l-binary ${GET_MACHINE_FLAGS} 2>&1 )
+	[ 0 = $? ] || exit 5
+	[ "$out" = "armv7l" ] || exit 6
 fi
 exit 0

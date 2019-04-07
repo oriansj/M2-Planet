@@ -39,9 +39,10 @@ hex2 -f test/common_x86/ELF-i386.hex2 -f test/test99/cc0.hex2 --LittleEndian --a
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
 then
+	. ./sha256.sh
 	# Verify that the compiled program can compile itself
 	./test/results/test99-x86-binary < test/test99/cc500.c >| test/test99/cc1 || exit 4
-	out=$(sha256sum -c test/test99/proof0.answer)
+	out=$(sha256_check test/test99/proof0.answer)
 	[ "$out" = "test/test99/cc1: OK" ] || exit 5
 
 	# Make it executable
@@ -49,7 +50,7 @@ then
 
 	# Verify that the result of it compiling itself can compile itself
 	./test/test99/cc1 < test/test99/cc500.c >| test/test99/cc2 || exit 6
-	out=$(sha256sum -c test/test99/proof1.answer)
+	out=$(sha256_check test/test99/proof1.answer)
 	[ "$out" = "test/test99/cc2: OK" ] || exit 7
 fi
 exit 0

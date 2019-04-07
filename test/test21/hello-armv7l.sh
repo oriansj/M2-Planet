@@ -58,9 +58,10 @@ then
 	[ "$out" = "blood-elf 0.1
 (Basically Launches Odd Object Dump ExecutabLe Files" ] || exit 6
 
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test21-armv7l-binary -f test/test21/test.M1 -o test/test21/proof || exit 7
-	out=$(sha256sum -c test/test21/proof.answer)
+	out=$(sha256_check test/test21/proof.answer)
 	[ "$out" = "test/test21/proof: OK" ] || exit 8
 fi
 exit 0

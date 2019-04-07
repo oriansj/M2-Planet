@@ -35,9 +35,10 @@ hex2 -f test/common_armv7l/ELF-armv7l.hex2 -f test/test14/basic_args.hex2 --Litt
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
 then
+	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test14-armv7l-binary 314 1 5926 5 35897 932384626 43 383279 50288 419 71693 99375105 820974944 >| test/test14/proof || exit 4
-	out=$(sha256sum -c test/test14/proof-armv7l.answer)
+	out=$(sha256_check test/test14/proof-armv7l.answer)
 	[ "$out" = "test/test14/proof: OK" ] || exit 5
 fi
 exit 0

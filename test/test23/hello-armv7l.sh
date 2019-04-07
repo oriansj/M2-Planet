@@ -69,7 +69,8 @@ then
 		--architecture x86 \
 		-o test/test23/proof || exit 7
 
-	out=$(sha256sum -c test/test23/proof.answer)
+	. ./sha256.sh
+	out=$(sha256_check test/test23/proof.answer)
 	[ "$out" = "test/test23/proof: OK" ] || exit 8
 fi
 exit 0
