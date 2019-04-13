@@ -53,7 +53,7 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	--LittleEndian \
 	--architecture x86 \
 	--BaseAddress 0x8048000 \
-	-o test/results/test26-binary \
+	-o test/results/test26-x86-binary \
 	--exec_enable || exit 4
 
 exit 0

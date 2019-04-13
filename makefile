@@ -112,6 +112,10 @@ test: test00-knight-posix-binary \
 	test20-armv7l-binary \
 	test21-armv7l-binary \
 	test22-armv7l-binary \
+	test23-armv7l-binary \
+	test24-armv7l-binary \
+	test25-armv7l-binary \
+	test26-armv7l-binary \
 	test00-x86-binary \
 	test01-x86-binary \
 	test02-x86-binary \
@@ -137,6 +141,8 @@ test: test00-knight-posix-binary \
 	test22-x86-binary \
 	test23-x86-binary \
 	test24-x86-binary \
+	test25-x86-binary \
+	test26-x86-binary \
 	test99-x86-binary \
 	test100-x86-binary | results
 	sha256sum -c test/test.answers
@@ -291,6 +297,18 @@ test21-armv7l-binary: M2-Planet | results
 test22-armv7l-binary: M2-Planet | results
 	test/test22/hello-armv7l.sh
 
+test23-armv7l-binary: M2-Planet | results
+	test/test23/hello-armv7l.sh
+
+test24-armv7l-binary: M2-Planet | results
+	test/test24/hello-armv7l.sh
+
+test25-armv7l-binary: M2-Planet | results
+	test/test25/hello-armv7l.sh
+
+test26-armv7l-binary: M2-Planet | results
+	test/test26/hello-armv7l.sh
+
 test00-x86-binary: M2-Planet | results
 	test/test00/hello-x86.sh
 
@@ -365,6 +383,12 @@ test23-x86-binary: M2-Planet | results
 
 test24-x86-binary: M2-Planet | results
 	test/test24/hello-x86.sh
+
+test25-x86-binary: M2-Planet | results
+	test/test25/hello-x86.sh
+
+test26-x86-binary: M2-Planet | results
+	test/test26/hello-x86.sh
 
 test99-x86-binary: M2-Planet | results
 	test/test99/hello-x86.sh

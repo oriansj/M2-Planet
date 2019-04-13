@@ -53,7 +53,7 @@ hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \
-	-o test/results/test26-binary \
+	-o test/results/test26-armv7l-binary \
 	--exec_enable || exit 4
 
 exit 0

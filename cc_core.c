@@ -873,7 +873,7 @@ void collect_local()
 	{
 		if(KNIGHT_POSIX == Architecture) a->depth = 4;
 		else if(X86 == Architecture) a->depth = -8;
-		else if(ARMV7L == Architecture) a->depth = 4;
+		else if(ARMV7L == Architecture) a->depth = 8;
 	}
 	else if(NULL == function->locals)
 	{
