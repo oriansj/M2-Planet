@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.2 - 2019-04-14
+** Added
 Added 24/24 working tests for armv7l
 Port to ARMv7l and ARMv6l both work
 
