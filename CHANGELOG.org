@@ -16,10 +16,12 @@
 
 * Current
 ** Added
-Added 23/24 working tests for armv7l
+Added 24/24 working tests for armv7l
+Port to ARMv7l and ARMv6l both work
 
 ** Changed
 ELF-code segment now writable for ARMv7l without debug
+Updated from mescc-tools from 0.5.2 to 0.6 (with changes in checksums due to alternate null padding)
 
 ** Fixed
 Fixed unsigned division in ARMv7l port
