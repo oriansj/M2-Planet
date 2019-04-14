@@ -71,7 +71,7 @@
 %ELF_end>ELF_base              # ph_filesz
 %ELF_end>ELF_base              # ph_memsz
 
-05 00 00 00                    # p_flags
+07 00 00 00                    # p_flags
 00 00 01 00                    # alignment
 
 :ELF_text

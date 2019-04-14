@@ -16,9 +16,10 @@
 
 * Current
 ** Added
-Added 22/24 working tests for armv7l
+Added 23/24 working tests for armv7l
 
 ** Changed
+ELF-code segment now writable for ARMv7l without debug
 
 ** Fixed
 Fixed unsigned division in ARMv7l port
