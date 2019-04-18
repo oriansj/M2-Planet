@@ -1534,6 +1534,13 @@ new_type:
 			}
 			else if(('"' == global_token->s[0]))
 			{ /* Assume a string*/
+				globals_list = emit("&GLOBAL_", globals_list);
+				globals_list = emit(global_token->prev->prev->s, globals_list);
+				globals_list = emit("_contents\n", globals_list);
+
+				globals_list = emit(":GLOBAL_", globals_list);
+				globals_list = emit(global_token->prev->prev->s, globals_list);
+				globals_list = emit("_contents\n", globals_list);
 				globals_list = emit(parse_string(global_token->s), globals_list);
 			}
 			else
