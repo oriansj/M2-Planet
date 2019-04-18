@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
-	Architecture = 0; /* Assume Knight-native */
+	Architecture = KNIGHT_NATIVE; /* Assume Knight-native */
 	char* arch;
 
 	int i = 1;
@@ -84,6 +84,7 @@ int main(int argc, char** argv)
 				file_print("Unknown architecture: ", stderr);
 				file_print(arch, stderr);
 				file_print(" know values are: knight-native, knight-posix, x86, amd64 and armv7l", stderr);
+				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
 		}
@@ -109,13 +110,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-	/* Temp solution to aborting when an architecture isn't supported yet but is expected to be fully supported */
-	if(!in_set(Architecture, "\x01\x02\x04"))
-	{
-		file_print("ALL IS FIRE\n\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{
@@ -136,11 +130,13 @@ int main(int argc, char** argv)
 	/* Output the program we have compiled */
 	file_print("\n# Core program\n", destination_file);
 	recursive_output(output_list, destination_file);
-	if(DEBUG) file_print("\n:ELF_data\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) file_print("\n", destination_file);
+	else if(DEBUG) file_print("\n:ELF_data\n", destination_file);
 	file_print("\n# Program global variables\n", destination_file);
 	recursive_output(globals_list, destination_file);
 	file_print("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
-	if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) file_print("\n:STACK\n", destination_file);
+	else if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
 	return EXIT_SUCCESS;
 }

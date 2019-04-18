@@ -40,8 +40,9 @@ int consume_byte(int c)
 	return fgetc(input);
 }
 
-int consume_word(int c, int frequent)
+int preserve_string(int c)
 {
+	int frequent = c;
 	int escape = FALSE;
 	do
 	{
@@ -66,23 +67,9 @@ int consume_word(int c, int frequent)
 	} while(0 != hold);
 }
 
-int preserve_keyword(int c)
+int preserve_keyword(int c, char* S)
 {
-	while(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
-	{
-		c = consume_byte(c);
-	}
-	if(':' == c)
-	{
-		fixup_label();
-		return 32;
-	}
-	return c;
-}
-
-int preserve_symbol(int c)
-{
-	while(in_set(c, "<=>|&!-"))
+	while(in_set(c, S))
 	{
 		c = consume_byte(c);
 	}
@@ -114,26 +101,32 @@ reset:
 	string_index = 0;
 
 	c = clearWhiteSpace(c);
-	if('#' == c)
+	if(c == EOF)
+	{
+		free(current);
+		return c;
+	}
+	else if('#' == c)
 	{
 		c = purge_macro(c);
 		goto reset;
 	}
 	else if(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
 	{
-		c = preserve_keyword(c);
+		c = preserve_keyword(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
+		if(':' == c)
+		{
+			fixup_label();
+			c = ' ';
+		}
 	}
 	else if(in_set(c, "<=>|&!-"))
 	{
-		c = preserve_symbol(c);
+		c = preserve_keyword(c, "<=>|&!-");
 	}
-	else if(c == '\'')
-	{ /* 39 == ' */
-		c = consume_word(c, '\'');
-	}
-	else if(c == '"')
+	else if(in_set(c, "'\""))
 	{
-		c = consume_word(c, '"');
+		c = preserve_string(c);
 	}
 	else if(c == '/')
 	{
@@ -159,11 +152,6 @@ reset:
 			c = fgetc(input);
 			goto reset;
 		}
-	}
-	else if(c == EOF)
-	{
-		free(current);
-		return c;
 	}
 	else
 	{

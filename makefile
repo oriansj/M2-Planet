@@ -62,7 +62,10 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test00-knight-posix-binary \
+test: test00-amd64-binary \
+	test01-amd64-binary \
+	test02-amd64-binary \
+	test00-knight-posix-binary \
 	test01-knight-posix-binary \
 	test02-knight-posix-binary \
 	test03-knight-posix-binary \
@@ -89,6 +92,24 @@ test: test00-knight-posix-binary \
 	test24-knight-posix-binary \
 	test99-knight-posix-binary \
 	test100-knight-posix-binary \
+	test00-knight-native-binary\
+	test01-knight-native-binary\
+	test02-knight-native-binary\
+	test03-knight-native-binary\
+	test04-knight-native-binary\
+	test05-knight-native-binary\
+	test06-knight-native-binary\
+	test07-knight-native-binary\
+	test08-knight-native-binary\
+	test09-knight-native-binary\
+	test10-knight-native-binary\
+	test11-knight-native-binary\
+	test12-knight-native-binary\
+	test13-knight-native-binary\
+	test17-knight-native-binary\
+	test18-knight-native-binary\
+	test20-knight-native-binary\
+	test99-knight-native-binary\
 	test00-armv7l-binary \
 	test01-armv7l-binary \
 	test02-armv7l-binary \
@@ -148,6 +169,15 @@ test: test00-knight-posix-binary \
 	test99-x86-binary \
 	test100-x86-binary | results
 	sha256sum -c test/test.answers
+
+test00-amd64-binary: M2-Planet | results
+	test/test00/hello-amd64.sh
+
+test01-amd64-binary: M2-Planet | results
+	test/test01/hello-amd64.sh
+
+test02-amd64-binary: M2-Planet | results
+	test/test02/hello-amd64.sh
 
 test00-knight-posix-binary: M2-Planet | results
 	test/test00/hello-knight-posix.sh
@@ -229,6 +259,60 @@ test99-knight-posix-binary: M2-Planet | results
 
 test100-knight-posix-binary: M2-Planet | results
 	test/test100/hello-knight-posix.sh
+
+test00-knight-native-binary: M2-Planet | results
+	test/test00/hello-knight-native.sh
+
+test01-knight-native-binary: M2-Planet | results
+	test/test01/hello-knight-native.sh
+
+test02-knight-native-binary: M2-Planet | results
+	test/test02/hello-knight-native.sh
+
+test03-knight-native-binary: M2-Planet | results
+	test/test03/hello-knight-native.sh
+
+test04-knight-native-binary: M2-Planet | results
+	test/test04/hello-knight-native.sh
+
+test05-knight-native-binary: M2-Planet | results
+	test/test05/hello-knight-native.sh
+
+test06-knight-native-binary: M2-Planet | results
+	test/test06/hello-knight-native.sh
+
+test07-knight-native-binary: M2-Planet | results
+	test/test07/hello-knight-native.sh
+
+test08-knight-native-binary: M2-Planet | results
+	test/test08/hello-knight-native.sh
+
+test09-knight-native-binary: M2-Planet | results
+	test/test09/hello-knight-native.sh
+
+test10-knight-native-binary: M2-Planet | results
+	test/test10/hello-knight-native.sh
+
+test11-knight-native-binary: M2-Planet | results
+	test/test11/hello-knight-native.sh
+
+test12-knight-native-binary: M2-Planet | results
+	test/test12/hello-knight-native.sh
+
+test13-knight-native-binary: M2-Planet | results
+	test/test13/hello-knight-native.sh
+
+test17-knight-native-binary: M2-Planet | results
+	test/test17/hello-knight-native.sh
+
+test18-knight-native-binary: M2-Planet | results
+	test/test18/hello-knight-native.sh
+
+test20-knight-native-binary: M2-Planet | results
+	test/test20/hello-knight-native.sh
+
+test99-knight-native-binary: M2-Planet | results
+	test/test99/hello-knight-native.sh
 
 test00-armv7l-binary: M2-Planet | results
 	test/test00/hello-armv7l.sh

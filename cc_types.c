@@ -23,10 +23,14 @@ int numerate_string(char *a);
 /* Initialize default types */
 void initialize_types()
 {
+	int register_size;
+	if(AMD64 == Architecture) register_size = 8;
+	else register_size = 4;
+
 	/* Define void */
 	global_types = calloc(1, sizeof(struct type));
 	global_types->name = "void";
-	global_types->size = 4;
+	global_types->size = register_size;
 	global_types->type = global_types;
 	/* void* has the same properties as void */
 	global_types->indirect = global_types;
@@ -34,7 +38,7 @@ void initialize_types()
 	/* Define int */
 	struct type* a = calloc(1, sizeof(struct type));
 	a->name = "int";
-	a->size = 4;
+	a->size = register_size;
 	/* int* has the same properties as int */
 	a->indirect = a;
 	a->type = a;
@@ -42,7 +46,7 @@ void initialize_types()
 	/* Define char* */
 	struct type* b = calloc(1, sizeof(struct type));
 	b->name = "char*";
-	b->size = 4;
+	b->size = register_size;
 	b->type = b;
 
 	/* Define char */
@@ -54,7 +58,7 @@ void initialize_types()
 	/* Define char** */
 	struct type* d = calloc(1, sizeof(struct type));
 	d->name = "char**";
-	d->size = 4;
+	d->size = register_size;
 	d->type = b;
 	d->indirect = d;
 
@@ -65,7 +69,7 @@ void initialize_types()
 	/* Define FILE */
 	struct type* e = calloc(1, sizeof(struct type));
 	e->name = "FILE";
-	e->size = 4;
+	e->size = register_size;
 	e->type = e;
 	/* FILE* has the same properties as FILE */
 	e->indirect = e;
@@ -73,7 +77,7 @@ void initialize_types()
 	/* Define FUNCTION */
 	struct type* f = calloc(1, sizeof(struct type));
 	f->name = "FUNCTION";
-	f->size = 4;
+	f->size = register_size;
 	f->type = f;
 	/* FUNCTION* has the same properties as FUNCTION */
 	f->indirect = f;
@@ -81,7 +85,7 @@ void initialize_types()
 	/* Define UNSIGNED */
 	struct type* g = calloc(1, sizeof(struct type));
 	g->name = "unsigned";
-	g->size = 4;
+	g->size = register_size;
 	g->type = g;
 	/* unsigned* has the same properties as unsigned */
 	g->indirect = g;
@@ -89,7 +93,7 @@ void initialize_types()
 	/* Custom type for mescc*/
 	struct type* h = calloc(1, sizeof(struct type));
 	h->name = "SCM";
-	h->size = 4;
+	h->size = register_size;
 	h->indirect = h;
 
 	/* Finalize type list */
