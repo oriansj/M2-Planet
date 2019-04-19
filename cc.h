@@ -94,3 +94,4 @@ int string_index;
 
 /* Our Target Architecture */
 int Architecture;
+int register_size;

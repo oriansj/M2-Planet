@@ -17,12 +17,13 @@
 * Current
 ** Added
 Added port to Knight-Native
-Ported 1/24 working tests for AMD64
+Ported 4/24 working tests for AMD64
 
 ** Changed
 
 ** Fixed
 Corrected Global char* to behave correctly when given a static string
+Ensured pointers match register size
 
 ** Removed
 

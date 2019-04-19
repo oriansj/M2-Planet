@@ -23,7 +23,6 @@ int numerate_string(char *a);
 /* Initialize default types */
 void initialize_types()
 {
-	int register_size;
 	if(AMD64 == Architecture) register_size = 8;
 	else register_size = 4;
 
@@ -200,7 +199,7 @@ void create_struct()
 	head->next = global_types;
 	global_types = head;
 	global_token = global_token->next;
-	i->size = 4;
+	i->size = register_size;
 	require_match("ERROR in create_struct\n Missing {\n", "{");
 	struct type* last = NULL;
 	while('}' != global_token->s[0])

@@ -198,7 +198,7 @@ JUMP %WHILE_0
 RETURN
 # Defining function malloc
 :FUNCTION_malloc
-STORE_eax_into_ESP_IMMEDIATE8 !4
+LOAD_ESP_IMMEDIATE_into_eax %4
 PUSH_eax
 LOAD_IMMEDIATE_eax %45
 LOAD_IMMEDIATE_ebx %0

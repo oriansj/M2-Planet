@@ -65,6 +65,12 @@ results:
 test: test00-amd64-binary \
 	test01-amd64-binary \
 	test02-amd64-binary \
+	test03-amd64-binary \
+	test04-amd64-binary \
+	test05-amd64-binary \
+	test06-amd64-binary \
+	test07-amd64-binary \
+	test08-amd64-binary \
 	test00-knight-posix-binary \
 	test01-knight-posix-binary \
 	test02-knight-posix-binary \
@@ -178,6 +184,24 @@ test01-amd64-binary: M2-Planet | results
 
 test02-amd64-binary: M2-Planet | results
 	test/test02/hello-amd64.sh
+
+test03-amd64-binary: M2-Planet | results
+	test/test03/hello-amd64.sh
+
+test04-amd64-binary: M2-Planet | results
+	test/test04/hello-amd64.sh
+
+test05-amd64-binary: M2-Planet | results
+	test/test05/hello-amd64.sh
+
+test06-amd64-binary: M2-Planet | results
+	test/test06/hello-amd64.sh
+
+test07-amd64-binary: M2-Planet | results
+	test/test07/hello-amd64.sh
+
+test08-amd64-binary: M2-Planet | results
+	test/test08/hello-amd64.sh
 
 test00-knight-posix-binary: M2-Planet | results
 	test/test00/hello-knight-posix.sh
