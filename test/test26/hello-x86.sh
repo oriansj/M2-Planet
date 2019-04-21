@@ -65,7 +65,7 @@ then
 	[ "$out" = "Slow_Lisp 0.1" ] || exit 6
 
 	# Verify that the resulting file works
-	out=$(echo "(* 2 3 7)" | ./test/results/test26-x86-binary)
+	out=$(./test/results/test26-x86-binary --file test/test26/test.scm)
 	[ "$out" = "42" ] || exit 7
 fi
 exit 0
