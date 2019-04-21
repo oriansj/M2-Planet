@@ -56,4 +56,16 @@ hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
 	-o test/results/test26-armv7l-binary \
 	--exec_enable || exit 4
 
+# Ensure binary works if host machine supports test
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+then
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test26-armv7l-binary --version 2>&1 )
+	[ 0 = $? ] || exit 5
+	[ "$out" = "Slow_Lisp 0.1" ] || exit 6
+
+	# Verify that the resulting file works
+	out=$(echo "(* 2 3 7)" | ./test/results/test26-armv7l-binary)
+	[ "$out" = "42" ] || exit 7
+fi
 exit 0

@@ -20,6 +20,8 @@ Added port to Knight-Native
 Ported 4/24 working tests for AMD64
 
 ** Changed
+Added basic verification of the compiled program (kaem) to test25
+Added basic verification of the compiled program (Slow_Lisp) to test26
 
 ** Fixed
 Corrected Global char* to behave correctly when given a static string

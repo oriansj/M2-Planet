@@ -53,4 +53,15 @@ hex2 -f test/common_x86/ELF-i386-debug.hex2 \
 	-o test/results/test25-x86-binary \
 	--exec_enable || exit 4
 
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+then
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test25-x86-binary --version 2>&1 )
+	[ 0 = $? ] || exit 5
+	[ "$out" = "kaem version 0.1" ] || exit 6
+
+	# Verify that the resulting file works
+	out=$(./test/results/test25-x86-binary --file test/test25/kaem.run)
+	[ "$out" = "hello world" ] || exit 7
+fi
 exit 0

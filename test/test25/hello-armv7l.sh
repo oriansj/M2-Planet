@@ -53,4 +53,15 @@ hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
 	-o test/results/test25-armv7l-binary \
 	--exec_enable || exit 4
 
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+then
+	# Verify that the compiled program returns the correct result
+	out=$(./test/results/test25-armv7l-binary --version 2>&1 )
+	[ 0 = $? ] || exit 5
+	[ "$out" = "kaem version 0.1" ] || exit 6
+
+	# Verify that the resulting file works
+	out=$(./test/results/test25-armv7l-binary --file test/test25/kaem.run)
+	[ "$out" = "hello world" ] || exit 7
+fi
 exit 0
