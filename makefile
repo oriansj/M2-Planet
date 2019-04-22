@@ -71,6 +71,26 @@ test: test00-amd64-binary \
 	test06-amd64-binary \
 	test07-amd64-binary \
 	test08-amd64-binary \
+	test09-amd64-binary \
+	test10-amd64-binary \
+	test11-amd64-binary \
+	test12-amd64-binary \
+	test13-amd64-binary \
+	test14-amd64-binary \
+	test15-amd64-binary \
+	test16-amd64-binary \
+	test17-amd64-binary \
+	test18-amd64-binary \
+	test19-amd64-binary \
+	test20-amd64-binary \
+	test21-amd64-binary \
+	test22-amd64-binary \
+	test23-amd64-binary \
+	test24-amd64-binary \
+	test25-amd64-binary \
+	test26-amd64-binary \
+	test99-amd64-binary \
+	test100-amd64-binary \
 	test00-knight-posix-binary \
 	test01-knight-posix-binary \
 	test02-knight-posix-binary \
@@ -202,6 +222,66 @@ test07-amd64-binary: M2-Planet | results
 
 test08-amd64-binary: M2-Planet | results
 	test/test08/hello-amd64.sh
+
+test09-amd64-binary: M2-Planet | results
+	test/test09/hello-amd64.sh
+
+test10-amd64-binary: M2-Planet | results
+	test/test10/hello-amd64.sh
+
+test11-amd64-binary: M2-Planet | results
+	test/test11/hello-amd64.sh
+
+test12-amd64-binary: M2-Planet | results
+	test/test12/hello-amd64.sh
+
+test13-amd64-binary: M2-Planet | results
+	test/test13/hello-amd64.sh
+
+test14-amd64-binary: M2-Planet | results
+	test/test14/hello-amd64.sh
+
+test15-amd64-binary: M2-Planet | results
+	test/test15/hello-amd64.sh
+
+test16-amd64-binary: M2-Planet | results
+	test/test16/hello-amd64.sh
+
+test17-amd64-binary: M2-Planet | results
+	test/test17/hello-amd64.sh
+
+test18-amd64-binary: M2-Planet | results
+	test/test18/hello-amd64.sh
+
+test19-amd64-binary: M2-Planet | results
+	test/test19/hello-amd64.sh
+
+test20-amd64-binary: M2-Planet | results
+	test/test20/hello-amd64.sh
+
+test21-amd64-binary: M2-Planet | results
+	test/test21/hello-amd64.sh
+
+test22-amd64-binary: M2-Planet | results
+	test/test22/hello-amd64.sh
+
+test23-amd64-binary: M2-Planet | results
+	test/test23/hello-amd64.sh
+
+test24-amd64-binary: M2-Planet | results
+	test/test24/hello-amd64.sh
+
+test25-amd64-binary: M2-Planet | results
+	test/test25/hello-amd64.sh
+
+test26-amd64-binary: M2-Planet | results
+	test/test26/hello-amd64.sh
+
+test99-amd64-binary: M2-Planet | results
+	test/test99/hello-amd64.sh
+
+test100-amd64-binary: M2-Planet | results
+	test/test100/hello-amd64.sh
 
 test00-knight-posix-binary: M2-Planet | results
 	test/test00/hello-knight-posix.sh

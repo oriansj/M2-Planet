@@ -19,7 +19,7 @@
 
 /* Deal with the fact GCC converts the 1 to the size of the structs being iterated over */
 #define CELL_SIZE 1
-//CONSTANT CELL_SIZE 16
+//CONSTANT CELL_SIZE sizeof(struct cell)
 
 struct cell *free_cells;
 struct cell *gc_block_start;

@@ -1400,6 +1400,7 @@ void statement()
 		global_token = global_token->next;
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
 		else if(X86 == Architecture) emit_out("JUMP %");
+		else if(AMD64 == Architecture) emit_out("JUMP %");
 		else if(ARMV7L == Architecture) emit_out("^~");
 		emit_out(global_token->s);
 		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
@@ -1535,8 +1536,21 @@ new_type:
 	{
 		global_token = global_token->next;
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
-		global_constant_list->arguments = global_token->next;
-		global_token = global_token->next->next;
+
+		if(match("sizeof", global_token->next->s))
+		{
+			global_token = global_token->next->next;
+			require_match("ERROR in CONSTANT with sizeof\nMissing (\n", "(");
+			struct type* a = type_name();
+			require_match("ERROR in CONSTANT with sizeof\nMissing )\n", ")");
+			global_token->prev->s = numerate_number(a->size);
+			global_constant_list->arguments = global_token->prev;
+		}
+		else
+		{
+			global_constant_list->arguments = global_token->next;
+			global_token = global_token->next->next;
+		}
 	}
 	else
 	{

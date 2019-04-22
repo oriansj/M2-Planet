@@ -17,17 +17,21 @@
 * Current
 ** Added
 Added port to Knight-Native
-Ported 4/24 working tests for AMD64
+Ported 24/24 working tests for AMD64
+Added support for CONSTANT to leverage sizeof(type)
 
 ** Changed
 Added basic verification of the compiled program (kaem) to test25
 Added basic verification of the compiled program (Slow_Lisp) to test26
+Updated from mescc-tools from 0.6.0 to 0.6.1 (To gain support for --64)
+Changed test26 to adust behavior according to struct size
 
 ** Fixed
 Corrected Global char* to behave correctly when given a static string
 Ensured pointers match register size
 
 ** Removed
+Removed need to hand calculate struct sizes
 
 * 1.2 - 2019-04-14
 ** Added
