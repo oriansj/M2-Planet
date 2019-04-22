@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.3 - 2019-04-22
+** Added
 Added port to Knight-Native
 Ported 24/24 working tests for AMD64
 Added support for CONSTANT to leverage sizeof(type)
