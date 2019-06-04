@@ -27,7 +27,6 @@ struct token_list* global_constant_list;
 
 /* Core lists for this file */
 struct token_list* function;
-struct token_list* out;
 
 /* What we are currently working on */
 struct type* current_target;
@@ -56,7 +55,7 @@ struct token_list* emit(char *s, struct token_list* head)
 
 void emit_out(char* s)
 {
-	out = emit(s, out);
+	output_list = emit(s, output_list);
 }
 
 struct token_list* uniqueID(char* s, struct token_list* l, char* num)
@@ -67,7 +66,7 @@ struct token_list* uniqueID(char* s, struct token_list* l, char* num)
 
 void uniqueID_out(char* s, char* num)
 {
-	out = uniqueID(s, out, num);
+	output_list = uniqueID(s, output_list, num);
 }
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
@@ -1322,10 +1321,10 @@ void recursive_statement()
 
 	/* Clean up any locals added */
 
-	if(((X86 == Architecture) && !match("RETURN\n", out->s)) ||
-	   ((AMD64 == Architecture) && !match("RETURN\n", out->s)) ||
-	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", out->s)) ||
-	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", out->s)))
+	if(((X86 == Architecture) && !match("RETURN\n", output_list->s)) ||
+	   ((AMD64 == Architecture) && !match("RETURN\n", output_list->s)) ||
+	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
+	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)))
 	{
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
@@ -1498,10 +1497,10 @@ void declare_function()
 		statement();
 
 		/* Prevent duplicate RETURNS */
-		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", out->s)) emit_out("RET R15\n");
-		else if((X86 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
-		else if((AMD64 == Architecture) && !match("RETURN\n", out->s)) emit_out("RETURN\n");
-		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", out->s)) emit_out("'1' LR RETURN\n");
+		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) emit_out("RET R15\n");
+		else if((X86 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
+		else if((AMD64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
+		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
 	}
 }
 
@@ -1523,15 +1522,14 @@ void declare_function()
  * parameter-declaration:
  *     type-name identifier-opt
  */
-struct token_list* program()
+void program()
 {
-	out = NULL;
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
 
 new_type:
-	if (NULL == global_token) return out;
+	if (NULL == global_token) return;
 	if(match("CONSTANT", global_token->s))
 	{
 		global_token = global_token->next;

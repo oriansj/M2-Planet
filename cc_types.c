@@ -235,27 +235,29 @@ void create_struct()
  */
 struct type* type_name()
 {
-	int structure = match("struct", global_token->s);
+	struct type* ret;
 
-	if(structure)
+	if(match("struct", global_token->s))
 	{
 		global_token = global_token->next;
+		ret = lookup_type(global_token->s, global_types);
+		if(NULL == ret)
+		{
+			create_struct();
+			return NULL;
+		}
 	}
-
-	struct type* ret = lookup_type(global_token->s, global_types);
-
-	if(NULL == ret && !structure)
+	else
 	{
-		file_print("Unknown type ", stderr);
-		file_print(global_token->s, stderr);
-		file_print("\n", stderr);
-		line_error();
-		exit(EXIT_FAILURE);
-	}
-	else if(NULL == ret)
-	{
-		create_struct();
-		return NULL;
+		ret = lookup_type(global_token->s, global_types);
+		if(NULL == ret)
+		{
+			file_print("Unknown type ", stderr);
+			file_print(global_token->s, stderr);
+			file_print("\n", stderr);
+			line_error();
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	global_token = global_token->next;

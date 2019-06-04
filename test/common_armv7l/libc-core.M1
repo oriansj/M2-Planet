@@ -18,7 +18,7 @@
 	'0' SP BP NO_SHIFT MOVE_ALWAYS  ; Setup Base Pointer
 
 	;; Prepare argv
-	!4 R0 ADD BP ARITH_ALWAYS       ; ARGV_address = EBP + 4
+	!4 R0 ADD BP ARITH_ALWAYS       ; ARGV_address = BP + 4
 	{R0} PUSH_ALWAYS                ; Put argv on the stack
 
 	;; Prepare envp
@@ -26,11 +26,11 @@
 	!0 R0 LOAD32 R0 MEMORY          ; Get ARGC
 	!2 R0 ADD R0 ARITH_ALWAYS       ; OFFSET = ARGC + 2
 	'0' R0 R0 '1' MOVE_ALWAYS       ; OFFSET = OFFSET * WORDSIZE
-	'0' R0 R0 ADD BP ARITH2_ALWAYS  ; ENVP_address = EBP + OFFSET
+	'0' R0 R0 ADD BP ARITH2_ALWAYS  ; ENVP_address = BP + OFFSET
 	{R0} PUSH_ALWAYS                ; Put envp on the stack
 
 	;; Stack offset
-	!4 BP ADD BP ARITH_ALWAYS       ; Fix ebp
+	!4 BP ADD BP ARITH_ALWAYS       ; Fix BP
 
 	^~FUNCTION_main CALL_ALWAYS     ; Jump right into main
 	!1 R7 LOADI8_ALWAYS             ; Setup for final exit

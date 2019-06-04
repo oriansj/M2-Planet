@@ -85,6 +85,7 @@ struct type* prim_types;
 struct token_list* global_token;
 
 /* Output reorder collections*/
+struct token_list* output_list;
 struct token_list* strings_list;
 struct token_list* globals_list;
 
