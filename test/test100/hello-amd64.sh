@@ -27,6 +27,7 @@ set -ex
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
 	-f functions/number_pack.c \
+	-f test/common_amd64/functions/fixup.c \
 	-f functions/string.c \
 	-f cc.h \
 	-f cc_reader.c \
@@ -72,6 +73,7 @@ then
 		-f functions/numerate_number.c \
 		-f functions/file_print.c \
 		-f functions/number_pack.c \
+		-f functions/fixup.c \
 		-f functions/string.c \
 		-f cc.h \
 		-f cc_reader.c \

@@ -143,11 +143,14 @@ void require_match(char* message, char* required);
 int member_size;
 struct type* build_member(struct type* last, int offset)
 {
-	struct type* member_type = type_name();
 	struct type* i = calloc(1, sizeof(struct type));
+	i->members = last;
+	i->offset = offset;
+
+	struct type* member_type = type_name();
+	i->type = member_type;
 	i->name = global_token->s;
 	global_token = global_token->next;
-	i->members = last;
 
 	/* Check to see if array */
 	if(match( "[", global_token->s))
@@ -162,8 +165,7 @@ struct type* build_member(struct type* last, int offset)
 		i->size = member_type->size;
 	}
 	member_size = i->size;
-	i->type = member_type;
-	i->offset = offset;
+
 	return i;
 }
 

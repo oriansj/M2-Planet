@@ -19,46 +19,22 @@ set -ex
 # Build using seed if possible
 if [ -f bin/M2-Planet-seed ]
 then
-[ ! -f test/results ] && mkdir -p test/results
-./bin/M2-Planet-seed -f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/file_print.c \
-	-f functions/number_pack.c \
-	-f functions/string.c \
-	-f cc.h \
-	-f cc_reader.c \
-	-f cc_strings.c \
-	-f cc_types.c \
-	-f cc_core.c \
-	-f cc.c \
-	--debug \
-	-o test/test100/cc.M1 || exit 1
+	[ ! -f test/results ] && mkdir -p test/results
+	cp bin/M2-Planet-seed bin/M2-Planet
 
-# Build debug footer
-blood-elf -f test/test100/cc.M1 \
-	-o test/test100/cc-footer.M1 || exit 2
-
-# Macro assemble with libc written in M1-Macro
-M1 -f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
-	-f test/test100/cc.M1 \
-	-f test/test100/cc-footer.M1 \
-	--LittleEndian \
-	--architecture x86 \
-	-o test/test100/cc.hex2 || exit 3
-
-# Resolve all linkages
-hex2 -f test/common_x86/ELF-i386-debug.hex2 \
-	-f test/test100/cc.hex2 \
-	--LittleEndian \
-	--architecture x86 \
-	--BaseAddress 0x8048000 \
-	-o test/results/test100-x86-binary --exec_enable || exit 4
+	if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
+	then
+		./test/test100/hello-amd64.sh
+		mv test/results/test100-amd64-binary bin/M2-Planet
+	elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+	then
+		./test/test100/hello-x86.sh
+		mv test/results/test100-x86-binary bin/M2-Planet
+	elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+	then
+		./test/test100/hello-armv7l.sh
+		mv test/results/test100-armv7l-binary bin/M2-Planet
+	fi
 
 else
 [ -z "${CC+x}" ] && export CC=gcc
@@ -70,6 +46,7 @@ ${CC} ${CFLAGS} \
 	functions/numerate_number.c \
 	functions/file_print.c \
 	functions/number_pack.c \
+	functions/fixup.c \
 	functions/string.c \
 	cc_reader.c \
 	cc_strings.c \

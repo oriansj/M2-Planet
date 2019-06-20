@@ -35,7 +35,6 @@ char* break_target_func;
 char* break_target_num;
 struct token_list* break_frame;
 int current_count;
-struct type* last_type;
 int Address_of;
 
 /* Imported functions */
@@ -44,6 +43,9 @@ int escape_lookup(char* c);
 char* numerate_number(int a);
 int numerate_string(char *a);
 char* number_to_hex(int a, int bytes);
+
+/* Host touchy function will need custom on 64bit systems*/
+int fixup_int32(int a);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -397,7 +399,7 @@ void primary_expr_number()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = numerate_string(global_token->s);
+		int size = fixup_int32(numerate_string(global_token->s));
 		if((32768 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");
@@ -499,14 +501,13 @@ struct type* promote_type(struct type* a, struct type* b)
 
 void common_recursion(FUNCTION f)
 {
-	last_type = current_target;
-	global_token = global_token->next;
-
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_common_recursion\n");
 	else if(X86 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
 	else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_common_recursion\n");
 
+	struct type* last_type = current_target;
+	global_token = global_token->next;
 	f();
 	current_target = promote_type(current_target, last_type);
 
