@@ -21,6 +21,7 @@
 Tweaked cc_types.c to better match amd64 assembly
 Replaced out with output_list in cc_core.c
 For 32bit behavior on 64bit platforms
+Replaced generated seed with hand written seed in M1
 
 ** Fixed
 
