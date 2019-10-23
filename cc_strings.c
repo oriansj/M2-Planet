@@ -94,7 +94,7 @@ int escape_lookup(char* c)
 	else if(c[1] == '\'') return 39;
 	else if(c[1] == '\\') return 92;
 
-	file_print("Unknown escape recieved: ", stderr);
+	file_print("Unknown escape received: ", stderr);
 	file_print(c, stderr);
 	file_print(" Unable to process\n", stderr);
 	exit(EXIT_FAILURE);
