@@ -357,7 +357,7 @@ void global_load(struct token_list* a)
 void primary_expr_failure()
 {
 	line_error();
-	file_print("Recieved ", stderr);
+	file_print("Received ", stderr);
 	file_print(global_token->s, stderr);
 	file_print(" in primary_expr\n", stderr);
 	exit(EXIT_FAILURE);
@@ -1598,7 +1598,7 @@ new_type:
 			else
 			{
 				line_error();
-				file_print("Recieved ", stderr);
+				file_print("Received ", stderr);
 				file_print(global_token->s, stderr);
 				file_print(" in program\n", stderr);
 				exit(EXIT_FAILURE);
@@ -1610,7 +1610,7 @@ new_type:
 		else
 		{
 			line_error();
-			file_print("Recieved ", stderr);
+			file_print("Received ", stderr);
 			file_print(global_token->s, stderr);
 			file_print(" in program\n", stderr);
 			exit(EXIT_FAILURE);
