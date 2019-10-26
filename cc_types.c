@@ -95,7 +95,25 @@ void initialize_types()
 	h->size = register_size;
 	h->indirect = h;
 
+	struct type* i = calloc(1, sizeof(struct type));
+	i->name = "long";
+	i->size = register_size;
+	i->indirect = i;
+
+	struct type* j = calloc(1, sizeof(struct type));
+	j->name = "size_t";
+	j->size = register_size;
+	j->indirect = j;
+
+	struct type* k = calloc(1, sizeof(struct type));
+	k->name = "ssize_t";
+	k->size = register_size;
+	k->indirect = k;
+
 	/* Finalize type list */
+	j->next = k;
+	i->next = j;
+	h->next = i;
 	g->next = h;
 	f->next = g;
 	e->next = f;
@@ -263,6 +281,11 @@ struct type* type_name()
 	}
 
 	global_token = global_token->next;
+
+	if(match("const", global_token->s))
+	{
+		global_token = global_token->next;
+	}
 
 	while(global_token->s[0] == '*')
 	{
