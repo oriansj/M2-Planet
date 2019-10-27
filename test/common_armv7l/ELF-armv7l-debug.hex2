@@ -76,12 +76,12 @@
 %ELF_end>ELF_base              # ph_filesz
 %ELF_end>ELF_base              # ph_memsz
 
-05 00 00 00                    # p_flags
+07 00 00 00                    # p_flags
 00 00 01 00                    # alignment
 
 # @60
 :ELF_program_header__data
-01 00 00 00                     # ph_type: PT-LOAD = 1
+00 00 00 00                     # ph_type: PT-LOAD = 0
 00 00 00 00                     # ph_offset
 &ELF_base                       # ph_vaddr
 &ELF_base                       # ph_physaddr

@@ -517,12 +517,33 @@ void common_recursion(FUNCTION f)
 	else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _common_recursion\n");
 }
 
-void general_recursion( FUNCTION f, char* s, char* name, FUNCTION iterate)
+void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
 {
 	if(match(name, global_token->s))
 	{
 		common_recursion(f);
 		emit_out(s);
+		iterate();
+	}
+}
+
+void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
+{
+	if(match(name, global_token->s))
+	{
+		common_recursion(f);
+		if(NULL == current_target)
+		{
+			emit_out(s2);
+		}
+		else if(current_target->is_signed)
+		{
+			emit_out(s1);
+		}
+		else
+		{
+			emit_out(s2);
+		}
 		iterate();
 	}
 }
@@ -706,43 +727,43 @@ void additive_expr_stub()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		general_recursion(postfix_expr, "ADD R0 R1 R0\n", "+", additive_expr_stub);
-		general_recursion(postfix_expr, "SUB R0 R1 R0\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "MUL R0 R1 R0\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "DIVU R0 R1 R0\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "MODU R0 R1 R0\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "SAL R0 R1 R0\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "SAR R0 R1 R0\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "ADD R0 R1 R0\n", "ADDU R0 R1 R0\n", "+", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SUB R0 R1 R0\n", "SUBU R0 R1 R0\n", "-", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "MUL R0 R1 R0\n", "MULU R0 R1 R0\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "DIV R0 R1 R0\n", "DIVU R0 R1 R0\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "MOD R0 R1 R0\n", "MODU R0 R1 R0\n", "%", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SAL R0 R1 R0\n", "SAL R0 R1 R0\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SAR R0 R1 R0\n", "SAR R0 R1 R0\n", ">>", additive_expr_stub);
 	}
 	else if(X86 == Architecture)
 	{
-		general_recursion(postfix_expr, "ADD_ebx_to_eax\n", "+", additive_expr_stub);
-		general_recursion(postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "ADD_ebx_to_eax\n", "ADD_ebx_to_eax\n", "+", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "MULTIPLYS_eax_by_ebx_into_eax\n", "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDES_eax_by_ebx_into_eax\n", "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUSS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", ">>", additive_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
-		general_recursion(postfix_expr, "ADD_rbx_to_rax\n", "+", additive_expr_stub);
-		general_recursion(postfix_expr, "SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "MULTIPLY_rax_by_rbx_into_rax\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nDIVIDE_rax_by_rbx_into_rax\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nMODULUS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "ADD_rbx_to_rax\n", "ADD_rbx_to_rax\n", "+", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n", "SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n", "-", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "MULTIPLYS_rax_by_rbx_into_rax\n", "MULTIPLY_rax_by_rbx_into_rax\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nDIVIDES_rax_by_rbx_into_rax\n", "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nDIVIDE_rax_by_rbx_into_rax\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nMODULUSS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n", "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nMODULUS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n", "%", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", ">>", additive_expr_stub);
 	}
 	else if(ARMV7L == Architecture)
 	{
-		general_recursion(postfix_expr, "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "+", additive_expr_stub);
-		general_recursion(postfix_expr, "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "-", additive_expr_stub);
-		general_recursion(postfix_expr, "'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n", "*", additive_expr_stub);
-		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n", "/", additive_expr_stub);
-		general_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n", "%", additive_expr_stub);
-		general_recursion(postfix_expr, "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
-		general_recursion(postfix_expr, "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "+", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "-", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "'9' R0 '0' R1 MULS R0 ARITH2_ALWAYS\n", "'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~divides CALL_ALWAYS\n{LR} POP_ALWAYS\n", "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~moduluss CALL_ALWAYS\n{LR} POP_ALWAYS\n", "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n", "%", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
 	}
 }
 
