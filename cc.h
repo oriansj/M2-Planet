@@ -49,6 +49,7 @@ struct type
 	struct type* next;
 	int size;
 	int offset;
+	int SIGNED;
 	struct type* indirect;
 	struct type* members;
 	struct type* type;

@@ -29,84 +29,100 @@ void initialize_types()
 	/* Define void */
 	global_types = calloc(1, sizeof(struct type));
 	global_types->name = "void";
+	global_types->SIGNED = FALSE;
 	global_types->size = register_size;
 	global_types->type = global_types;
 	/* void* has the same properties as void */
 	global_types->indirect = global_types;
 
-	/* Define int */
+	/* Define UNSIGNED LONG */
 	struct type* a = calloc(1, sizeof(struct type));
-	a->name = "int";
+	a->name = "SCM";
+	a->SIGNED = FALSE;
 	a->size = register_size;
-	/* int* has the same properties as int */
 	a->indirect = a;
 	a->type = a;
 
-	/* Define char* */
+	/* Define LONG */
 	struct type* b = calloc(1, sizeof(struct type));
-	b->name = "char*";
+	b->name = "long";
+	b->SIGNED = TRUE;
 	b->size = register_size;
+	b->indirect = b;
 	b->type = b;
 
-	/* Define char */
+	/* Define UNSIGNED */
 	struct type* c = calloc(1, sizeof(struct type));
-	c->name = "char";
-	c->size = 1;
+	c->name = "unsigned";
+	c->SIGNED = FALSE;
+	c->size = register_size;
 	c->type = c;
+	/* unsigned* has the same properties as unsigned */
+	c->indirect = c;
 
-	/* Define char** */
+	/* Define int */
 	struct type* d = calloc(1, sizeof(struct type));
-	d->name = "char**";
+	d->name = "int";
+	d->SIGNED = TRUE;
 	d->size = register_size;
-	d->type = b;
+	/* int* has the same properties as int */
 	d->indirect = d;
+	d->type = d;
 
-	/*fix up indrects for chars */
-	c->indirect = b;
-	b->indirect = d;
-
-	/* Define FILE */
+	/* Define char* */
 	struct type* e = calloc(1, sizeof(struct type));
-	e->name = "FILE";
+	e->name = "char*";
+	e->SIGNED = FALSE;
 	e->size = register_size;
 	e->type = e;
-	/* FILE* has the same properties as FILE */
-	e->indirect = e;
 
-	/* Define FUNCTION */
+	/* Define char */
 	struct type* f = calloc(1, sizeof(struct type));
-	f->name = "FUNCTION";
-	f->size = register_size;
+	f->name = "char";
+	f->SIGNED = FALSE;
+	f->size = 1;
 	f->type = f;
-	/* FUNCTION* has the same properties as FUNCTION */
-	f->indirect = f;
 
-	/* Define UNSIGNED */
+	/* Define char** */
 	struct type* g = calloc(1, sizeof(struct type));
-	g->name = "unsigned";
+	g->name = "char**";
+	g->SIGNED = FALSE;
 	g->size = register_size;
-	g->type = g;
-	/* unsigned* has the same properties as unsigned */
+	g->type = e;
 	g->indirect = g;
 
-	/* Custom type for mescc*/
+	/*fix up indrects for chars */
+	f->indirect = e;
+	e->indirect = g;
+
+	/* Define FILE */
 	struct type* h = calloc(1, sizeof(struct type));
-	h->name = "SCM";
+	h->name = "FILE";
+	h->SIGNED = FALSE;
 	h->size = register_size;
+	h->type = h;
+	/* FILE* has the same properties as FILE */
 	h->indirect = h;
 
+	/* Define FUNCTION */
 	struct type* i = calloc(1, sizeof(struct type));
-	i->name = "long";
+	i->name = "FUNCTION";
+	i->SIGNED = FALSE;
 	i->size = register_size;
+	i->type = i;
+	/* FUNCTION* has the same properties as FUNCTION */
 	i->indirect = i;
 
+	/* Primitives mes.c wanted */
 	struct type* j = calloc(1, sizeof(struct type));
 	j->name = "size_t";
+	j->SIGNED = FALSE;
 	j->size = register_size;
 	j->indirect = j;
 
 	struct type* k = calloc(1, sizeof(struct type));
 	k->name = "ssize_t";
+	k->SIGNED = FALSE;
 	k->size = register_size;
 	k->indirect = k;
 
@@ -116,10 +132,10 @@ void initialize_types()
 	h->next = i;
 	g->next = h;
 	f->next = g;
-	e->next = f;
-	d->next = e;
-	c->next = e;
-	a->next = c;
+	d->next = f;
+	c->next = d;
+	b->next = c;
+	a->next = b;
 	global_types->next = a;
 	prim_types = global_types;
 }
