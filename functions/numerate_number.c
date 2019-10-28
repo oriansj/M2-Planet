@@ -154,7 +154,7 @@ int numerate_string(char *a)
 	{
 		return set_reader("0123456789ABCDEFabcdef", 16, a+2);
 	}
-	/* Deal with ocal */
+	/* Deal with octal */
 	else if('0' == a[0])
 	{
 		return set_reader("01234567", 8, a+1);
