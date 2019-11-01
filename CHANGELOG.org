@@ -16,6 +16,29 @@
 
 * Current
 ** Added
+Added support for \a and \b
+Added support for long
+Added support for size_t
+Added support for ssize_t
+Added support for const keyword
+Added support for alternate instructions for signed/unsigned combinations
+Added is_signed data to all types
+Added support for signed multiplication, division and modulus
+
+** Changed
+Reordered types to prefer longs over unsigned over ints or chars
+
+** Fixed
+Typo: Recieved -> Received
+ARMv7l elf-header regression
+Corrected AMD64's xchg rax, rbx into it's proper encoding
+
+** Removed
+Removed bootstrap process as it belongs in mescc-tools-seed instead.
+Removed need for fixup_int32
+
+* 1.4 - 2019-06-23
+** Added
 
 ** Changed
 Tweaked cc_types.c to better match amd64 assembly

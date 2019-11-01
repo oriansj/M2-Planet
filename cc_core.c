@@ -44,9 +44,6 @@ char* numerate_number(int a);
 int numerate_string(char *a);
 char* number_to_hex(int a, int bytes);
 
-/* Host touchy function will need custom on 64bit systems*/
-int fixup_int32(int a);
-
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
@@ -399,7 +396,7 @@ void primary_expr_number()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = fixup_int32(numerate_string(global_token->s));
+		int size = numerate_string(global_token->s);
 		if((32768 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");

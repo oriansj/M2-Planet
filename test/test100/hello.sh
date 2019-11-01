@@ -46,7 +46,6 @@ ${CC} ${CFLAGS} \
 	functions/numerate_number.c \
 	functions/file_print.c \
 	functions/number_pack.c \
-	functions/fixup.c \
 	functions/string.c \
 	cc_reader.c \
 	cc_strings.c \
