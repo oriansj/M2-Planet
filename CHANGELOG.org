@@ -32,6 +32,7 @@ Reordered types to prefer longs over unsigned over ints or chars
 Typo: Recieved -> Received
 ARMv7l elf-header regression
 Corrected AMD64's xchg rax, rbx into it's proper encoding
+A great deal of typos thanks to Andrius Štikonas
 
 ** Removed
 Removed bootstrap process as it belongs in mescc-tools-seed instead.

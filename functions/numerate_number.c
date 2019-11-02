@@ -152,7 +152,7 @@ int numerate_string(char *a)
 	/* Deal with hex */
 	else if ('0' == a[0] &&  'x' == a[1])
 	{
-		return set_reader("0123456789ABCDEFabcdef", 16, a+2);
+		return set_reader("0123456789ABCDEF", 16, a+2);
 	}
 	/* Deal with octal */
 	else if('0' == a[0])
