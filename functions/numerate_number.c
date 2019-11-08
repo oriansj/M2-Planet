@@ -110,11 +110,11 @@ int set_reader(char* set, int mult, char* input)
 	int n = 0;
 	int i = 0;
 	int hold;
-	int negative_p = 0;
+	int negative_p = FALSE;
 
 	if(input[0] == '-')
 	{
-		negative_p = 1;
+		negative_p = TRUE;
 		i = i + 1;
 	}
 
@@ -122,11 +122,14 @@ int set_reader(char* set, int mult, char* input)
 	{
 		n = n * mult;
 		hold = index_number(set, toupper(input[i]));
+
+		/* Input managed to change between in_set and index_number */
 		if(-1 == hold) return 0;
 		n = n + hold;
 		i = i + 1;
 	}
 
+	/* loop exited before NULL and thus invalid input */
 	if(0 != input[i]) return 0;
 
 	if(negative_p)
@@ -152,7 +155,7 @@ int numerate_string(char *a)
 	/* Deal with hex */
 	else if ('0' == a[0] &&  'x' == a[1])
 	{
-		return set_reader("0123456789ABCDEF", 16, a+2);
+		return set_reader("0123456789ABCDEFabcdef", 16, a+2);
 	}
 	/* Deal with octal */
 	else if('0' == a[0])
