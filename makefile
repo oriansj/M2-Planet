@@ -16,6 +16,7 @@
 
 # Prevent rebuilding
 VPATH = bin:test:test/results
+PACKAGE = m2-planet
 
 all: M2-Planet
 
@@ -604,3 +605,25 @@ bindir:=$(DESTDIR)$(PREFIX)/bin
 install: M2-Planet
 	mkdir -p $(bindir)
 	cp $^ $(bindir)
+
+###  dist
+.PHONY: dist
+
+COMMIT=$(shell git describe --dirty)
+TARBALL_VERSION=$(COMMIT:Release_%=%)
+TARBALL_DIR:=$(PACKAGE)-$(TARBALL_VERSION)
+TARBALL=$(TARBALL_DIR).tar.gz
+# Be friendly to Debian; avoid using EPOCH
+MTIME=$(shell git show HEAD --format=%ct --no-patch)
+# Reproducible tarball
+TAR_FLAGS=--sort=name --mtime=@$(MTIME) --owner=0 --group=0 --numeric-owner --mode=go=rX,u+rw,a-s
+
+$(TARBALL):
+	(git ls-files					\
+	    --exclude=$(TARBALL_DIR);			\
+	    echo $^ | tr ' ' '\n')			\
+	    | tar $(TAR_FLAGS)				\
+	    --transform=s,^,$(TARBALL_DIR)/,S -T- -cf-	\
+	    | gzip -c --no-name > $@
+
+dist: $(TARBALL)
