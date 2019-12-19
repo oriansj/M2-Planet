@@ -191,6 +191,11 @@ struct type* build_member(struct type* last, int offset)
 	{
 		global_token = global_token->next;
 		i->size = member_type->type->size * numerate_string(global_token->s);
+		if(0 == i->size)
+		{
+			file_print("Struct only supports [num] form\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 		global_token = global_token->next;
 		require_match("Struct only supports [num] form\n", "]");
 	}
