@@ -234,7 +234,9 @@ void create_struct()
 	struct type* head = calloc(1, sizeof(struct type));
 	struct type* i = calloc(1, sizeof(struct type));
 	head->name = global_token->s;
+	head->type = head;
 	i->name = global_token->s;
+	i->type = i;
 	head->indirect = i;
 	i->indirect = head;
 	head->next = global_types;
