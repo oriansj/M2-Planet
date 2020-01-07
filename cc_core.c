@@ -1584,7 +1584,7 @@ new_type:
 			/* Ensure 4 bytes are allocated for the global */
 			globals_list = emit(":GLOBAL_", globals_list);
 			globals_list = emit(global_token->prev->s, globals_list);
-			globals_list = emit("\nNOP\n", globals_list);
+			globals_list = emit("\nNULL\n", globals_list);
 
 			global_token = global_token->next;
 		}

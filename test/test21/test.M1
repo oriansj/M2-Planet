@@ -1606,9 +1606,9 @@ RETURN
 # Program global variables
 
 :GLOBAL_output
-NOP
+NULL
 :GLOBAL_jump_table
-NOP
+NULL
 
 # Program strings
 

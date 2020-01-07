@@ -15,7 +15,7 @@
 ## along with stage0.  If not, see <http://www.gnu.org/licenses/>.
 
 # M2-Planet standards
-DEFINE NOP 00000000
+DEFINE NULL 00000000
 
 # Registers
 DEFINE R0 0
