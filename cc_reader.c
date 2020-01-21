@@ -22,6 +22,18 @@ int line;
 char* file;
 int in_set(int c, char* s);
 
+
+/* Deal with common errors */
+void require(int bool, char* error)
+{
+	if(!bool)
+	{
+		file_print(error, stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
+
 int clearWhiteSpace(int c)
 {
 	if((32 == c) || (9 == c)) return clearWhiteSpace(fgetc(input));
@@ -37,6 +49,7 @@ int consume_byte(int c)
 {
 	hold_string[string_index] = c;
 	string_index = string_index + 1;
+	require(MAX_STRING > string_index, "Token exceeded 4096char limit\n");
 	return fgetc(input);
 }
 
@@ -49,6 +62,7 @@ int preserve_string(int c)
 		if(!escape && '\\' == c ) escape = TRUE;
 		else escape = FALSE;
 		c = consume_byte(c);
+		require(EOF != c, "Unterminated string\n");
 	} while(escape || (c != frequent));
 	return fgetc(input);
 }
@@ -78,7 +92,11 @@ int preserve_keyword(int c, char* S)
 
 int purge_macro(int ch)
 {
-	while(10 != ch) ch = fgetc(input);
+	while(10 != ch)
+	{
+		ch = fgetc(input);
+		require(EOF != ch, "Hit EOF inside macro\n");
+	}
 	return ch;
 }
 
@@ -139,10 +157,12 @@ reset:
 				while(c != '*')
 				{
 					c = fgetc(input);
-					if(10 == c) line = line + 1;
+					require(EOF != c, "Hit EOF inside of block comment\n");
+					if('\n' == c) line = line + 1;
 				}
 				c = fgetc(input);
-				if(10 == c) line = line + 1;
+				require(EOF != c, "Hit EOF inside of block comment\n");
+				if('\n' == c) line = line + 1;
 			}
 			c = fgetc(input);
 			goto reset;
