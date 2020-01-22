@@ -16,23 +16,16 @@
  */
 
 #include "cc.h"
+
+/* imported functions */
+int in_set(int c, char* s);
+void require(int bool, char* error);
+
+/* Globals */
 FILE* input;
 struct token_list* token;
 int line;
 char* file;
-int in_set(int c, char* s);
-
-
-/* Deal with common errors */
-void require(int bool, char* error)
-{
-	if(!bool)
-	{
-		file_print(error, stderr);
-		exit(EXIT_FAILURE);
-	}
-}
-
 
 int clearWhiteSpace(int c)
 {

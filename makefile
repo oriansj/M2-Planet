@@ -18,10 +18,29 @@
 VPATH = bin:test:test/results
 PACKAGE = m2-planet
 
+# C compiler settings
+CC?=gcc
+CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb
+
 all: M2-Planet
 
 M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
-	./test/test100/hello.sh
+	$(CC) $(CFLAGS) \
+	functions/match.c \
+	functions/in_set.c \
+	functions/numerate_number.c \
+	functions/file_print.c \
+	functions/number_pack.c \
+	functions/string.c \
+	functions/require.c \
+	cc_reader.c \
+	cc_strings.c \
+	cc_types.c \
+	cc_core.c \
+	cc.c \
+	cc.h \
+	gcc_req.h \
+	-o bin/M2-Planet
 
 # Clean up after ourselves
 .PHONY: clean

@@ -38,11 +38,13 @@ int current_count;
 int Address_of;
 
 /* Imported functions */
+char* number_to_hex(int a, int bytes);
+char* numerate_number(int a);
 char* parse_string(char* string);
 int escape_lookup(char* c);
-char* numerate_number(int a);
 int numerate_string(char *a);
-char* number_to_hex(int a, int bytes);
+void require(int bool, char* error);
+
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -89,6 +91,7 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 
 void line_error()
 {
+	require(NULL != global_token, "EOF reached inside of line_error\n");
 	file_print(global_token->filename, stderr);
 	file_print(":", stderr);
 	file_print(numerate_number(global_token->linenumber), stderr);
@@ -97,6 +100,7 @@ void line_error()
 
 void require_match(char* message, char* required)
 {
+	require(NULL != global_token, "EOF reached inside of require match\n");
 	if(!match(global_token->s, required))
 	{
 		line_error();
@@ -104,6 +108,7 @@ void require_match(char* message, char* required)
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
+	require(NULL != global_token, "EOF after require match occurred\n");
 }
 
 void expression();
@@ -140,6 +145,7 @@ void function_call(char* s, int bool)
 	if(global_token->s[0] != ')')
 	{
 		expression();
+		require(NULL != global_token, "incomplete function call, recieved EOF instead of )\n");
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression1\n");
 		else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
 		else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_process_expression1\n");
@@ -149,6 +155,7 @@ void function_call(char* s, int bool)
 		while(global_token->s[0] == ',')
 		{
 			global_token = global_token->next;
+			require(NULL != global_token, "incomplete function call, recieved EOF instead of argument\n");
 			expression();
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression2\n");
 			else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
@@ -280,6 +287,7 @@ void constant_load(struct token_list* a)
 
 void variable_load(struct token_list* a)
 {
+	require(NULL != global_token, "incomplete variable load recieved\n");
 	if(match("FUNCTION", a->type->name) && match("(", global_token->s))
 	{
 		function_call(numerate_number(a->depth), TRUE);
@@ -307,6 +315,7 @@ void variable_load(struct token_list* a)
 
 void function_load(struct token_list* a)
 {
+	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
 		function_call(a->s, FALSE);
@@ -332,6 +341,8 @@ void global_load(struct token_list* a)
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
 	emit_out(a->s);
 	emit_out("\n");
+
+	require(NULL != global_token, "unterminated global load\n");
 	if(!match("=", global_token->s))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
@@ -353,6 +364,7 @@ void global_load(struct token_list* a)
 
 void primary_expr_failure()
 {
+	require(NULL != global_token, "hit EOF when expecting primary expression\n");
 	line_error();
 	file_print("Received ", stderr);
 	file_print(global_token->s, stderr);
@@ -505,6 +517,7 @@ void common_recursion(FUNCTION f)
 
 	struct type* last_type = current_target;
 	global_token = global_token->next;
+	require(NULL != global_token, "Recieved EOF in common_recursion\n");
 	f();
 	current_target = promote_type(current_target, last_type);
 
@@ -516,6 +529,7 @@ void common_recursion(FUNCTION f)
 
 void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
 {
+	require(NULL != global_token, "Recieved EOF in general_recursion\n");
 	if(match(name, global_token->s))
 	{
 		common_recursion(f);
@@ -526,6 +540,7 @@ void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
 
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
 {
+	require(NULL != global_token, "Recieved EOF in arithmetic_recursion\n");
 	if(match(name, global_token->s))
 	{
 		common_recursion(f);
@@ -575,10 +590,12 @@ void postfix_expr_arrow()
 {
 	emit_out("# looking up offset\n");
 	global_token = global_token->next;
+	require(NULL != global_token, "naked -> not allowed\n");
 
 	struct type* i = lookup_member(current_target, global_token->s);
 	current_target = i->type;
 	global_token = global_token->next;
+	require(NULL != global_token, "Unterminated -> expression not allowed\n");
 
 	if(0 != i->offset)
 	{
@@ -623,6 +640,8 @@ void postfix_expr_array()
 	struct type* array = current_target;
 	common_recursion(expression);
 	current_target = array;
+	require(NULL != current_target, "Arrays only apply to variables\n");
+
 	char* assign;
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) assign = "LOAD R0 R0 0\n";
 	else if(X86 == Architecture) assign = "LOAD_INTEGER\n";
@@ -675,6 +694,7 @@ struct type* type_name();
 void unary_expr_sizeof()
 {
 	global_token = global_token->next;
+	require(NULL != global_token, "Recieved EOF when starting sizeof\n");
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct type* a = type_name();
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
@@ -690,6 +710,7 @@ void unary_expr_sizeof()
 
 void postfix_expr_stub()
 {
+	require(NULL != global_token, "Unexpected EOF, improperly terminated primary expression\n");
 	if(match("[", global_token->s))
 	{
 		postfix_expr_array();
@@ -887,10 +908,12 @@ void bitwise_expr()
 
 void primary_expr()
 {
+	require(NULL != global_token, "Recieved EOF where primary expression expected\n");
 	if(match("&", global_token->s))
 	{
 		Address_of = TRUE;
 		global_token = global_token->next;
+		require(NULL != global_token, "Recieved EOF after & where primary expression expected\n");
 	}
 	else
 	{
@@ -1016,10 +1039,12 @@ void collect_local()
 	emit_out("\n");
 
 	global_token = global_token->next;
+	require(NULL != global_token, "incomplete local missing name\n");
 
 	if(match("=", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "incomplete local assignment\n");
 		expression();
 	}
 
@@ -1073,6 +1098,7 @@ void process_if()
 	if(match("else", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "Recieved EOF where an else statement expected\n");
 		statement();
 	}
 	emit_out(":_END_IF_");
@@ -1170,6 +1196,7 @@ void process_asm()
 		emit_out((global_token->s + 1));
 		emit_out("\n");
 		global_token = global_token->next;
+		require(NULL != global_token, "Recieved EOF inside asm statement\n");
 	}
 	require_match("ERROR in process_asm\nMISSING )\n", ")");
 	require_match("ERROR in process_asm\nMISSING ;\n", ";");
@@ -1195,6 +1222,7 @@ void process_do()
 	uniqueID_out(function->s, number_string);
 
 	global_token = global_token->next;
+	require(NULL != global_token, "Recieved EOF where do statement is expected\n");
 	statement();
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
@@ -1274,6 +1302,7 @@ void process_while()
 void return_result()
 {
 	global_token = global_token->next;
+	require(NULL != global_token, "Incomplete return statement recieved\n");
 	if(global_token->s[0] != ';') expression();
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
@@ -1330,11 +1359,13 @@ void process_break()
 void recursive_statement()
 {
 	global_token = global_token->next;
+	require(NULL != global_token, "Recieved EOF in recursive statement\n");
 	struct token_list* frame = function->locals;
 
 	while(!match("}", global_token->s))
 	{
 		statement();
+		require(NULL != global_token, "Recieved EOF in recursive statement prior to }\n");
 	}
 	global_token = global_token->next;
 
@@ -1416,6 +1447,7 @@ void statement()
 	else if(match("goto", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "naked goto is not supported\n");
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
 		else if(X86 == Architecture) emit_out("JUMP %");
 		else if(AMD64 == Architecture) emit_out("JUMP %");
@@ -1451,6 +1483,7 @@ void statement()
 void collect_arguments()
 {
 	global_token = global_token->next;
+	require(NULL != global_token, "Recieved EOF when attempting to collect arguments\n");
 
 	while(!match(")", global_token->s))
 	{
@@ -1480,11 +1513,18 @@ void collect_arguments()
 			}
 
 			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete argument list\n");
 			function->arguments = a;
 		}
 
 		/* ignore trailing comma (needed for foo(bar(), 1); expressions*/
-		if(global_token->s[0] == ',') global_token = global_token->next;
+		if(global_token->s[0] == ',')
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "naked comma in collect arguments\n");
+		}
+
+		require(NULL != global_token, "Argument list never completed\n");
 	}
 	global_token = global_token->next;
 }
@@ -1503,6 +1543,7 @@ void declare_function()
 	}
 	else collect_arguments();
 
+	require(NULL != global_token, "Function definitions either need to be prototypes or full\n");
 	/* If just a prototype don't waste time */
 	if(global_token->s[0] == ';') global_token = global_token->next;
 	else
@@ -1552,8 +1593,10 @@ new_type:
 	if(match("CONSTANT", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "CONSTANT lacks a name\n");
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
 
+		require(NULL != global_token->next, "CONSTANT lacks a value\n");
 		if(match("sizeof", global_token->next->s))
 		{
 			global_token = global_token->next->next;
@@ -1579,6 +1622,7 @@ new_type:
 		/* Add to global symbol table */
 		global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
 		global_token = global_token->next;
+		require(NULL != global_token, "Unterminated global\n");
 		if(match(";", global_token->s))
 		{
 			/* Ensure 4 bytes are allocated for the global */
@@ -1596,6 +1640,7 @@ new_type:
 			globals_list = emit(global_token->prev->s, globals_list);
 			globals_list = emit("\n", globals_list);
 			global_token = global_token->next;
+			require(NULL != global_token, "Global locals value in assignment\n");
 			if(in_set(global_token->s[0], "0123456789"))
 			{ /* Assume Int */
 				globals_list = emit("%", globals_list);

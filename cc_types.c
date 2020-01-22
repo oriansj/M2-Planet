@@ -17,8 +17,11 @@
 
 #include "cc.h"
 #include <stdint.h>
-void line_error();
+
+/* Imported functions */
 int numerate_string(char *a);
+void line_error();
+void require(int bool, char* error);
 
 /* Initialize default types */
 void initialize_types()
@@ -156,6 +159,7 @@ struct type* lookup_type(char* s, struct type* start)
 struct type* lookup_member(struct type* parent, char* name)
 {
 	struct type* i;
+	require(NULL != parent, "Not a valid struct type\n");
 	for(i = parent->members; NULL != i; i = i->members)
 	{
 		if(match(i->name, name)) return i;
@@ -182,14 +186,17 @@ struct type* build_member(struct type* last, int offset)
 	i->offset = offset;
 
 	struct type* member_type = type_name();
+	require(NULL != member_type, "struct member type can not be invalid\n");
 	i->type = member_type;
 	i->name = global_token->s;
 	global_token = global_token->next;
+	require(NULL != global_token, "struct member can not be EOF terminated\n");
 
 	/* Check to see if array */
 	if(match( "[", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "struct member arrays can not be EOF sized\n");
 		i->size = member_type->type->size * numerate_string(global_token->s);
 		if(0 == i->size)
 		{
@@ -221,6 +228,7 @@ struct type* build_union(struct type* last, int offset)
 			size = member_size;
 		}
 		require_match("ERROR in build_union\nMissing ;\n", ";");
+		require(NULL != global_token, "Unterminated union\n");
 	}
 	member_size = size;
 	global_token = global_token->next;
@@ -257,6 +265,7 @@ void create_struct()
 		}
 		offset = offset + member_size;
 		require_match("ERROR in create_struct\n Missing ;\n", ";");
+		require(NULL != global_token, "Unterminated struct\n");
 	}
 
 	global_token = global_token->next;
@@ -272,9 +281,11 @@ struct type* type_name()
 {
 	struct type* ret;
 
+	require(NULL != global_token, "Recieved EOF instead of type name\n");
 	if(match("struct", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "structs can not have a EOF type name\n");
 		ret = lookup_type(global_token->s, global_types);
 		if(NULL == ret)
 		{
@@ -296,16 +307,19 @@ struct type* type_name()
 	}
 
 	global_token = global_token->next;
+	require(NULL != global_token, "unfinished type definition\n");
 
 	if(match("const", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "unfinished type definition in const\n");
 	}
 
 	while(global_token->s[0] == '*')
 	{
 		ret = ret->indirect;
 		global_token = global_token->next;
+		require(NULL != global_token, "unfinished type definition in indirection\n");
 	}
 
 	return ret;
