@@ -7,7 +7,7 @@ A lovely set of examples of M2-Planet programs are in tests but the most
 surprising part of all M2-Planet can self-host M2-Planet.
 
 Further more M2-Planet is cross-platform and self-hosting across platforms
-with fully deterministic builds enabling prefect reproducibility.
+with fully deterministic builds enabling perfect reproducibility.
 
 To bootstrap from assembly simple run ./bootstrap-x86.sh after cd into the
 bootstrap directory (the only requirement is mescc-tools to be installed)
