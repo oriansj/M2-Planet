@@ -21,11 +21,11 @@ set -x
 	-f test/common_armv7l/functions/malloc.c \
 	-f functions/calloc.c \
 	-f functions/in_set.c \
+	-f test/common_armv7l/functions/file.c \
+	-f test/common_armv7l/functions/exit.c \
 	-f functions/numerate_number.c \
 	-f functions/match.c \
-	-f test/common_armv7l/functions/file.c \
 	-f functions/file_print.c \
-	-f test/common_armv7l/functions/exit.c \
 	-f test/test26/lisp.c \
 	-f test/test26/lisp_cell.c \
 	-f test/test26/lisp_eval.c \

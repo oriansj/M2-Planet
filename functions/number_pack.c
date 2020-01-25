@@ -25,6 +25,11 @@ int hex2char(int c);
 char* number_to_hex(int a, int bytes)
 {
 	char* result = calloc(1 + (bytes << 1), sizeof(char));
+	if(NULL == result)
+	{
+		file_print("calloc failed in number_to_hex\n", stderr);
+		exit(EXIT_FAILURE);
+	}
 	int i = 0;
 
 	int divisor = (bytes << 3);

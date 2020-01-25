@@ -24,6 +24,7 @@ bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/file.c
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
+	-f functions/file_print.c \
 	-f test/test19/getopt.c \
 	-o test/test19/getopt.M1 || exit 1
 

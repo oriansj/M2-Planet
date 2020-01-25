@@ -19,8 +19,9 @@
 #include "cc.h"
 #include <stdint.h>
 
-struct token_list* emit(char *s, struct token_list* head);
 int char2hex(int c);
+struct token_list* emit(char *s, struct token_list* head);
+void require(int bool, char* error);
 
 char upcase(char a)
 {
@@ -106,6 +107,7 @@ char* collect_regular_string(char* string)
 	string_index = 0;
 
 collect_regular_string_reset:
+	require((MAX_STRING - 3) > string_index, "Attempt at parsing regular string exceeds max length\n");
 	if(string[0] == '\\')
 	{
 		hold_string[string_index] = escape_lookup(string);
@@ -138,6 +140,7 @@ char* collect_weird_string(char* string)
 
 	hold_string[0] = '\'';
 collect_weird_string_reset:
+	require((MAX_STRING - 6) > string_index, "Attempt at parsing weird string exceeds max length\n");
 	string = string + 1;
 	hold_string[string_index] = ' ';
 	temp = escape_lookup(string);

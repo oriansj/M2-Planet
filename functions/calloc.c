@@ -29,6 +29,7 @@ void* memset(void* ptr, int value, int num)
 void* calloc(int count, int size)
 {
 	void* ret = malloc(count * size);
+	if(NULL == ret) return NULL;
 	memset(ret, 0, (count * size));
 	return ret;
 }
