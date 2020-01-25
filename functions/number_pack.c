@@ -19,11 +19,13 @@
 #include<string.h>
 #include<stdio.h>
 // void* calloc(int count, int size);
-void file_print(char* s, FILE* f);
 int hex2char(int c);
+void file_print(char* s, FILE* f);
+void require(int bool, char* error);
 
 char* number_to_hex(int a, int bytes)
 {
+	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
 	char* result = calloc(1 + (bytes << 1), sizeof(char));
 	if(NULL == result)
 	{
@@ -33,6 +35,7 @@ char* number_to_hex(int a, int bytes)
 	int i = 0;
 
 	int divisor = (bytes << 3);
+	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
 
 	/* Simply collect numbers until divisor is gone */
 	while(0 != divisor)

@@ -31,6 +31,7 @@ void initialize_types()
 
 	/* Define void */
 	global_types = calloc(1, sizeof(struct type));
+	require(NULL != global_types, "Exhusted memory while intializing VOID\n");
 	global_types->name = "void";
 	global_types->is_signed = FALSE;
 	global_types->size = register_size;
@@ -38,8 +39,9 @@ void initialize_types()
 	/* void* has the same properties as void */
 	global_types->indirect = global_types;
 
-	/* Define UNis_signed LONG */
+	/* Define unsigned LONG */
 	struct type* a = calloc(1, sizeof(struct type));
+	require(NULL != a, "Exhusted memory while intializing SCM\n");
 	a->name = "SCM";
 	a->is_signed = FALSE;
 	a->size = register_size;
@@ -48,6 +50,7 @@ void initialize_types()
 
 	/* Define LONG */
 	struct type* b = calloc(1, sizeof(struct type));
+	require(NULL != b, "Exhusted memory while intializing LONG\n");
 	b->name = "long";
 	b->is_signed = TRUE;
 	b->size = register_size;
@@ -56,6 +59,7 @@ void initialize_types()
 
 	/* Define UNSIGNED */
 	struct type* c = calloc(1, sizeof(struct type));
+	require(NULL != c, "Exhusted memory while intializing UNSIGNE\n");
 	c->name = "unsigned";
 	c->is_signed = FALSE;
 	c->size = register_size;
@@ -65,6 +69,7 @@ void initialize_types()
 
 	/* Define int */
 	struct type* d = calloc(1, sizeof(struct type));
+	require(NULL != d, "Exhusted memory while intializing INT\n");
 	d->name = "int";
 	d->is_signed = TRUE;
 	d->size = register_size;
@@ -74,6 +79,7 @@ void initialize_types()
 
 	/* Define char* */
 	struct type* e = calloc(1, sizeof(struct type));
+	require(NULL != e, "Exhusted memory while intializing CHAR*\n");
 	e->name = "char*";
 	e->is_signed = FALSE;
 	e->size = register_size;
@@ -81,6 +87,7 @@ void initialize_types()
 
 	/* Define char */
 	struct type* f = calloc(1, sizeof(struct type));
+	require(NULL != f, "Exhusted memory while intializing CHAR\n");
 	f->name = "char";
 	f->is_signed = FALSE;
 	f->size = 1;
@@ -88,6 +95,7 @@ void initialize_types()
 
 	/* Define char** */
 	struct type* g = calloc(1, sizeof(struct type));
+	require(NULL != g, "Exhusted memory while intializing CHAR**\n");
 	g->name = "char**";
 	g->is_signed = FALSE;
 	g->size = register_size;
@@ -100,6 +108,7 @@ void initialize_types()
 
 	/* Define FILE */
 	struct type* h = calloc(1, sizeof(struct type));
+	require(NULL != h, "Exhusted memory while intializing FILE\n");
 	h->name = "FILE";
 	h->is_signed = FALSE;
 	h->size = register_size;
@@ -109,6 +118,7 @@ void initialize_types()
 
 	/* Define FUNCTION */
 	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhusted memory while intializing FUNCTION\n");
 	i->name = "FUNCTION";
 	i->is_signed = FALSE;
 	i->size = register_size;
@@ -118,12 +128,14 @@ void initialize_types()
 
 	/* Primitives mes.c wanted */
 	struct type* j = calloc(1, sizeof(struct type));
+	require(NULL != j, "Exhusted memory while intializing SIZE_T\n");
 	j->name = "size_t";
 	j->is_signed = FALSE;
 	j->size = register_size;
 	j->indirect = j;
 
 	struct type* k = calloc(1, sizeof(struct type));
+	require(NULL != k, "Exhusted memory while intializing SSIZE_T\n");
 	k->name = "ssize_t";
 	k->is_signed = FALSE;
 	k->size = register_size;
@@ -182,6 +194,7 @@ int member_size;
 struct type* build_member(struct type* last, int offset)
 {
 	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhusted memory while building a struct member\n");
 	i->members = last;
 	i->offset = offset;
 
@@ -240,7 +253,9 @@ void create_struct()
 	int offset = 0;
 	member_size = 0;
 	struct type* head = calloc(1, sizeof(struct type));
+	require(NULL != head, "Exhusted memory while creating a struct\n");
 	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhusted memory while creating a struct indirection\n");
 	head->name = global_token->s;
 	head->type = head;
 	i->name = global_token->s;

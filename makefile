@@ -71,6 +71,8 @@ clean:
 	./test/test22/cleanup.sh
 	./test/test23/cleanup.sh
 	./test/test24/cleanup.sh
+	./test/test25/cleanup.sh
+	./test/test26/cleanup.sh
 	./test/test99/cleanup.sh
 	./test/test100/cleanup.sh
 

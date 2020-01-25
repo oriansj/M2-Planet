@@ -16,6 +16,7 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 rm -f test/test100/cc.M1
+rm -f test/test100/cc-footer.M1
 rm -f test/test100/cc.hex2
 rm -f test/test100/proof
 exit 0

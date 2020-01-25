@@ -49,6 +49,7 @@ void require(int bool, char* error);
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
+	require(NULL != t, "Exhusted memory while generating token to emit\n");
 	t->next = head;
 	t->s = s;
 	return t;
@@ -73,6 +74,7 @@ void uniqueID_out(char* s, char* num)
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
+	require(NULL != a, "Exhusted memory while attempting to declare a symbol\n");
 	a->next = list;
 	a->s = s;
 	a->type = t;

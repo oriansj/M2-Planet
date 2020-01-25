@@ -17,10 +17,6 @@
 
 #include "cc.h"
 
-/* imported functions */
-int in_set(int c, char* s);
-void require(int bool, char* error);
-
 /* Globals */
 FILE* input;
 struct token_list* token;
@@ -106,6 +102,7 @@ void reset_hold_string()
 int get_token(int c)
 {
 	struct token_list* current = calloc(1, sizeof(struct token_list));
+	require(NULL != current, "Exhusted memory while getting token\n");
 
 reset:
 	reset_hold_string();
@@ -173,6 +170,7 @@ reset:
 
 	/* More efficiently allocate memory for string */
 	current->s = calloc(string_index + 2, sizeof(char));
+	require(NULL != current->s, "Exhusted memory while trying to copy a token\n");
 	copy_string(current->s, hold_string);
 
 	current->prev = token;

@@ -25,13 +25,11 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 struct token_list* reverse_list(struct token_list* head);
 void program();
 void recursive_output(struct token_list* i, FILE* out);
-int match(char* a, char* b);
-void file_print(char* s, FILE* f);
-char* parse_string(char* string);
 
 int main(int argc, char** argv)
 {
 	hold_string = calloc(MAX_STRING, sizeof(char));
+	require(NULL != hold_string, "Impossible Exhustion has occured\n");
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
