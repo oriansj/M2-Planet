@@ -19,7 +19,7 @@
 //CONSTANT PATH_MAX 4096
 #define PATH_MAX 4096
 
-char* getcwd(char* buf, size_t size)
+int _getcwd(char* buf, size_t size)
 {
 	asm("!4 R0 SUB R12 ARITH_ALWAYS"
 	    "!0 R0 LOAD32 R0 MEMORY"
@@ -27,6 +27,13 @@ char* getcwd(char* buf, size_t size)
 	    "!0 R1 LOAD32 R1 MEMORY"
 	    "!183 R7 LOADI8_ALWAYS"
 	    "SYSCALL_ALWAYS");
+}
+
+char* getcwd(char* buf, size_t size)
+{
+	int c = _getcwd(buf, size);
+	if(0 == c) return NULL;
+	return buf;
 }
 
 char* getwd(char* buf)

@@ -19,7 +19,7 @@
 //CONSTANT PATH_MAX 4096
 #define PATH_MAX 4096
 
-char* getcwd(char* buf, size_t size)
+int _getcwd(char* buf, size_t size)
 {
 	asm("LOAD_EFFECTIVE_ADDRESS_ebx %8"
 	"LOAD_INTEGER_ebx"
@@ -27,6 +27,13 @@ char* getcwd(char* buf, size_t size)
 	"LOAD_INTEGER_ecx"
 	"LOAD_IMMEDIATE_eax %183"
 	"INT_80");
+}
+
+char* getcwd(char* buf, size_t size)
+{
+	int c = _getcwd(buf, size);
+	if(0 == c) return NULL;
+	return buf;
 }
 
 char* getwd(char* buf)

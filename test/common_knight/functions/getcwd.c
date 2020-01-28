@@ -19,11 +19,18 @@
 //CONSTANT PATH_MAX 4096
 #define PATH_MAX 4096
 
-char* getcwd(char* buf, size_t size)
+int _getcwd(char* buf, size_t size)
 {
 	asm("LOAD R0 R14 0"
 	    "LOAD R1 R14 4"
 	    "GETCWD");
+}
+
+char* getcwd(char* buf, size_t size)
+{
+	int c = _getcwd(buf, size);
+	if(0 == c) return NULL;
+	return buf;
 }
 
 char* getwd(char* buf)
