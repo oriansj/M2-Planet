@@ -92,6 +92,7 @@ clean:
 	./test/test24/cleanup.sh
 	./test/test25/cleanup.sh
 	./test/test26/cleanup.sh
+	./test/test27/cleanup.sh
 	./test/test99/cleanup.sh
 	./test/test100/cleanup.sh
 
@@ -130,6 +131,7 @@ test: test00-aarch64-binary \
 	test24-aarch64-binary \
 	test25-aarch64-binary \
 	test26-aarch64-binary \
+	test27-aarch64-binary \
 	test99-aarch64-binary \
 	test100-aarch64-binary \
 	test00-amd64-binary \
@@ -159,6 +161,7 @@ test: test00-aarch64-binary \
 	test24-amd64-binary \
 	test25-amd64-binary \
 	test26-amd64-binary \
+	test27-amd64-binary \
 	test99-amd64-binary \
 	test100-amd64-binary \
 	test00-knight-posix-binary \
@@ -186,6 +189,7 @@ test: test00-aarch64-binary \
 	test22-knight-posix-binary \
 	test23-knight-posix-binary \
 	test24-knight-posix-binary \
+	test27-knight-posix-binary \
 	test99-knight-posix-binary \
 	test100-knight-posix-binary \
 	test00-knight-native-binary\
@@ -233,6 +237,7 @@ test: test00-aarch64-binary \
 	test24-armv7l-binary \
 	test25-armv7l-binary \
 	test26-armv7l-binary \
+	test27-armv7l-binary \
 	test99-armv7l-binary \
 	test100-armv7l-binary \
 	test00-x86-binary \
@@ -262,6 +267,7 @@ test: test00-aarch64-binary \
 	test24-x86-binary \
 	test25-x86-binary \
 	test26-x86-binary \
+	test27-x86-binary \
 	test99-x86-binary \
 	test100-x86-binary | results
 	sha256sum -c test/test.answers
@@ -434,6 +440,9 @@ test25-amd64-binary: M2-Planet | results
 test26-amd64-binary: M2-Planet | results
 	test/test26/hello-amd64.sh
 
+test27-amd64-binary: M2-Planet | results
+	test/test27/hello-amd64.sh
+
 test99-amd64-binary: M2-Planet | results
 	test/test99/hello-amd64.sh
 
@@ -514,6 +523,9 @@ test23-knight-posix-binary: M2-Planet | results
 
 test24-knight-posix-binary: M2-Planet | results
 	test/test24/hello-knight-posix.sh
+
+test27-knight-posix-binary: M2-Planet | results
+	test/test27/hello-knight-posix.sh
 
 test99-knight-posix-binary: M2-Planet | results
 	test/test99/hello-knight-posix.sh
@@ -656,6 +668,9 @@ test25-armv7l-binary: M2-Planet | results
 test26-armv7l-binary: M2-Planet | results
 	test/test26/hello-armv7l.sh
 
+test27-armv7l-binary: M2-Planet | results
+	test/test27/hello-armv7l.sh
+
 test99-armv7l-binary: M2-Planet | results
 	test/test99/hello-armv7l.sh
 
@@ -742,6 +757,9 @@ test25-x86-binary: M2-Planet | results
 
 test26-x86-binary: M2-Planet | results
 	test/test26/hello-x86.sh
+
+test27-x86-binary: M2-Planet | results
+	test/test27/hello-x86.sh
 
 test99-x86-binary: M2-Planet | results
 	test/test99/hello-x86.sh
