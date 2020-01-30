@@ -1085,6 +1085,7 @@ void process_if()
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
+	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_END_IF_");
 	else if(X86 == Architecture) emit_out("JUMP %_END_IF_");
@@ -1102,6 +1103,7 @@ void process_if()
 		global_token = global_token->next;
 		require(NULL != global_token, "Recieved EOF where an else statement expected\n");
 		statement();
+		require(NULL != global_token, "Reached EOF inside of function\n");
 	}
 	emit_out(":_END_IF_");
 	uniqueID_out(function->s, number_string);
@@ -1171,6 +1173,7 @@ void process_for()
 
 	require_match("ERROR in process_for\nMISSING )\n", ")");
 	statement();
+	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_ITER_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_ITER_");
@@ -1226,6 +1229,7 @@ void process_do()
 	global_token = global_token->next;
 	require(NULL != global_token, "Recieved EOF where do statement is expected\n");
 	statement();
+	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
@@ -1284,6 +1288,7 @@ void process_while()
 
 	require_match("ERROR in process_while\nMISSING )\n", ")");
 	statement();
+	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @WHILE_");
 	else if(X86 == Architecture) emit_out("JUMP %WHILE_");
