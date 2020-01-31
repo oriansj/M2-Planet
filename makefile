@@ -42,6 +42,24 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
 	gcc_req.h \
 	-o bin/M2-Planet
 
+M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-minimal.c
+	$(CC) $(CFLAGS) \
+	functions/match.c \
+	functions/in_set.c \
+	functions/numerate_number.c \
+	functions/file_print.c \
+	functions/number_pack.c \
+	functions/string.c \
+	functions/require.c \
+	cc_reader.c \
+	cc_strings.c \
+	cc_types.c \
+	cc_core.c \
+	cc-minimal.c \
+	cc.h \
+	gcc_req.h \
+	-o bin/M2-minimal
+
 # Clean up after ourselves
 .PHONY: clean
 clean:
