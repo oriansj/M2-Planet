@@ -840,6 +840,16 @@ void additive_expr_stub()
 		arithmetic_recursion(postfix_expr, "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
 	}
+	else if(AARCH64 == Architecture)
+	{
+		general_recursion(postfix_expr, "ADD_X0_X1_X0\n", "+", additive_expr_stub);
+		general_recursion(postfix_expr, "SUB_X0_X1_X0\n", "-", additive_expr_stub);
+		general_recursion(postfix_expr, "MUL_X0_X1_X0\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SDIV_X0_X1_X0\n", "UDIV_X0_X1_X0\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n", "UDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n", "%", additive_expr_stub);
+		general_recursion(postfix_expr, "LSHIFT_X0_X1_X0\n", "<<", additive_expr_stub);
+		general_recursion(postfix_expr, "RSHIFT_X0_X1_X0\n", ">>", additive_expr_stub);
+	}
 }
 
 
@@ -897,6 +907,15 @@ void relational_expr_stub()
 		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_EQUAL\n", "==", relational_expr_stub);
 		general_recursion(additive_expr, "'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_NE\n", "!=", relational_expr_stub);
 	}
+	else if(AARCH64 == Architecture)
+	{
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_LT\nSET_X0_TO_0\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_LE\nSET_X0_TO_0\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_GE\nSET_X0_TO_0\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_GT\nSET_X0_TO_0\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_EQ\nSET_X0_TO_0\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_NE\nSET_X0_TO_0\n", "!=", relational_expr_stub);
+	}
 }
 
 void relational_expr()
@@ -947,6 +966,14 @@ void bitwise_expr_stub()
 		general_recursion(relational_expr, "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n", "|", bitwise_expr_stub);
 		general_recursion(relational_expr, "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n", "||", bitwise_expr_stub);
 		general_recursion(relational_expr, "'0' R0 R0 XOR R1 ARITH2_ALWAYS\n", "^", bitwise_expr_stub);
+	}
+	else if(AARCH64 == Architecture)
+	{
+		general_recursion(relational_expr, "AND_X0_X1_X0\n", "&", bitwise_expr_stub);
+		general_recursion(relational_expr, "AND_X0_X1_X0\n", "&&", bitwise_expr_stub);
+		general_recursion(relational_expr, "OR_X0_X1_X0\n", "|", bitwise_expr_stub);
+		general_recursion(relational_expr, "OR_X0_X1_X0\n", "||", bitwise_expr_stub);
+		general_recursion(relational_expr, "XOR_X0_X1_X0\n", "^", bitwise_expr_stub);
 	}
 }
 
