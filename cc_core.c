@@ -312,6 +312,7 @@ void constant_load(struct token_list* a)
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
 	emit_out(a->arguments->s);
 	emit_out("\n");
 }
@@ -330,9 +331,11 @@ void variable_load(struct token_list* a)
 	else if(X86 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
 	else if(AMD64 == Architecture) emit_out("LOAD_BASE_ADDRESS_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
+	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
 
 	emit_out(numerate_number(a->depth));
 	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
+	else if(AARCH64 == Architecture) emit_out("\nSUB_X0_X0_X1\n");
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
@@ -342,6 +345,7 @@ void variable_load(struct token_list* a)
 	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 	else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
+	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
 }
 
 void function_load(struct token_list* a)
@@ -357,6 +361,7 @@ void function_load(struct token_list* a)
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &FUNCTION_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -368,6 +373,7 @@ void global_load(struct token_list* a)
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &GLOBAL_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&GLOBAL_");
 	emit_out(a->s);
 	emit_out("\n");
 
@@ -378,6 +384,7 @@ void global_load(struct token_list* a)
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
+		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
 	}
 }
 
