@@ -58,7 +58,7 @@ then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test25-armv7l-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "kaem version 0.1" ] || exit 6
+	[ "$out" = "kaem version 0.6.0" ] || exit 6
 
 	# Verify that the resulting file works
 	out=$(./test/results/test25-armv7l-binary --file test/test25/kaem.run)
