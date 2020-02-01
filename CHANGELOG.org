@@ -28,6 +28,7 @@ Added dist build target
 Added a manpage for M2-Planet
 Added support for nested structs thanks to fosslinux
 Added support for access, chdir and fchdir primitives
+Added AArch64 target (mescc-tools 0.7.0 required), all tests passing but rough on the edges
 
 ** Changed
 Reordered types to prefer longs over unsigned over ints or chars
