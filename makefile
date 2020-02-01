@@ -1,4 +1,5 @@
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2020 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -102,7 +103,36 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test00-amd64-binary \
+test: test00-aarch64-binary \
+	test01-aarch64-binary \
+	test02-aarch64-binary \
+	test03-aarch64-binary \
+	test04-aarch64-binary \
+	test05-aarch64-binary \
+	test06-aarch64-binary \
+	test07-aarch64-binary \
+	test08-aarch64-binary \
+	test09-aarch64-binary \
+	test10-aarch64-binary \
+	test11-aarch64-binary \
+	test12-aarch64-binary \
+	test13-aarch64-binary \
+	test14-aarch64-binary \
+	test15-aarch64-binary \
+	test16-aarch64-binary \
+	test17-aarch64-binary \
+	test18-aarch64-binary \
+	test19-aarch64-binary \
+	test20-aarch64-binary \
+	test21-aarch64-binary \
+	test22-aarch64-binary \
+	test23-aarch64-binary \
+	test24-aarch64-binary \
+	test25-aarch64-binary \
+	test26-aarch64-binary \
+	test99-aarch64-binary \
+	test100-aarch64-binary \
+	test00-amd64-binary \
 	test01-amd64-binary \
 	test02-amd64-binary \
 	test03-amd64-binary \
@@ -235,6 +265,93 @@ test: test00-amd64-binary \
 	test99-x86-binary \
 	test100-x86-binary | results
 	sha256sum -c test/test.answers
+
+test00-aarch64-binary: M2-Planet | results
+	test/test00/hello-aarch64.sh
+
+test01-aarch64-binary: M2-Planet | results
+	test/test01/hello-aarch64.sh
+
+test02-aarch64-binary: M2-Planet | results
+	test/test02/hello-aarch64.sh
+
+test03-aarch64-binary: M2-Planet | results
+	test/test03/hello-aarch64.sh
+
+test04-aarch64-binary: M2-Planet | results
+	test/test04/hello-aarch64.sh
+
+test05-aarch64-binary: M2-Planet | results
+	test/test05/hello-aarch64.sh
+
+test06-aarch64-binary: M2-Planet | results
+	test/test06/hello-aarch64.sh
+
+test07-aarch64-binary: M2-Planet | results
+	test/test07/hello-aarch64.sh
+
+test08-aarch64-binary: M2-Planet | results
+	test/test08/hello-aarch64.sh
+
+test09-aarch64-binary: M2-Planet | results
+	test/test09/hello-aarch64.sh
+
+test10-aarch64-binary: M2-Planet | results
+	test/test10/hello-aarch64.sh
+
+test11-aarch64-binary: M2-Planet | results
+	test/test11/hello-aarch64.sh
+
+test12-aarch64-binary: M2-Planet | results
+	test/test12/hello-aarch64.sh
+
+test13-aarch64-binary: M2-Planet | results
+	test/test13/hello-aarch64.sh
+
+test14-aarch64-binary: M2-Planet | results
+	test/test14/hello-aarch64.sh
+
+test15-aarch64-binary: M2-Planet | results
+	test/test15/hello-aarch64.sh
+
+test16-aarch64-binary: M2-Planet | results
+	test/test16/hello-aarch64.sh
+
+test17-aarch64-binary: M2-Planet | results
+	test/test17/hello-aarch64.sh
+
+test18-aarch64-binary: M2-Planet | results
+	test/test18/hello-aarch64.sh
+
+test19-aarch64-binary: M2-Planet | results
+	test/test19/hello-aarch64.sh
+
+test20-aarch64-binary: M2-Planet | results
+	test/test20/hello-aarch64.sh
+
+test21-aarch64-binary: M2-Planet | results
+	test/test21/hello-aarch64.sh
+
+test22-aarch64-binary: M2-Planet | results
+	test/test22/hello-aarch64.sh
+
+test23-aarch64-binary: M2-Planet | results
+	test/test23/hello-aarch64.sh
+
+test24-aarch64-binary: M2-Planet | results
+	test/test24/hello-aarch64.sh
+
+test25-aarch64-binary: M2-Planet | results
+	test/test25/hello-aarch64.sh
+
+test26-aarch64-binary: M2-Planet | results
+	test/test26/hello-aarch64.sh
+
+test99-aarch64-binary: M2-Planet | results
+	test/test99/hello-aarch64.sh
+
+test100-aarch64-binary: M2-Planet | results
+	test/test100/hello-aarch64.sh
 
 test00-amd64-binary: M2-Planet | results
 	test/test00/hello-amd64.sh
