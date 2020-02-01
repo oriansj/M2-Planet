@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.5 - 2020-02-01
+** Added
 Added support for \a and \b
 Added support for long
 Added support for size_t
