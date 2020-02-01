@@ -1070,6 +1070,7 @@ void expression()
 			else if(X86 == Architecture) store = "STORE_INTEGER\n";
 			else if(AMD64 == Architecture) store = "STORE_INTEGER\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
 		}
 		else
 		{
@@ -1077,6 +1078,7 @@ void expression()
 			else if(X86 == Architecture) store = "STORE_CHAR\n";
 			else if(AMD64 == Architecture) store = "STORE_CHAR\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
 		}
 
 		common_recursion(expression);
