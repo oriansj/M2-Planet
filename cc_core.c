@@ -1,5 +1,6 @@
 /* Copyright (C) 2016 Jeremiah Orians
  * Copyright (C) 2018 Jan (janneke) Nieuwenhuizen <janneke@gnu.org>
+ * Copyright (C) 2020 deesix <deesix@tuta.io>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -506,6 +507,7 @@ void common_recursion(FUNCTION f)
 	else if(X86 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
 	else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_common_recursion\n");
+	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_common_recursion\n");
 
 	struct type* last_type = current_target;
 	global_token = global_token->next;
@@ -517,6 +519,7 @@ void common_recursion(FUNCTION f)
 	else if(X86 == Architecture) emit_out("POP_ebx\t# _common_recursion\n");
 	else if(AMD64 == Architecture) emit_out("POP_RBX\t# _common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _common_recursion\n");
+	else if(AARCH64 == Architecture) emit_out("POP_X1\t# _common_recursion\n");
 }
 
 void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
