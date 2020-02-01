@@ -1173,9 +1173,11 @@ void process_if()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
+	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
 
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
@@ -1185,9 +1187,11 @@ void process_if()
 	else if(X86 == Architecture) emit_out("JUMP %_END_IF_");
 	else if(AMD64 == Architecture) emit_out("JUMP %_END_IF_");
 	else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
 
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	emit_out(":ELSE_");
 	uniqueID_out(function->s, number_string);
@@ -1239,15 +1243,19 @@ void process_for()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
+	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_THEN_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_THEN_");
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_THEN_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_THEN_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	emit_out(":FOR_ITER_");
 	uniqueID_out(function->s, number_string);
@@ -1259,8 +1267,10 @@ void process_for()
 	else if(X86 == Architecture) emit_out("JUMP %FOR_");
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	emit_out(":FOR_THEN_");
 	uniqueID_out(function->s, number_string);
@@ -1273,8 +1283,10 @@ void process_for()
 	else if(X86 == Architecture) emit_out("JUMP %FOR_ITER_");
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_ITER_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_ITER_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	emit_out(":FOR_END_");
 	uniqueID_out(function->s, number_string);
@@ -1335,8 +1347,10 @@ void process_do()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
+	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 
 	emit_out(":DO_END_");
 	uniqueID_out(function->s, number_string);
@@ -1375,8 +1389,10 @@ void process_while()
 	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
+	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	emit_out("# THEN_while_");
 	uniqueID_out(function->s, number_string);
 
@@ -1388,8 +1404,10 @@ void process_while()
 	else if(X86 == Architecture) emit_out("JUMP %WHILE_");
 	else if(AMD64 == Architecture) emit_out("JUMP %WHILE_");
 	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&WHILE_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	emit_out(":END_WHILE_");
 	uniqueID_out(function->s, number_string);
 
@@ -1441,6 +1459,7 @@ void process_break()
 		else if(X86 == Architecture) emit_out("POP_ebx\t# break_cleanup_locals\n");
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# break_cleanup_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# break_cleanup_locals\n");
+		else if(AARCH64 == Architecture) emit_out("POP_X1\t# break_cleanup_locals\n");
 		i = i->next;
 	}
 	global_token = global_token->next;
@@ -1449,12 +1468,14 @@ void process_break()
 	else if(X86 == Architecture) emit_out("JUMP %");
 	else if(AMD64 == Architecture) emit_out("JUMP %");
 	else if(ARMV7L == Architecture) emit_out("^~");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
 
 	emit_out(break_target_head);
 	emit_out(break_target_func);
 	emit_out("_");
 	emit_out(break_target_num);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
 	emit_out("\n");
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
