@@ -144,6 +144,13 @@ void function_call(char* s, int bool)
 		emit_out("{BP} PUSH_ALWAYS\t# Protect the old base pointer\n");
 		emit_out("'0' SP R11 NO_SHIFT MOVE_ALWAYS\t# Copy new base pointer\n");
 	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("PUSH_X16\t# Protect a tmp register we're going to use\n");
+		emit_out("PUSH_LR\t# Protect the old return pointer (link)\n");
+		emit_out("PUSH_BP\t# Protect the old base pointer\n");
+		emit_out("SET_X16_FROM_SP\t# The base pointer to-be\n");
+	}
 
 	if(global_token->s[0] != ')')
 	{
@@ -153,6 +160,7 @@ void function_call(char* s, int bool)
 		else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
 		else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_process_expression1\n");
 		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
+		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression1\n");
 		passed = 1;
 
 		while(global_token->s[0] == ',')
@@ -164,6 +172,7 @@ void function_call(char* s, int bool)
 			else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
 			else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_process_expression2\n");
 			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression2\n");
+			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression2\n");
 			passed = passed + 1;
 		}
 	}
@@ -206,6 +215,17 @@ void function_call(char* s, int bool)
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
 		}
+		else if(AARCH64 == Architecture)
+		{
+			emit_out("SET_X0_FROM_BP\n");
+			emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
+			emit_out(s);
+			emit_out("\nSUB_X0_X0_X1\n");
+			emit_out("DEREF_X0\n");
+			emit_out("SET_BP_FROM_X16\n");
+			emit_out("SET_X16_FROM_X0\n");
+			emit_out("BLR_X16\n");
+		}
 	}
 	else
 	{
@@ -239,6 +259,14 @@ void function_call(char* s, int bool)
 			emit_out(" CALL_ALWAYS\n");
 			emit_out("{LR} POP_ALWAYS\t# Restore the old link register\n");
 		}
+		else if(AARCH64 == Architecture)
+		{
+			emit_out("SET_BP_FROM_X16\n");
+			emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
+			emit_out(s);
+			emit_out("\n");
+			emit_out("BLR_X16\n");
+		}
 	}
 
 	for(; passed > 0; passed = passed - 1)
@@ -247,6 +275,7 @@ void function_call(char* s, int bool)
 		else if(X86 == Architecture) emit_out("POP_ebx\t# _process_expression_locals\n");
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# _process_expression_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _process_expression_locals\n");
+		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _process_expression_locals\n");
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
@@ -268,6 +297,12 @@ void function_call(char* s, int bool)
 	{
 		emit_out("{BP} POP_ALWAYS\t# Restore old base pointer\n");
 		emit_out("{R11} POP_ALWAYS\t# Prevent overwrite\n");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("POP_BP\t# Restore the old base pointer\n");
+		emit_out("POP_LR\t# Restore the old return pointer (link)\n");
+		emit_out("POP_X16\t# Restore a register we used as tmp\n");
 	}
 }
 
@@ -1004,6 +1039,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = -20;
 		else if(AMD64 == Architecture) a->depth = -40;
 		else if(ARMV7L == Architecture) a->depth = 16;
+		else if(AARCH64 == Architecture) a->depth = 64; /* argc, argv, envp and the local (16 bytes each) */
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
@@ -1011,6 +1047,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = -8;
 		else if(AMD64 == Architecture) a->depth = -16;
 		else if(ARMV7L == Architecture) a->depth = 8;
+		else if(AARCH64 == Architecture) a->depth = 16;
 	}
 	else if(NULL == function->locals)
 	{
@@ -1018,6 +1055,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
 		else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
 		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
+		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + 16;
 	}
 	else
 	{
@@ -1025,6 +1063,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
+		else if(AARCH64 == Architecture) a->depth = function->locals->depth + 16;
 	}
 
 	function->locals = a;
@@ -1049,6 +1088,7 @@ void collect_local()
 	else if(X86 == Architecture) emit_out("PUSH_eax\t#");
 	else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
+	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
 	emit_out(a->s);
 	emit_out("\n");
 }
@@ -1314,12 +1354,14 @@ void return_result()
 		else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# _return_result_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
+		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _return_result_locals\n");
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("RETURN\n");
 	else if(AMD64 == Architecture) emit_out("RETURN\n");
 	else if(ARMV7L == Architecture) emit_out("'1' LR RETURN\n");
+	else if(AARCH64 == Architecture) emit_out("RETURN\n");
 }
 
 void process_break()
@@ -1503,6 +1545,7 @@ void collect_arguments()
 				else if(X86 == Architecture) a->depth = -4;
 				else if(AMD64 == Architecture) a->depth = -8;
 				else if(ARMV7L == Architecture) a->depth = 4;
+				else if(AARCH64 == Architecture) a->depth = 16;
 			}
 			else
 			{
@@ -1510,6 +1553,7 @@ void collect_arguments()
 				else if(X86 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
+				else if(AARCH64 == Architecture) a->depth = function->arguments->depth + 16;
 			}
 
 			global_token = global_token->next;
@@ -1561,6 +1605,7 @@ void declare_function()
 		else if((X86 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 		else if((AMD64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
+		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 	}
 }
 
