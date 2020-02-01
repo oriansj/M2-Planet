@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2020 deesix <deesix@tuta.io>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -77,11 +78,12 @@ int main(int argc, char** argv)
 			else if(match("x86", arch)) Architecture = X86;
 			else if(match("amd64", arch)) Architecture = AMD64;
 			else if(match("armv7l", arch)) Architecture = ARMV7L;
+			else if(match("aarch64", arch)) Architecture = AARCH64;
 			else
 			{
 				file_print("Unknown architecture: ", stderr);
 				file_print(arch, stderr);
-				file_print(" know values are: knight-native, knight-posix, x86, amd64 and armv7l", stderr);
+				file_print(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;

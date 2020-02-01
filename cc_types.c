@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2020 deesix <deesix@tuta.io>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -26,7 +27,7 @@ void require(int bool, char* error);
 /* Initialize default types */
 void initialize_types()
 {
-	if(AMD64 == Architecture) register_size = 8;
+	if(AMD64 == Architecture || AARCH64 == Architecture) register_size = 8;
 	else register_size = 4;
 
 	/* Define void */
