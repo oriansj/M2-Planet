@@ -20,6 +20,8 @@
 // CONSTANT stderr 0
 // CONSTANT EOF 0xFFFFFFFF
 
+int match(char* a, char* b);
+
 int fgetc(FILE* f)
 {
 	asm("LOAD R1 R14 0"
@@ -31,4 +33,52 @@ void fputc(char s, FILE* f)
 	asm("LOAD R0 R14 0"
 	    "LOAD R1 R14 4"
 	    "FPUTC");
+}
+
+FILE* open_read(int filename)
+{
+	asm("LOAD R0 R14 0"
+	    "FOPEN_READ");
+}
+
+FILE* open_write(int filename)
+{
+	asm("LOAD R0 R14 0"
+	    "FOPEN_WRITE");
+}
+
+int fclose(FILE* stream)
+{
+	asm("LOAD R0 R14 0"
+	    "FCLOSE");
+}
+
+FILE* fopen(char* filename, char* mode)
+{
+	FILE* f;
+	int fd = 0;
+	if(match(filename, "STDIN") || match(filename, "tape_01"))
+	{
+		fd = 0x1100;
+	}
+	else if(match(filename, "STDOUT") || match(filename, "tape_02"))
+	{
+		fd = 0x1101;
+	}
+
+	if('w' == mode[0])
+	{ /* 577 is O_WRONLY|O_CREAT|O_TRUNC, 384 is 600 in octal */
+		f = open_write(fd);
+	}
+	else
+	{ /* Everything else is a read */
+		f = open_read(fd);
+	}
+
+	/* Negative numbers are error codes */
+	if(0 > f)
+	{
+		return 0;
+	}
+	return f;
 }

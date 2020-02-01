@@ -208,14 +208,7 @@ void function_call(char* s, int bool)
 	}
 	else
 	{
-		if(KNIGHT_NATIVE == Architecture)
-		{
-			emit_out("MOVE R14 R13\n");
-			emit_out("CALLI R15 @FUNCTION_");
-			emit_out(s);
-			emit_out("\n");
-		}
-		else if(KNIGHT_POSIX == Architecture)
+		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
 			emit_out("MOVE R14 R13\n");
 			emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
@@ -324,8 +317,7 @@ void function_load(struct token_list* a)
 		return;
 	}
 
-	if (KNIGHT_NATIVE == Architecture) emit_out("LOADUI R0 $FUNCTION_");
-	else if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
+	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &FUNCTION_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
@@ -336,8 +328,7 @@ void function_load(struct token_list* a)
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	if(KNIGHT_NATIVE == Architecture) emit_out("LOADUI R0 $GLOBAL_");
-	else if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
+	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &GLOBAL_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
@@ -378,8 +369,7 @@ void primary_expr_string()
 {
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
-	if (KNIGHT_NATIVE == Architecture) emit_out("LOADUI R0 $STRING_");
-	else if(KNIGHT_POSIX == Architecture) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
+	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &STRING_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
@@ -411,7 +401,7 @@ void primary_expr_number()
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
 		int size = numerate_string(global_token->s);
-		if((32768 > size) && (size > -32768))
+		if((32767 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");
 			emit_out(global_token->s);

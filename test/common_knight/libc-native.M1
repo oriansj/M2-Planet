@@ -16,9 +16,21 @@
 
 :_start
 	LOADR32 R12 @HEAP           ; Setup HEAP pointer
-	LOADUI R15 $STACK           ; Setup initial stack pointer
-	COPY R14 R15                ; Setup initial base pointer
-	CALLI R15 @FUNCTION_main    ; Go to main
+
+	; Setup initial stack pointer
+	LOADR R15 4
+	JUMP 4
+	&STACK
+
+	; Setup initial base pointer
+	COPY R14 R15
+	
+	; Perform the main loop
+	LOADR R0 4
+	JUMP 4
+	&FUNCTION_main
+	CALL R0 R15
+
 	HALT                        ; Exit to kernel
 
 	;; Our default heap pointer

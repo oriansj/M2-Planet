@@ -46,7 +46,7 @@ then
 	[ "$out" = "test/test99/cc1: OK" ] || exit 5
 
 	# Make it executable
-	exec_enable test/test99/cc1
+	chmod u+x test/test99/cc1
 
 	# Verify that the result of it compiling itself can compile itself
 	./test/test99/cc1 < test/test99/cc500.c >| test/test99/cc2 || exit 6

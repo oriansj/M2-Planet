@@ -20,6 +20,7 @@ set -ex
 bin/M2-Planet --architecture knight-native -f test/common_knight/functions/file-native.c \
 	-f test/common_knight/functions/malloc.c \
 	-f functions/calloc.c \
+	-f functions/match.c \
 	-f test/test18/math.c \
 	-o test/test18/math.M1 || exit 1
 
