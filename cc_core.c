@@ -1498,7 +1498,8 @@ void recursive_statement()
 	if(((X86 == Architecture) && !match("RETURN\n", output_list->s)) ||
 	   ((AMD64 == Architecture) && !match("RETURN\n", output_list->s)) ||
 	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
-	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)))
+	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) ||
+	   ((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)))
 	{
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
@@ -1507,6 +1508,7 @@ void recursive_statement()
 			else if(X86 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
 			else if(AMD64 == Architecture) emit_out("POP_RBX\t# _recursive_statement_locals\n");
 			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
+			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _recursive_statement_locals\n");
 		}
 	}
 	function->locals = frame;
@@ -1576,8 +1578,10 @@ void statement()
 		else if(X86 == Architecture) emit_out("JUMP %");
 		else if(AMD64 == Architecture) emit_out("JUMP %");
 		else if(ARMV7L == Architecture) emit_out("^~");
+		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
 		emit_out(global_token->s);
 		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
+		else if(AARCH64 == Architecture) emit_out("\nBR_X16");
 		emit_out("\n");
 		global_token = global_token->next;
 		require_match("ERROR in statement\nMissing ;\n", ";");
