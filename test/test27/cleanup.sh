@@ -15,5 +15,6 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 rm -f test/test27/chdir.M1
+rm -f test/test27/chdir-footer.M1
 rm -f test/test27/chdir.hex2
 exit 0

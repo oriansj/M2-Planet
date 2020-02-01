@@ -353,6 +353,9 @@ test25-aarch64-binary: M2-Planet | results
 test26-aarch64-binary: M2-Planet | results
 	test/test26/hello-aarch64.sh
 
+test27-aarch64-binary: M2-Planet | results
+	test/test27/hello-aarch64.sh
+
 test99-aarch64-binary: M2-Planet | results
 	test/test99/hello-aarch64.sh
 
