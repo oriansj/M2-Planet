@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2020 deesix <deesix@tuta.io>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -36,6 +37,8 @@
 #define AMD64 3
 // CONSTANT ARMV7L 4
 #define ARMV7L 4
+// CONSTANT AARCH64 5
+#define AARCH64 5
 
 
 char* copy_string(char* target, char* source);
