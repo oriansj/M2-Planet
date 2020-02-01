@@ -29,10 +29,14 @@ Added a manpage for M2-Planet
 Added support for nested structs thanks to fosslinux
 Added support for access, chdir and fchdir primitives
 Added AArch64 target (mescc-tools 0.7.0 required), all tests passing but rough on the edges
+Added require support to reduce number of segfaults possible
+Added first pass error checking in primitives
+Added first knight-native cc-minimal.c
 
 ** Changed
 Reordered types to prefer longs over unsigned over ints or chars
 Replaced NOP with NULL to better match what it is really ment.
+Enabled large binary support in knight-native
 
 ** Fixed
 Typo: Recieved -> Received
@@ -41,10 +45,15 @@ Corrected AMD64's xchg rax, rbx into it's proper encoding
 A great deal of typos thanks to Andrius Štikonas
 Regression in numerate_number
 Segfault found in build_member when passed a non-number
+Segfault found in tokenizer
+Segfault in string hexifier
+Enabled skipped cleanup scripts
+Unbalanced { segfaults
 
 ** Removed
 Removed bootstrap process as it belongs in mescc-tools-seed instead.
 Removed need for fixup_int32
+Removed unneeded lines in .gitignore
 
 * 1.4 - 2019-06-23
 ** Added

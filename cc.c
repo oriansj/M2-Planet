@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
-			file_print("M2-Planet v1.3.0\n", stderr);
+			file_print("M2-Planet v1.5.0\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else
