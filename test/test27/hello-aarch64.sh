@@ -49,7 +49,7 @@ hex2 -f test/common_aarch64/ELF-aarch64-debug.hex2 \
 	-f test/test27/chdir.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
-	--BaseAddress 0x40000 \
+	--BaseAddress 0x400000 \
 	-o test/results/test27-aarch64-binary \
 	--exec_enable || exit 4
 
