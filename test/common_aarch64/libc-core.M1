@@ -15,6 +15,7 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 :_start
+	INIT_SP
 	LDR_X0_[SP]
 	ADD_X1_SP_8
 	SET_BP_FROM_SP

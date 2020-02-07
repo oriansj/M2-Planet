@@ -273,12 +273,16 @@ tmp, oLR and oBP again) leaving everything as it was before this
 journey. Well... one important thing changed: following M2-Planet
 conventions the value returned from the function, if any, is on X0.
 
-*** Wasted stack space
+*** Stack pointer
 
-Due to alignment (128 bits) restriction for "push" and "pop" we waste
-half of the stack space in the running generated binaries, as the
-values are only 64 bits. Using another register as stack pointer would
-work around the architectural restriction but this solution is not
-implemented yet. Adjustment to several definitions and functions is
-required, to reflect the new "depth" of the elements and the change of
-register.
+Due to alignment (128 bits) restriction for "push" and "pop" based on
+the architectural register, we initialize and use X18 as stack pointer
+instead.
+
+The M1 definitions referring to SP use X18; stack operations too.
+
+For example:
+
+DEFINE LDR_X0_[SP] 400240f9 is ldr x0, [x18]
+DEFINE PUSH_LR 5e8e1ff8 is str x30, [x18, #-8]!
+DEFINE INIT_SP f2030091 is mov x18, sp

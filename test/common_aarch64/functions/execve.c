@@ -26,11 +26,11 @@ int waitpid(int pid, int* status_ptr, int options)
 {
 	asm("SET_X0_TO_MINUS_1"
 	    "SET_X3_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_48" "DEREF_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_24" "DEREF_X0"
 	    "SET_X2_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_32" "DEREF_X0"
-	    "SET_X1_FROM_X0"
 	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	    "SET_X1_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X8_TO_SYS_WAIT4"
 	    "SYSCALL");
 }
@@ -38,11 +38,11 @@ int waitpid(int pid, int* status_ptr, int options)
 int execve(char* file_name, char** argv, char** envp)
 {
 	asm(
-	    "SET_X0_FROM_BP" "SUB_X0_48" "DEREF_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_24" "DEREF_X0"
 	    "SET_X2_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_32" "DEREF_X0"
-	    "SET_X1_FROM_X0"
 	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	    "SET_X1_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X8_TO_SYS_EXECVE"
 	    "SYSCALL");
 }

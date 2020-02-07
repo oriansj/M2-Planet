@@ -43,9 +43,9 @@
 
 int chmod(char *pathname, int mode)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_32" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
 	    "SET_X2_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X1_FROM_X0"
 	    "SET_X0_TO_0"
 	    "SET_X3_FROM_X0"

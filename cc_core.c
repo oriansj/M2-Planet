@@ -1100,7 +1100,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = -20;
 		else if(AMD64 == Architecture) a->depth = -40;
 		else if(ARMV7L == Architecture) a->depth = 16;
-		else if(AARCH64 == Architecture) a->depth = 64; /* argc, argv, envp and the local (16 bytes each) */
+		else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
@@ -1108,7 +1108,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = -8;
 		else if(AMD64 == Architecture) a->depth = -16;
 		else if(ARMV7L == Architecture) a->depth = 8;
-		else if(AARCH64 == Architecture) a->depth = 16;
+		else if(AARCH64 == Architecture) a->depth = register_size;
 	}
 	else if(NULL == function->locals)
 	{
@@ -1116,7 +1116,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
 		else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
 		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
-		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + 16;
+		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
 	}
 	else
 	{
@@ -1124,7 +1124,7 @@ void collect_local()
 		else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
-		else if(AARCH64 == Architecture) a->depth = function->locals->depth + 16;
+		else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
 	}
 
 	function->locals = a;
@@ -1631,7 +1631,7 @@ void collect_arguments()
 				else if(X86 == Architecture) a->depth = -4;
 				else if(AMD64 == Architecture) a->depth = -8;
 				else if(ARMV7L == Architecture) a->depth = 4;
-				else if(AARCH64 == Architecture) a->depth = 16;
+				else if(AARCH64 == Architecture) a->depth = register_size;
 			}
 			else
 			{
@@ -1639,7 +1639,7 @@ void collect_arguments()
 				else if(X86 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
-				else if(AARCH64 == Architecture) a->depth = function->arguments->depth + 16;
+				else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
 			}
 
 			global_token = global_token->next;

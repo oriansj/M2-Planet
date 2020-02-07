@@ -21,6 +21,7 @@ Added test for chdir and getcwd family of posix primitives
 ** Changed
 
 ** Fixed
+AArch64 wasteful stack
 
 ** Removed
 

@@ -23,7 +23,7 @@
 
 int fgetc(FILE* f)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "PUSH_X0"
 	    "SET_X1_FROM_SP"
 	    "SET_X2_TO_1"
@@ -39,9 +39,9 @@ int fgetc(FILE* f)
 
 void fputc(char s, FILE* f)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16"
+	asm("SET_X0_FROM_BP" "SUB_X0_8"
 	    "SET_X1_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_32" "DEREF_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
 	    "SET_X2_TO_1"
 	    "SET_X8_TO_SYS_WRITE"
 	    "SYSCALL");
@@ -61,11 +61,11 @@ void fputc(char s, FILE* f)
 
 FILE* open(char* name, int flag, int mode)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_48" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_24" "DEREF_X0"
 	    "SET_X3_FROM_X0"
-	    "SET_X0_FROM_BP" "SUB_X0_32" "DEREF_X0"
-	    "SET_X2_FROM_X0"
 	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	    "SET_X2_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X1_FROM_X0"
 	    "SET_X0_TO_FCNTL_H_AT_FDCWD"
 	    "SET_X8_TO_SYS_OPENAT"
@@ -93,7 +93,7 @@ FILE* fopen(char* filename, char* mode)
 
 int close(int fd)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X8_TO_SYS_CLOSE"
 	    "SYSCALL");
 }

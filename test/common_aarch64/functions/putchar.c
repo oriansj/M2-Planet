@@ -17,7 +17,7 @@
 
 void putchar(int c)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16"
+	asm("SET_X0_FROM_BP" "SUB_X0_8"
 	    "SET_X1_FROM_X0"
 	    "SET_X0_TO_1"
 	    "SET_X2_TO_1"

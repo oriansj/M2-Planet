@@ -17,14 +17,14 @@
 
 int chdir(char* path)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X8_TO_SYS_CHDIR"
 	    "SYSCALL");
 }
 
 int fchdir(int fd)
 {
-	asm("SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	asm("SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
 	    "SET_X8_TO_SYS_FCHDIR"
 	    "SYSCALL");
 }
