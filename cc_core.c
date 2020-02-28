@@ -34,6 +34,7 @@ struct type* current_target;
 char* break_target_head;
 char* break_target_func;
 char* break_target_num;
+char* continue_target_head;
 struct token_list* break_frame;
 int current_count;
 int Address_of;
@@ -1213,11 +1214,13 @@ void process_for()
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
+	char* nested_continue_head = continue_target_head;
 
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
 	break_target_head = "FOR_END_";
+	continue_target_head = "FOR_ITER_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
@@ -1294,6 +1297,7 @@ void process_for()
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
+	continue_target_head = nested_continue_head;
 	break_frame = nested_locals;
 }
 
@@ -1320,11 +1324,13 @@ void process_do()
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
+	char* nested_continue_head = continue_target_head;
 
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
 	break_target_head = "DO_END_";
+	continue_target_head = "DO_TEST_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
@@ -1336,6 +1342,9 @@ void process_do()
 	require(NULL != global_token, "Recieved EOF where do statement is expected\n");
 	statement();
 	require(NULL != global_token, "Reached EOF inside of function\n");
+
+	emit_out(":DO_TEST_");
+	uniqueID_out(function->s, number_string);
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
@@ -1359,6 +1368,7 @@ void process_do()
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
+	continue_target_head = nested_continue_head;
 }
 
 
@@ -1369,11 +1379,13 @@ void process_while()
 	char* nested_break_head = break_target_head;
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
+	char* nested_continue_head = continue_target_head;
 
 	char* number_string = numerate_number(current_count);
 	current_count = current_count + 1;
 
 	break_target_head = "END_WHILE_";
+	continue_target_head = "WHILE_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
@@ -1414,6 +1426,7 @@ void process_while()
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
 	break_target_num = nested_break_num;
+	continue_target_head = nested_continue_head;
 	break_frame = nested_locals;
 }
 
@@ -1448,7 +1461,7 @@ void process_break()
 	if(NULL == break_target_head)
 	{
 		line_error();
-		file_print("Not inside of a loop or case statement", stderr);
+		file_print("Not inside of a loop or case statement\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	struct token_list* i = function->locals;
@@ -1478,6 +1491,32 @@ void process_break()
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
 	emit_out("\n");
 	require_match("ERROR in break statement\nMissing ;\n", ";");
+}
+
+void process_contine()
+{
+	if(NULL == continue_target_head)
+	{
+		line_error();
+		file_print("Not inside of a loop\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	global_token = global_token->next;
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
+	else if(X86 == Architecture) emit_out("JUMP %");
+	else if(AMD64 == Architecture) emit_out("JUMP %");
+	else if(ARMV7L == Architecture) emit_out("^~");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
+
+	emit_out(continue_target_head);
+	emit_out(break_target_func);
+	emit_out("_");
+	emit_out(break_target_num);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
+	emit_out("\n");
+	require_match("ERROR in continue statement\nMissing ;\n", ";");
 }
 
 void recursive_statement()
@@ -1596,9 +1635,7 @@ void statement()
 	}
 	else if(match("continue", global_token->s))
 	{
-		global_token = global_token->next;
-		emit_out("\n#continue statement\n");
-		require_match("ERROR in statement\nMissing ;\n", ";");
+		process_contine();
 	}
 	else
 	{

@@ -87,6 +87,7 @@ clean:
 	./test/test0019/cleanup.sh
 	./test/test0020/cleanup.sh
 	./test/test0021/cleanup.sh
+	./test/test0022/cleanup.sh
 	./test/test0100/cleanup.sh
 	./test/test0101/cleanup.sh
 	./test/test0102/cleanup.sh
@@ -126,6 +127,7 @@ test: test0000-aarch64-binary \
 	test0019-aarch64-binary \
 	test0020-aarch64-binary \
 	test0021-aarch64-binary \
+	test0022-aarch64-binary \
 	test0100-aarch64-binary \
 	test0101-aarch64-binary \
 	test0102-aarch64-binary \
@@ -156,6 +158,7 @@ test: test0000-aarch64-binary \
 	test0019-amd64-binary \
 	test0020-amd64-binary \
 	test0021-amd64-binary \
+	test0022-amd64-binary \
 	test0100-amd64-binary \
 	test0101-amd64-binary \
 	test0102-amd64-binary \
@@ -186,6 +189,7 @@ test: test0000-aarch64-binary \
 	test0019-knight-posix-binary \
 	test0020-knight-posix-binary \
 	test0021-knight-posix-binary \
+	test0022-knight-posix-binary \
 	test0100-knight-posix-binary \
 	test0101-knight-posix-binary \
 	test0102-knight-posix-binary \
@@ -232,6 +236,7 @@ test: test0000-aarch64-binary \
 	test0019-armv7l-binary \
 	test0020-armv7l-binary \
 	test0021-armv7l-binary \
+	test0022-armv7l-binary \
 	test0100-armv7l-binary \
 	test0101-armv7l-binary \
 	test0102-armv7l-binary \
@@ -262,6 +267,7 @@ test: test0000-aarch64-binary \
 	test0019-x86-binary \
 	test0020-x86-binary \
 	test0021-x86-binary \
+	test0022-x86-binary \
 	test0100-x86-binary \
 	test0101-x86-binary \
 	test0102-x86-binary \
@@ -337,6 +343,9 @@ test0020-aarch64-binary: M2-Planet | results
 
 test0021-aarch64-binary: M2-Planet | results
 	test/test0021/hello-aarch64.sh
+
+test0022-aarch64-binary: M2-Planet | results
+	test/test0022/hello-aarch64.sh
 
 test0100-aarch64-binary: M2-Planet | results
 	test/test0100/hello-aarch64.sh
@@ -428,6 +437,9 @@ test0020-amd64-binary: M2-Planet | results
 test0021-amd64-binary: M2-Planet | results
 	test/test0021/hello-amd64.sh
 
+test0022-amd64-binary: M2-Planet | results
+	test/test0022/hello-amd64.sh
+
 test0100-amd64-binary: M2-Planet | results
 	test/test0100/hello-amd64.sh
 
@@ -517,6 +529,9 @@ test0020-knight-posix-binary: M2-Planet | results
 
 test0021-knight-posix-binary: M2-Planet | results
 	test/test0021/hello-knight-posix.sh
+
+test0022-knight-posix-binary: M2-Planet | results
+	test/test0022/hello-knight-posix.sh
 
 test0100-knight-posix-binary: M2-Planet | results
 	test/test0100/hello-knight-posix.sh
@@ -656,6 +671,9 @@ test0020-armv7l-binary: M2-Planet | results
 test0021-armv7l-binary: M2-Planet | results
 	test/test0021/hello-armv7l.sh
 
+test0022-armv7l-binary: M2-Planet | results
+	test/test0022/hello-armv7l.sh
+
 test0100-armv7l-binary: M2-Planet | results
 	test/test0100/hello-armv7l.sh
 
@@ -745,6 +763,9 @@ test0020-x86-binary: M2-Planet | results
 
 test0021-x86-binary: M2-Planet | results
 	test/test0021/hello-x86.sh
+
+test0022-x86-binary: M2-Planet | results
+	test/test0022/hello-x86.sh
 
 test0100-x86-binary: M2-Planet | results
 	test/test0100/hello-x86.sh
