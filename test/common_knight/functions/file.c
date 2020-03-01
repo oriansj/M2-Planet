@@ -79,3 +79,8 @@ int fclose(FILE* stream)
 	asm("LOAD R0 R14 0"
 	    "FCLOSE");
 }
+
+int fflush(FILE *stream){
+	/* We don't buffer, nothing to flush */
+	return 0;
+}

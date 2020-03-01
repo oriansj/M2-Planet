@@ -17,6 +17,7 @@
 * Current
 ** Added
 Added test for chdir and getcwd family of posix primitives
+Added fflush stub, for code to match our behavior when compiled with GCC (we don't buffer)
 
 ** Changed
 

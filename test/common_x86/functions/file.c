@@ -101,3 +101,8 @@ int fclose(FILE* stream)
 	int error = close(stream);
 	return error;
 }
+
+int fflush(FILE *stream){
+	/* We don't buffer, nothing to flush */
+	return 0;
+}
