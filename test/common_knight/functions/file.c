@@ -33,17 +33,20 @@ void fputc(char s, FILE* f)
 	    "FPUTC");
 }
 
-/* Important values needed for open
- * O_RDONLY => 0
- * O_WRONLY => 1
- * O_RDWR => 2
- * O_CREAT => 64
- * O_TRUNC => 512
- * S_IRWXU => 00700
- * S_IXUSR => 00100
- * S_IWUSR => 00200
- * S_IRUSR => 00400
- */
+/* Important values needed for open */
+// CONSTANT O_RDONLY 0
+// CONSTANT O_WRONLY 1
+// CONSTANT O_RDWR 2
+// CONSTANT O_CREAT 64
+// CONSTANT O_TRUNC 512
+/* 00700 in octal is 448*/
+// CONSTANT S_IRWXU 448
+/* 00100 in octal is 64 */
+// CONSTANT S_IXUSR 64
+/* 00200 in octal is 128 */
+// CONSTANT S_IWUSR 128
+/* 00400 in octal is 256 */
+// CONSTANT S_IRUSR 256
 
 FILE* open(char* filename, int flag, int mode)
 {
@@ -83,4 +86,22 @@ int fclose(FILE* stream)
 int fflush(FILE *stream){
 	/* We don't buffer, nothing to flush */
 	return 0;
+}
+
+// CONSTANT SEEK_SET 0
+// CONSTANT SEEK_CUR 1
+// CONSTANT SEEK_END 2
+
+int fseek(FILE* f, long offset, int whence)
+{
+	asm("LOAD R0 R14 0"
+	    "LOAD R1 R14 4"
+	    "LOAD R2 R14 8"
+	    "FSEEK"
+	    "FALSE R2");
+}
+
+void rewind(FILE* f)
+{
+	fseek(f, 0, SEEK_SET);
 }

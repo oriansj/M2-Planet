@@ -17,52 +17,43 @@
 
 set -x
 # Build the test
-./bin/M2-Planet --architecture amd64 -f test/common_amd64/functions/exit.c \
+bin/M2-Planet --architecture amd64 \
 	-f test/common_amd64/functions/file.c \
-	-f functions/file_print.c \
-	-f test/common_amd64/functions/malloc.c \
-	-f functions/calloc.c \
-	-f functions/match.c \
-	-f test/test0100/blood-elf.c \
+	-f test/test0023/fseek.c \
 	--debug \
-	-o test/test0100/blood-elf.M1 || exit 1
+	-o test/test0023/fseek.M1 || exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0100/blood-elf.M1 \
+blood-elf --64 -f test/test0023/fseek.M1 \
 	--entry _start \
-	-o test/test0100/blood-elf-footer.M1 || exit 2
+	-o test/test0023/fseek-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_amd64/amd64_defs.M1 \
 	-f test/common_amd64/libc-core.M1 \
-	-f test/test0100/blood-elf.M1 \
-	-f test/test0100/blood-elf-footer.M1 \
+	-f test/test0023/fseek.M1 \
+	-f test/test0023/fseek-footer.M1 \
 	--LittleEndian \
 	--architecture amd64 \
-	-o test/test0100/blood-elf.hex2 || exit 3
+	-o test/test0023/fseek.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_amd64/ELF-amd64-debug.hex2 \
-	 -f test/test0100/blood-elf.hex2 \
-	 --LittleEndian \
-	 --architecture amd64 \
-	 --BaseAddress 0x00600000 \
-	 -o test/results/test0100-amd64-binary \
-	 --exec_enable || exit 4
+	-f test/test0023/fseek.hex2 \
+	--LittleEndian \
+	--architecture amd64 \
+	--BaseAddress 0x00600000 \
+	-o test/results/test0023-amd64-binary \
+	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
 then
-	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0100-amd64-binary --version 2>&1 )
-	[ 0 = $? ] || exit 5
-	[ "$out" = "blood-elf 0.1
-(Basically Launches Odd Object Dump ExecutabLe Files" ] || exit 6
-
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0100-amd64-binary -f test/test0100/test.M1 -o test/test0100/proof || exit 7
-	out=$(sha256_check test/test0100/proof.answer)
-	[ "$out" = "test/test0100/proof: OK" ] || exit 8
+	./test/results/test0023-amd64-binary test/test0023/question >| test/test0023/proof
+	[ 0 = $? ] || exit 5
+	out=$(sha256_check test/test0023/proof.answer)
+	[ "$out" = "test/test0023/proof: OK" ] || exit 6
 fi
 exit 0

@@ -31,6 +31,7 @@ bin/M2-Planet --architecture x86 \
 
 # Build debug footer
 blood-elf -f test/test0022/continue.M1 \
+	--entry _start \
 	-o test/test0022/continue-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro

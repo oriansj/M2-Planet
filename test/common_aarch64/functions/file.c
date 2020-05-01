@@ -108,3 +108,25 @@ int fflush(FILE *stream){
 	/* We don't buffer, nothing to flush */
 	return 0;
 }
+
+// CONSTANT SEEK_SET 0
+// CONSTANT SEEK_CUR 1
+// CONSTANT SEEK_END 2
+
+int fseek(FILE* f, long offset, int whence)
+{
+	asm("SET_X0_TO_MINUS_1"
+	    "SET_X3_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_24" "DEREF_X0"
+	    "SET_X2_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_16" "DEREF_X0"
+	    "SET_X1_FROM_X0"
+	    "SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
+	    "SET_X8_TO_SYS_LSEEK"
+	    "SYSCALL");
+}
+
+void rewind(FILE* f)
+{
+	fseek(f, 0, SEEK_SET);
+}

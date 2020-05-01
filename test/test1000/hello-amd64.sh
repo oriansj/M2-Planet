@@ -40,6 +40,7 @@ set -ex
 
 # Build debug footer
 blood-elf --64 -f test/test1000/cc.M1 \
+	--entry _start \
 	-o test/test1000/cc-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro

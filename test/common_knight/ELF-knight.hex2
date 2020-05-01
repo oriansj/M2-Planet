@@ -15,11 +15,12 @@
 ### You should have received a copy of the GNU General Public License
 ### along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-### stage0's hex2 format for x86
+### stage0's hex2 format
 ###    !<label>          1 byte relative
 ###    $<label>          2 byte address
 ###    @<label>          2 byte relative
 ###    &<label>          4 byte address
 ###    %<label>          4 byte relative
-###    local_<label>     function-local
-###    string_<index>    string #<index>
+
+### if you wish to use this header, you need to add :ELF_end to the end of your
+### M1 or hex2 files.

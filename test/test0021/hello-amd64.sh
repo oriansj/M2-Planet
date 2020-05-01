@@ -33,6 +33,7 @@ bin/M2-Planet --architecture amd64 \
 
 # Build debug footer
 blood-elf --64 -f test/test0021/chdir.M1 \
+	--entry _start \
 	-o test/test0021/chdir-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro

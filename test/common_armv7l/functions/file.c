@@ -44,17 +44,20 @@ void fputc(char s, FILE* f)
 	    "SYSCALL_ALWAYS");
 }
 
-/* Important values needed for open
- * O_RDONLY => 0
- * O_WRONLY => 1
- * O_RDWR => 2
- * O_CREAT => 64
- * O_TRUNC => 512
- * S_IRWXU => 00700
- * S_IXUSR => 00100
- * S_IWUSR => 00200
- * S_IRUSR => 00400
- */
+/* Important values needed for open */
+// CONSTANT O_RDONLY 0
+// CONSTANT O_WRONLY 1
+// CONSTANT O_RDWR 2
+// CONSTANT O_CREAT 64
+// CONSTANT O_TRUNC 512
+/* 00700 in octal is 448*/
+// CONSTANT S_IRWXU 448
+/* 00100 in octal is 64 */
+// CONSTANT S_IXUSR 64
+/* 00200 in octal is 128 */
+// CONSTANT S_IWUSR 128
+/* 00400 in octal is 256 */
+// CONSTANT S_IRUSR 256
 
 FILE* open(char* name, int flag, int mode)
 {
@@ -103,4 +106,25 @@ int fclose(FILE* stream)
 int fflush(FILE *stream){
 	/* We don't buffer, nothing to flush */
 	return 0;
+}
+
+// CONSTANT SEEK_SET 0
+// CONSTANT SEEK_CUR 1
+// CONSTANT SEEK_END 2
+
+int fseek(FILE* f, long offset, int whence)
+{
+	asm("!19 R7 LOADI8_ALWAYS"
+	    "!12 R2 SUB R12 ARITH_ALWAYS"
+	    "!0 R2 LOAD32 R2 MEMORY"
+	    "!8 R1 SUB R12 ARITH_ALWAYS"
+	    "!0 R1 LOAD32 R1 MEMORY"
+	    "!4 R0 SUB R12 ARITH_ALWAYS"
+	    "!0 R0 LOAD32 R0 MEMORY"
+	    "SYSCALL_ALWAYS");
+}
+
+void rewind(FILE* f)
+{
+	fseek(f, 0, SEEK_SET);
 }

@@ -36,6 +36,7 @@ set -x
 
 # Build debug footer
 blood-elf -f test/test0105/lisp.M1 \
+	--entry _start \
 	-o test/test0105/lisp-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro

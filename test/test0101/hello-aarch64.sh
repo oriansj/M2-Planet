@@ -34,6 +34,7 @@ set -x
 
 # Build debug footer
 blood-elf --64 -f test/test0101/hex2_linker.M1 \
+	--entry _start \
 	-o test/test0101/hex2_linker-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro

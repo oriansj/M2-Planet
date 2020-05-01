@@ -1,6 +1,5 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2020 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -18,56 +17,43 @@
 
 set -x
 # Build the test
-./bin/M2-Planet --architecture aarch64 -f test/test0105/lisp.h \
-	-f test/common_aarch64/functions/malloc.c \
-	-f functions/calloc.c \
-	-f functions/in_set.c \
+bin/M2-Planet --architecture aarch64 \
 	-f test/common_aarch64/functions/file.c \
-	-f test/common_aarch64/functions/exit.c \
-	-f functions/numerate_number.c \
-	-f functions/match.c \
-	-f functions/file_print.c \
-	-f test/test0105/lisp.c \
-	-f test/test0105/lisp_cell.c \
-	-f test/test0105/lisp_eval.c \
-	-f test/test0105/lisp_print.c \
-	-f test/test0105/lisp_read.c \
+	-f test/test0023/fseek.c \
 	--debug \
-	-o test/test0105/lisp.M1 || exit 1
+	-o test/test0023/fseek.M1 || exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0105/lisp.M1 \
+blood-elf --64 -f test/test0023/fseek.M1 \
 	--entry _start \
-	-o test/test0105/lisp-footer.M1 || exit 2
+	-o test/test0023/fseek-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 -f test/common_aarch64/aarch64_defs.M1 \
 	-f test/common_aarch64/libc-core.M1 \
-	-f test/test0105/lisp.M1 \
-	-f test/test0105/lisp-footer.M1 \
+	-f test/test0023/fseek.M1 \
+	-f test/test0023/fseek-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0105/lisp.hex2 || exit 3
+	-o test/test0023/fseek.hex2 || exit 3
 
 # Resolve all linkages
 hex2 -f test/common_aarch64/ELF-aarch64-debug.hex2 \
-	-f test/test0105/lisp.hex2 \
+	-f test/test0023/fseek.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
-	-o test/results/test0105-aarch64-binary \
+	-o test/results/test0023-aarch64-binary \
 	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
 then
-	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0105-aarch64-binary --version 2>&1 )
-	[ 0 = $? ] || exit 5
-	[ "$out" = "Slow_Lisp 0.1" ] || exit 6
-
+	. ./sha256.sh
 	# Verify that the resulting file works
-	out=$(./test/results/test0105-aarch64-binary  --file test/test0105/test.scm)
-	[ "$out" = "42" ] || exit 7
+	./test/results/test0023-aarch64-binary test/test0023/question >| test/test0023/proof
+	[ 0 = $? ] || exit 5
+	out=$(sha256_check test/test0023/proof.answer)
+	[ "$out" = "test/test0023/proof: OK" ] || exit 6
 fi
 exit 0

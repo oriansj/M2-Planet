@@ -18,11 +18,18 @@
 ** Added
 Added test for chdir and getcwd family of posix primitives
 Added fflush stub, for code to match our behavior when compiled with GCC (we don't buffer)
+Added fseek and rewind functions
 
 ** Changed
+Updated kaem
+Revised 27 to include dwart stubs
+Restructured tests to enable future growth
+Reengineered M2-Planet to leverage blood-elf v1.0's output format
 
 ** Fixed
 AArch64 wasteful stack
+Fixed continue behavior
+Generate fully proper elf output
 
 ** Removed
 

@@ -17,49 +17,43 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture aarch64 \
-	-f test/common_aarch64/functions/malloc.c \
-	-f test/common_aarch64/functions/file.c \
-	-f test/common_aarch64/functions/exit.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/calloc.c \
-	-f functions/file_print.c \
-	-f test/test0022/continue.c \
+bin/M2-Planet --architecture armv7l \
+	-f test/common_armv7l/functions/file.c \
+	-f test/test0023/fseek.c \
 	--debug \
-	-o test/test0022/continue.M1 || exit 1
+	-o test/test0023/fseek.M1 || exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0022/continue.M1 \
+blood-elf -f test/test0023/fseek.M1 \
 	--entry _start \
-	-o test/test0022/continue-footer.M1 || exit 2
+	-o test/test0023/fseek-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_aarch64/aarch64_defs.M1 \
-	-f test/common_aarch64/libc-core.M1 \
-	-f test/test0022/continue.M1 \
-	-f test/test0022/continue-footer.M1 \
+M1 -f test/common_armv7l/armv7l_defs.M1 \
+	-f test/common_armv7l/libc-core.M1 \
+	-f test/test0023/fseek.M1 \
+	-f test/test0023/fseek-footer.M1 \
 	--LittleEndian \
-	--architecture aarch64 \
-	-o test/test0022/continue.hex2 || exit 3
+	--architecture armv7l \
+	-o test/test0023/fseek.hex2 || exit 3
 
 # Resolve all linkages
-hex2 -f test/common_aarch64/ELF-aarch64-debug.hex2 \
-	-f test/test0022/continue.hex2 \
+hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
+	-f test/test0023/fseek.hex2 \
 	--LittleEndian \
-	--architecture aarch64 \
-	--BaseAddress 0x400000 \
-	-o test/results/test0022-aarch64-binary \
+	--architecture armv7l \
+	--BaseAddress 0x10000 \
+	-o test/results/test0023-armv7l-binary \
 	--exec_enable || exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0022-aarch64-binary >| test/test0022/proof
+	./test/results/test0023-armv7l-binary test/test0023/question >| test/test0023/proof
 	[ 0 = $? ] || exit 5
-	out=$(sha256_check test/test0022/proof.answer)
-	[ "$out" = "test/test0022/proof: OK" ] || exit 6
+	out=$(sha256_check test/test0023/proof.answer)
+	[ "$out" = "test/test0023/proof: OK" ] || exit 6
 fi
 exit 0

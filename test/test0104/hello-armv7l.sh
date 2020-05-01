@@ -33,6 +33,7 @@ set -x
 
 # Build debug footer
 blood-elf -f test/test0104/kaem.M1 \
+	--entry _start \
 	-o test/test0104/kaem-footer.M1 || exit 2
 
 # Macro assemble with libc written in M1-Macro
