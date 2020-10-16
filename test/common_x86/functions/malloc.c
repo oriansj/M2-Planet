@@ -26,8 +26,8 @@ int brk(void *addr)
 	"INT_80");
 }
 
-SCM _malloc_ptr;
-SCM _brk_ptr;
+long _malloc_ptr;
+long _brk_ptr;
 
 void* malloc(int size)
 {
@@ -43,7 +43,7 @@ void* malloc(int size)
 		if(-1 == _brk_ptr) return 0;
 	}
 
-	SCM old_malloc = _malloc_ptr;
+	long old_malloc = _malloc_ptr;
 	_malloc_ptr = _malloc_ptr + size;
 	return old_malloc;
 }
