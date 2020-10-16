@@ -17,18 +17,31 @@
 
 // CONSTANT NULL 0
 
-void* malloc(int size)
+int brk(void *addr)
 {
 	asm("SET_X0_FROM_BP" "SUB_X0_8" "DEREF_X0"
-	    "SET_X1_FROM_X0"
-	    "SET_X0_TO_0" "SET_X8_TO_SYS_BRK" "SYSCALL"
-	    "PUSH_X0"
-	    "ADD_X0_X1_X0"
-	    "PUSH_X0"
-	    "SYSCALL"
-	    "POP_X1"
-	    /* TODO: Compare obtained with requested, as error checking. */
-	    "POP_X0"
-	    /* TODO: Override to return error if detected by the compare. */
-	    );
+	    "SET_X8_TO_SYS_BRK"
+	    "SYSCALL");
+}
+
+SCM _malloc_ptr;
+SCM _brk_ptr;
+
+void* malloc(int size)
+{
+	if(NULL == _brk_ptr)
+	{
+		_brk_ptr = brk(0);
+		_malloc_ptr = _brk_ptr;
+	}
+
+	if(_brk_ptr < _malloc_ptr + size)
+	{
+		_brk_ptr = brk(_malloc_ptr + size);
+		if(-1 == _brk_ptr) return 0;
+	}
+
+	SCM old_malloc = _malloc_ptr;
+	_malloc_ptr = _malloc_ptr + size;
+	return old_malloc;
 }

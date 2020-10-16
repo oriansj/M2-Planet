@@ -17,24 +17,34 @@
 
 // CONSTANT NULL 0
 
-void* malloc(int size)
+int brk(void *addr)
 {
 	asm("LOAD_RSP_IMMEDIATE_into_rax %8"
 	"PUSH_RAX"
 	"LOAD_IMMEDIATE_rax %12"
-	"LOAD_IMMEDIATE_rdi %0"
-	"SYSCALL"
 	"POP_RBX"
-	"ADD_rax_to_rbx"
 	"COPY_rbx_to_rdi"
-	"PUSH_RAX"
-	"PUSH_RBX"
-	"LOAD_IMMEDIATE_rax %12"
-	"SYSCALL"
-	"POP_RBX"
-	"CMP"
-	"POP_RAX"
-	"JUMP_EQ %FUNCTION_malloc_Done"
-	"LOAD_IMMEDIATE_rax %-1"
-	":FUNCTION_malloc_Done");
+	"SYSCALL");
+}
+
+SCM _malloc_ptr;
+SCM _brk_ptr;
+
+void* malloc(int size)
+{
+	if(NULL == _brk_ptr)
+	{
+		_brk_ptr = brk(0);
+		_malloc_ptr = _brk_ptr;
+	}
+
+	if(_brk_ptr < _malloc_ptr + size)
+	{
+		_brk_ptr = brk(_malloc_ptr + size);
+		if(-1 == _brk_ptr) return 0;
+	}
+
+	SCM old_malloc = _malloc_ptr;
+	_malloc_ptr = _malloc_ptr + size;
+	return old_malloc;
 }

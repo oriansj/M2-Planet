@@ -17,19 +17,32 @@
 
 // CONSTANT NULL 0
 
+int brk(void *addr)
+{
+	asm("!4 R0 SUB R12 ARITH_ALWAYS"
+	    "!0 R0 LOAD32 R0 MEMORY"
+	    "!45 R7 LOADI8_ALWAYS"
+	    "SYSCALL_ALWAYS");
+}
+
+SCM _malloc_ptr;
+SCM _brk_ptr;
+
 void* malloc(int size)
 {
-	asm("!45 R7 LOADI8_ALWAYS"
-	    "!0 R0 LOADI8_ALWAYS"
-	    "SYSCALL_ALWAYS"
-	    "{R0} PUSH_ALWAYS"
-	    "!4 R1 SUB R12 ARITH_ALWAYS"
-	    "!0 R1 LOAD32 R1 MEMORY"
-	    "'0' R0 R0 ADD R1 ARITH2_ALWAYS"
-	    "{R0} PUSH_ALWAYS"
-	    "SYSCALL_ALWAYS"
-	    "{R1} POP_ALWAYS"
-	    "'0' R0 CMP R1 AUX_ALWAYS"
-	    "{R0} POP_ALWAYS"
-	    "!-1 R0 LOADI8_NE");
+	if(NULL == _brk_ptr)
+	{
+		_brk_ptr = brk(0);
+		_malloc_ptr = _brk_ptr;
+	}
+
+	if(_brk_ptr < _malloc_ptr + size)
+	{
+		_brk_ptr = brk(_malloc_ptr + size);
+		if(-1 == _brk_ptr) return 0;
+	}
+
+	SCM old_malloc = _malloc_ptr;
+	_malloc_ptr = _malloc_ptr + size;
+	return old_malloc;
 }

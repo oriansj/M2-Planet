@@ -17,23 +17,33 @@
 
 // CONSTANT NULL 0
 
-void* malloc(int size)
+int brk(void *addr)
 {
 	asm("LOAD_ESP_IMMEDIATE_into_eax %4"
 	"PUSH_eax"
 	"LOAD_IMMEDIATE_eax %45"
-	"LOAD_IMMEDIATE_ebx %0"
-	"INT_80"
 	"POP_ebx"
-	"ADD_eax_to_ebx"
-	"PUSH_eax"
-	"PUSH_ebx"
-	"LOAD_IMMEDIATE_eax %45"
-	"INT_80"
-	"POP_ebx"
-	"CMP"
-	"POP_eax"
-	"JUMP_EQ8 !FUNCTION_malloc_Done"
-	"LOAD_IMMEDIATE_eax %-1"
-	":FUNCTION_malloc_Done");
+	"INT_80");
+}
+
+SCM _malloc_ptr;
+SCM _brk_ptr;
+
+void* malloc(int size)
+{
+	if(NULL == _brk_ptr)
+	{
+		_brk_ptr = brk(0);
+		_malloc_ptr = _brk_ptr;
+	}
+
+	if(_brk_ptr < _malloc_ptr + size)
+	{
+		_brk_ptr = brk(_malloc_ptr + size);
+		if(-1 == _brk_ptr) return 0;
+	}
+
+	SCM old_malloc = _malloc_ptr;
+	_malloc_ptr = _malloc_ptr + size;
+	return old_malloc;
 }
