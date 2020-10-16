@@ -1,5 +1,6 @@
-#! /bin/sh
+#! /usr/bin/env sh
 # Copyright (C) 2019 ng0 <ng0@n0.is>
+# Copyright (C) 2019 Jeremiah Orians
 #
 # This file is part of mescc-tools
 #
@@ -23,12 +24,25 @@ set -ex
 # accordingly.
 sha256_check()
 {
-	if [ "$(get_machine --OS)" = "Linux" ]; then
+	if [ -e "$(which sha256sum)" ]; then
 		LANG=C sha256sum -c "$1"
-	elif [ "$(get_machine --OS)" = "NetBSD" ]; then
-		sum -a SHA256 -n -c "$1"
 	elif [ "$(get_machine --OS)" = "FreeBSD" ]; then
-		sha256 -r -c "$1"
+		LANG=C awk '
+		BEGIN { status = 0 }
+		{
+			rc=system(">/dev/null sha256 -q -c "$1" "$2);
+			if (rc == 0) print($2": OK")
+			else {
+				print($2": NOT OK");
+				status=rc
+			}
+		}
+		END { exit status}
+		' "$1"
+	elif [ -e "$(which sum)" ]; then
+		LANG=C sum -a SHA256 -n -c "$1"
+	elif [ -e "$(which sha256)" ]; then
+		LANG=C sha256 -r -c "$1"
 	else
 		echo "Unsupported sha256 tool, please send a patch to support it"
 		exit 77
