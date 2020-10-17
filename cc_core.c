@@ -808,8 +808,8 @@ void additive_expr_stub()
 		arithmetic_recursion(postfix_expr, "MUL R0 R1 R0\n", "MULU R0 R1 R0\n", "*", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "DIV R0 R1 R0\n", "DIVU R0 R1 R0\n", "/", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "MOD R0 R1 R0\n", "MODU R0 R1 R0\n", "%", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "SAL R0 R1 R0\n", "SAL R0 R1 R0\n", "<<", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "SAR R0 R1 R0\n", "SAR R0 R1 R0\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SAL R0 R1 R0\n", "SL0 R0 R1 R0\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "SAR R0 R1 R0\n", "SR0 R0 R1 R0\n", ">>", additive_expr_stub);
 	}
 	else if(X86 == Architecture)
 	{
@@ -818,8 +818,8 @@ void additive_expr_stub()
 		arithmetic_recursion(postfix_expr, "MULTIPLYS_eax_by_ebx_into_eax\n", "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nCDTQ\nDIVIDES_eax_by_ebx_into_eax\n", "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nCDTQ\nMODULUSS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "XCHG_eax_ebx\nCDTQ\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "<<", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHL_eax_cl\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHR_eax_cl\n", ">>", additive_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -828,8 +828,8 @@ void additive_expr_stub()
 		arithmetic_recursion(postfix_expr, "MULTIPLYS_rax_by_rbx_into_rax\n", "MULTIPLY_rax_by_rbx_into_rax\n", "*", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "XCHG_rax_rbx\nCQTO\nDIVIDES_rax_by_rbx_into_rax\n", "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nDIVIDE_rax_by_rbx_into_rax\n", "/", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "XCHG_rax_rbx\nCQTO\nMODULUSS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n", "XCHG_rax_rbx\nCQTO\nMODULUS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n", "%", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "<<", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSHL_rax_cl\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n", "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSHR_rax_cl\n", ">>", additive_expr_stub);
 	}
 	else if(ARMV7L == Architecture)
 	{
@@ -839,7 +839,7 @@ void additive_expr_stub()
 		arithmetic_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~divides CALL_ALWAYS\n{LR} POP_ALWAYS\n", "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n", "/", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "{LR} PUSH_ALWAYS\n^~moduluss CALL_ALWAYS\n{LR} POP_ALWAYS\n", "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n", "%", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n", "<<", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "ARITH_RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n", ">>", additive_expr_stub);
 	}
 	else if(AARCH64 == Architecture)
 	{
@@ -1649,10 +1649,12 @@ void collect_arguments()
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Recieved EOF when attempting to collect arguments\n");
+	struct type* type_size;
+	struct token_list* a;
 
 	while(!match(")", global_token->s))
 	{
-		struct type* type_size = type_name();
+		type_size = type_name();
 		if(global_token->s[0] == ')')
 		{
 			/* foo(int,char,void) doesn't need anything done */
@@ -1661,7 +1663,7 @@ void collect_arguments()
 		else if(global_token->s[0] != ',')
 		{
 			/* deal with foo(int a, char b) */
-			struct token_list* a = sym_declare(global_token->s, type_size, function->arguments);
+			a = sym_declare(global_token->s, type_size, function->arguments);
 			if(NULL == function->arguments)
 			{
 				if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = 0;
