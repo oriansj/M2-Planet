@@ -46,7 +46,8 @@ char* parse_string(char* string);
 int escape_lookup(char* c);
 int numerate_string(char *a);
 void require(int bool, char* error);
-
+/* Host touchy function will need custom on 64bit systems*/
+int fixup_int32(int a);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -446,7 +447,7 @@ void primary_expr_number()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = numerate_string(global_token->s);
+		int size = fixup_int32(numerate_string(global_token->s));
 		if((32767 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");

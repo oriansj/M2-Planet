@@ -29,6 +29,7 @@ set -ex
 	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f functions/require.c \
+	-f functions/fixup.c \
 	-f cc.h \
 	-f cc_reader.c \
 	-f cc_strings.c \

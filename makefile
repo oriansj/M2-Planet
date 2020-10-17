@@ -34,6 +34,7 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
 	functions/number_pack.c \
 	functions/string.c \
 	functions/require.c \
+	functions/fixup.c \
 	cc_reader.c \
 	cc_strings.c \
 	cc_types.c \
@@ -52,6 +53,7 @@ M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-mi
 	functions/number_pack.c \
 	functions/string.c \
 	functions/require.c \
+	functions/fixup.c \
 	cc_reader.c \
 	cc_strings.c \
 	cc_types.c \
