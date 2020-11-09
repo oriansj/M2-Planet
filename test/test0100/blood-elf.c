@@ -174,6 +174,7 @@ int main(int argc, char **argv)
 	struct entry* input = NULL;
 	output = stdout;
 	char* output_file = "";
+	struct entry* temp;
 
 	int option_index = 1;
 	while(option_index <= argc)
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))
 		{
-			struct entry* temp = calloc(1, sizeof(struct entry));
+			temp = calloc(1, sizeof(struct entry));
 			temp->name = argv[option_index + 1];
 			temp->next = input;
 			input = temp;

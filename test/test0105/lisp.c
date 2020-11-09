@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 	file_output = fopen("/dev/null", "w");
 	console_output = stdout;
 	struct file_list* essential = NULL;
+	struct file_list* new;
 
 	int i = 1;
 	while(i <= argc)
@@ -93,7 +94,7 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[i], "-f") || match(argv[i], "--file"))
 		{
-			struct file_list* new = calloc(1, sizeof(struct file_list));
+			new = calloc(1, sizeof(struct file_list));
 			new->file = fopen(argv[i + 1], "r");
 			if(NULL == new->file)
 			{

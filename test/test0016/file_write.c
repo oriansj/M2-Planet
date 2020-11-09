@@ -19,9 +19,10 @@
 void write_string(FILE* f)
 {
 	int i = 65;
+	int j;
 	do
 	{
-		int j = i;
+		j = i;
 		do
 		{
 			fputc(j, f);

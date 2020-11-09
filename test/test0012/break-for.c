@@ -31,9 +31,10 @@ int main()
 
 	putchar(10);
 
+	int j;
 	for(i = 65; i <= 120; i = i + 1)
 	{
-		int j = i;
+		j = i;
 		for(j = i; j <= 90; j = j + 1)
 		{
 			if(70 == i)

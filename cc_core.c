@@ -1093,6 +1093,14 @@ void expression()
 /* Process local variable */
 void collect_local()
 {
+	if(NULL != break_target_func)
+	{
+		file_print("Local variable initialized inside of loop in file: ", stderr);
+		line_error();
+		file_print("\nMove the variable outside of the loop to resolve\n", stderr);
+		file_print("Otherwise the binary will segfault while running\n", stderr);
+		exit(EXIT_FAILURE);
+	}
 	struct type* type_size = type_name();
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))

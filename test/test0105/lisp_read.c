@@ -40,10 +40,11 @@ struct cell* tokenize(struct cell* head, char* fullstring, int size)
 	}
 
 	char *store = calloc(MAX_STRING + 1, sizeof(char));
+	int c;
 
 	do
 	{
-		int c = fullstring[i];
+		c = fullstring[i];
 		if((i > size) || (MAX_STRING <= i))
 		{
 			done = TRUE;
@@ -190,9 +191,10 @@ struct cell* readlist()
 struct cell* reverse_list(struct cell* head)
 {
 	struct cell* root = NULL;
+	struct cell* next;
 	while(NULL != head)
 	{
-		struct cell* next = head->cdr;
+		next = head->cdr;
 		head->cdr = root;
 		root = head;
 		head = next;

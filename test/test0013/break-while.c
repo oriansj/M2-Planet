@@ -32,9 +32,10 @@ int main()
 
 	putchar(10);
 	i = 65;
+	int j;
 	while (i <= 120)
 	{
-		int j = i;
+		j = i;
 		while (j <= 90)
 		{
 			if(70 == i)

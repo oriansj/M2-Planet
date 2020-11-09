@@ -214,9 +214,10 @@ void sym_declare(char *s, int type, int value)
 {
   int t = table_pos;
   i = 0;
+  int x;
   while (s[i] != 0) {
     if (table_size <= t + 10) {
-      int x = (t + 10) << 1;
+      x = (t + 10) << 1;
       table = my_realloc(table, table_size, x);
       table_size = x;
     }
@@ -725,6 +726,7 @@ void statement()
 void program()
 {
   int current_symbol;
+  int n;
   while (token[0]) {
     type_name();
     current_symbol = sym_declare_global(token);
@@ -734,7 +736,7 @@ void program()
       emit(4, "\x00\x00\x00\x00");
     }
     else if (accept("(")) {
-      int n = table_pos;
+      n = table_pos;
       number_of_args = 0;
       while (accept(")") == 0) {
 	number_of_args = number_of_args + 1;

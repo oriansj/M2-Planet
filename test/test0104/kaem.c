@@ -222,6 +222,9 @@ int check_envar(char* token)
 	int j;
 	int equal_found;
 	equal_found = 0;
+	int found;
+	char c;
+
 	for(j = 0; j < string_length(token); j = j + 1)
 	{
 		if(token[j] == '=')
@@ -231,9 +234,7 @@ int check_envar(char* token)
 		}
 		else
 		{ /* Should be A-z */
-			int found;
 			found = 0;
-			char c;
 			/* Represented numerically; 0 = 48 through 9 = 57 */
 			for(c = 48; c <= 57; c = c + 1)
 			{
@@ -266,17 +267,27 @@ int check_envar(char* token)
 /* Function for executing our programs with desired arguments */
 void execute_commands(FILE* script, char** envp, int envp_length)
 {
+	char* PATH;
+	char* USERNAME;
+	int i;
+	int status;
+	char* result;
+	int j;
+	int is_envar;
+	char* program;
+	int f;
+
 	while(1)
 	{
 		tokens = calloc(max_args, sizeof(char*));
-		char* PATH = env_lookup("PATH=", envp);
+		PATH = env_lookup("PATH=", envp);
 		if(NULL != PATH)
 		{
 			PATH = calloc(max_string, sizeof(char));
 			copy_string(PATH, env_lookup("PATH=", envp));
 		}
 
-		char* USERNAME = env_lookup("LOGNAME=", envp);
+		USERNAME = env_lookup("LOGNAME=", envp);
 		if((NULL == PATH) && (NULL == USERNAME))
 		{
 			PATH = calloc(max_string, sizeof(char));
@@ -287,12 +298,12 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 			PATH = prepend_string("/home/", prepend_string(USERNAME,"/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"));
 		}
 
-		int i = 0;
-		int status = 0;
+		i = 0;
+		status = 0;
 		command_done = 0;
 		do
 		{
-			char* result = collect_token(script);
+			result = collect_token(script);
 			if(0 != result)
 			{ /* Not a comment string but an actual argument */
 				tokens[i] = result;
@@ -303,7 +314,6 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 		if(VERBOSE && (0 < i))
 		{
 			file_print(" +> ", stdout);
-			int j;
 			for(j = 0; j < i; j = j + 1)
 			{
 				file_print(tokens[j], stdout);
@@ -314,7 +324,6 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 
 		if(0 < i)
 		{ /* Not a line comment */
-			int is_envar;
 			is_envar = 0;
 			if(check_envar(tokens[0]) == 0)
 			{ /* It's an envar! */
@@ -325,7 +334,7 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 
 			if(is_envar == 0)
 			{ /* Stuff to exec */
-				char* program = find_executable(tokens[0], PATH);
+				program = find_executable(tokens[0], PATH);
 				if(NULL == program)
 				{
 					file_print(tokens[0], stderr);
@@ -334,7 +343,7 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 					exit(EXIT_FAILURE);
 				}
 
-				int f = fork();
+				f = fork();
 				if (f == -1)
 				{
 					file_print("fork() failure", stderr);

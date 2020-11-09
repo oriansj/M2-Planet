@@ -184,9 +184,10 @@ reset:
 struct token_list* reverse_list(struct token_list* head)
 {
 	struct token_list* root = NULL;
+	struct token_list* next;
 	while(NULL != head)
 	{
-		struct token_list* next = head->next;
+		next = head->next;
 		head->next = root;
 		root = head;
 		head = next;

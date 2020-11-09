@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 	FILE* destination_file = stdout;
 	Architecture = KNIGHT_NATIVE; /* Assume Knight-native */
 	char* arch;
+	char* name;
 
 	int i = 1;
 	while(i <= argc)
@@ -46,7 +47,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-f") || match(argv[i], "--file"))
 		{
-			char* name = argv[i + 1];
+			name = argv[i + 1];
 			in = fopen(name, "r");
 			if(NULL == in)
 			{

@@ -32,9 +32,10 @@ int main()
 
 	putchar(10);
 	i = 65;
+	int j;
 	do
 	{
-		int j = i;
+		j = i;
 		do
 		{
 			if(70 == i)

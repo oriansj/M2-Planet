@@ -90,9 +90,10 @@ struct Token* newToken(char* filename, int linenumber)
 struct Token* reverse_list(struct Token* head)
 {
 	struct Token* root = NULL;
+	struct Token* next;
 	while(NULL != head)
 	{
-		struct Token* next = head->next;
+		next = head->next;
 		head->next = root;
 		root = head;
 		head = next;
@@ -366,11 +367,12 @@ char* pad_nulls(int size, char* nil)
 void preserve_other(struct Token* p)
 {
 	struct Token* i;
+	char c;
 	for(i = p; NULL != i; i = i->next)
 	{
 		if((NULL == i->Expression) && !(i->type & MACRO))
 		{
-			char c = i->Text[0];
+			c = i->Text[0];
 
 			if(in_set(c, "!@$~%&:^"))
 			{
@@ -560,6 +562,7 @@ char* express_number(int value, char c)
 void eval_immediates(struct Token* p)
 {
 	struct Token* i;
+	int value;
 	for(i = p; NULL != i; i = i->next)
 	{
 		if(MACRO == i->type) continue;
@@ -567,7 +570,6 @@ void eval_immediates(struct Token* p)
 		else if('<' == i->Text[0]) continue;
 		else if(NULL == i->Expression)
 		{
-			int value;
 			if((1 == Architecture) || (2 == Architecture) || (40 == Architecture))
 			{
 				value = numerate_string(i->Text + 1);

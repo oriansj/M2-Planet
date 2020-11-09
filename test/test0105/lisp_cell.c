@@ -99,11 +99,12 @@ void relocate_cell(struct cell* current, struct cell* target, struct cell* list)
 struct cell* pop_cons();
 void compact(struct cell* list)
 {
+	struct cell* temp;
 	for(; NULL != list; list = list->cdr)
 	{
 		if((FREE != list->type) && (list > free_cells ))
 		{
-			struct cell* temp = pop_cons();
+			temp = pop_cons();
 			temp->type = list->type;
 			temp->car = list->car;
 			temp->cdr = list->cdr;
