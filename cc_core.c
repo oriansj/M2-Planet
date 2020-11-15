@@ -426,8 +426,42 @@ void primary_expr_string()
 	strings_list = uniqueID(function->s, strings_list, number_string);
 
 	/* Parse the string */
-	strings_list = emit(parse_string(global_token->s), strings_list);
-	global_token = global_token->next;
+	if('"' != global_token->next->s[0])
+	{
+		strings_list = emit(parse_string(global_token->s), strings_list);
+		global_token = global_token->next;
+	}
+	else
+	{
+		char* s = calloc(MAX_STRING, sizeof(char));
+
+		/* prefix leading string */
+		s[0] = '"';
+		int i = 1;
+
+		int j;
+		while('"' == global_token->s[0])
+		{
+			/* Step past the leading '"' */
+			j = 1;
+
+			/* Copy the rest of the string as is */
+			while(0 != global_token->s[j])
+			{
+				require(i < MAX_STRING, "concat string exceeded max string length\n");
+				s[i] = global_token->s[j];
+				i = i + 1;
+				j = j + 1;
+			}
+
+			/* Move on to the next token */
+			global_token = global_token->next;
+			require(NULL != global_token, "multi-string null is not valid C\n");
+		}
+
+		/* Now use it */
+		strings_list = emit(parse_string(s), strings_list);
+	}
 }
 
 void primary_expr_char()
