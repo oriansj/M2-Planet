@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.7 - 2020-11-15
+** Added
 Added common error catch for the declaration of variables inside of loops that usually results in crashes
 Added support for C multi-strings
 
