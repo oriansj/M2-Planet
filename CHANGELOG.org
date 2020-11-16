@@ -16,6 +16,25 @@
 
 * Current
 ** Added
+Added common error catch for the declaration of variables inside of loops that usually results in crashes
+Added support for C multi-strings
+
+** Changed
+Changed ELF headers for FreeBSD compatibility
+Changed sha256 function to be more compatible with FreeBSD
+Changed malloc behavior to accept non-exact brk returns
+Changed looping tests to reflect new expected code behavior in regards to variable declaration inside of loops
+
+** Fixed
+Type regression in cc_* compatibility
+Shift behavior to better match C standard
+64bit host behavior in regards to primary_expr_number in knight tests
+GCC 10 compatibility
+
+** Removed
+
+* 1.6 - 2020-04-30
+** Added
 Added test for chdir and getcwd family of posix primitives
 Added fflush stub, for code to match our behavior when compiled with GCC (we don't buffer)
 Added fseek and rewind functions
