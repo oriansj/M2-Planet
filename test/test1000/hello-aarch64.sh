@@ -32,6 +32,7 @@ set -ex
 	-f functions/require.c \
 	-f test/common_aarch64/functions/fixup.c \
 	-f cc.h \
+	-f cc_globals.c \
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
@@ -79,6 +80,7 @@ then
 		-f functions/string.c \
 		-f functions/require.c \
 		-f cc.h \
+		-f cc_globals.c \
 		-f cc_reader.c \
 		-f cc_strings.c \
 		-f cc_types.c \

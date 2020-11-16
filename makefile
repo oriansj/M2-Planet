@@ -25,7 +25,7 @@ CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb
 
 all: M2-Planet
 
-M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
+M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c cc_globals.c cc_globals.h
 	$(CC) $(CFLAGS) \
 	functions/match.c \
 	functions/in_set.c \
@@ -41,6 +41,7 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c
 	cc_core.c \
 	cc.c \
 	cc.h \
+	cc_globals.c \
 	gcc_req.h \
 	-o bin/M2-Planet
 
@@ -60,6 +61,7 @@ M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-mi
 	cc_core.c \
 	cc-minimal.c \
 	cc.h \
+	cc_globals.c \
 	gcc_req.h \
 	-o bin/M2-minimal
 
