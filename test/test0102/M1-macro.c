@@ -24,8 +24,8 @@
 
 //CONSTANT max_string 4096
 #define max_string 4096
-//CONSTANT MACRO 1
-#define MACRO 1
+//CONSTANT PROCESSED 1
+#define PROCESSED 1
 //CONSTANT STR 2
 #define STR 2
 //CONSTANT NEWLINE 3
@@ -36,14 +36,53 @@
 //CONSTANT FALSE 0
 #define FALSE 0
 
-void file_print(char* s, FILE* f);
-int match(char* a, char* b);
-int string_length(char* a);
+// CONSTANT KNIGHT 0
+#define KNIGHT 0
+// CONSTANT X86 1
+#define X86 1
+// CONSTANT AMD64 2
+#define AMD64 2
+// CONSTANT ARMV7L 40
+#define ARMV7L 40
+// CONSTANT AARM64 80
+#define AARM64 80
+
+// CONSTANT HEX 16
+#define HEX 16
+// CONSTANT OCTAL 8
+#define OCTAL 8
+// CONSTANT BINARY 2
+#define BINARY 2
+
+
+/* Imported functions */
 char* numerate_number(int a);
-int numerate_string(char *a);
 int hex2char(int c);
 int in_set(int c, char* s);
+int match(char* a, char* b);
+int numerate_string(char *a);
+int string_length(char* a);
+void file_print(char* s, FILE* f);
+void require(int bool, char* error);
 
+struct blob
+{
+	struct blob* next;
+	int type;
+	char* Text;
+	char* Expression;
+	struct blob* hash_next;
+};
+
+struct Token
+{
+	struct Token* next;
+	struct blob* contents;
+	char* filename;
+	int linenumber;
+};
+
+/* Globals */
 FILE* source_file;
 FILE* destination_file;
 int BigEndian;
@@ -51,6 +90,13 @@ int BigBitEndian;
 int ByteMode;
 int Architecture;
 int linenumber;
+struct Token* token_list;
+struct blob* blob_list;
+struct blob* define_blob;
+struct blob* newline_blob;
+int blob_count;
+char* SCRATCH;
+struct blob** hash_table;
 
 void line_error(char* filename, int linenumber)
 {
@@ -60,26 +106,74 @@ void line_error(char* filename, int linenumber)
 	file_print(" :", stderr);
 }
 
-struct Token
+void ClearScratch()
 {
-	struct Token* next;
-	int type;
-	char* Text;
-	char* Expression;
-	char* filename;
-	int linenumber;
-};
+	int i = 0;
+	int c = SCRATCH[i];
+	while(0 != c)
+	{
+		SCRATCH[i] = 0;
+		i = i + 1;
+		c = SCRATCH[i];
+	}
+}
+
+int GetHash(char* s)
+{
+	int i = 5381;
+	while(0 != s[0])
+	{
+		i = (i << 5) + i + s[0];
+		s = s + 1;
+	}
+	return i & 0xFFFF;
+}
+
+struct blob* FindBlob()
+{
+	int hash = GetHash(SCRATCH);
+	struct blob* i = hash_table[hash];
+	while(NULL != i)
+	{
+		if(match(SCRATCH, i->Text)) return i;
+		i = i->hash_next;
+	}
+
+	return NULL;
+}
+
+void AddHash(struct blob* a, char* s)
+{
+	int i = GetHash(s);
+	a->hash_next = hash_table[i];
+	hash_table[i] = a;
+}
+
+void NewBlob(int size)
+{
+	blob_count = blob_count + 1;
+	struct blob* a = calloc(1, sizeof(struct blob));
+	require(NULL != a, "Exhusted available memory\n");
+	a->Text = calloc(size + 1, sizeof(char));
+	require(NULL != a->Text, "Exhusted available memory\n");
+
+	int i = 0;
+	while(i <= size)
+	{
+		a->Text[i] = SCRATCH[i];
+		i = i + 1;
+	}
+	a->next = blob_list;
+	blob_list = a;
+	AddHash(a, SCRATCH);
+}
 
 struct Token* newToken(char* filename, int linenumber)
 {
 	struct Token* p;
 
 	p = calloc (1, sizeof (struct Token));
-	if (NULL == p)
-	{
-		file_print("calloc failed.\n", stderr);
-		exit (EXIT_FAILURE);
-	}
+	require(NULL != p, "Exhusted available memory\n");
 
 	p->filename = filename;
 	p->linenumber = linenumber;
@@ -106,6 +200,7 @@ void purge_lineComment()
 	int c = fgetc(source_file);
 	while(!in_set(c, "\n\r"))
 	{
+		if(EOF == c) break;
 		c = fgetc(source_file);
 	}
 }
@@ -114,38 +209,39 @@ struct Token* append_newline(struct Token* head, char* filename)
 {
 	linenumber = linenumber + 1;
 	if(NULL == head) return NULL;
-	if(NEWLINE == head->type)
+	if(NEWLINE == head->contents->type)
 	{/* Don't waste whitespace*/
 		return head;
 	}
 
 	struct Token* lf = newToken(filename, linenumber);
-	lf->type = NEWLINE;
+	lf->contents = newline_blob;
 	lf->next = head;
-	lf->Text = "\n";
-	lf->Expression = lf->Text;
 	return lf;
 }
 
 
 struct Token* store_atom(struct Token* head, char c, char* filename)
 {
-	char* store = calloc(max_string + 1, sizeof(char));
-	if(NULL == store)
-	{
-		file_print("Exhusted available memory\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+	ClearScratch();
 	int ch = c;
 	int i = 0;
 	do
 	{
-		store[i] = ch;
+		SCRATCH[i] = ch;
 		ch = fgetc(source_file);
 		i = i + 1;
-	} while (!in_set(ch, "\t\n ") && (i <= max_string));
+		require(i < max_string, "storing atom of size larger than max_string\n");
+		if(EOF == ch) break;
+	} while (!in_set(ch, "\t\n "));
 
-	head->Text = store;
+	head->contents = FindBlob();
+	if(NULL == head->contents)
+	{
+		NewBlob(i);
+		head->contents = blob_list;
+	}
+
 	if('\n' == ch)
 	{
 		return append_newline(head, filename);
@@ -153,38 +249,39 @@ struct Token* store_atom(struct Token* head, char c, char* filename)
 	return head;
 }
 
-char* store_string(char c, char* filename)
+struct blob* store_string(char c, char* filename)
 {
-	char* store = calloc(max_string + 1, sizeof(char));
-	if(NULL == store)
-	{
-		file_print("Exhusted available memory\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+	ClearScratch();
+
 	int ch = c;
 	int i = 0;
 	do
 	{
-		store[i] = ch;
+		SCRATCH[i] = ch;
 		i = i + 1;
+		if('\n' == ch) linenumber = linenumber + 1;
 		ch = fgetc(source_file);
-		if(-1 == ch)
-		{
-			line_error(filename, linenumber);
-			file_print("Unmatched \"!\n", stderr);
-			exit(EXIT_FAILURE);
-		}
+		require(EOF != ch, "Unmatched \"!\n");
+
 		if(max_string == i)
 		{
 			line_error(filename, linenumber);
 			file_print("String: ", stderr);
-			file_print(store, stderr);
+			file_print(SCRATCH, stderr);
 			file_print(" exceeds max string size\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	} while(ch != c);
 
-	return store;
+	struct blob* a = FindBlob();
+	if(NULL == a)
+	{
+		NewBlob(i);
+		a = blob_list;
+		a->type = STR;
+	}
+
+	return a;
 }
 
 struct Token* Tokenize_Line(struct Token* head, char* filename)
@@ -226,8 +323,7 @@ restart:
 		p->next = head;
 		if(in_set(c, "'\""))
 		{
-			p->Text = store_string(c, filename);
-			p->type = STR;
+			p->contents = store_string(c, filename);
 		}
 		else
 		{
@@ -240,97 +336,111 @@ done:
 	return head;
 }
 
-void setExpression(struct Token* p, char *c, char *Exp)
+void line_macro(struct Token* p)
 {
 	struct Token* i;
 	for(i = p; NULL != i; i = i->next)
 	{
-		/* Leave macros alone */
-		if(MACRO == i->type)
+		if(define_blob == i->contents)
 		{
-			if(match(i->Text, c))
+			require(NULL != i->next, "Macro name must exist\n");
+			require(NULL != i->next->next, "Macro value must exist\n");
+			if(PROCESSED == i->next->contents->type)
 			{
 				line_error(i->filename, i->linenumber);
 				file_print("Multiple definitions for macro ", stderr);
-				file_print(c, stderr);
+				file_print(i->next->contents->Text, stderr);
 				file_print("\n", stderr);
 				exit(EXIT_FAILURE);
 			}
-			continue;
-		}
-		else if(match(i->Text, c))
-		{ /* Only if there is an exact match replace */
-			i->Expression = Exp;
-		}
-	}
-}
 
-void identify_macros(struct Token* p)
-{
-	struct Token* i;
-	for(i = p; NULL != i; i = i->next)
-	{
-		if(match(i->Text, "DEFINE"))
-		{
-			i->type = MACRO;
-			i->Text = i->next->Text;
-			if(STR == i->next->next->type)
+			i->contents = newline_blob;
+
+			if (STR == i->next->next->contents->type)
 			{
-				i->Expression = i->next->next->Text + 1;
+				i->contents->Expression = i->next->next->contents->Text + 1;
 			}
 			else
 			{
-				i->Expression = i->next->next->Text;
+				i->next->contents->Expression = i->next->next->contents->Text;
 			}
 			i->next = i->next->next->next;
 		}
 	}
 }
 
-void line_macro(struct Token* p)
-{
-	struct Token* i;
-	for(i = p; NULL != i; i = i->next)
-	{
-		if(MACRO == i->type)
-		{
-			setExpression(i->next, i->Text, i->Expression);
-		}
-	}
-}
-
-void hexify_string(struct Token* p)
+void hexify_string(struct blob* p)
 {
 	char* table = "0123456789ABCDEF";
-	int i = ((string_length(p->Text + 1)/4) + 1) * 8;
+	int i = string_length(p->Text);
+	int size;
 
-	char* d = calloc(max_string, sizeof(char));
+	if(HEX == ByteMode) size = (((i << 1) + i) + 12);
+	else if(OCTAL == ByteMode) size = (i << 2) + 1;
+	else if(BINARY == ByteMode) size = (i << 3) + i + 1;
+	else size = 1;
+
+	require(1 != size, "hexify_string lacked a valid bytemode\n");
+	char* d = calloc(size, sizeof(char));
+	require(NULL != d, "Exhusted available memory\n");
 	p->Expression = d;
+	char* S = p->Text;
 
-	while(0 < i)
+	if((KNIGHT == Architecture) && (HEX == ByteMode))
 	{
-		i = i - 1;
-		d[i] = '0';
+		i = (((((i - 1) >> 2) + 1) << 3) + i);
+		while( 0 < i)
+		{
+			i = i - 1;
+			d[i] = '0';
+		}
 	}
 
-	while( i < max_string)
+	if(HEX == ByteMode)
 	{
-		if(0 == p->Text[i+1])
+		while(0 != S[0])
 		{
-			i = max_string;
+			S = S + 1;
+			d[0] = table[S[0] >> 4];
+			d[1] = table[S[0] & 0xF];
+			d[2] = ' ';
+			d = d + 3;
 		}
-		else
+	}
+	else if(OCTAL == ByteMode)
+	{
+		while(0 != S[0])
 		{
-			d[2*i]  = table[p->Text[i+1] / 16];
-			d[2*i + 1] = table[p->Text[i+1] % 16];
-			i = i + 1;
+			S = S + 1;
+			d[0] = table[S[0] >> 6];
+			d[1] = table[(S[0] >> 3) & 0x7];
+			d[2] = table[S[0] & 0x7];
+			d[3] = ' ';
+			d = d + 4;
+		}
+	}
+	else if(BINARY == ByteMode)
+	{
+		while(0 != S[0])
+		{
+			S = S + 1;
+			d[0] = table[S[0] >> 7];
+			d[1] = table[(S[0] >> 6) & 0x1];
+			d[2] = table[(S[0] >> 5) & 0x1];
+			d[3] = table[(S[0] >> 4) & 0x1];
+			d[4] = table[(S[0] >> 3) & 0x1];
+			d[5] = table[(S[0] >> 2) & 0x1];
+			d[6] = table[(S[0] >> 1) & 0x1];
+			d[7] = table[S[0] & 0x1];
+			d[8] = ' ';
+			d = d + 9;
 		}
 	}
 }
 
-void process_string(struct Token* p)
+void process_string(struct blob* p)
 {
-	struct Token* i;
+	struct blob* i;
 	for(i = p; NULL != i; i = i->next)
 	{
 		if(STR == i->type)
@@ -350,9 +460,13 @@ void process_string(struct Token* p)
 char* pad_nulls(int size, char* nil)
 {
 	if(0 == size) return nil;
-	size = size * 2;
+	require(size > 0, "negative null padding not possible\n");
+	if(HEX == ByteMode) size = size * 2;
+	else if (OCTAL == ByteMode) size = size * 3;
+	else if (BINARY == ByteMode) size = size * 8;
 
 	char* s = calloc(size + 1, sizeof(char));
+	require(NULL != s, "Exhusted available memory\n");
 
 	int i = 0;
 	while(i < size)
@@ -364,13 +478,13 @@ char* pad_nulls(int size, char* nil)
 	return s;
 }
 
-void preserve_other(struct Token* p)
+void preserve_other(struct blob* p)
 {
-	struct Token* i;
+	struct blob* i;
 	char c;
 	for(i = p; NULL != i; i = i->next)
 	{
-		if((NULL == i->Expression) && !(i->type & MACRO))
+		if((NULL == i->Expression) && !(i->type & PROCESSED))
 		{
 			c = i->Text[0];
 
@@ -381,14 +495,6 @@ void preserve_other(struct Token* p)
 			else if('<' == c)
 			{
 				i->Expression = pad_nulls(numerate_string(i->Text + 1), i->Text);
-			}
-			else
-			{
-				line_error(i->filename, i->linenumber);
-				file_print("Received invalid other; ", stderr);
-				file_print(i->Text, stderr);
-				file_print("\n", stderr);
-				exit(EXIT_FAILURE);
 			}
 		}
 	}
@@ -436,19 +542,19 @@ void reverseBitOrder(char* c)
 	if(0 == c[1]) return;
 	int hold = c[0];
 
-	if(16 == ByteMode)
+	if(HEX == ByteMode)
 	{
 		c[0] = c[1];
 		c[1] = hold;
 		reverseBitOrder(c+2);
 	}
-	else if(8 == ByteMode)
+	else if(OCTAL == ByteMode)
 	{
 		c[0] = c[2];
 		c[2] = hold;
 		reverseBitOrder(c+3);
 	}
-	else if(2 == ByteMode)
+	else if(BINARY == ByteMode)
 	{
 		c[0] = c[7];
 		c[7] = hold;
@@ -496,6 +602,7 @@ int stringify(char* s, int digits, int divisor, int value, int shift)
 char* express_number(int value, char c)
 {
 	char* ch = calloc(42, sizeof(char));
+	require(NULL != ch, "Exhusted available memory\n");
 	int size;
 	int number_of_bytes;
 	int shift;
@@ -531,17 +638,17 @@ char* express_number(int value, char c)
 
 	range_check(value, number_of_bytes);
 
-	if(16 == ByteMode)
+	if(HEX == ByteMode)
 	{
 		size = number_of_bytes * 2;
 		shift = 4;
 	}
-	else if(8 == ByteMode)
+	else if(OCTAL == ByteMode)
 	{
 		size = number_of_bytes * 3;
 		shift = 3;
 	}
-	else if(2 == ByteMode)
+	else if(BINARY == ByteMode)
 	{
 		size = number_of_bytes * 8;
 		shift = 1;
@@ -559,26 +666,30 @@ char* express_number(int value, char c)
 	return ch;
 }
 
-void eval_immediates(struct Token* p)
+void eval_immediates(struct blob* p)
 {
-	struct Token* i;
+	struct blob* i;
 	int value;
 	for(i = p; NULL != i; i = i->next)
 	{
-		if(MACRO == i->type) continue;
+		if(PROCESSED == i->type) continue;
 		else if(NEWLINE == i->type) continue;
 		else if('<' == i->Text[0]) continue;
 		else if(NULL == i->Expression)
 		{
-			if((1 == Architecture) || (2 == Architecture) || (40 == Architecture))
+			if((X86 == Architecture) || (AMD64 == Architecture) || (ARMV7L == Architecture) || (AARM64 == Architecture))
 			{
-				value = numerate_string(i->Text + 1);
-				if(('0' == i->Text[1]) || (0 != value))
+				if(in_set(i->Text[0], "%~@!"))
 				{
-					i->Expression = express_number(value, i->Text[0]);
+					value = numerate_string(i->Text + 1);
+
+					if(('0' == i->Text[1]) || (0 != value))
+					{
+						i->Expression = express_number(value, i->Text[0]);
+					}
 				}
 			}
-			else if(0 == Architecture)
+			else if(KNIGHT == Architecture)
 			{
 				value = numerate_string(i->Text);
 				if(('0' == i->Text[0]) || (0 != value))
@@ -600,15 +711,23 @@ void print_hex(struct Token* p)
 	struct Token* i;
 	for(i = p; NULL != i; i = i->next)
 	{
-		if(NEWLINE == i->type)
+		if(NEWLINE == i->contents->type)
 		{
 			if(NULL == i->next) fputc('\n', destination_file);
-			else if((NEWLINE != i->next->type) && (MACRO != i->next->type)) fputc('\n', destination_file);
+			else if(NEWLINE != i->next->contents->type) fputc('\n', destination_file);
 		}
-		else if(i->type != MACRO)
+		else if(NULL != i->contents->Expression)
 		{
-			file_print(i->Expression, destination_file);
-			if(NEWLINE != i->next->type) fputc(' ', destination_file);
+			file_print(i->contents->Expression, destination_file);
+			if(NEWLINE != i->next->contents->type) fputc(' ', destination_file);
+		}
+		else
+		{
+			line_error(i->filename, i->linenumber);
+			file_print("Received invalid other; ", stderr);
+			file_print(i->contents->Text, stderr);
+			file_print("\n", stderr);
+			exit(EXIT_FAILURE);
 		}
 	}
 }
@@ -617,13 +736,31 @@ void print_hex(struct Token* p)
 int main(int argc, char **argv)
 {
 	BigEndian = TRUE;
-	struct Token* head = NULL;
-	Architecture = 0;
+	Architecture = KNIGHT;
 	destination_file = stdout;
 	BigBitEndian = TRUE;
-	ByteMode = 16;
+	ByteMode = HEX;
 	char* filename;
 	char* arch;
+	blob_count = 2;
+	hash_table = calloc(65537, sizeof(struct blob*));
+
+	/* Create newline blob */
+	newline_blob = calloc(1, sizeof(struct blob));
+	newline_blob->Text = "\n";
+	newline_blob->Expression = "\n";
+	newline_blob->type = NEWLINE;
+	AddHash(newline_blob, "\n");
+
+	/* Start the blob list with DEFINE and newline */
+	blob_list = calloc(1, sizeof(struct blob));
+	blob_list->Text = "DEFINE";
+	define_blob = blob_list;
+	blob_list->next = newline_blob;
+	AddHash(define_blob, "DEFINE");
+
+	/* Initialize scratch */
+	SCRATCH = calloc(max_string + 1, sizeof(char));
 
 	int option_index = 1;
 	while(option_index <= argc)
@@ -632,12 +769,12 @@ int main(int argc, char **argv)
 		{
 			option_index = option_index + 1;
 		}
-		else if(match(argv[option_index], "--BigEndian"))
+		else if(match(argv[option_index], "--BigEndian") || match(argv[option_index], "--big-endian"))
 		{
 			BigEndian = TRUE;
 			option_index = option_index + 1;
 		}
-		else if(match(argv[option_index], "--LittleEndian"))
+		else if(match(argv[option_index], "--LittleEndian") || match(argv[option_index], "--little-endian"))
 		{
 			BigEndian = FALSE;
 			option_index = option_index + 1;
@@ -645,29 +782,32 @@ int main(int argc, char **argv)
 		else if(match(argv[option_index], "-A") || match(argv[option_index], "--architecture"))
 		{
 			arch = argv[option_index + 1];
-			if(match("knight-native", arch) || match("knight-posix", arch)) Architecture = 0;
-			else if(match("x86", arch)) Architecture = 1;
-			else if(match("amd64", arch)) Architecture = 2;
-			else if(match("armv7l", arch)) Architecture = 40;
+			if(match("knight-native", arch) || match("knight-posix", arch)) Architecture = KNIGHT;
+			else if(match("x86", arch)) Architecture = X86;
+			else if(match("amd64", arch)) Architecture = AMD64;
+			else if(match("armv7l", arch)) Architecture = ARMV7L;
+			else if(match("aarch64", arch)) Architecture = AARM64;
 			else
 			{
 				file_print("Unknown architecture: ", stderr);
 				file_print(arch, stderr);
-				file_print(" know values are: knight-native, knight-posix, x86, amd64 and armv7l", stderr);
+				file_print(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
+				exit(EXIT_FAILURE);
 			}
 			option_index = option_index + 2;
 		}
 		else if(match(argv[option_index], "-b") || match(argv[option_index], "--binary"))
 		{
-			ByteMode = 2;
+			ByteMode = BINARY;
 			option_index = option_index + 1;
 		}
 		else if(match(argv[option_index], "-h") || match(argv[option_index], "--help"))
 		{
 			file_print("Usage: ", stderr);
 			file_print(argv[0], stderr);
-			file_print(" -f FILENAME1 {-f FILENAME2} (--BigEndian|--LittleEndian) ", stderr);
+			file_print(" --file FILENAME1 {-f FILENAME2} (--big-endian|--little-endian) ", stderr);
 			file_print("[--architecture name]\nArchitectures: knight-native, knight-posix, x86, amd64 and armv7\n", stderr);
+			file_print("To leverage octal or binary output: --octal, --binary\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))
@@ -683,7 +823,7 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 
-			head = Tokenize_Line(head, filename);
+			token_list = Tokenize_Line(token_list, filename);
 			option_index = option_index + 2;
 		}
 		else if(match(argv[option_index], "-o") || match(argv[option_index], "--output"))
@@ -701,12 +841,12 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-O") || match(argv[option_index], "--octal"))
 		{
-			ByteMode = 8;
+			ByteMode = OCTAL;
 			option_index = option_index + 1;
 		}
 		else if(match(argv[option_index], "-V") || match(argv[option_index], "--version"))
 		{
-			file_print("M1 0.3\n", stdout);
+			file_print("M1 1.0.0\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else
@@ -716,19 +856,18 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(NULL == head)
+	if(NULL == token_list)
 	{
 		file_print("Either no input files were given or they were empty\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
-	head = reverse_list(head);
-	identify_macros(head);
-	line_macro(head);
-	process_string(head);
-	eval_immediates(head);
-	preserve_other(head);
-	print_hex(head);
+	token_list = reverse_list(token_list);
+	line_macro(token_list);
+	process_string(blob_list);
+	eval_immediates(blob_list);
+	preserve_other(blob_list);
+	print_hex(token_list);
 
 	return EXIT_SUCCESS;
 }

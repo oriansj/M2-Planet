@@ -26,6 +26,7 @@ set -x
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/string.c \
+	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
 	--debug \
 	-o test/test0102/M1-macro.M1 || exit 1
@@ -59,7 +60,7 @@ then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test0102-amd64-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "M1 0.3" ] || exit 6
+	[ "$out" = "M1 1.0.0" ] || exit 6
 
 	# Verify that the resulting file works
 	./test/results/test0102-amd64-binary -f \

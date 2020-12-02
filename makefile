@@ -110,7 +110,11 @@ results:
 	mkdir -p test/results
 
 # tests
-test: test0000-aarch64-binary \
+test: aarch64-tests amd64-tests knight-posix-tests knight-native-tests armv7l-tests x86-tests | results
+	sha256sum -c test/test.answers
+
+aarch64-tests: \
+	test0000-aarch64-binary \
 	test0001-aarch64-binary \
 	test0002-aarch64-binary \
 	test0003-aarch64-binary \
@@ -141,7 +145,9 @@ test: test0000-aarch64-binary \
 	test0104-aarch64-binary \
 	test0105-aarch64-binary \
 	test0106-aarch64-binary \
-	test1000-aarch64-binary \
+	test1000-aarch64-binary | results
+
+amd64-tests: \
 	test0000-amd64-binary \
 	test0001-amd64-binary \
 	test0002-amd64-binary \
@@ -173,7 +179,9 @@ test: test0000-aarch64-binary \
 	test0104-amd64-binary \
 	test0105-amd64-binary \
 	test0106-amd64-binary \
-	test1000-amd64-binary \
+	test1000-amd64-binary | results
+
+knight-posix-tests: \
 	test0000-knight-posix-binary \
 	test0001-knight-posix-binary \
 	test0002-knight-posix-binary \
@@ -203,7 +211,9 @@ test: test0000-aarch64-binary \
 	test0102-knight-posix-binary \
 	test0103-knight-posix-binary \
 	test0106-knight-posix-binary \
-	test1000-knight-posix-binary \
+	test1000-knight-posix-binary | results
+
+knight-native-tests: \
 	test0000-knight-native-binary\
 	test0001-knight-native-binary\
 	test0002-knight-native-binary\
@@ -221,7 +231,9 @@ test: test0000-aarch64-binary \
 	test0017-knight-native-binary\
 	test0018-knight-native-binary\
 	test0020-knight-native-binary\
-	test0106-knight-native-binary\
+	test0106-knight-native-binary | results
+
+armv7l-tests: \
 	test0000-armv7l-binary \
 	test0001-armv7l-binary \
 	test0002-armv7l-binary \
@@ -253,7 +265,9 @@ test: test0000-aarch64-binary \
 	test0104-armv7l-binary \
 	test0105-armv7l-binary \
 	test0106-armv7l-binary \
-	test1000-armv7l-binary \
+	test1000-armv7l-binary | results
+
+x86-tests: \
 	test0000-x86-binary \
 	test0001-x86-binary \
 	test0002-x86-binary \
@@ -286,7 +300,6 @@ test: test0000-aarch64-binary \
 	test0105-x86-binary \
 	test0106-x86-binary \
 	test1000-x86-binary | results
-	sha256sum -c test/test.answers
 
 test0000-aarch64-binary: M2-Planet | results
 	test/test0000/hello-aarch64.sh
