@@ -909,12 +909,12 @@ void relational_expr_stub()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		general_recursion(additive_expr, "CMPSKIP.GE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.G R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.L R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.LE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.NE R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "CMPSKIP.E R1 R0\nLOADUI R2 1\nMOVE R0 R2\n", "!=", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.L R0 R0 1\n", "<", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.LE R0 R0 1\n", "<=", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.GE R0 R0 1\n", ">=", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.G R0 R0 1\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.E R0 R0 1\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.NE R0 R0 1\n", "!=", relational_expr_stub);
 	}
 	else if(X86 == Architecture)
 	{

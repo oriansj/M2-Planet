@@ -15,7 +15,7 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 :_start
-	LOADR32 R12 @HEAP           ; Setup HEAP pointer
+	;; Kernel Setup R12 as HEAP pointer after end of the stack
 	;; Kernel Setup R15 as Stack pointer after the initial stack frame
 
 	;; Default stack frame is:
@@ -31,7 +31,3 @@
 
 	;; Exit to kernel
 	EXIT                        ; Return what is in R0
-
-	;; Our default heap pointer
-:HEAP
-	'00100000'
