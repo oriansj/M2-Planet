@@ -918,10 +918,10 @@ void relational_expr_stub()
 	}
 	else if(X86 == Architecture)
 	{
-		general_recursion(additive_expr, "CMP\nSETL\nMOVEZBL\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETLE\nMOVEZBL\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETGE\nMOVEZBL\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETG\nMOVEZBL\n", ">", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETL\nMOVEZBL\n", "CMP\nSETB\nMOVEZBL\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETLE\nMOVEZBL\n", "CMP\nSETBE\nMOVEZBL\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETGE\nMOVEZBL\n", "CMP\nSETAE\nMOVEZBL\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETG\nMOVEZBL\n", "CMP\nSETA\nMOVEZBL\n", ">", relational_expr_stub);
 		general_recursion(additive_expr, "CMP\nSETE\nMOVEZBL\n", "==", relational_expr_stub);
 		general_recursion(additive_expr, "CMP\nSETNE\nMOVEZBL\n", "!=", relational_expr_stub);
 	}
