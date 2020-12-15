@@ -626,7 +626,7 @@ void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION i
 		common_recursion(f);
 		if(NULL == current_target)
 		{
-			emit_out(s2);
+			emit_out(s1);
 		}
 		else if(current_target->is_signed)
 		{
@@ -909,12 +909,12 @@ void relational_expr_stub()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.L R0 R0 1\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.LE R0 R0 1\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.GE R0 R0 1\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.G R0 R0 1\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.E R0 R0 1\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "CMP R0 R1 R0\nSET.NE R0 R0 1\n", "!=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.L R0 R0 1\n", "CMPU R0 R1 R0\nSET.L R0 R0 1\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.LE R0 R0 1\n", "CMPU R0 R1 R0\nSET.LE R0 R0 1\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.GE R0 R0 1\n", "CMPU R0 R1 R0\nSET.GE R0 R0 1\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.G R0 R0 1\n", "CMPU R0 R1 R0\nSET.G R0 R0 1\n", ">", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.E R0 R0 1\n", "CMPU R0 R1 R0\nSET.E R0 R0 1\n", "==", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP R0 R1 R0\nSET.NE R0 R0 1\n", "CMPU R0 R1 R0\nSET.NE R0 R0 1\n", "!=", relational_expr_stub);
 	}
 	else if(X86 == Architecture)
 	{
