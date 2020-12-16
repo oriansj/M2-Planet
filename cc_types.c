@@ -111,7 +111,7 @@ void initialize_types()
 	struct type* h = calloc(1, sizeof(struct type));
 	require(NULL != h, "Exhusted memory while intializing FILE\n");
 	h->name = "FILE";
-	h->is_signed = FALSE;
+	h->is_signed = TRUE;
 	h->size = register_size;
 	h->type = h;
 	/* FILE* has the same properties as FILE */
