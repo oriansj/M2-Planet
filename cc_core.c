@@ -927,10 +927,10 @@ void relational_expr_stub()
 	}
 	else if(AMD64 == Architecture)
 	{
-		general_recursion(additive_expr, "CMP\nSETL\nMOVEZX\n", "<", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETLE\nMOVEZX\n", "<=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETGE\nMOVEZX\n", ">=", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETG\nMOVEZX\n", ">", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETL\nMOVEZX\n", "CMP\nSETB\nMOVEZX\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETLE\nMOVEZX\n", "CMP\nSETBE\nMOVEZX\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETGE\nMOVEZX\n", "CMP\nSETAE\nMOVEZX\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "CMP\nSETG\nMOVEZX\n", "CMP\nSETA\nMOVEZX\n", ">", relational_expr_stub);
 		general_recursion(additive_expr, "CMP\nSETE\nMOVEZX\n", "==", relational_expr_stub);
 		general_recursion(additive_expr, "CMP\nSETNE\nMOVEZX\n", "!=", relational_expr_stub);
 	}
