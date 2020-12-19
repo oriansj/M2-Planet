@@ -1618,6 +1618,7 @@ void recursive_statement()
 struct type* lookup_type(char* s, struct type* start);
 void statement()
 {
+	current_target = NULL;
 	if(global_token->s[0] == '{')
 	{
 		recursive_statement();
