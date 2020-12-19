@@ -46,6 +46,7 @@ char* parse_string(char* string);
 int escape_lookup(char* c);
 int numerate_string(char *a);
 void require(int bool, char* error);
+struct token_list* reverse_list(struct token_list* head);
 /* Host touchy function will need custom on 64bit systems*/
 int fixup_int32(int a);
 
@@ -1895,9 +1896,12 @@ new_type:
 	goto new_type;
 }
 
-void recursive_output(struct token_list* i, FILE* out)
+void recursive_output(struct token_list* head, FILE* out)
 {
-	if(NULL == i) return;
-	recursive_output(i->next, out);
-	file_print(i->s, out);
+	struct token_list* i = reverse_list(head);
+	while(NULL != i)
+	{
+		file_print(i->s, out);
+		i = i->next;
+	}
 }
