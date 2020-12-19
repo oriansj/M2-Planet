@@ -39,6 +39,7 @@ int VERBOSE;
 int STRICT;
 int envp_length;
 
+
 /* Function for purging line comments */
 void collect_comment(FILE* input)
 {

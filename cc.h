@@ -20,8 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// CONSTANT MAX_STRING 4096
-#define MAX_STRING 4096
 // CONSTANT FALSE 0
 #define FALSE 0
 // CONSTANT TRUE 1

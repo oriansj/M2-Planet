@@ -31,6 +31,7 @@ char* parse_string(char* string);
 
 int main()
 {
+	MAX_STRING = 4096;
 	hold_string = calloc(MAX_STRING, sizeof(char));
 	FILE* in = fopen("tape_01", "r");
 	FILE* destination_file = fopen("tape_02", "w");

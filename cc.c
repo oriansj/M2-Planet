@@ -26,11 +26,11 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 struct token_list* reverse_list(struct token_list* head);
 void program();
 void recursive_output(struct token_list* i, FILE* out);
+int numerate_string(char *a);
 
 int main(int argc, char** argv)
 {
-	hold_string = calloc(MAX_STRING, sizeof(char));
-	require(NULL != hold_string, "Impossible Exhustion has occured\n");
+	MAX_STRING = 4096;
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
@@ -47,6 +47,12 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-f") || match(argv[i], "--file"))
 		{
+			if(NULL == hold_string)
+			{
+				hold_string = calloc(MAX_STRING, sizeof(char));
+				require(NULL != hold_string, "Impossible Exhustion has occured\n");
+			}
+
 			name = argv[i + 1];
 			in = fopen(name, "r");
 			if(NULL == in)
@@ -89,6 +95,12 @@ int main(int argc, char** argv)
 			}
 			i = i + 2;
 		}
+		else if(match(argv[i], "--max-string"))
+		{
+			MAX_STRING = numerate_string(argv[i+1]);
+			require(0 < MAX_STRING, "Not a valid string size\nAbort and fix your --max-string\n");
+			i = i + 2;
+		}
 		else if(match(argv[i], "-g") || match(argv[i], "--debug"))
 		{
 			DEBUG = TRUE;
@@ -114,6 +126,8 @@ int main(int argc, char** argv)
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{
+		hold_string = calloc(MAX_STRING, sizeof(char));
+		require(NULL != hold_string, "Impossible Exhustion has occured\n");
 		global_token = read_all_tokens(in, global_token, "STDIN");
 	}
 

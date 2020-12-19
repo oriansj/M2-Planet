@@ -35,3 +35,5 @@ extern int string_index;
 /* Our Target Architecture */
 extern int Architecture;
 extern int register_size;
+
+extern int MAX_STRING;

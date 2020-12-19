@@ -38,7 +38,7 @@ int consume_byte(int c)
 {
 	hold_string[string_index] = c;
 	string_index = string_index + 1;
-	require(MAX_STRING > string_index, "Token exceeded 4096char limit\n");
+	require(MAX_STRING > string_index, "Token exceeded MAX_STRING char limit\nuse --max-string number to increase\n");
 	return fgetc(input);
 }
 
