@@ -63,6 +63,7 @@ int main(int argc, char** argv)
 				exit(EXIT_FAILURE);
 			}
 			global_token = read_all_tokens(in, global_token, name);
+			fclose(in);
 			i = i + 2;
 		}
 		else if(match(argv[i], "-o") || match(argv[i], "--output"))
@@ -154,5 +155,10 @@ int main(int argc, char** argv)
 	recursive_output(strings_list, destination_file);
 	if(KNIGHT_NATIVE == Architecture) file_print("\n:STACK\n", destination_file);
 	else if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
+
+	if (destination_file != stdout)
+	{
+		fclose(destination_file);
+	}
 	return EXIT_SUCCESS;
 }

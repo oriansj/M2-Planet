@@ -158,5 +158,14 @@ int main(int argc, char **argv)
 		Reached_EOF = REPL(stdin, stdout);
 	}
 	fclose(file_output);
+	if (console_output != stdout)
+	{
+		fclose(console_output);
+	}
+	while(NULL != essential)
+	{
+		fclose(essential->file);
+		essential = essential -> next;
+	}
 	return 0;
 }

@@ -39,6 +39,8 @@ int main()
 
 	global_token = read_all_tokens(in, global_token, "tape_01");
 
+	fclose(in);
+
 	if(NULL == global_token)
 	{
 		file_print("Either no input files were given or they were empty\n", stderr);
@@ -59,5 +61,7 @@ int main()
 	file_print("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
 	file_print("\n:STACK\n", destination_file);
+
+	fclose(destination_file)
 	return EXIT_SUCCESS;
 }

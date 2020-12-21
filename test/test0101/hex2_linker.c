@@ -659,6 +659,11 @@ int main(int argc, char **argv)
 	ip = Base_Address;
 	second_pass(input);
 
+	/* Close output file */
+	if (output != stdout) {
+		fclose(output);
+	}
+
 	/* Set file as executable */
 	if(exec_enable)
 	{

@@ -62,5 +62,7 @@ int main(int argc, char** argv)
 	c = fgetc(f);
 	fputc(c, stdout);
 
+	fclose(f);
+
 	return 0;
 }
