@@ -390,7 +390,7 @@ int main(int argc, char** argv, char** envp)
 	{
 		envp_length = envp_length + 1;
 	}
-	char** nenvp = calloc(envp_length + max_args, sizeof(char*));
+	char** nenvp = calloc(envp_length + max_args + 1, sizeof(char*));
 	int i;
 	for(i = 0; i < envp_length; i = i + 1)
 	{

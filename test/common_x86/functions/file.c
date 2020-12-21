@@ -96,9 +96,11 @@ FILE* fopen(char* filename, char* mode)
 int close(int fd)
 {
 	asm("LOAD_EFFECTIVE_ADDRESS_ebx %4"
+	"LOAD_INTEGER_ebx"
 	"LOAD_IMMEDIATE_eax %6"
 	"INT_80");
 }
+
 int fclose(FILE* stream)
 {
 	int error = close(stream);
