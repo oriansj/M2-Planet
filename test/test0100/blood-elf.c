@@ -242,5 +242,9 @@ int main(int argc, char **argv)
 	output_debug(jump_table, FALSE);
 	file_print("\n:ELF_end\n", output);
 
+	if (output != stdout) {
+		fclose(output);
+	}
+
 	return EXIT_SUCCESS;
 }

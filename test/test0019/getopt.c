@@ -104,5 +104,14 @@ int main(int argc, char** argv)
 	}
 
 	sum_file(in, out);
+
+	if (in != stdin)
+	{
+		fclose(in);
+	}
+	if (out != stdout)
+	{
+		fclose(out);
+	}
 	return 0;
 }

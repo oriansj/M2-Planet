@@ -32,6 +32,7 @@ int main(int argc, char** argv)
 	{
 		FILE* f = fopen(argv[1], "r");
 		write_string(f);
+		fclose(f);
 	}
 	return 0;
 }

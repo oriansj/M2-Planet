@@ -41,5 +41,9 @@ int main(int argc, char** argv)
 		f = fopen(argv[1], "w");
 	}
 	write_string(f);
+	if (f != stdout)
+	{
+		fclose(f);
+	}
 	return 0;
 }

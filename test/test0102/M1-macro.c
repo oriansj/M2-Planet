@@ -824,6 +824,9 @@ int main(int argc, char **argv)
 			}
 
 			token_list = Tokenize_Line(token_list, filename);
+
+			fclose(source_file);
+
 			option_index = option_index + 2;
 		}
 		else if(match(argv[option_index], "-o") || match(argv[option_index], "--output"))
@@ -868,6 +871,11 @@ int main(int argc, char **argv)
 	eval_immediates(blob_list);
 	preserve_other(blob_list);
 	print_hex(token_list);
+
+	if (destination_file != stdout)
+	{
+		fclose(destination_file);
+	}
 
 	return EXIT_SUCCESS;
 }

@@ -76,7 +76,7 @@ int main()
 	getcwd(current_path, MAX_STRING);
 
 	/* Test fchdir works */
-	FILE* fchdir_fd = open(prepend_string(base_path, "/test/test0021"), 0, 0);
+	int fchdir_fd = open(prepend_string(base_path, "/test/test0021"), 0, 0);
 	int fchdir_rc = fchdir(fchdir_fd);
 	if(fchdir_rc != 0)
 	{
