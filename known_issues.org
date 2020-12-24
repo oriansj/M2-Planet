@@ -1,0 +1,115 @@
+M2-Planet is subset of the C programming language.
+
+Mostly eliminating features that have yet to be proven useful in building compilers, linkers or assemblers.
+
+* Global variables
+** Assignment
+*** struct initialization
+M2-Planet doesn't support static initialization for structs yet.
+
+Simply because time hasn't been made available for the effort.
+
+Patches for adding support are welcome.
+
+*** AMD64 & AArch64 int initialization wrong
+right now the code in cc_core.c in the function void program() simply doesn't output the correct output for AArch64 or AMD64.
+As the function should numerate the string global_token to determine if the leading 32bits should be 0 or 0xFFFFFFFF and output %0 or %0xFFFFFFFF accordingly.
+
+**** example of failing code
+#include<stdlib.h>
+#include<stdio.h>
+#include<string.h>
+
+void write_string(char* s, FILE* f)
+{
+	while(0 != s[0])
+	{
+		fputc(s[0], f);
+		s = s + 1;
+	}
+}
+
+void* empty = 0;
+
+int main()
+{
+	if (0 == empty)
+	{
+		write_string("Yes, is empty\n", stdout);
+	}
+	else
+	{
+		write_string("Oops, why not?\n", stdout);
+	}
+	return 0;
+}
+
+* Arrays
+** multidimensional arrays return wrong results
+
+*** example of failing code
+#include <stdio.h>
+
+char** env_argv;
+
+char getargchar(int n, int k)
+{
+	return env_argv[n][k];
+}
+
+int main(int argc, char** argv)
+{
+	env_argv = argv;
+	fputc(getargchar(2, 4), stdout);
+	return 0;
+}
+
+run with: ./example 12345 abcdef ABCDEF
+
+*** work around code
+char getargchar(int n, int k)
+{
+	char *tmp = env_argv[n];
+	return tmp[k];
+}
+
+* typedef doesn't work
+M2-Planet doesn't support this function yet as the time for its development has not been allocated yet.
+
+Patches are welcome
+
+* C style function pointers
+M2-Planet supports universal function pointers FUNCTION
+Simply delete the typedef and the code works fine in M2-Planet
+
+** example of failing code
+#include <stdio.h>
+typedef int (*FUNCTION) ();
+
+struct function
+{
+	FUNCTION function;
+	int arity;
+	char* name;
+};
+
+struct function fun_make_cell_;
+
+int make_cell_ ()
+{
+	char* i = fun_make_cell_.name;
+	while(0 != i[0])
+	{
+		fputc(i[0], stdout);
+		i = i + 1;
+	}
+	return fun_make_cell_.arity;
+}
+
+int main ()
+{
+	fun_make_cell_.function = make_cell_;
+	fun_make_cell_.arity = 2;
+	fun_make_cell_.name = "bar\n";
+	fun_make_cell_.function();
+}
