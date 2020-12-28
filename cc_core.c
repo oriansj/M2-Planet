@@ -323,7 +323,7 @@ void constant_load(struct token_list* a)
 void variable_load(struct token_list* a)
 {
 	require(NULL != global_token, "incomplete variable load recieved\n");
-	if(match("FUNCTION", a->type->name) && match("(", global_token->s))
+	if((match("FUNCTION", a->type->name) || match("FUNCTION*", a->type->name)) && match("(", global_token->s))
 	{
 		function_call(numerate_number(a->depth), TRUE);
 		return;

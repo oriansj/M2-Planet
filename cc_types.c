@@ -15,14 +15,58 @@
  * You should have received a copy of the GNU General Public License
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "cc.h"
-#include <stdint.h>
 
 /* Imported functions */
 int numerate_string(char *a);
 void line_error();
 void require(int bool, char* error);
+
+/* enable easy primitive extension */
+struct type* add_primitive(struct type* a)
+{
+	if(NULL == prim_types) return a;
+	struct type* i = prim_types;
+	while(NULL != i->next)
+	{
+		i = i->next;
+	}
+	i->next = a;
+
+	return prim_types;
+}
+
+/* enable easy primitive creation */
+struct type* new_primitive(char* name0, char* name1, char* name2, int size, int sign)
+{
+	/* Create type** */
+	struct type* a = calloc(1, sizeof(struct type));
+	require(NULL != a, "Exhusted memory while declaring new primitive**\n");
+	a->name = name2;
+	a->size = register_size;
+	a->indirect = a;
+	a->is_signed = sign;
+
+	/* Create type* */
+	struct type* b = calloc(1, sizeof(struct type));
+	require(NULL != b, "Exhusted memory while declaring new primitive*\n");
+	b->name = name1;
+	b->size = register_size;
+	b->is_signed = sign;
+	b->indirect = a;
+	b->type = b;
+	a->type = b;
+
+	struct type* r = calloc(1, sizeof(struct type));
+	require(NULL != r, "Exhusted memory while declaring new primitive\n");
+	r->name = name0;
+	r->size = size;
+	r->is_signed = sign;
+	r->indirect = b;
+	r->type = r;
+
+	return r;
+}
 
 /* Initialize default types */
 void initialize_types()
@@ -31,129 +75,45 @@ void initialize_types()
 	else register_size = 4;
 
 	/* Define void */
-	global_types = calloc(1, sizeof(struct type));
-	require(NULL != global_types, "Exhusted memory while intializing VOID\n");
-	global_types->name = "void";
-	global_types->is_signed = FALSE;
-	global_types->size = register_size;
-	global_types->type = global_types;
-	/* void* has the same properties as void */
-	global_types->indirect = global_types;
+	struct type* hold = new_primitive("void", "void*", "void**", register_size, FALSE);
+	prim_types = add_primitive(hold);
 
 	/* Define unsigned LONG */
-	struct type* a = calloc(1, sizeof(struct type));
-	require(NULL != a, "Exhusted memory while intializing SCM\n");
-	a->name = "SCM";
-	a->is_signed = FALSE;
-	a->size = register_size;
-	a->indirect = a;
-	a->type = a;
+	hold = new_primitive("MES","MES*", "MES**", register_size, FALSE);
+	prim_types = add_primitive(hold);
 
 	/* Define LONG */
-	struct type* b = calloc(1, sizeof(struct type));
-	require(NULL != b, "Exhusted memory while intializing LONG\n");
-	b->name = "long";
-	b->is_signed = TRUE;
-	b->size = register_size;
-	b->indirect = b;
-	b->type = b;
+	hold = new_primitive("long", "long*", "long**", register_size, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define UNSIGNED */
-	struct type* c = calloc(1, sizeof(struct type));
-	require(NULL != c, "Exhusted memory while intializing UNSIGNE\n");
-	c->name = "unsigned";
-	c->is_signed = FALSE;
-	c->size = register_size;
-	c->type = c;
-	/* unsigned* has the same properties as unsigned */
-	c->indirect = c;
+	hold = new_primitive("unsigned", "unsigned*", "unsigned**",register_size, FALSE);
+	prim_types = add_primitive(hold);
 
 	/* Define int */
-	struct type* d = calloc(1, sizeof(struct type));
-	require(NULL != d, "Exhusted memory while intializing INT\n");
-	d->name = "int";
-	d->is_signed = TRUE;
-	d->size = register_size;
-	/* int* has the same properties as int */
-	d->indirect = d;
-	d->type = d;
-
-	/* Define char* */
-	struct type* e = calloc(1, sizeof(struct type));
-	require(NULL != e, "Exhusted memory while intializing CHAR*\n");
-	e->name = "char*";
-	e->is_signed = FALSE;
-	e->size = register_size;
-	e->type = e;
+	hold = new_primitive("int", "int*", "int**", register_size, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define char */
-	struct type* f = calloc(1, sizeof(struct type));
-	require(NULL != f, "Exhusted memory while intializing CHAR\n");
-	f->name = "char";
-	f->is_signed = FALSE;
-	f->size = 1;
-	f->type = f;
-
-	/* Define char** */
-	struct type* g = calloc(1, sizeof(struct type));
-	require(NULL != g, "Exhusted memory while intializing CHAR**\n");
-	g->name = "char**";
-	g->is_signed = FALSE;
-	g->size = register_size;
-	g->type = e;
-	g->indirect = g;
-
-	/*fix up indirects for chars */
-	f->indirect = e;
-	e->indirect = g;
+	hold = new_primitive("char", "char*", "char**", 1, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define FILE */
-	struct type* h = calloc(1, sizeof(struct type));
-	require(NULL != h, "Exhusted memory while intializing FILE\n");
-	h->name = "FILE";
-	h->is_signed = TRUE;
-	h->size = register_size;
-	h->type = h;
-	/* FILE* has the same properties as FILE */
-	h->indirect = h;
+	hold = new_primitive("FILE", "FILE*", "FILE**", register_size, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define FUNCTION */
-	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhusted memory while intializing FUNCTION\n");
-	i->name = "FUNCTION";
-	i->is_signed = FALSE;
-	i->size = register_size;
-	i->type = i;
-	/* FUNCTION* has the same properties as FUNCTION */
-	i->indirect = i;
+	hold = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
+	prim_types = add_primitive(hold);
 
 	/* Primitives mes.c wanted */
-	struct type* j = calloc(1, sizeof(struct type));
-	require(NULL != j, "Exhusted memory while intializing SIZE_T\n");
-	j->name = "size_t";
-	j->is_signed = FALSE;
-	j->size = register_size;
-	j->indirect = j;
+	hold = new_primitive("size_t", "size_t*", "size_t**", register_size, FALSE);
+	prim_types = add_primitive(hold);
 
-	struct type* k = calloc(1, sizeof(struct type));
-	require(NULL != k, "Exhusted memory while intializing SSIZE_T\n");
-	k->name = "ssize_t";
-	k->is_signed = FALSE;
-	k->size = register_size;
-	k->indirect = k;
+	hold = new_primitive("ssize_t", "ssize_t*", "ssize_t**", register_size, FALSE);
+	prim_types = add_primitive(hold);
 
-	/* Finalize type list */
-	j->next = k;
-	i->next = j;
-	h->next = i;
-	g->next = h;
-	f->next = g;
-	d->next = f;
-	c->next = d;
-	b->next = c;
-	a->next = b;
-	global_types->next = a;
-	prim_types = global_types;
+	global_types = prim_types;
 }
 
 struct type* lookup_type(char* s, struct type* start)
