@@ -36,4 +36,8 @@ extern int string_index;
 extern int Architecture;
 extern int register_size;
 
+/* Allow us to have a single settable max string */
 extern int MAX_STRING;
+
+/* make default type integer */
+extern struct type* integer;

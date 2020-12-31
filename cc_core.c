@@ -426,6 +426,9 @@ void primary_expr_string()
 	strings_list = emit(":STRING_", strings_list);
 	strings_list = uniqueID(function->s, strings_list, number_string);
 
+	/* catch case of just "foo" from segfaulting */
+	require(NULL != global_token->next, "a string by itself is not valid C\n");
+
 	/* Parse the string */
 	if('"' != global_token->next->s[0])
 	{
@@ -567,14 +570,10 @@ void primary_expr_variable()
 void primary_expr();
 struct type* promote_type(struct type* a, struct type* b)
 {
-	if(NULL == b)
-	{
-		return a;
-	}
-	if(NULL == a)
-	{
-		return b;
-	}
+	require(NULL != b, "impossible case 1 in promote_type\n");
+	require(NULL != a, "impossible case 2 in promote_type\n");
+
+	if(a == b) return a;
 
 	struct type* i;
 	for(i = global_types; NULL != i; i = i->next)
@@ -583,7 +582,10 @@ struct type* promote_type(struct type* a, struct type* b)
 		if(b->name == i->name) break;
 		if(a->name == i->indirect->name) break;
 		if(b->name == i->indirect->name) break;
+		if(a->name == i->indirect->indirect->name) break;
+		if(b->name == i->indirect->indirect->name) break;
 	}
+	require(NULL != i, "impossible case 3 in promote_type\n");
 	return i;
 }
 
@@ -1120,7 +1122,7 @@ void expression()
 
 		common_recursion(expression);
 		emit_out(store);
-		current_target = NULL;
+		current_target = integer;
 	}
 }
 
@@ -1618,7 +1620,9 @@ void recursive_statement()
 struct type* lookup_type(char* s, struct type* start);
 void statement()
 {
-	current_target = NULL;
+	/* Always an integer until told otherwise */
+	current_target = integer;
+
 	if(global_token->s[0] == '{')
 	{
 		recursive_statement();

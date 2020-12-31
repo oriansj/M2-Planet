@@ -37,3 +37,4 @@ int Architecture;
 int register_size;
 
 int MAX_STRING;
+struct type* integer;

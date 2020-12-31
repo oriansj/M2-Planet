@@ -91,8 +91,8 @@ void initialize_types()
 	prim_types = add_primitive(hold);
 
 	/* Define int */
-	hold = new_primitive("int", "int*", "int**", register_size, TRUE);
-	prim_types = add_primitive(hold);
+	integer = new_primitive("int", "int*", "int**", register_size, TRUE);
+	prim_types = add_primitive(integer);
 
 	/* Define char */
 	hold = new_primitive("char", "char*", "char**", 1, TRUE);
