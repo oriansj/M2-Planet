@@ -79,7 +79,7 @@ void initialize_types()
 	prim_types = add_primitive(hold);
 
 	/* Define unsigned LONG */
-	hold = new_primitive("MES","MES*", "MES**", register_size, FALSE);
+	hold = new_primitive("SCM","SCM*", "SCM**", register_size, FALSE);
 	prim_types = add_primitive(hold);
 
 	/* Define LONG */
