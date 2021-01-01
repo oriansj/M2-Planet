@@ -19,8 +19,6 @@ set -x
 # Build the test
 bin/M2-Planet --architecture amd64 \
 	-f test/common_amd64/functions/file.c \
-	-f test/common_amd64/functions/malloc.c \
-	-f functions/calloc.c \
 	-f test/test0023/fseek.c \
 	--debug \
 	-o test/test0023/fseek.M1 || exit 1

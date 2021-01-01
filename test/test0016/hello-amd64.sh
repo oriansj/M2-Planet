@@ -18,8 +18,6 @@
 set -ex
 # Build the test
 bin/M2-Planet --architecture amd64 -f test/common_amd64/functions/file.c \
-	-f test/common_amd64/functions/malloc.c \
-	-f functions/calloc.c \
 	-f test/common_amd64/functions/putchar.c \
 	-f test/test0016/file_write.c \
 	-o test/test0016/file_write.M1 || exit 1
