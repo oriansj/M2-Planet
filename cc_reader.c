@@ -102,7 +102,7 @@ void reset_hold_string()
 int get_token(int c)
 {
 	struct token_list* current = calloc(1, sizeof(struct token_list));
-	require(NULL != current, "Exhusted memory while getting token\n");
+	require(NULL != current, "Exhausted memory while getting token\n");
 
 reset:
 	reset_hold_string();
