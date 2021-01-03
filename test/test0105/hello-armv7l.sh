@@ -32,6 +32,7 @@ set -x
 	-f test/test0105/lisp_print.c \
 	-f test/test0105/lisp_read.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0105/lisp.M1 || exit 1
 
 # Build debug footer

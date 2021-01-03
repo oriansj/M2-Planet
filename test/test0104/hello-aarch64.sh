@@ -31,6 +31,7 @@ set -x
 	-f test/common_aarch64/functions/execve.c \
 	-f test/test0104/kaem.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0104/kaem.M1 || exit 1
 
 # Build debug footer

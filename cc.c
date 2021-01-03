@@ -31,6 +31,7 @@ int numerate_string(char *a);
 int main(int argc, char** argv)
 {
 	MAX_STRING = 4096;
+	BOOTSTRAP_MODE = FALSE;
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
@@ -101,6 +102,11 @@ int main(int argc, char** argv)
 			MAX_STRING = numerate_string(argv[i+1]);
 			require(0 < MAX_STRING, "Not a valid string size\nAbort and fix your --max-string\n");
 			i = i + 2;
+		}
+		else if(match(argv[i], "--bootstrap-mode"))
+		{
+			BOOTSTRAP_MODE = TRUE;
+			i = i + 1;
 		}
 		else if(match(argv[i], "-g") || match(argv[i], "--debug"))
 		{

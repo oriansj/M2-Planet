@@ -21,6 +21,7 @@ set -ex
 bin/M2-Planet --architecture aarch64 \
 	-f test/common_aarch64/functions/putchar.c \
 	-f test/test0014/basic_args.c \
+	--bootstrap-mode \
 	-o test/test0014/basic_args.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

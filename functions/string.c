@@ -18,15 +18,15 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-char* copy_string(char* target, char* source)
+void copy_string(char* target, char* source, int max)
 {
-	while(0 != source[0])
+	int i = 0;
+	while(0 != source[i])
 	{
-		target[0] = source[0];
-		target = target + 1;
-		source = source + 1;
+		target[i] = source[i];
+		i = i + 1;
+		if(i == max) break;
 	}
-	return target;
 }
 
 int string_length(char* a)

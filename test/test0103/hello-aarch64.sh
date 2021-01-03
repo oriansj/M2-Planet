@@ -28,6 +28,7 @@ set -x
 	-f functions/match.c \
 	-f test/test0103/get_machine.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0103/get_machine.M1 || exit 1
 
 # Build debug footer

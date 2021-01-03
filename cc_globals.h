@@ -41,3 +41,6 @@ extern int MAX_STRING;
 
 /* make default type integer */
 extern struct type* integer;
+
+/* enable bootstrap-mode */
+extern int BOOTSTRAP_MODE;

@@ -26,6 +26,7 @@ bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/file.c
 	-f functions/numerate_number.c \
 	-f functions/file_print.c \
 	-f test/test0019/getopt.c \
+	--bootstrap-mode \
 	-o test/test0019/getopt.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

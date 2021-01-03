@@ -38,6 +38,7 @@ set -ex
 	-f cc_core.c \
 	-f cc.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test1000/cc.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
@@ -79,6 +80,7 @@ then
 		-f cc_types.c \
 		-f cc_core.c \
 		-f cc.c \
+		--bootstrap-mode \
 		-o test/test1000/proof || exit 4
 
 	. ./sha256.sh

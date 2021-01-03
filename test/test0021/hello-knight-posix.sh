@@ -24,11 +24,11 @@ bin/M2-Planet --architecture knight-posix \
 	-f test/common_knight/functions/exit.c \
 	-f test/common_knight/functions/file.c \
 	-f functions/calloc.c \
-	-f functions/string.c \
 	-f functions/match.c \
 	-f functions/file_print.c \
 	-f test/test0021/chdir.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0021/chdir.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

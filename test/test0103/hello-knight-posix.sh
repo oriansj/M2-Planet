@@ -25,6 +25,7 @@ set -x
 	-f test/common_knight/functions/uname.c \
 	-f functions/match.c \
 	-f test/test0103/get_machine.c \
+	--bootstrap-mode \
 	-o test/test0103/get_machine.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

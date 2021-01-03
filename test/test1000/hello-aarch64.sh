@@ -39,6 +39,7 @@ set -ex
 	-f cc_core.c \
 	-f cc.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test1000/cc.M1 || exit 1
 
 # Build debug footer
@@ -86,6 +87,7 @@ then
 		-f cc_types.c \
 		-f cc_core.c \
 		-f cc.c \
+		--bootstrap-mode \
 		-o test/test1000/proof || exit 5
 
 	. ./sha256.sh

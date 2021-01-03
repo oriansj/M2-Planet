@@ -24,11 +24,11 @@ bin/M2-Planet --architecture armv7l \
 	-f test/common_armv7l/functions/exit.c \
 	-f test/common_armv7l/functions/file.c \
 	-f functions/calloc.c \
-	-f functions/string.c \
 	-f functions/match.c \
 	-f functions/file_print.c \
 	-f test/test0021/chdir.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0021/chdir.M1 || exit 1
 
 # Build debug footer

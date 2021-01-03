@@ -98,20 +98,23 @@ void initialize_types()
 	hold = new_primitive("char", "char*", "char**", 1, TRUE);
 	prim_types = add_primitive(hold);
 
-	/* Define FILE */
-	hold = new_primitive("FILE", "FILE*", "FILE**", register_size, TRUE);
-	prim_types = add_primitive(hold);
-
 	/* Define FUNCTION */
 	hold = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
 	prim_types = add_primitive(hold);
 
-	/* Primitives mes.c wanted */
-	hold = new_primitive("size_t", "size_t*", "size_t**", register_size, FALSE);
-	prim_types = add_primitive(hold);
+	if(BOOTSTRAP_MODE)
+	{
+		/* Define FILE */
+		hold = new_primitive("FILE", "FILE*", "FILE**", register_size, TRUE);
+		prim_types = add_primitive(hold);
 
-	hold = new_primitive("ssize_t", "ssize_t*", "ssize_t**", register_size, FALSE);
-	prim_types = add_primitive(hold);
+		/* Primitives mes.c wanted */
+		hold = new_primitive("size_t", "size_t*", "size_t**", register_size, FALSE);
+		prim_types = add_primitive(hold);
+
+		hold = new_primitive("ssize_t", "ssize_t*", "ssize_t**", register_size, FALSE);
+		prim_types = add_primitive(hold);
+	}
 
 	global_types = prim_types;
 }
@@ -299,4 +302,29 @@ struct type* type_name()
 	}
 
 	return ret;
+}
+
+struct type* mirror_type(struct type* source, char* name)
+{
+	struct type* head = calloc(1, sizeof(struct type));
+	require(NULL != head, "Exhusted memory while creating a struct\n");
+	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhusted memory while creating a struct indirection\n");
+
+	head->name = name;
+	i->name = name;
+	head->size = source->size;
+	i->size = source->indirect->size;
+	head->offset = source->offset;
+	i->offset = source->indirect->offset;
+	head->is_signed = source->is_signed;
+	i->is_signed = source->indirect->is_signed;
+	head->indirect = i;
+	i->indirect = head;
+	head->members = source->members;
+	i->members =  source->indirect->members;
+	head->type = head;
+	i->type = i;
+
+	return head;
 }

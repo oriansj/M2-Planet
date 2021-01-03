@@ -20,6 +20,7 @@ set -ex
 bin/M2-Planet --architecture armv7l -f test/common_armv7l/functions/file.c \
 	-f test/common_armv7l/functions/putchar.c \
 	-f test/test0016/file_write.c \
+	--bootstrap-mode \
 	-o test/test0016/file_write.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

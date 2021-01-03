@@ -25,6 +25,7 @@ set -x
 	-f functions/calloc.c \
 	-f functions/match.c \
 	-f test/test0100/blood-elf.c \
+	--bootstrap-mode \
 	-o test/test0100/blood-elf.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

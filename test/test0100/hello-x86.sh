@@ -25,6 +25,7 @@ set -x
 	-f functions/match.c \
 	-f test/test0100/blood-elf.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0100/blood-elf.M1 || exit 1
 
 # Build debug footer

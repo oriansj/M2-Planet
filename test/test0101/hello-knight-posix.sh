@@ -27,6 +27,7 @@ set -x
 	-f functions/numerate_number.c \
 	-f test/common_knight/functions/stat.c \
 	-f test/test0101/hex2_linker.c \
+	--bootstrap-mode \
 	-o test/test0101/hex2_linker.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

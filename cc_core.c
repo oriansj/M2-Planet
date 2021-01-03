@@ -47,6 +47,8 @@ int escape_lookup(char* c);
 int numerate_string(char *a);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
+struct type* mirror_type(struct type* source, char* name);
+struct type* add_primitive(struct type* a);
 /* Host touchy function will need custom on 64bit systems*/
 int fixup_int32(int a);
 
@@ -1830,6 +1832,16 @@ new_type:
 			global_constant_list->arguments = global_token->next;
 			global_token = global_token->next->next;
 		}
+	}
+	else if(match("typedef", global_token->s))
+	{
+		/* typedef $TYPE $NAME; */
+		global_token = global_token->next;
+		type_size = type_name();
+		type_size = mirror_type(type_size, global_token->s);
+		add_primitive(type_size);
+		global_token = global_token->next;
+		require_match("ERROR in typedef statement\nMissing ;\n", ";");
 	}
 	else
 	{

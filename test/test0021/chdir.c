@@ -25,8 +25,18 @@
 
 int match(char* a, char* b);
 char* get_current_dir_name();
-char* copy_string(char* target, char* source);
 void file_print(char* s, FILE* f);
+
+char* copy_string(char* target, char* source)
+{
+	while(0 != source[0])
+	{
+		target[0] = source[0];
+		target = target + 1;
+		source = source + 1;
+	}
+	return target;
+}
 
 char* prepend_string(char* add, char* base)
 {

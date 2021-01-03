@@ -28,6 +28,7 @@ set -x
 	-f test/common_amd64/functions/stat.c \
 	-f test/test0101/hex2_linker.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0101/hex2_linker.M1 || exit 1
 
 # Build debug footer

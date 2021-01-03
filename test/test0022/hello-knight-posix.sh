@@ -26,6 +26,7 @@ bin/M2-Planet --architecture knight-posix \
 	-f functions/calloc.c \
 	-f functions/file_print.c \
 	-f test/test0022/continue.c \
+	--bootstrap-mode \
 	-o test/test0022/continue.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

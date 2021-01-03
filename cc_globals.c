@@ -38,3 +38,6 @@ int register_size;
 
 int MAX_STRING;
 struct type* integer;
+
+/* enable bootstrap-mode */
+int BOOTSTRAP_MODE;

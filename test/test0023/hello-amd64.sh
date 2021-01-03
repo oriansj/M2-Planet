@@ -21,6 +21,7 @@ bin/M2-Planet --architecture amd64 \
 	-f test/common_amd64/functions/file.c \
 	-f test/test0023/fseek.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0023/fseek.M1 || exit 1
 
 # Build debug footer

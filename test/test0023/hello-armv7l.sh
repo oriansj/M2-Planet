@@ -21,6 +21,7 @@ bin/M2-Planet --architecture armv7l \
 	-f test/common_armv7l/functions/file.c \
 	-f test/test0023/fseek.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0023/fseek.M1 || exit 1
 
 # Build debug footer

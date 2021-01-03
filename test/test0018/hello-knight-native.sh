@@ -22,6 +22,7 @@ bin/M2-Planet --architecture knight-native -f test/common_knight/functions/file-
 	-f functions/calloc.c \
 	-f functions/match.c \
 	-f test/test0018/math.c \
+	--bootstrap-mode \
 	-o test/test0018/math.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

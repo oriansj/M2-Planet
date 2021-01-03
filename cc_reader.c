@@ -171,7 +171,7 @@ reset:
 	/* More efficiently allocate memory for string */
 	current->s = calloc(string_index + 2, sizeof(char));
 	require(NULL != current->s, "Exhusted memory while trying to copy a token\n");
-	copy_string(current->s, hold_string);
+	copy_string(current->s, hold_string, MAX_STRING);
 
 	current->prev = token;
 	current->next = token;

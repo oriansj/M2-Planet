@@ -22,6 +22,7 @@ bin/M2-Planet --architecture aarch64 \
 	-f test/common_aarch64/functions/file.c \
 	-f test/common_aarch64/functions/putchar.c \
 	-f test/test0016/file_write.c \
+	--bootstrap-mode \
 	-o test/test0016/file_write.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

@@ -39,7 +39,7 @@
 #define AARCH64 5
 
 
-char* copy_string(char* target, char* source);
+void copy_string(char* target, char* source, int max);
 int in_set(int c, char* s);
 int match(char* a, char* b);
 void file_print(char* s, FILE* f);

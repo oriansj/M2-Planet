@@ -21,6 +21,7 @@ bin/M2-Planet --architecture x86 -f test/common_x86/functions/file.c \
 	-f test/common_x86/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/test0018/math.c \
+	--bootstrap-mode \
 	-o test/test0018/math.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

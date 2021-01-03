@@ -29,6 +29,7 @@ set -x
 	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0102/M1-macro.M1 || exit 1
 
 # Build debug footer

@@ -28,6 +28,7 @@ set -x
 	-f functions/string.c \
 	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
+	--bootstrap-mode \
 	-o test/test0102/M1-macro.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

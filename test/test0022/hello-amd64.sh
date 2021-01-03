@@ -27,6 +27,7 @@ bin/M2-Planet --architecture amd64 \
 	-f functions/file_print.c \
 	-f test/test0022/continue.c \
 	--debug \
+	--bootstrap-mode \
 	-o test/test0022/continue.M1 || exit 1
 
 # Build debug footer
