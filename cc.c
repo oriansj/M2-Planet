@@ -25,14 +25,17 @@ void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
 void eat_newline_tokens();
+void preprocess();
 void program();
 void recursive_output(struct token_list* i, FILE* out);
+void output_tokens(struct token_list *i, FILE* out);
 int numerate_string(char *a);
 
 int main(int argc, char** argv)
 {
 	MAX_STRING = 4096;
 	BOOTSTRAP_MODE = FALSE;
+	PREPROCESSOR_MODE = FALSE;
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
@@ -119,6 +122,11 @@ int main(int argc, char** argv)
 			file_print(" -f input file\n -o output file\n --help for this message\n --version for file version\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
+		else if(match(argv[i], "-E"))
+		{
+			PREPROCESSOR_MODE = TRUE;
+			i = i + 1;
+		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
 			file_print("M2-Planet v1.7.0\n", stderr);
@@ -146,6 +154,14 @@ int main(int argc, char** argv)
 	}
 	global_token = reverse_list(global_token);
 
+	preprocess();
+	if (PREPROCESSOR_MODE)
+	{
+		file_print("\n/* Preprocessed source */\n", destination_file);
+		output_tokens(global_token, destination_file);
+		goto exit_success;
+	}
+
 	/* the main parser doesn't know how to handle newline tokens */
 	eat_newline_tokens();
 
@@ -166,6 +182,7 @@ int main(int argc, char** argv)
 	if(KNIGHT_NATIVE == Architecture) file_print("\n:STACK\n", destination_file);
 	else if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
 
+exit_success:
 	if (destination_file != stdout)
 	{
 		fclose(destination_file);

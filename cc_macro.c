@@ -54,3 +54,7 @@ void eat_newline_tokens()
     }
 }
 
+
+void preprocess()
+{
+}

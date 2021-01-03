@@ -41,3 +41,6 @@ struct type* integer;
 
 /* enable bootstrap-mode */
 int BOOTSTRAP_MODE;
+
+/* enable preprocessor-only mode */
+int PREPROCESSOR_MODE;

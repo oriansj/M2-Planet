@@ -1923,3 +1923,13 @@ void recursive_output(struct token_list* head, FILE* out)
 		i = i->next;
 	}
 }
+
+void output_tokens(struct token_list *i, FILE* out)
+{
+	while(NULL != i)
+	{
+		file_print(i->s, out);
+		file_print(" ", out);
+		i = i->next;
+	}
+}
