@@ -26,11 +26,6 @@ char* file;
 int clearWhiteSpace(int c)
 {
 	if((32 == c) || (9 == c)) return clearWhiteSpace(fgetc(input));
-	else if (10 == c)
-	{
-		line = line + 1;
-		return clearWhiteSpace(fgetc(input));
-	}
 	return c;
 }
 
@@ -162,6 +157,11 @@ reset:
 			c = fgetc(input);
 			goto reset;
 		}
+	}
+	else if (c == '\n')
+	{
+		line = line + 1;
+		c = consume_byte(c);
 	}
 	else
 	{

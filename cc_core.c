@@ -1845,6 +1845,7 @@ new_type:
 	}
 	else
 	{
+		require(!match("\n", global_token->s), "unexpected newline token\n");
 		type_size = type_name();
 		if(NULL == type_size)
 		{

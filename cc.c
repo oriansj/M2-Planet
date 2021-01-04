@@ -24,6 +24,7 @@
 void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
+void eat_newline_tokens();
 void program();
 void recursive_output(struct token_list* i, FILE* out);
 int numerate_string(char *a);
@@ -144,6 +145,9 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 	global_token = reverse_list(global_token);
+
+	/* the main parser doesn't know how to handle newline tokens */
+	eat_newline_tokens();
 
 	initialize_types();
 	reset_hold_string();

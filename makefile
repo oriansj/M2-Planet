@@ -39,6 +39,7 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c c
 	cc_strings.c \
 	cc_types.c \
 	cc_core.c \
+	cc_macro.c \
 	cc.c \
 	cc.h \
 	cc_globals.c \

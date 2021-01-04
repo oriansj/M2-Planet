@@ -37,6 +37,7 @@ set -ex
 	-f cc_strings.c \
 	-f cc_types.c \
 	-f cc_core.c \
+	-f cc_macro.c \
 	-f cc.c \
 	--debug \
 	--bootstrap-mode \
@@ -86,6 +87,7 @@ then
 		-f cc_strings.c \
 		-f cc_types.c \
 		-f cc_core.c \
+		-f cc_macro.c \
 		-f cc.c \
 		--bootstrap-mode \
 		-o test/test1000/proof || exit 5
