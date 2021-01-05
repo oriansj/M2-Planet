@@ -19,6 +19,7 @@
 
 void require(int bool, char* error);
 int numerate_string(char *a);
+void line_error_token(struct token_list *);
 
 struct conditional_inclusion {
     struct conditional_inclusion* prev;
@@ -270,6 +271,12 @@ void macro_directive()
     }
     else if (match("#endif", macro_token->s))
     {
+        if (NULL == conditional_inclusion_top)
+        {
+            line_error_token(macro_token);
+            file_print("unexpected #endif\n", stderr);
+            exit(EXIT_FAILURE);
+        }
         eat_current_token();
         /* pop conditional inclusion */
         t = conditional_inclusion_top;

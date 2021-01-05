@@ -97,13 +97,18 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 	return NULL;
 }
 
+void line_error_token(struct token_list *token)
+{
+	require(NULL != token, "EOF reached inside of line_error\n");
+	file_print(token->filename, stderr);
+	file_print(":", stderr);
+	file_print(numerate_number(token->linenumber), stderr);
+	file_print(":", stderr);
+}
+
 void line_error()
 {
-	require(NULL != global_token, "EOF reached inside of line_error\n");
-	file_print(global_token->filename, stderr);
-	file_print(":", stderr);
-	file_print(numerate_number(global_token->linenumber), stderr);
-	file_print(":", stderr);
+	line_error_token(global_token);
 }
 
 void require_match(char* message, char* required)
