@@ -1845,6 +1845,7 @@ new_type:
 	}
 	else
 	{
+		require('#' != global_token->s[0], "unhandled macro directive\n");
 		require(!match("\n", global_token->s), "unexpected newline token\n");
 		type_size = type_name();
 		if(NULL == type_size)

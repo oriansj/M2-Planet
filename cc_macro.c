@@ -17,6 +17,8 @@
 #include "cc.h"
 #include "gcc_req.h"
 
+void require(int bool, char* error);
+
 /* point where we are currently modifying the global_token list */
 struct token_list* macro_token;
 
@@ -54,7 +56,44 @@ void eat_newline_tokens()
     }
 }
 
+void macro_directive()
+{
+    /* unhandled macro directive; let's eat until a newline; om nom nom */
+    while (TRUE)
+    {
+        eat_current_token();
+
+        if (NULL == macro_token)
+            return;
+
+        if ('\n' == macro_token->s[0])
+            return;
+    }
+}
 
 void preprocess()
 {
+    int start_of_line = TRUE;
+    macro_token = global_token;
+
+    while (NULL != macro_token)
+    {
+
+        if (start_of_line && '#' == macro_token->s[0])
+        {
+            macro_directive();
+            if (macro_token)
+                require('\n' == macro_token->s[0], "newline expected at end of macro directive\n");
+        }
+        else if ('\n' == macro_token->s[0])
+        {
+            start_of_line = TRUE;
+            macro_token = macro_token->next;
+        }
+        else
+        {
+            start_of_line = FALSE;
+            macro_token = macro_token->next;
+        }
+    }
 }

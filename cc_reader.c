@@ -74,16 +74,6 @@ int preserve_keyword(int c, char* S)
 	return c;
 }
 
-int purge_macro(int ch)
-{
-	while(10 != ch)
-	{
-		ch = fgetc(input);
-		require(EOF != ch, "Hit EOF inside macro\n");
-	}
-	return ch;
-}
-
 void reset_hold_string()
 {
 	int i = string_index + 2;
@@ -111,8 +101,8 @@ reset:
 	}
 	else if('#' == c)
 	{
-		c = purge_macro(c);
-		goto reset;
+		c = consume_byte(c);
+		c = preserve_keyword(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
 	}
 	else if(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
 	{
