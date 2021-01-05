@@ -311,7 +311,17 @@ void preprocess()
         {
             macro_directive();
             if (macro_token)
-                require('\n' == macro_token->s[0], "newline expected at end of macro directive\n");
+            {
+                if ('\n' != macro_token->s[0])
+                {
+                    line_error_token(macro_token);
+                    file_print("newline expected at end of macro directive\n", stderr);
+                    file_print("found: '", stderr);
+                    file_print(macro_token->s, stderr);
+                    file_print("'\n", stderr);
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
         else if ('\n' == macro_token->s[0])
         {
