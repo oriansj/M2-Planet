@@ -91,6 +91,8 @@ int macro_number()
 
 int macro_primary_expr()
 {
+	require(NULL != macro_token, "got an EOF terminated macro expression\n");
+
 	if('-' == macro_token->s[0])
 	{
 		eat_current_token();
@@ -125,6 +127,7 @@ int macro_additive_expr()
 	int lhs = macro_primary_expr();
 	int hold;
 
+	require(NULL != macro_token, "got an EOF terminated macro expression\n");
 	if(match("+", macro_token->s))
 	{
 		eat_current_token();
