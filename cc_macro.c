@@ -123,6 +123,7 @@ int macro_primary_expr()
 int macro_additive_expr()
 {
 	int lhs = macro_primary_expr();
+	int hold;
 
 	if(match("+", macro_token->s))
 	{
@@ -142,12 +143,16 @@ int macro_additive_expr()
 	else if(match("/", macro_token->s))
 	{
 		eat_current_token();
-		return lhs / macro_additive_expr();
+		hold = macro_additive_expr();
+		require(0 != hold, "divide by zero not valid even in C macros\n");
+		return lhs / hold;
 	}
 	else if(match("%", macro_token->s))
 	{
 		eat_current_token();
-		return lhs % macro_additive_expr();
+		hold = macro_additive_expr();
+		require(0 != hold, "modulus by zero not valid even in C macros\n");
+		return lhs % hold;
 	}
 	else if(match(">>", macro_token->s))
 	{
@@ -279,6 +284,7 @@ void macro_directive()
 	{
 		eat_current_token();
 		result = macro_expression();
+		require(NULL != conditional_inclusion_top, "#elif without leading #if\n");
 		conditional_inclusion_top->include = result && !conditional_inclusion_top->previous_condition_matched;
 		conditional_inclusion_top->previous_condition_matched =
 		    conditional_inclusion_top->previous_condition_matched || conditional_inclusion_top->include;
@@ -286,6 +292,7 @@ void macro_directive()
 	else if(match("#else", macro_token->s))
 	{
 		eat_current_token();
+		require(NULL != conditional_inclusion_top, "#else without leading #if\n");
 		conditional_inclusion_top->include = !conditional_inclusion_top->previous_condition_matched;
 	}
 	else if(match("#endif", macro_token->s))
