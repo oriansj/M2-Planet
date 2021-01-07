@@ -313,6 +313,16 @@ void macro_directive()
 		conditional_inclusion_top = conditional_inclusion_top->prev;
 		free(t);
 	}
+	else if(match("#define", macro_token->s))
+	{
+		macro_token->s = "CONSTANT";
+		while('\n' != macro_token->s[0])
+		{
+			macro_token = macro_token->next;
+			require(NULL != macro_token, "Ran off the end of a #define\n");
+		}
+		return;
+	}
 	else
 	{
 		/* unhandled macro directive; let's eat until a newline; om nom nom */
