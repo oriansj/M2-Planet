@@ -28,6 +28,13 @@ struct conditional_inclusion
 	int previous_condition_matched; /* 1 == all subsequent conditions treated as FALSE */
 };
 
+struct macro_list
+{
+	struct macro_list* next;
+	char* symbol;
+};
+
+struct macro_list* macro_env;
 struct conditional_inclusion* conditional_inclusion_top;
 
 /* point where we are currently modifying the global_token list */
@@ -76,6 +83,25 @@ void eat_newline_tokens()
 	}
 }
 
+struct macro_list* lookup_macro(struct token_list* token)
+{
+	struct macro_list* hold = macro_env;
+
+	while (NULL != hold)
+	{
+		if (match(token->s, hold->symbol))
+		{
+			/* found! */
+			return hold;
+		}
+
+		hold = hold->next;
+	}
+
+	/* not found! */
+	return NULL;
+}
+
 int macro_expression();
 int macro_variable()
 {
@@ -91,7 +117,9 @@ int macro_number()
 
 int macro_primary_expr()
 {
-	require(NULL != macro_token, "got an EOF terminated macro expression\n");
+	int defined_has_paren = FALSE;
+	int hold;
+	require(NULL != macro_token, "got an EOF terminated macro primary expression\n");
 
 	if('-' == macro_token->s[0])
 	{
@@ -107,6 +135,36 @@ int macro_primary_expr()
 	{
 		eat_current_token();
 		return macro_expression();
+	}
+	else if(match("defined", macro_token->s))
+	{
+		eat_current_token();
+
+		require(NULL != macro_token, "got an EOF terminated macro defined expression\n");
+
+		if('(' == macro_token->s[0])
+		{
+			defined_has_paren = TRUE;
+			eat_current_token();
+		}
+
+		if (NULL != lookup_macro(macro_token))
+		{
+			hold = TRUE;
+		}
+		else
+		{
+			hold = FALSE;
+		}
+		eat_current_token();
+
+		if(TRUE == defined_has_paren)
+		{
+			require(')' == macro_token->s[0], "missing close parenthesis for defined()\n");
+			eat_current_token();
+		}
+
+		return hold;
 	}
 	else if(in_set(macro_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
@@ -127,7 +185,7 @@ int macro_additive_expr()
 	int lhs = macro_primary_expr();
 	int hold;
 
-	require(NULL != macro_token, "got an EOF terminated macro expression\n");
+	require(NULL != macro_token, "got an EOF terminated macro additive expression\n");
 	if(match("+", macro_token->s))
 	{
 		eat_current_token();
@@ -258,6 +316,49 @@ int macro_expression()
 	return macro_bitwise_expr();
 }
 
+void handle_define()
+{
+	int replace_with_constant = TRUE;
+	struct macro_list* hold;
+
+	if (replace_with_constant)
+	{
+		macro_token->s = "CONSTANT";
+		macro_token = macro_token->next;
+	}
+	else
+	{
+		eat_current_token();
+	}
+
+	require(NULL != macro_token, "got an EOF terminated #define\n");
+	require('\n' != macro_token->s[0], "unexpected newline after #define\n");
+
+	/* insert new macro */
+	hold = calloc(1, sizeof(struct macro_list));
+	hold->symbol = macro_token->s;
+	hold->next = macro_env;
+	macro_env = hold;
+
+	while (TRUE)
+	{
+		require(NULL != macro_token, "got an EOF terminated #define\n");
+
+		if ('\n' == macro_token->s[0])
+		{
+			return;
+		}
+
+		if (replace_with_constant)
+		{
+			macro_token = macro_token->next;
+		}
+		else
+		{
+			eat_current_token();
+		}
+	}
+}
 
 void macro_directive()
 {
@@ -315,13 +416,7 @@ void macro_directive()
 	}
 	else if(match("#define", macro_token->s))
 	{
-		macro_token->s = "CONSTANT";
-		while('\n' != macro_token->s[0])
-		{
-			macro_token = macro_token->next;
-			require(NULL != macro_token, "Ran off the end of a #define\n");
-		}
-		return;
+		handle_define();
 	}
 	else
 	{
