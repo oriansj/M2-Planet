@@ -33,6 +33,7 @@ struct macro_list
 {
 	struct macro_list* next;
 	char* symbol;
+	struct token_list* expansion;
 };
 
 struct macro_list* macro_env;
@@ -70,6 +71,44 @@ void eat_newline_tokens()
 			macro_token = macro_token->next;
 		}
 	}
+}
+
+/* returns the first token inserted; inserts *before* point */
+struct token_list* insert_tokens(struct token_list* point, struct token_list* token)
+{
+	struct token_list* copy;
+	struct token_list* first = NULL;
+
+	while (NULL != token)
+	{
+		copy = calloc(1, sizeof(struct token_list));
+		copy->s = token->s;
+		copy->filename = token->filename;
+		copy->linenumber = token->linenumber;
+
+		if(NULL == first)
+		{
+			first = copy;
+		}
+
+		copy->next = point;
+
+		if (NULL != point)
+		{
+			copy->prev = point->prev;
+
+			if(NULL != point->prev)
+			{
+				point->prev->next = copy;
+			}
+
+			point->prev = copy;
+		}
+
+		token = token->next;
+	}
+
+	return first;
 }
 
 struct macro_list* lookup_macro(struct token_list* token)
@@ -307,18 +346,10 @@ int macro_expression()
 
 void handle_define()
 {
-	int replace_with_constant = TRUE;
 	struct macro_list* hold;
+	struct token_list* expansion_end;
 
-	if (replace_with_constant)
-	{
-		macro_token->s = "CONSTANT";
-		macro_token = macro_token->next;
-	}
-	else
-	{
-		eat_current_token();
-	}
+	eat_current_token();
 
 	require(NULL != macro_token, "got an EOF terminated #define\n");
 	require('\n' != macro_token->s[0], "unexpected newline after #define\n");
@@ -329,24 +360,31 @@ void handle_define()
 	hold->next = macro_env;
 	macro_env = hold;
 
+	/* discard the macro name */
+	eat_current_token();
+
 	while (TRUE)
 	{
 		require(NULL != macro_token, "got an EOF terminated #define\n");
 
 		if ('\n' == macro_token->s[0])
 		{
+			expansion_end->next = NULL;
 			return;
 		}
 
-		if (replace_with_constant)
+		expansion_end = macro_token;
+
+		/* in the first iteration, we set the first token of the expansion, if
+		   it exists */
+		if (NULL == hold->expansion)
 		{
-			macro_token = macro_token->next;
+			hold->expansion = macro_token;
 		}
-		else
-		{
-			eat_current_token();
-		}
+
+		eat_current_token();
 	}
+
 }
 
 void macro_directive()
@@ -427,6 +465,21 @@ void macro_directive()
 	}
 }
 
+struct token_list* maybe_expand(struct token_list* token)
+{
+	struct macro_list* hold = lookup_macro(token);
+	struct token_list* hold2;
+	if (NULL == hold)
+	{
+		return token->next;
+	}
+
+	token = eat_token(token);
+	hold2 = insert_tokens(token, hold->expansion);
+
+	return hold2->next;
+}
+
 void preprocess()
 {
 	int start_of_line = TRUE;
@@ -459,10 +512,9 @@ void preprocess()
 		else
 		{
 			start_of_line = FALSE;
-
 			if(NULL == conditional_inclusion_top)
 			{
-				macro_token = macro_token->next;
+				macro_token = maybe_expand(macro_token);
 			}
 			else if(!conditional_inclusion_top->include)
 			{
@@ -471,7 +523,7 @@ void preprocess()
 			}
 			else
 			{
-				macro_token = macro_token->next;
+				macro_token = maybe_expand(macro_token);
 			}
 		}
 	}
