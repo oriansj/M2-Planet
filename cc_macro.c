@@ -20,6 +20,7 @@
 void require(int bool, char* error);
 int numerate_string(char* a);
 void line_error_token(struct token_list* list);
+struct token_list* eat_token(struct token_list* head);
 
 struct conditional_inclusion
 {
@@ -42,26 +43,14 @@ struct token_list* macro_token;
 
 void eat_current_token()
 {
-	struct token_list* tmp;
+	int update_global_token = FALSE;
+	if (macro_token == global_token)
+		update_global_token = TRUE;
 
-	if(NULL != macro_token->prev)
-	{
-		macro_token->prev->next = macro_token->next;
-	}
-	else
-	{
-		global_token = macro_token->next;
-	}
+	macro_token = eat_token(macro_token);
 
-	/* update backlinks */
-	if(NULL != macro_token->next)
-	{
-		macro_token->next->prev = macro_token->prev;
-	}
-
-	tmp = macro_token;
-	macro_token = macro_token->next;
-	free(tmp);
+	if(update_global_token)
+		global_token = macro_token;
 }
 
 void eat_newline_tokens()

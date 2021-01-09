@@ -23,6 +23,7 @@ bin/M2-Planet --architecture aarch64 \
 	-f test/common_aarch64/functions/exit.c \
 	-f test/common_aarch64/functions/malloc.c \
 	-f test/test0010/nested_struct.c \
+	--bootstrap-mode \
 	-o test/test0010/nested_struct.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

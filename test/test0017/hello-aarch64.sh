@@ -23,6 +23,7 @@ bin/M2-Planet --architecture aarch64 \
 	-f functions/calloc.c \
 	-f test/common_aarch64/functions/putchar.c \
 	-f test/test0017/memset.c \
+	--bootstrap-mode \
 	-o test/test0017/memset.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

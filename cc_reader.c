@@ -84,6 +84,110 @@ void reset_hold_string()
 	}
 }
 
+/* note if this is the first token in the list, head needs fixing up */
+struct token_list* eat_token(struct token_list* token)
+{
+	if(NULL != token->prev)
+	{
+		token->prev->next = token->next;
+	}
+
+	/* update backlinks */
+	if(NULL != token->next)
+	{
+		token->next->prev = token->prev;
+	}
+
+	return token->next;
+}
+
+struct token_list* eat_until_newline(struct token_list* head)
+{
+	while (NULL != head)
+	{
+		if('\n' == head->s[0])
+		{
+			return head;
+		}
+		else
+		{
+			head = eat_token(head);
+		}
+	}
+
+	return NULL;
+}
+
+struct token_list* remove_line_comments(struct token_list* head)
+{
+	struct token_list* first = NULL;
+
+	while (NULL != head)
+	{
+		if(match("//", head->s))
+		{
+			head = eat_until_newline(head);
+		}
+		else
+		{
+			if(NULL == first)
+			{
+				first = head;
+			}
+			head = head->next;
+		}
+	}
+
+	return first;
+}
+
+struct token_list* remove_line_comment_tokens(struct token_list* head)
+{
+	struct token_list* first = NULL;
+
+	while (NULL != head)
+	{
+		if(match("//", head->s))
+		{
+			head = eat_token(head);
+		}
+		else
+		{
+			if(NULL == first)
+			{
+				first = head;
+			}
+			head = head->next;
+		}
+	}
+
+	return first;
+}
+
+struct token_list* remove_preprocessor_directives(struct token_list* head)
+{
+	struct token_list* first = NULL;
+
+	while (NULL != head)
+	{
+		if('#' == head->s[0])
+		{
+			head = eat_until_newline(head);
+		}
+		else
+		{
+			if(NULL == first)
+			{
+				first = head;
+			}
+			head = head->next;
+		}
+	}
+
+	return first;
+}
+
+
 int get_token(int c)
 {
 	struct token_list* current = calloc(1, sizeof(struct token_list));
@@ -144,8 +248,7 @@ reset:
 		}
 		else if(c == '/')
 		{
-			c = fgetc(input);
-			goto reset;
+			c = consume_byte(c);
 		}
 	}
 	else if (c == '\n')

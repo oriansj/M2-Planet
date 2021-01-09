@@ -21,6 +21,7 @@ bin/M2-Planet --architecture x86 -f test/common_x86/functions/putchar.c \
 	-f test/common_x86/functions/exit.c \
 	-f test/common_x86/functions/malloc.c \
 	-f test/test0008/struct.c \
+	--bootstrap-mode \
 	-o test/test0008/struct.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

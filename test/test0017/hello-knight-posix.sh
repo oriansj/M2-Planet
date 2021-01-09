@@ -21,6 +21,7 @@ bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/malloc
 	-f functions/calloc.c \
 	-f test/common_knight/functions/putchar.c \
 	-f test/test0017/memset.c \
+	--bootstrap-mode \
 	-o test/test0017/memset.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro

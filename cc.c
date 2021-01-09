@@ -24,6 +24,11 @@
 void initialize_types();
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
+
+struct token_list* remove_line_comments(struct token_list* head);
+struct token_list* remove_line_comment_tokens(struct token_list* head);
+struct token_list* remove_preprocessor_directives(struct token_list* head);
+
 void eat_newline_tokens();
 void preprocess();
 void program();
@@ -154,7 +159,17 @@ int main(int argc, char** argv)
 	}
 	global_token = reverse_list(global_token);
 
-	preprocess();
+	if (BOOTSTRAP_MODE)
+	{
+		global_token = remove_line_comment_tokens(global_token);
+		global_token = remove_preprocessor_directives(global_token);
+	}
+	else
+	{
+		global_token = remove_line_comments(global_token);
+		preprocess();
+	}
+
 	if (PREPROCESSOR_MODE)
 	{
 		file_print("\n/* Preprocessed source */\n", destination_file);

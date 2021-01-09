@@ -23,6 +23,7 @@ bin/M2-Planet --architecture knight-native \
 	-f test/common_knight/functions/exit-native.c \
 	-f test/common_knight/functions/malloc.c \
 	-f test/test0106/cc500.c \
+	--bootstrap-mode \
 	-o test/test0106/cc0.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
