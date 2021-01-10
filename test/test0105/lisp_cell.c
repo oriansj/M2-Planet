@@ -18,8 +18,12 @@
 #include "lisp.h"
 
 /* Deal with the fact GCC converts the 1 to the size of the structs being iterated over */
+#if __GCC__
 #define CELL_SIZE 1
+#else
 //CONSTANT CELL_SIZE sizeof(struct cell)
+#define CELL_SIZE sizeof(struct cell)
+#endif
 
 struct cell *free_cells;
 struct cell *gc_block_start;

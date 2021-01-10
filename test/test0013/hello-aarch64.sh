@@ -19,21 +19,23 @@
 set -ex
 # Build the test
 bin/M2-Planet --architecture aarch64 \
-	-f test/common_aarch64/functions/putchar.c \
-	-f test/common_aarch64/functions/exit.c \
+	-f M2libc/AArch64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/AArch64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0013/break-while.c \
 	-o test/test0013/break-while.M1 || exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_aarch64/aarch64_defs.M1 \
-	-f test/common_aarch64/libc-core.M1 \
+M1 -f M2libc/AArch64/aarch64_defs.M1 \
+	-f M2libc/AArch64/libc-full.M1 \
 	-f test/test0013/break-while.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
 	-o test/test0013/break-while.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_aarch64/ELF-aarch64.hex2 \
+hex2 -f M2libc/AArch64/ELF-aarch64.hex2 \
 	-f test/test0013/break-while.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \

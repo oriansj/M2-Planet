@@ -15,6 +15,7 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 # Ignore the files created by script
+cc0-footer.M1
 cc0.M1
 cc0.hex2
 cc1
