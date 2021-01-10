@@ -1,0 +1,3 @@
+[submodule "M2libc"]
+	path = M2libc
+	url = https://github.com/oriansj/M2libc.git
