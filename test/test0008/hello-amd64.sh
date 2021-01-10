@@ -33,7 +33,7 @@ blood-elf --64 -f test/test0008/struct.M1 \
 
 # Macro assemble with libc written in M1-Macro
 M1 -f M2libc/amd64/amd64_defs.M1 \
-	-f M2libc/amd64/libc-core.M1 \
+	-f M2libc/amd64/libc-full.M1 \
 	-f test/test0008/struct.M1 \
 	-f test/test0008/struct-footer.M1 \
 	--LittleEndian \
