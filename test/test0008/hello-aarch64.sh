@@ -19,23 +19,30 @@
 set -x
 # Build the test
 bin/M2-Planet --architecture aarch64 \
-	-f test/common_aarch64/functions/putchar.c \
-	-f test/common_aarch64/functions/exit.c \
-	-f test/common_aarch64/functions/malloc.c \
+	-f M2libc/AArch64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/AArch64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0008/struct.c \
-	--bootstrap-mode \
+	--debug \
 	-o test/test0008/struct.M1 || exit 1
 
+# Build debug footer
+blood-elf --64 -f test/test0008/struct.M1 \
+	--entry _start \
+	-o test/test0008/struct-footer.M1 || exit 2
+
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_aarch64/aarch64_defs.M1 \
-	-f test/common_aarch64/libc-core.M1 \
+M1 -f M2libc/AArch64/aarch64_defs.M1 \
+	-f M2libc/AArch64/libc-full.M1 \
 	-f test/test0008/struct.M1 \
+	-f test/test0008/struct-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
 	-o test/test0008/struct.hex2 || exit 2
 
 # Resolve all linkages
-hex2 -f test/common_aarch64/ELF-aarch64.hex2 \
+hex2 -f M2libc/AArch64/ELF-aarch64-debug.hex2 \
 	-f test/test0008/struct.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
