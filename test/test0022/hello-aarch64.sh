@@ -17,7 +17,8 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture aarch64 \
+bin/M2-Planet \
+	--architecture aarch64 \
 	-f M2libc/AArch64/Linux/unistd.h \
 	-f M2libc/stdlib.c \
 	-f M2libc/AArch64/Linux/fcntl.h \
@@ -27,30 +28,38 @@ bin/M2-Planet --architecture aarch64 \
 	-f functions/file_print.c \
 	-f test/test0022/continue.c \
 	--debug \
-	-o test/test0022/continue.M1 || exit 1
+	-o test/test0022/continue.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0022/continue.M1 \
+blood-elf \
+	--64 \
+	-f test/test0022/continue.M1 \
 	--entry _start \
-	-o test/test0022/continue-footer.M1 || exit 2
+	-o test/test0022/continue-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f M2libc/AArch64/aarch64_defs.M1 \
+M1 \
+	-f M2libc/AArch64/aarch64_defs.M1 \
 	-f M2libc/AArch64/libc-full.M1 \
 	-f test/test0022/continue.M1 \
 	-f test/test0022/continue-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0022/continue.hex2 || exit 3
+	-o test/test0022/continue.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f M2libc/AArch64/ELF-aarch64-debug.hex2 \
+hex2 \
+	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
 	-f test/test0022/continue.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
 	-o test/results/test0022-aarch64-binary \
-	--exec_enable || exit 4
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]

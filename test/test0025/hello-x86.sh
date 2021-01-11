@@ -17,37 +17,46 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture x86 \
+bin/M2-Planet \
+	--architecture x86 \
 	-f M2libc/x86/Linux/unistd.h \
 	-f M2libc/stdlib.c \
 	-f M2libc/x86/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0025/array.c \
 	--debug \
-	-o test/test0025/array.M1 || exit 1
+	-o test/test0025/array.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0025/array.M1 \
+blood-elf \
+	--64 \
+	-f test/test0025/array.M1 \
 	--entry _start \
-	-o test/test0025/array-footer.M1 || exit 2
+	-o test/test0025/array-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f M2libc/x86/x86_defs.M1 \
+M1 \
+	-f M2libc/x86/x86_defs.M1 \
 	-f M2libc/x86/libc-full.M1 \
 	-f test/test0025/array.M1 \
 	-f test/test0025/array-footer.M1 \
 	--LittleEndian \
 	--architecture x86 \
-	-o test/test0025/array.hex2 || exit 2
+	-o test/test0025/array.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f M2libc/x86/ELF-i386-debug.hex2 \
+hex2 \
+	-f M2libc/x86/ELF-i386-debug.hex2 \
 	-f test/test0025/array.hex2 \
 	--LittleEndian \
 	--architecture x86 \
 	--BaseAddress 0x400000 \
 	-o test/results/test0025-x86-binary \
-	--exec_enable || exit 3
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]

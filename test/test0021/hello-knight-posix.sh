@@ -17,7 +17,8 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture knight-posix \
+bin/M2-Planet \
+	--architecture knight-posix \
 	-f test/common_knight/functions/chdir.c \
 	-f test/common_knight/functions/malloc.c \
 	-f test/common_knight/functions/getcwd.c \
@@ -29,24 +30,29 @@ bin/M2-Planet --architecture knight-posix \
 	-f test/test0021/chdir.c \
 	--debug \
 	--bootstrap-mode \
-	-o test/test0021/chdir.M1 || exit 1
+	-o test/test0021/chdir.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_knight/knight_defs.M1 \
+M1 \
+	-f test/common_knight/knight_defs.M1 \
 	-f test/common_knight/libc-core.M1 \
 	-f test/test0021/chdir.M1 \
 	--BigEndian \
 	--architecture knight-posix \
-	-o test/test0021/chdir.hex2 || exit 3
+	-o test/test0021/chdir.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f test/common_knight/ELF-knight.hex2 \
+hex2 \
+	-f test/common_knight/ELF-knight.hex2 \
 	-f test/test0021/chdir.hex2 \
 	--BigEndian \
 	--architecture knight-posix \
 	--BaseAddress 0x0 \
 	-o test/results/test0021-knight-posix-binary \
-	--exec_enable || exit 4
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]

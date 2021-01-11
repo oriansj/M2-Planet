@@ -17,7 +17,9 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture armv7l -f test/common_armv7l/functions/file.c \
+bin/M2-Planet \
+	--architecture armv7l \
+	-f test/common_armv7l/functions/file.c \
 	-f test/common_armv7l/functions/malloc.c \
 	-f functions/calloc.c \
 	-f test/common_armv7l/functions/exit.c \
@@ -27,18 +29,29 @@ bin/M2-Planet --architecture armv7l -f test/common_armv7l/functions/file.c \
 	-f functions/file_print.c \
 	-f test/test0019/getopt.c \
 	--bootstrap-mode \
-	-o test/test0019/getopt.M1 || exit 1
+	-o test/test0019/getopt.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_armv7l/armv7l_defs.M1 \
+M1 \
+	-f test/common_armv7l/armv7l_defs.M1 \
 	-f test/common_armv7l/libc-core.M1 \
 	-f test/test0019/getopt.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test0019/getopt.hex2 || exit 2
+	-o test/test0019/getopt.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f test/common_armv7l/ELF-armv7l.hex2 -f test/test0019/getopt.hex2 --LittleEndian --architecture armv7l --BaseAddress 0x10000 -o test/results/test0019-armv7l-binary --exec_enable || exit 3
+hex2 \
+	-f test/common_armv7l/ELF-armv7l.hex2 \
+	-f test/test0019/getopt.hex2 \
+	--LittleEndian \
+	--architecture armv7l \
+	--BaseAddress 0x10000 \
+	-o test/results/test0019-armv7l-binary \
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]

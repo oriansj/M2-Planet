@@ -18,7 +18,8 @@
 
 set -ex
 # Build the test
-./bin/M2-Planet --architecture aarch64 \
+./bin/M2-Planet \
+	--architecture aarch64 \
 	-f test/common_aarch64/functions/file.c \
 	-f test/common_aarch64/functions/malloc.c \
 	-f functions/calloc.c \
@@ -41,29 +42,38 @@ set -ex
 	-f cc.c \
 	--debug \
 	--bootstrap-mode \
-	-o test/test1000/cc.M1 || exit 1
+	-o test/test1000/cc.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test1000/cc.M1 \
+blood-elf \
+	--64 \
+	-f test/test1000/cc.M1 \
 	--entry _start \
-	-o test/test1000/cc-footer.M1 || exit 2
+	-o test/test1000/cc-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_aarch64/aarch64_defs.M1 \
+M1 \
+	-f test/common_aarch64/aarch64_defs.M1 \
 	-f test/common_aarch64/libc-core.M1 \
 	-f test/test1000/cc.M1 \
 	-f test/test1000/cc-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test1000/cc.hex2 || exit 3
+	-o test/test1000/cc.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f test/common_aarch64/ELF-aarch64-debug.hex2 \
+hex2 \
+	-f test/common_aarch64/ELF-aarch64-debug.hex2 \
 	-f test/test1000/cc.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
-	-o test/results/test1000-aarch64-binary --exec_enable || exit 4
+	-o test/results/test1000-aarch64-binary \
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]

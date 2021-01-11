@@ -17,31 +17,46 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture amd64 \
+bin/M2-Planet \
+	--architecture amd64 \
 	-f M2libc/amd64/Linux/unistd.h \
 	-f M2libc/stdlib.c \
 	-f M2libc/amd64/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0008/struct.c \
 	--debug \
-	-o test/test0008/struct.M1 || exit 1
+	-o test/test0008/struct.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0008/struct.M1 \
+blood-elf \
+	--64 \
+	-f test/test0008/struct.M1 \
 	--entry _start \
-	-o test/test0008/struct-footer.M1 || exit 2
+	-o test/test0008/struct-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f M2libc/amd64/amd64_defs.M1 \
+M1 \
+	-f M2libc/amd64/amd64_defs.M1 \
 	-f M2libc/amd64/libc-full.M1 \
 	-f test/test0008/struct.M1 \
 	-f test/test0008/struct-footer.M1 \
 	--LittleEndian \
 	--architecture amd64 \
-	-o test/test0008/struct.hex2 || exit 2
+	-o test/test0008/struct.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f M2libc/amd64/ELF-amd64-debug.hex2 -f test/test0008/struct.hex2 --LittleEndian --architecture amd64 --BaseAddress 0x00600000 -o test/results/test0008-amd64-binary --exec_enable || exit 3
+hex2 \
+	-f M2libc/amd64/ELF-amd64-debug.hex2 \
+	-f test/test0008/struct.hex2 \
+	--LittleEndian \
+	--architecture amd64 \
+	--BaseAddress 0x00600000 \
+	-o test/results/test0008-amd64-binary \
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]

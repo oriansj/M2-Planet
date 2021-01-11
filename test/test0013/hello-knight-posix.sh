@@ -17,21 +17,34 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/putchar.c \
+bin/M2-Planet \
+	--architecture knight-posix \
+	-f test/common_knight/functions/putchar.c \
 	-f test/common_knight/functions/exit.c \
 	-f test/test0013/break-while.c \
-	-o test/test0013/break-while.M1 || exit 1
+	-o test/test0013/break-while.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_knight/knight_defs.M1 \
+M1 \
+	-f test/common_knight/knight_defs.M1 \
 	-f test/common_knight/libc-core.M1 \
 	-f test/test0013/break-while.M1 \
 	--BigEndian \
 	--architecture knight-posix \
-	-o test/test0013/break-while.hex2 || exit 2
+	-o test/test0013/break-while.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f test/common_knight/ELF-knight.hex2 -f test/test0013/break-while.hex2 --BigEndian --architecture knight-posix --BaseAddress 0x00 -o test/results/test0013-knight-posix-binary --exec_enable || exit 3
+hex2 \
+	-f test/common_knight/ELF-knight.hex2 \
+	-f test/test0013/break-while.hex2 \
+	--BigEndian \
+	--architecture knight-posix \
+	--BaseAddress 0x00 \
+	-o test/results/test0013-knight-posix-binary \
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]

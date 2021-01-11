@@ -17,21 +17,33 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture knight-native -f test/common_knight/functions/putchar-native.c \
+bin/M2-Planet \
+	--architecture knight-native \
+	-f test/common_knight/functions/putchar-native.c \
 	-f test/common_knight/functions/exit-native.c \
 	-f test/test0002/if.c \
-	-o test/test0002/if.M1 || exit 1
+	-o test/test0002/if.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_knight/knight-native_defs.M1 \
+M1 \
+	-f test/common_knight/knight-native_defs.M1 \
 	-f test/common_knight/libc-native.M1 \
 	-f test/test0002/if.M1 \
 	--BigEndian \
 	--architecture knight-native \
-	-o test/test0002/if.hex2 || exit 2
+	-o test/test0002/if.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f test/test0002/if.hex2 --BigEndian --architecture knight-native --BaseAddress 0x00 -o test/results/test0002-knight-native-binary --exec_enable || exit 3
+hex2 \
+	-f test/test0002/if.hex2 \
+	--BigEndian \
+	--architecture knight-native \
+	--BaseAddress 0x00 \
+	-o test/results/test0002-knight-native-binary \
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]

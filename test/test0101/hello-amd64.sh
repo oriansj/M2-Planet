@@ -17,7 +17,9 @@
 
 set -x
 # Build the test
-./bin/M2-Planet --architecture amd64 -f test/common_amd64/functions/exit.c \
+./bin/M2-Planet \
+	--architecture amd64 \
+	-f test/common_amd64/functions/exit.c \
 	-f test/common_amd64/functions/file.c \
 	-f functions/file_print.c \
 	-f test/common_amd64/functions/malloc.c \
@@ -29,30 +31,38 @@ set -x
 	-f test/test0101/hex2_linker.c \
 	--debug \
 	--bootstrap-mode \
-	-o test/test0101/hex2_linker.M1 || exit 1
+	-o test/test0101/hex2_linker.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf --64 -f test/test0101/hex2_linker.M1 \
+blood-elf \
+	--64 \
+	-f test/test0101/hex2_linker.M1 \
 	--entry _start \
-	-o test/test0101/hex2_linker-footer.M1 || exit 2
+	-o test/test0101/hex2_linker-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_amd64/amd64_defs.M1 \
+M1 \
+	-f test/common_amd64/amd64_defs.M1 \
 	-f test/common_amd64/libc-core.M1 \
 	-f test/test0101/hex2_linker.M1 \
 	-f test/test0101/hex2_linker-footer.M1 \
 	--LittleEndian \
 	--architecture amd64 \
-	-o test/test0101/hex2_linker.hex2 || exit 3
+	-o test/test0101/hex2_linker.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f test/common_amd64/ELF-amd64-debug.hex2 \
+hex2 \
+	-f test/common_amd64/ELF-amd64-debug.hex2 \
 	-f test/test0101/hex2_linker.hex2 \
 	--LittleEndian \
 	--architecture amd64 \
 	--BaseAddress 0x00600000 \
 	-o test/results/test0101-amd64-binary \
-	--exec_enable || exit 4
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]

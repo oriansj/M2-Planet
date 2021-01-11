@@ -17,7 +17,8 @@
 
 set -ex
 # Build the test
-./bin/M2-Planet --architecture armv7l \
+./bin/M2-Planet \
+	--architecture armv7l \
 	-f test/common_armv7l/functions/file.c \
 	-f test/common_armv7l/functions/malloc.c \
 	-f functions/calloc.c \
@@ -40,29 +41,37 @@ set -ex
 	-f cc.c \
 	--debug \
 	--bootstrap-mode \
-	-o test/test1000/cc.M1 || exit 1
+	-o test/test1000/cc.M1 \
+	|| exit 1
 
 # Build debug footer
-blood-elf -f test/test1000/cc.M1 \
+blood-elf \
+	-f test/test1000/cc.M1 \
 	--entry _start \
-	-o test/test1000/cc-footer.M1 || exit 2
+	-o test/test1000/cc-footer.M1 \
+	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_armv7l/armv7l_defs.M1 \
+M1 \
+	-f test/common_armv7l/armv7l_defs.M1 \
 	-f test/common_armv7l/libc-core.M1 \
 	-f test/test1000/cc.M1 \
 	-f test/test1000/cc-footer.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test1000/cc.hex2 || exit 3
+	-o test/test1000/cc.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f test/common_armv7l/ELF-armv7l-debug.hex2 \
+hex2 \
+	-f test/common_armv7l/ELF-armv7l-debug.hex2 \
 	-f test/test1000/cc.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \
-	-o test/results/test1000-armv7l-binary --exec_enable || exit 4
+	-o test/results/test1000-armv7l-binary \
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]

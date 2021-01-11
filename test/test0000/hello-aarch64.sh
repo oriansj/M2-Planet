@@ -18,26 +18,32 @@
 
 set -x
 # Build the test
-bin/M2-Planet --architecture aarch64 \
+bin/M2-Planet \
+	--architecture aarch64 \
 	-f test/test0000/return.c \
-	-o test/test0000/return.M1 || exit 1
+	-o test/test0000/return.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f M2libc/AArch64/aarch64_defs.M1 \
+M1 \
+	-f M2libc/AArch64/aarch64_defs.M1 \
 	-f M2libc/AArch64/libc-core.M1 \
 	-f test/test0000/return.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0000/return.hex2 || exit 2
+	-o test/test0000/return.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f M2libc/AArch64/ELF-aarch64.hex2 \
+hex2 \
+	-f M2libc/AArch64/ELF-aarch64.hex2 \
 	-f test/test0000/return.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
 	-o test/results/test0000-aarch64-binary \
-	--exec_enable || exit 3
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]

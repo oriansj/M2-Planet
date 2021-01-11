@@ -17,7 +17,9 @@
 
 set -x
 # Build the test
-./bin/M2-Planet --architecture knight-posix -f test/common_knight/functions/exit.c \
+./bin/M2-Planet \
+	--architecture knight-posix \
+	-f test/common_knight/functions/exit.c \
 	-f test/common_knight/functions/file.c \
 	-f functions/file_print.c \
 	-f test/common_knight/functions/malloc.c \
@@ -28,24 +30,29 @@ set -x
 	-f test/common_knight/functions/stat.c \
 	-f test/test0101/hex2_linker.c \
 	--bootstrap-mode \
-	-o test/test0101/hex2_linker.M1 || exit 1
+	-o test/test0101/hex2_linker.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_knight/knight_defs.M1 \
+M1 \
+	-f test/common_knight/knight_defs.M1 \
 	-f test/common_knight/libc-core.M1 \
 	-f test/test0101/hex2_linker.M1 \
 	--BigEndian \
 	--architecture knight-posix \
-	-o test/test0101/hex2_linker.hex2 || exit 3
+	-o test/test0101/hex2_linker.hex2 \
+	|| exit 3
 
 # Resolve all linkages
-hex2 -f test/common_knight/ELF-knight.hex2 \
+hex2 \
+	-f test/common_knight/ELF-knight.hex2 \
 	-f test/test0101/hex2_linker.hex2 \
 	--BigEndian \
 	--architecture knight-posix \
 	--BaseAddress 0x00 \
 	-o test/results/test0101-knight-posix-binary \
-	--exec_enable || exit 4
+	--exec_enable \
+	|| exit 4
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]

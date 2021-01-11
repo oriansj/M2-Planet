@@ -17,22 +17,35 @@
 
 set -ex
 # Build the test
-bin/M2-Planet --architecture amd64 -f test/common_amd64/functions/file.c \
+bin/M2-Planet \
+	--architecture amd64 \
+	-f test/common_amd64/functions/file.c \
 	-f test/common_amd64/functions/putchar.c \
 	-f test/test0015/file_read.c \
 	--bootstrap-mode \
-	-o test/test0015/file_read.M1 || exit 1
+	-o test/test0015/file_read.M1 \
+	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
-M1 -f test/common_amd64/amd64_defs.M1 \
+M1 \
+	-f test/common_amd64/amd64_defs.M1 \
 	-f test/common_amd64/libc-core.M1 \
 	-f test/test0015/file_read.M1 \
 	--LittleEndian \
 	--architecture amd64 \
-	-o test/test0015/file_read.hex2 || exit 2
+	-o test/test0015/file_read.hex2 \
+	|| exit 2
 
 # Resolve all linkages
-hex2 -f test/common_amd64/ELF-amd64.hex2 -f test/test0015/file_read.hex2 --LittleEndian --architecture amd64 --BaseAddress 0x00600000 -o test/results/test0015-amd64-binary --exec_enable || exit 3
+hex2 \
+	-f test/common_amd64/ELF-amd64.hex2 \
+	-f test/test0015/file_read.hex2 \
+	--LittleEndian \
+	--architecture amd64 \
+	--BaseAddress 0x00600000 \
+	-o test/results/test0015-amd64-binary \
+	--exec_enable \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
