@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
+
+TMPDIR="test/test0019/tmp-amd64"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture amd64 \
@@ -29,23 +34,23 @@ bin/M2-Planet \
 	-f functions/file_print.c \
 	-f test/test0019/getopt.c \
 	--bootstrap-mode \
-	-o test/test0019/getopt.M1 \
+	-o ${TMPDIR}/getopt.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f test/common_amd64/amd64_defs.M1 \
 	-f test/common_amd64/libc-core.M1 \
-	-f test/test0019/getopt.M1 \
+	-f ${TMPDIR}/getopt.M1 \
 	--LittleEndian \
 	--architecture amd64 \
-	-o test/test0019/getopt.hex2 \
+	-o ${TMPDIR}/getopt.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
 	-f test/common_amd64/ELF-amd64.hex2 \
-	-f test/test0019/getopt.hex2 \
+	-f ${TMPDIR}/getopt.hex2 \
 	--LittleEndian \
 	--architecture amd64 \
 	--BaseAddress 0x00600000 \

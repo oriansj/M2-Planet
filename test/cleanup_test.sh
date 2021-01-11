@@ -1,5 +1,5 @@
 #! /bin/sh
-## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -15,8 +15,16 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-rm -f test/test0101/hex2_linker.M1
-rm -f test/test0101/hex2_linker-footer.M1
-rm -f test/test0101/hex2_linker.hex2
-rm -f test/test0101/proof
+for ARCH in aarch64 amd64 armv7l knight-native knight-posix x86; do
+	rm -rf "test/test$1/tmp-$ARCH"
+done
+
+# Not all, but most tests generate a 'proof' file.
+rm -f "test/test$1/proof"
+
+# Test 0106 generates these two files when the host is x86.
+if [ "0106" = "$1" ] ; then
+	rm -f "test/test$1/cc1" "test/test$1/cc2"
+fi
+
 exit 0

@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
+
+TMPDIR="test/test0017/tmp-knight-native"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
@@ -24,22 +29,22 @@ bin/M2-Planet \
 	-f test/common_knight/functions/putchar-native.c \
 	-f test/test0017/memset.c \
 	--bootstrap-mode \
-	-o test/test0017/memset.M1 \
+	-o ${TMPDIR}/memset.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f test/common_knight/knight-native_defs.M1 \
 	-f test/common_knight/libc-native.M1 \
-	-f test/test0017/memset.M1 \
+	-f ${TMPDIR}/memset.M1 \
 	--BigEndian \
 	--architecture knight-native \
-	-o test/test0017/memset.hex2 \
+	-o ${TMPDIR}/memset.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f test/test0017/memset.hex2 \
+	-f ${TMPDIR}/memset.hex2 \
 	--BigEndian \
 	--architecture knight-native \
 	--BaseAddress 0x00 \

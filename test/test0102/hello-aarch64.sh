@@ -1,6 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2020 deesix <deesix@tuta.io>
+## Copyright (C) 2020-2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -17,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -x
+
+TMPDIR="test/test0102/tmp-aarch64"
+mkdir -p ${TMPDIR}
+
 # Build the test
 ./bin/M2-Planet \
 	--architecture aarch64 \
@@ -32,32 +36,32 @@ set -x
 	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
 	--debug \
-	-o test/test0102/M1-macro.M1 \
+	-o ${TMPDIR}/M1-macro.M1 \
 	|| exit 1
 
 # Build debug footer
 blood-elf \
 	--64 \
-	-f test/test0102/M1-macro.M1 \
+	-f ${TMPDIR}/M1-macro.M1 \
 	--entry _start \
-	-o test/test0102/M1-macro-footer.M1 \
+	-o ${TMPDIR}/M1-macro-footer.M1 \
 	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/AArch64/aarch64_defs.M1 \
 	-f M2libc/AArch64/libc-full.M1 \
-	-f test/test0102/M1-macro.M1 \
-	-f test/test0102/M1-macro-footer.M1 \
+	-f ${TMPDIR}/M1-macro.M1 \
+	-f ${TMPDIR}/M1-macro-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0102/M1-macro.hex2 \
+	-o ${TMPDIR}/M1-macro.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
 	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
-	-f test/test0102/M1-macro.hex2 \
+	-f ${TMPDIR}/M1-macro.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \

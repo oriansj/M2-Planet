@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -x
+
+TMPDIR="test/test0101/tmp-knight-posix"
+mkdir -p ${TMPDIR}
+
 # Build the test
 ./bin/M2-Planet \
 	--architecture knight-posix \
@@ -30,23 +35,23 @@ set -x
 	-f test/common_knight/functions/stat.c \
 	-f test/test0101/hex2_linker.c \
 	--bootstrap-mode \
-	-o test/test0101/hex2_linker.M1 \
+	-o ${TMPDIR}/hex2_linker.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f test/common_knight/knight_defs.M1 \
 	-f test/common_knight/libc-core.M1 \
-	-f test/test0101/hex2_linker.M1 \
+	-f ${TMPDIR}/hex2_linker.M1 \
 	--BigEndian \
 	--architecture knight-posix \
-	-o test/test0101/hex2_linker.hex2 \
+	-o ${TMPDIR}/hex2_linker.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
 	-f test/common_knight/ELF-knight.hex2 \
-	-f test/test0101/hex2_linker.hex2 \
+	-f ${TMPDIR}/hex2_linker.hex2 \
 	--BigEndian \
 	--architecture knight-posix \
 	--BaseAddress 0x00 \

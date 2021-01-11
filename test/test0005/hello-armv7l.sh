@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -x
+
+TMPDIR="test/test0005/tmp-armv7l"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture armv7l \
@@ -23,29 +28,29 @@ bin/M2-Planet \
 	-f test/common_armv7l/functions/exit.c \
 	-f test/test0005/string.c \
 	--debug \
-	-o test/test0005/string.M1 \
+	-o ${TMPDIR}/string.M1 \
 	|| exit 1
 
 blood-elf \
-	-f test/test0005/string.M1 \
-	-o test/test0005/string-footer.M1 \
+	-f ${TMPDIR}/string.M1 \
+	-o ${TMPDIR}/string-footer.M1 \
 	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f test/common_armv7l/armv7l_defs.M1 \
 	-f test/common_armv7l/libc-core.M1 \
-	-f test/test0005/string.M1 \
-	-f test/test0005/string-footer.M1 \
+	-f ${TMPDIR}/string.M1 \
+	-f ${TMPDIR}/string-footer.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test0005/string.hex2 \
+	-o ${TMPDIR}/string.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
 	-f test/common_armv7l/ELF-armv7l-debug.hex2 \
-	-f test/test0005/string.hex2 \
+	-f ${TMPDIR}/string.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \

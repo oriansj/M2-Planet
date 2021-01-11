@@ -1,4 +1,5 @@
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -13,5 +14,13 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
+
 # Ignore all generated contents of tests
 results/
+test????/tmp-*/
+test????/proof
+test0106/cc1
+test0106/cc2
+
+# A place to put a good run for comparison
+test????/actual.M1

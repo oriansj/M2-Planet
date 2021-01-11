@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -x
+
+TMPDIR="test/test0022/tmp-aarch64"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture aarch64 \
@@ -28,32 +33,32 @@ bin/M2-Planet \
 	-f functions/file_print.c \
 	-f test/test0022/continue.c \
 	--debug \
-	-o test/test0022/continue.M1 \
+	-o ${TMPDIR}/continue.M1 \
 	|| exit 1
 
 # Build debug footer
 blood-elf \
 	--64 \
-	-f test/test0022/continue.M1 \
+	-f ${TMPDIR}/continue.M1 \
 	--entry _start \
-	-o test/test0022/continue-footer.M1 \
+	-o ${TMPDIR}/continue-footer.M1 \
 	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/AArch64/aarch64_defs.M1 \
 	-f M2libc/AArch64/libc-full.M1 \
-	-f test/test0022/continue.M1 \
-	-f test/test0022/continue-footer.M1 \
+	-f ${TMPDIR}/continue.M1 \
+	-f ${TMPDIR}/continue-footer.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0022/continue.hex2 \
+	-o ${TMPDIR}/continue.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
 	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
-	-f test/test0022/continue.hex2 \
+	-f ${TMPDIR}/continue.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \

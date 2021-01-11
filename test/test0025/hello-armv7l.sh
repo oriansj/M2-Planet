@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
+
+TMPDIR="test/test0025/tmp-armv7l"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture armv7l \
@@ -25,31 +30,31 @@ bin/M2-Planet \
 	-f M2libc/stdio.c \
 	-f test/test0025/array.c \
 	--debug \
-	-o test/test0025/array.M1 \
+	-o ${TMPDIR}/array.M1 \
 	|| exit 1
 
 # Build debug footer
 blood-elf \
-	-f test/test0025/array.M1 \
+	-f ${TMPDIR}/array.M1 \
 	--entry _start \
-	-o test/test0025/array-footer.M1 \
+	-o ${TMPDIR}/array-footer.M1 \
 	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/armv7l/armv7l_defs.M1 \
 	-f M2libc/armv7l/libc-full.M1 \
-	-f test/test0025/array.M1 \
-	-f test/test0025/array-footer.M1 \
+	-f ${TMPDIR}/array.M1 \
+	-f ${TMPDIR}/array-footer.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test0025/array.hex2 \
+	-o ${TMPDIR}/array.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
 	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
-	-f test/test0025/array.hex2 \
+	-f ${TMPDIR}/array.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
 	--BaseAddress 0x400000 \

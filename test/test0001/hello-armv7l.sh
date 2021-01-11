@@ -1,5 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
+## Copyright (C) 2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -16,29 +17,33 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -x
+
+TMPDIR="test/test0001/tmp-armv7l"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture armv7l \
 	-f test/common_armv7l/functions/putchar.c \
 	-f test/common_armv7l/functions/exit.c \
 	-f test/test0001/library_call.c \
-	-o test/test0001/library_call.M1 \
+	-o ${TMPDIR}/library_call.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f test/common_armv7l/armv7l_defs.M1 \
 	-f test/common_armv7l/libc-core.M1 \
-	-f test/test0001/library_call.M1 \
+	-f ${TMPDIR}/library_call.M1 \
 	--LittleEndian \
 	--architecture armv7l \
-	-o test/test0001/library_call.hex2 \
+	-o ${TMPDIR}/library_call.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
 	-f test/common_armv7l/ELF-armv7l.hex2 \
-	-f test/test0001/library_call.hex2 \
+	-f ${TMPDIR}/library_call.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \

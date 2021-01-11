@@ -1,6 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2020 deesix <deesix@tuta.io>
+## Copyright (C) 2020-2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -17,6 +17,10 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
+
+TMPDIR="test/test0017/tmp-aarch64"
+mkdir -p ${TMPDIR}
+
 # Build the test
 bin/M2-Planet \
 	--architecture aarch64 \
@@ -25,23 +29,23 @@ bin/M2-Planet \
 	-f M2libc/AArch64/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0017/memset.c \
-	-o test/test0017/memset.M1 \
+	-o ${TMPDIR}/memset.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/AArch64/aarch64_defs.M1 \
 	-f M2libc/AArch64/libc-full.M1 \
-	-f test/test0017/memset.M1 \
+	-f ${TMPDIR}/memset.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
-	-o test/test0017/memset.hex2 \
+	-o ${TMPDIR}/memset.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
 	-f M2libc/AArch64/ELF-aarch64.hex2 \
-	-f test/test0017/memset.hex2 \
+	-f ${TMPDIR}/memset.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \

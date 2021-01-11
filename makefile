@@ -1,5 +1,5 @@
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2020 deesix <deesix@tuta.io>
+## Copyright (C) 2020-2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -70,40 +70,40 @@ M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-mi
 .PHONY: clean
 clean:
 	rm -rf bin/ test/results/
-	./test/test0000/cleanup.sh
-	./test/test0001/cleanup.sh
-	./test/test0002/cleanup.sh
-	./test/test0003/cleanup.sh
-	./test/test0004/cleanup.sh
-	./test/test0005/cleanup.sh
-	./test/test0006/cleanup.sh
-	./test/test0007/cleanup.sh
-	./test/test0008/cleanup.sh
-	./test/test0009/cleanup.sh
-	./test/test0010/cleanup.sh
-	./test/test0011/cleanup.sh
-	./test/test0012/cleanup.sh
-	./test/test0013/cleanup.sh
-	./test/test0014/cleanup.sh
-	./test/test0015/cleanup.sh
-	./test/test0016/cleanup.sh
-	./test/test0017/cleanup.sh
-	./test/test0018/cleanup.sh
-	./test/test0019/cleanup.sh
-	./test/test0020/cleanup.sh
-	./test/test0021/cleanup.sh
-	./test/test0022/cleanup.sh
-	./test/test0023/cleanup.sh
-	./test/test0024/cleanup.sh
-	./test/test0025/cleanup.sh
-	./test/test0100/cleanup.sh
-	./test/test0101/cleanup.sh
-	./test/test0102/cleanup.sh
-	./test/test0103/cleanup.sh
-	./test/test0104/cleanup.sh
-	./test/test0105/cleanup.sh
-	./test/test0106/cleanup.sh
-	./test/test1000/cleanup.sh
+	./test/cleanup_test.sh 0000
+	./test/cleanup_test.sh 0001
+	./test/cleanup_test.sh 0002
+	./test/cleanup_test.sh 0003
+	./test/cleanup_test.sh 0004
+	./test/cleanup_test.sh 0005
+	./test/cleanup_test.sh 0006
+	./test/cleanup_test.sh 0007
+	./test/cleanup_test.sh 0008
+	./test/cleanup_test.sh 0009
+	./test/cleanup_test.sh 0010
+	./test/cleanup_test.sh 0011
+	./test/cleanup_test.sh 0012
+	./test/cleanup_test.sh 0013
+	./test/cleanup_test.sh 0014
+	./test/cleanup_test.sh 0015
+	./test/cleanup_test.sh 0016
+	./test/cleanup_test.sh 0017
+	./test/cleanup_test.sh 0018
+	./test/cleanup_test.sh 0019
+	./test/cleanup_test.sh 0020
+	./test/cleanup_test.sh 0021
+	./test/cleanup_test.sh 0022
+	./test/cleanup_test.sh 0023
+	./test/cleanup_test.sh 0024
+	./test/cleanup_test.sh 0025
+	./test/cleanup_test.sh 0100
+	./test/cleanup_test.sh 0101
+	./test/cleanup_test.sh 0102
+	./test/cleanup_test.sh 0103
+	./test/cleanup_test.sh 0104
+	./test/cleanup_test.sh 0105
+	./test/cleanup_test.sh 0106
+	./test/cleanup_test.sh 1000
 
 # Directories
 bin:
