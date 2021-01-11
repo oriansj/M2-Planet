@@ -124,6 +124,17 @@ void require_match(char* message, char* required)
 	require(NULL != global_token, "EOF after require match occurred\n");
 }
 
+void maybe_bootstrap_error(char* feature)
+{
+	if (BOOTSTRAP_MODE)
+	{
+		line_error();
+		file_print(feature, stderr);
+		file_print(" is not supported in --bootstrap-mode\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
 void expression();
 void function_call(char* s, int bool)
 {
@@ -1813,6 +1824,7 @@ void program()
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
+	int size;
 
 new_type:
 	if (NULL == global_token) return;
@@ -1857,10 +1869,45 @@ new_type:
 		{
 			goto new_type;
 		}
+
+		require(NULL != global_token->next, "Unterminated global\n");
+		if(match("[", global_token->next->s))
+		{
+			maybe_bootstrap_error("global array definitions");
+			globals_list = emit(":GLOBAL_", globals_list);
+			globals_list = emit(global_token->s, globals_list);
+			globals_list = emit("\n&GLOBAL_STORAGE_", globals_list);
+			globals_list = emit(global_token->s, globals_list);
+			if (AARCH64 == Architecture || AMD64 == Architecture)
+			{
+				globals_list = emit(" %0", globals_list);
+			}
+			globals_list = emit("\n:GLOBAL_STORAGE_", globals_list);
+			globals_list = emit(global_token->s, globals_list);
+			global_symbol_list = sym_declare(global_token->s, type_size->indirect, global_symbol_list);
+
+			require(NULL != global_token->next->next, "Unterminated global\n");
+			global_token = global_token->next->next;
+
+			/* length */
+			size = numerate_string(global_token->s);
+			globals_list = emit("\n'", globals_list);
+			while (0 != size)
+			{
+				globals_list = emit(" 00", globals_list);
+				size = size - 1;
+			}
+			globals_list = emit("'\n", globals_list);
+
+			global_token = global_token->next;
+			require_match("missing close bracket\n", "]");
+			require_match("missing ;\n", ";");
+
+			goto new_type;
+		}
 		/* Add to global symbol table */
 		global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
 		global_token = global_token->next;
-		require(NULL != global_token, "Unterminated global\n");
 		if(match(";", global_token->s))
 		{
 			/* Ensure 4 bytes are allocated for the global */
