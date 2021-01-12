@@ -130,7 +130,7 @@ install: M2-Planet
 	mkdir -p $(bindir)
 	cp $^ $(bindir)
 
-###  dist
+### dist
 .PHONY: dist
 
 COMMIT=$(shell git describe --dirty)
