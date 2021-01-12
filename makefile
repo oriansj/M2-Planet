@@ -114,7 +114,7 @@ results:
 
 # tests
 test: M2-Planet | bin results
-	+make -f makefile-tests
+	+make -f makefile-tests --output-sync
 	sha256sum -c test/test.answers
 
 # Generate test answers
