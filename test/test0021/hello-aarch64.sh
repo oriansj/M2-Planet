@@ -24,17 +24,14 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture aarch64 \
-	-f test/common_aarch64/functions/chdir.c \
-	-f test/common_aarch64/functions/malloc.c \
-	-f test/common_aarch64/functions/getcwd.c \
-	-f test/common_aarch64/functions/exit.c \
-	-f test/common_aarch64/functions/file.c \
-	-f functions/calloc.c \
+	-f M2libc/AArch64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/AArch64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f functions/match.c \
 	-f functions/file_print.c \
 	-f test/test0021/chdir.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/chdir.M1 \
 	|| exit 1
 
@@ -48,8 +45,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_aarch64/aarch64_defs.M1 \
-	-f test/common_aarch64/libc-core.M1 \
+	-f M2libc/AArch64/aarch64_defs.M1 \
+	-f M2libc/AArch64/libc-full.M1 \
 	-f ${TMPDIR}/chdir.M1 \
 	-f ${TMPDIR}/chdir-footer.M1 \
 	--LittleEndian \
@@ -59,7 +56,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_aarch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
 	-f ${TMPDIR}/chdir.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
