@@ -30,8 +30,8 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/AArch64/aarch64_defs.M1 \
-	-f M2libc/AArch64/libc-core.M1 \
+	-f M2libc/aarch64/aarch64_defs.M1 \
+	-f M2libc/aarch64/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--LittleEndian \
 	--architecture aarch64 \
@@ -40,7 +40,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/AArch64/ELF-aarch64.hex2 \
+	-f M2libc/aarch64/ELF-aarch64.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \

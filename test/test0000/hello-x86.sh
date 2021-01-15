@@ -40,7 +40,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/x86/ELF-i386.hex2 \
+	-f M2libc/x86/ELF-x86.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--LittleEndian \
 	--architecture x86 \

@@ -54,7 +54,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/x86/ELF-i386-debug.hex2 \
+	-f M2libc/x86/ELF-x86-debug.hex2 \
 	-f ${TMPDIR}/array.hex2 \
 	--LittleEndian \
 	--architecture x86 \

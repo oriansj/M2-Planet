@@ -24,9 +24,9 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture aarch64 \
-	-f M2libc/AArch64/Linux/unistd.h \
+	-f M2libc/aarch64/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/AArch64/Linux/fcntl.h \
+	-f M2libc/aarch64/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0007/do.c \
 	--debug \
@@ -44,8 +44,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/AArch64/aarch64_defs.M1 \
-	-f M2libc/AArch64/libc-full.M1 \
+	-f M2libc/aarch64/aarch64_defs.M1 \
+	-f M2libc/aarch64/libc-full.M1 \
 	-f ${TMPDIR}/do.M1 \
 	-f ${TMPDIR}/do-footer.M1 \
 	--LittleEndian \
@@ -55,7 +55,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
 	-f ${TMPDIR}/do.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \

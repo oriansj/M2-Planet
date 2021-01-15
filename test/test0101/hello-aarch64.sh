@@ -24,9 +24,9 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture aarch64 \
-	-f M2libc/AArch64/Linux/unistd.h \
+	-f M2libc/aarch64/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/AArch64/Linux/fcntl.h \
+	-f M2libc/aarch64/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/file_print.c \
 	-f functions/match.c \
@@ -47,8 +47,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/AArch64/aarch64_defs.M1 \
-	-f M2libc/AArch64/libc-full.M1 \
+	-f M2libc/aarch64/aarch64_defs.M1 \
+	-f M2libc/aarch64/libc-full.M1 \
 	-f ${TMPDIR}/hex2_linker.M1 \
 	-f ${TMPDIR}/hex2_linker-footer.M1 \
 	--LittleEndian \
@@ -58,7 +58,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/AArch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
 	-f ${TMPDIR}/hex2_linker.hex2 \
 	--LittleEndian \
 	--architecture aarch64 \
@@ -78,7 +78,7 @@ then
 	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test0101-aarch64-binary \
-	-f M2libc/x86/ELF-i386.hex2\
+	-f M2libc/x86/ELF-x86.hex2 \
 	-f test/test0101/test.hex2 \
 	--LittleEndian \
 	--architecture x86 \
