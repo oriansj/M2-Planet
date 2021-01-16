@@ -57,7 +57,7 @@ hex2 \
 	-f ${TMPDIR}/array.hex2 \
 	--LittleEndian \
 	--architecture amd64 \
-	--BaseAddress 0x400000 \
+	--BaseAddress 0x00600000 \
 	-o test/results/test0025-amd64-binary \
 	--exec_enable \
 	|| exit 3
@@ -67,7 +67,7 @@ if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0025-amd64-binary > test/test0025/proof || exit 4
+	./test/results/test0025-amd64-binary 2>| test/test0025/proof || exit 4
 	out=$(sha256_check test/test0025/proof.answer)
 	[ "$out" = "test/test0025/proof: OK" ] || exit 5
 fi

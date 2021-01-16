@@ -68,7 +68,7 @@ if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0025-aarch64-binary > test/test0025/proof || exit 4
+	./test/results/test0025-aarch64-binary 2>| test/test0025/proof || exit 4
 	out=$(sha256_check test/test0025/proof.answer)
 	[ "$out" = "test/test0025/proof: OK" ] || exit 5
 fi
