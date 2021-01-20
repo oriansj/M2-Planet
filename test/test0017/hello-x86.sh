@@ -24,18 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture x86 \
-	-f test/common_x86/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_x86/functions/putchar.c \
+	-f M2libc/x86/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/x86/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0017/memset.c \
-	--bootstrap-mode \
 	-o ${TMPDIR}/memset.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+	-f M2libc/x86/x86_defs.M1 \
+	-f M2libc/x86/libc-full.M1 \
 	-f ${TMPDIR}/memset.M1 \
 	--LittleEndian \
 	--architecture x86 \
@@ -44,7 +44,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_x86/ELF-i386.hex2 \
+	-f M2libc/x86/ELF-x86.hex2 \
 	-f ${TMPDIR}/memset.hex2 \
 	--LittleEndian \
 	--architecture x86 \

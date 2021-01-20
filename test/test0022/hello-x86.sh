@@ -24,16 +24,15 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture x86 \
-	-f test/common_x86/functions/malloc.c \
-	-f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/exit.c \
+	-f M2libc/x86/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/x86/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
-	-f functions/calloc.c \
 	-f functions/file_print.c \
 	-f test/test0022/continue.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/continue.M1 \
 	|| exit 1
 
@@ -46,8 +45,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+	-f M2libc/x86/x86_defs.M1 \
+	-f M2libc/x86/libc-full.M1 \
 	-f ${TMPDIR}/continue.M1 \
 	-f ${TMPDIR}/continue-footer.M1 \
 	--LittleEndian \
@@ -57,7 +56,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_x86/ELF-i386-debug.hex2 \
+	-f M2libc/x86/ELF-x86-debug.hex2 \
 	-f ${TMPDIR}/continue.hex2 \
 	--LittleEndian \
 	--architecture x86 \

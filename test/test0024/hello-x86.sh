@@ -30,8 +30,8 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+	-f M2libc/x86/x86_defs.M1 \
+	-f M2libc/x86/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--LittleEndian \
 	--architecture x86 \
@@ -40,7 +40,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_x86/ELF-i386.hex2 \
+	-f M2libc/x86/ELF-x86.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--LittleEndian \
 	--architecture x86 \

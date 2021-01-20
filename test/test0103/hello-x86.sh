@@ -22,18 +22,16 @@ TMPDIR="test/test0103/tmp-x86"
 mkdir -p ${TMPDIR}
 
 # Build the test
-./bin/M2-Planet \
+bin/M2-Planet \
 	--architecture x86 \
-	-f test/common_x86/functions/exit.c \
-	-f test/common_x86/functions/file.c \
+	-f M2libc/x86/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/x86/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f functions/file_print.c \
-	-f test/common_x86/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_x86/functions/uname.c \
 	-f functions/match.c \
 	-f test/test0103/get_machine.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/get_machine.M1 \
 	|| exit 1
 
@@ -46,8 +44,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+	-f M2libc/x86/x86_defs.M1 \
+	-f M2libc/x86/libc-full.M1 \
 	-f ${TMPDIR}/get_machine.M1 \
 	-f ${TMPDIR}/get_machine-footer.M1 \
 	--LittleEndian \
@@ -57,7 +55,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_x86/ELF-i386-debug.hex2 \
+	-f M2libc/x86/ELF-x86-debug.hex2 \
 	-f ${TMPDIR}/get_machine.hex2 \
 	--LittleEndian \
 	--architecture x86 \
