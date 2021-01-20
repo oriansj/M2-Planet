@@ -24,18 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture armv7l \
-	-f test/common_armv7l/functions/file.c \
-	-f test/common_armv7l/functions/malloc.c \
-	-f functions/calloc.c \
+	-f M2libc/armv7l/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0018/math.c \
-	--bootstrap-mode \
 	-o ${TMPDIR}/math.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_armv7l/armv7l_defs.M1 \
-	-f test/common_armv7l/libc-core.M1 \
+	-f M2libc/armv7l/armv7l_defs.M1 \
+	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/math.M1 \
 	--LittleEndian \
 	--architecture armv7l \
@@ -44,7 +44,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_armv7l/ELF-armv7l.hex2 \
+	-f M2libc/armv7l/ELF-armv7l.hex2 \
 	-f ${TMPDIR}/math.hex2 \
 	--LittleEndian \
 	--architecture armv7l \

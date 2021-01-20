@@ -22,14 +22,14 @@ TMPDIR="test/test0105/tmp-armv7l"
 mkdir -p ${TMPDIR}
 
 # Build the test
-./bin/M2-Planet \
+bin/M2-Planet \
 	--architecture armv7l \
+	-f M2libc/armv7l/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0105/lisp.h \
-	-f test/common_armv7l/functions/malloc.c \
-	-f functions/calloc.c \
 	-f functions/in_set.c \
-	-f test/common_armv7l/functions/file.c \
-	-f test/common_armv7l/functions/exit.c \
 	-f functions/numerate_number.c \
 	-f functions/match.c \
 	-f functions/file_print.c \
@@ -39,7 +39,6 @@ mkdir -p ${TMPDIR}
 	-f test/test0105/lisp_print.c \
 	-f test/test0105/lisp_read.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/lisp.M1 \
 	|| exit 1
 
@@ -52,8 +51,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_armv7l/armv7l_defs.M1 \
-	-f test/common_armv7l/libc-core.M1 \
+	-f M2libc/armv7l/armv7l_defs.M1 \
+	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/lisp.M1 \
 	-f ${TMPDIR}/lisp-footer.M1 \
 	--LittleEndian \
@@ -63,7 +62,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_armv7l/ELF-armv7l-debug.hex2 \
+	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
 	-f ${TMPDIR}/lisp.hex2 \
 	--LittleEndian \
 	--architecture armv7l \

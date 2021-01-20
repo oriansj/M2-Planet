@@ -22,18 +22,16 @@ TMPDIR="test/test0103/tmp-armv7l"
 mkdir -p ${TMPDIR}
 
 # Build the test
-./bin/M2-Planet \
+bin/M2-Planet \
 	--architecture armv7l \
-	-f test/common_armv7l/functions/exit.c \
-	-f test/common_armv7l/functions/file.c \
+	-f M2libc/armv7l/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f functions/file_print.c \
-	-f test/common_armv7l/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_armv7l/functions/uname.c \
 	-f functions/match.c \
 	-f test/test0103/get_machine.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/get_machine.M1 \
 	|| exit 1
 
@@ -46,8 +44,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_armv7l/armv7l_defs.M1 \
-	-f test/common_armv7l/libc-core.M1 \
+	-f M2libc/armv7l/armv7l_defs.M1 \
+	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/get_machine.M1 \
 	-f ${TMPDIR}/get_machine-footer.M1 \
 	--LittleEndian \
@@ -57,7 +55,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_armv7l/ELF-armv7l-debug.hex2 \
+	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
 	-f ${TMPDIR}/get_machine.hex2 \
 	--LittleEndian \
 	--architecture armv7l \
