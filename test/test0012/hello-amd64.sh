@@ -24,16 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture amd64 \
-	-f test/common_amd64/functions/putchar.c \
-	-f test/common_amd64/functions/exit.c \
+	-f M2libc/amd64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/amd64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0012/break-for.c \
 	-o ${TMPDIR}/break-for.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_amd64/amd64_defs.M1 \
-	-f test/common_amd64/libc-core.M1 \
+	-f M2libc/amd64/amd64_defs.M1 \
+	-f M2libc/amd64/libc-full.M1 \
 	-f ${TMPDIR}/break-for.M1 \
 	--LittleEndian \
 	--architecture amd64 \
@@ -42,7 +44,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_amd64/ELF-amd64.hex2 \
+	-f M2libc/amd64/ELF-amd64.hex2 \
 	-f ${TMPDIR}/break-for.hex2 \
 	--LittleEndian \
 	--architecture amd64 \

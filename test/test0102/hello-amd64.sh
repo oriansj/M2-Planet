@@ -22,13 +22,13 @@ TMPDIR="test/test0102/tmp-amd64"
 mkdir -p ${TMPDIR}
 
 # Build the test
-./bin/M2-Planet \
+bin/M2-Planet \
 	--architecture amd64 \
-	-f test/common_amd64/functions/exit.c \
-	-f test/common_amd64/functions/file.c \
+	-f M2libc/amd64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/amd64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f functions/file_print.c \
-	-f test/common_amd64/functions/malloc.c \
-	-f functions/calloc.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -36,7 +36,6 @@ mkdir -p ${TMPDIR}
 	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/M1-macro.M1 \
 	|| exit 1
 
@@ -50,8 +49,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_amd64/amd64_defs.M1 \
-	-f test/common_amd64/libc-core.M1 \
+	-f M2libc/amd64/amd64_defs.M1 \
+	-f M2libc/amd64/libc-full.M1 \
 	-f ${TMPDIR}/M1-macro.M1 \
 	-f ${TMPDIR}/M1-macro-footer.M1 \
 	--LittleEndian \
@@ -61,7 +60,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_amd64/ELF-amd64-debug.hex2 \
+	-f M2libc/amd64/ELF-amd64-debug.hex2 \
 	-f ${TMPDIR}/M1-macro.hex2 \
 	--LittleEndian \
 	--architecture amd64 \
@@ -80,8 +79,8 @@ then
 
 	# Verify that the resulting file works
 	./test/results/test0102-amd64-binary -f \
-		test/common_x86/x86_defs.M1 \
-		-f test/common_x86/libc-core.M1 \
+		M2libc/x86/x86_defs.M1 \
+		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
 		--LittleEndian \
 		--architecture x86 \

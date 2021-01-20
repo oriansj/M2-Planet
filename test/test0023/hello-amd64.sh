@@ -24,10 +24,12 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture amd64 \
-	-f test/common_amd64/functions/file.c \
+	-f M2libc/amd64/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/amd64/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0023/fseek.c \
 	--debug \
-	--bootstrap-mode \
 	-o ${TMPDIR}/fseek.M1 \
 	|| exit 1
 
@@ -41,8 +43,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_amd64/amd64_defs.M1 \
-	-f test/common_amd64/libc-core.M1 \
+	-f M2libc/amd64/amd64_defs.M1 \
+	-f M2libc/amd64/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
 	-f ${TMPDIR}/fseek-footer.M1 \
 	--LittleEndian \
@@ -52,7 +54,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_amd64/ELF-amd64-debug.hex2 \
+	-f M2libc/amd64/ELF-amd64-debug.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
 	--LittleEndian \
 	--architecture amd64 \
