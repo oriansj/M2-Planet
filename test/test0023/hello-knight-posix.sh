@@ -24,31 +24,32 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-posix \
-	-f test/common_knight/functions/file.c \
+	-f M2libc/knight/Linux/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0023/fseek.c \
-	--bootstrap-mode \
 	-o ${TMPDIR}/fseek.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight_defs.M1 \
-	-f test/common_knight/libc-core.M1 \
+	-f M2libc/knight/knight_defs.M1 \
+	-f M2libc/knight/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-posix \
 	-o ${TMPDIR}/fseek.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f test/common_knight/ELF-knight.hex2 \
+	-f M2libc/knight/ELF-knight.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-posix \
-	--BaseAddress 0x0 \
+	--base-address 0x0 \
 	-o test/results/test0023-knight-posix-binary \
-	--exec_enable \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
