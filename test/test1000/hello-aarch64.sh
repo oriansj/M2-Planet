@@ -83,7 +83,8 @@ hex2 \
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
 then
 	# Verify that the resulting file works
-	./test/results/test1000-aarch64-binary --architecture x86 \
+	./test/results/test1000-aarch64-binary \
+		--architecture x86 \
 		-f test/common_x86/functions/file.c \
 		-f test/common_x86/functions/malloc.c \
 		-f functions/calloc.c \
@@ -104,7 +105,8 @@ then
 		-f cc_macro.c \
 		-f cc.c \
 		--bootstrap-mode \
-		-o test/test1000/proof || exit 5
+		-o test/test1000/proof \
+		|| exit 5
 
 	. ./sha256.sh
 	out=$(sha256_check test/test1000/proof.answer)

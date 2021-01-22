@@ -66,12 +66,14 @@ then
 
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0101-knight-posix-binary -f test/common_x86/ELF-i386.hex2 \
-	-f test/test0101/test.hex2 \
-	--LittleEndian \
-	--architecture x86 \
-	--BaseAddress 0x8048000 \
-	-o test/test0101/proof || exit 7
+	./test/results/test0101-knight-posix-binary \
+		-f test/common_x86/ELF-i386.hex2 \
+		-f test/test0101/test.hex2 \
+		--LittleEndian \
+		--architecture x86 \
+		--BaseAddress 0x8048000 \
+		-o test/test0101/proof \
+		|| exit 7
 	out=$(sha256_check test/test0101/proof.answer)
 	[ "$out" = "test/test0101/proof: OK" ] || exit 8
 fi

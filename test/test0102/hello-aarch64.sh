@@ -78,13 +78,14 @@ then
 	[ "$out" = "M1 1.0.0" ] || exit 6
 
 	# Verify that the resulting file works
-	./test/results/test0102-aarch64-binary -f \
-		M2libc/x86/x86_defs.M1 \
+	./test/results/test0102-aarch64-binary \
+		-f M2libc/x86/x86_defs.M1 \
 		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
 		--LittleEndian \
 		--architecture x86 \
-		-o test/test0102/proof || exit 7
+		-o test/test0102/proof \
+		|| exit 7
 
 	. ./sha256.sh
 	out=$(sha256_check test/test0102/proof.answer)

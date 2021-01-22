@@ -74,7 +74,8 @@ hex2 \
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
 then
 	# Verify that the resulting file works
-	./test/results/test1000-knight-posix-binary --architecture x86 \
+	./test/results/test1000-knight-posix-binary \
+		--architecture x86 \
 		-f test/common_x86/functions/file.c \
 		-f test/common_x86/functions/malloc.c \
 		-f functions/calloc.c \
@@ -95,7 +96,8 @@ then
 		-f cc_macro.c \
 		-f cc.c \
 		--bootstrap-mode \
-		-o test/test1000/proof || exit 4
+		-o test/test1000/proof \
+		|| exit 4
 
 	. ./sha256.sh
 	out=$(sha256_check test/test1000/proof.answer)
