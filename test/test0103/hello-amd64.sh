@@ -62,7 +62,6 @@ hex2 \
 	--architecture amd64 \
 	--BaseAddress 0x00600000 \
 	-o test/results/test0103-amd64-binary \
-	--exec_enable \
 	|| exit 4
 
 # Ensure binary works if host machine supports test

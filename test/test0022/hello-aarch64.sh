@@ -63,7 +63,6 @@ hex2 \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
 	-o test/results/test0022-aarch64-binary \
-	--exec_enable \
 	|| exit 4
 
 # Ensure binary works if host machine supports test

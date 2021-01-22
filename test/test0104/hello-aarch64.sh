@@ -64,7 +64,6 @@ hex2 \
 	--architecture aarch64 \
 	--BaseAddress 0x400000 \
 	-o test/results/test0104-aarch64-binary \
-	--exec_enable \
 	|| exit 4
 
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]

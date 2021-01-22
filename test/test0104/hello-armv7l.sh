@@ -63,7 +63,6 @@ hex2 \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \
 	-o test/results/test0104-armv7l-binary \
-	--exec_enable \
 	|| exit 4
 
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]

@@ -65,7 +65,6 @@ hex2 \
 	--architecture armv7l \
 	--BaseAddress 0x10000 \
 	-o test/results/test0102-armv7l-binary \
-	--exec_enable \
 	|| exit 4
 
 # Ensure binary works if host machine supports test

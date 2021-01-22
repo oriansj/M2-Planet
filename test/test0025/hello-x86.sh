@@ -59,7 +59,6 @@ hex2 \
 	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test0025-x86-binary \
-	--exec_enable \
 	|| exit 3
 
 # Ensure binary works if host machine supports test

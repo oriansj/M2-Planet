@@ -64,7 +64,6 @@ hex2 \
 	--architecture amd64 \
 	--BaseAddress 0x00600000 \
 	-o test/results/test0104-amd64-binary \
-	--exec_enable \
 	|| exit 4
 
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]

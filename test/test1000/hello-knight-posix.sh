@@ -67,7 +67,6 @@ hex2 \
 	--architecture knight-posix \
 	--BaseAddress 0x00 \
 	-o test/results/test1000-knight-posix-binary \
-	--exec_enable \
 	|| exit 3
 
 # Ensure binary works if host machine supports test

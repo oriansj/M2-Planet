@@ -47,7 +47,6 @@ hex2 \
 	--architecture knight-native \
 	--BaseAddress 0x00 \
 	-o test/results/test0011-knight-native-binary \
-	--exec_enable \
 	|| exit 3
 
 # Ensure binary works if host machine supports test

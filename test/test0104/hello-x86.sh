@@ -63,7 +63,6 @@ hex2 \
 	--architecture x86 \
 	--BaseAddress 0x8048000 \
 	-o test/results/test0104-x86-binary \
-	--exec_enable \
 	|| exit 4
 
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
