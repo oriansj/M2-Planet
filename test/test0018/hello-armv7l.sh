@@ -37,7 +37,7 @@ M1 \
 	-f M2libc/armv7l/armv7l_defs.M1 \
 	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/math.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture armv7l \
 	-o ${TMPDIR}/math.hex2 \
 	|| exit 2
@@ -46,9 +46,9 @@ M1 \
 hex2 \
 	-f M2libc/armv7l/ELF-armv7l.hex2 \
 	-f ${TMPDIR}/math.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture armv7l \
-	--BaseAddress 0x10000 \
+	--base-address 0x10000 \
 	-o test/results/test0018-armv7l-binary \
 	|| exit 3
 

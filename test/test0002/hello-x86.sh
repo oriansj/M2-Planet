@@ -37,7 +37,7 @@ M1 \
 	-f M2libc/x86/x86_defs.M1 \
 	-f M2libc/x86/libc-full.M1 \
 	-f ${TMPDIR}/if.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
 	-o ${TMPDIR}/if.hex2 \
 	|| exit 2
@@ -46,9 +46,9 @@ M1 \
 hex2 \
 	-f M2libc/x86/ELF-x86.hex2 \
 	-f ${TMPDIR}/if.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
-	--BaseAddress 0x8048000 \
+	--base-address 0x8048000 \
 	-o test/results/test0002-x86-binary \
 	|| exit 3
 

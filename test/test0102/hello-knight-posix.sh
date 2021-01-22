@@ -71,7 +71,7 @@ then
 		-f test/common_x86/x86_defs.M1 \
 		-f test/common_x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
-		--LittleEndian \
+		--little-endian \
 		--architecture x86 \
 		-o test/test0102/proof \
 		|| exit 7

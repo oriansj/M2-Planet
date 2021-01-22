@@ -47,7 +47,7 @@ M1 \
 	-f M2libc/aarch64/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
 	-f ${TMPDIR}/fseek-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture aarch64 \
 	-o ${TMPDIR}/fseek.hex2 \
 	|| exit 3
@@ -56,9 +56,9 @@ M1 \
 hex2 \
 	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture aarch64 \
-	--BaseAddress 0x400000 \
+	--base-address 0x400000 \
 	-o test/results/test0023-aarch64-binary \
 	|| exit 4
 

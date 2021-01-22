@@ -62,7 +62,7 @@ M1 \
 	-f test/common_x86/libc-core.M1 \
 	-f ${TMPDIR}/cc.M1 \
 	-f ${TMPDIR}/cc-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
 	-o ${TMPDIR}/cc.hex2 \
 	|| exit 3
@@ -71,9 +71,9 @@ M1 \
 hex2 \
 	-f test/common_x86/ELF-i386-debug.hex2 \
 	-f ${TMPDIR}/cc.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
-	--BaseAddress 0x8048000 \
+	--base-address 0x8048000 \
 	-o test/results/test1000-x86-binary \
 	|| exit 4
 

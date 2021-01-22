@@ -54,7 +54,7 @@ M1 \
 	-f test/common_knight/knight_defs.M1 \
 	-f test/common_knight/libc-core.M1 \
 	-f ${TMPDIR}/cc.M1 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-posix \
 	-o ${TMPDIR}/cc.hex2 \
 	|| exit 2
@@ -63,9 +63,9 @@ M1 \
 hex2 \
 	-f test/common_knight/ELF-knight.hex2 \
 	-f ${TMPDIR}/cc.hex2 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-posix \
-	--BaseAddress 0x00 \
+	--base-address 0x00 \
 	-o test/results/test1000-knight-posix-binary \
 	|| exit 3
 

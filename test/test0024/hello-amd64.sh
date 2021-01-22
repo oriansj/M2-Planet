@@ -33,7 +33,7 @@ M1 \
 	-f M2libc/amd64/amd64_defs.M1 \
 	-f M2libc/amd64/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
 	-o ${TMPDIR}/return.hex2 \
 	|| exit 2
@@ -42,9 +42,9 @@ M1 \
 hex2 \
 	-f M2libc/amd64/ELF-amd64.hex2 \
 	-f ${TMPDIR}/return.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
-	--BaseAddress 0x00600000 \
+	--base-address 0x00600000 \
 	-o test/results/test0024-amd64-binary \
 	|| exit 3
 

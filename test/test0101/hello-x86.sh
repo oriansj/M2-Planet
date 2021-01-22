@@ -50,7 +50,7 @@ M1 \
 	-f M2libc/x86/libc-full.M1 \
 	-f ${TMPDIR}/hex2_linker.M1 \
 	-f ${TMPDIR}/hex2_linker-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
 	-o ${TMPDIR}/hex2_linker.hex2 \
 	|| exit 3
@@ -59,9 +59,9 @@ M1 \
 hex2 \
 	-f M2libc/x86/ELF-x86-debug.hex2 \
 	-f ${TMPDIR}/hex2_linker.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture x86 \
-	--BaseAddress 0x8048000 \
+	--base-address 0x8048000 \
 	-o test/results/test0101-x86-binary \
 	|| exit 4
 

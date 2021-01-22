@@ -33,7 +33,7 @@ M1 \
 	-f M2libc/aarch64/aarch64_defs.M1 \
 	-f M2libc/aarch64/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture aarch64 \
 	-o ${TMPDIR}/return.hex2 \
 	|| exit 2
@@ -42,9 +42,9 @@ M1 \
 hex2 \
 	-f M2libc/aarch64/ELF-aarch64.hex2 \
 	-f ${TMPDIR}/return.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture aarch64 \
-	--BaseAddress 0x400000 \
+	--base-address 0x400000 \
 	-o test/results/test0024-aarch64-binary \
 	|| exit 3
 

@@ -63,7 +63,7 @@ M1 \
 	-f test/common_amd64/libc-core.M1 \
 	-f ${TMPDIR}/cc.M1 \
 	-f ${TMPDIR}/cc-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
 	-o ${TMPDIR}/cc.hex2 \
 	|| exit 3
@@ -72,9 +72,9 @@ M1 \
 hex2 \
 	-f test/common_amd64/ELF-amd64-debug.hex2 \
 	-f ${TMPDIR}/cc.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
-	--BaseAddress 0x00600000 \
+	--base-address 0x00600000 \
 	-o test/results/test1000-amd64-binary \
 	|| exit 4
 

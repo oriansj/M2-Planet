@@ -35,7 +35,7 @@ M1 \
 	-f test/common_knight/knight-native_defs.M1 \
 	-f test/common_knight/libc-native.M1 \
 	-f ${TMPDIR}/library_call.M1 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-native \
 	-o ${TMPDIR}/library_call.hex2 \
 	|| exit 2
@@ -43,9 +43,9 @@ M1 \
 # Resolve all linkages
 hex2 \
 	-f ${TMPDIR}/library_call.hex2 \
-	--BigEndian \
+	--big-endian \
 	--architecture knight-native \
-	--BaseAddress 0x0 \
+	--base-address 0x0 \
 	-o test/results/test0001-knight-native-binary \
 	|| exit 3
 

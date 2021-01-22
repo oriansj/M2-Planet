@@ -51,7 +51,7 @@ M1 \
 	-f M2libc/amd64/libc-full.M1 \
 	-f ${TMPDIR}/kaem.M1 \
 	-f ${TMPDIR}/kaem-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
 	-o ${TMPDIR}/kaem.hex2 \
 	|| exit 3
@@ -60,9 +60,9 @@ M1 \
 hex2 \
 	-f M2libc/amd64/ELF-amd64-debug.hex2 \
 	-f ${TMPDIR}/kaem.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture amd64 \
-	--BaseAddress 0x00600000 \
+	--base-address 0x00600000 \
 	-o test/results/test0104-amd64-binary \
 	|| exit 4
 

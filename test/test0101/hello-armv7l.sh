@@ -50,7 +50,7 @@ M1 \
 	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/hex2_linker.M1 \
 	-f ${TMPDIR}/hex2_linker-footer.M1 \
-	--LittleEndian \
+	--little-endian \
 	--architecture armv7l \
 	-o ${TMPDIR}/hex2_linker.hex2 \
 	|| exit 3
@@ -59,9 +59,9 @@ M1 \
 hex2 \
 	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
 	-f ${TMPDIR}/hex2_linker.hex2 \
-	--LittleEndian \
+	--little-endian \
 	--architecture armv7l \
-	--BaseAddress 0x10000 \
+	--base-address 0x10000 \
 	-o test/results/test0101-armv7l-binary \
 	|| exit 4
 
