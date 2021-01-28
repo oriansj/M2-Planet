@@ -50,11 +50,11 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight-native" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0012-knight-native-binary >| test/test0012/proof || exit 4
+	vm --rom ./test/results/test0012-knight-native-binary --tty-out test/test0012/proof || exit 4
 	out=$(sha256_check test/test0012/proof.answer)
 	[ "$out" = "test/test0012/proof: OK" ] || exit 5
 fi

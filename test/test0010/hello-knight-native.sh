@@ -52,11 +52,11 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight-native" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0010-knight-native-binary 2>&1 )
-	[ 12 = $? ] || exit 4
+	out=$(vm --rom ./test/results/test0010-knight-native-binary --memory 2M)
+	[ 0 = $? ] || exit 4
 	[ "$out" = "35419896642975313541989657891634" ] || exit 5
 fi
 exit 0
