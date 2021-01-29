@@ -399,14 +399,14 @@ void global_load(struct token_list* a)
 	emit_out("\n");
 
 	require(NULL != global_token, "unterminated global load\n");
-	if(!match("=", global_token->s))
-	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
-		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
-		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
-	}
+	if(TRUE == Address_of) return;
+	if(match("=", global_token->s)) return;
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
+	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
+	else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
+	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
 }
 
 /*
