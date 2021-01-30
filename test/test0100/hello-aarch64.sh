@@ -56,7 +56,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/aarch64/ELF-aarch64.hex2 \
+	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
 	-f ${TMPDIR}/blood-elf.hex2 \
 	--little-endian \
 	--architecture aarch64 \
