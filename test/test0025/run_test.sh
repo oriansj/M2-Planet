@@ -38,7 +38,7 @@ bin/M2-Planet \
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/array.M1 \
 	--entry _start \
 	-o ${TMPDIR}/array-footer.M1 \

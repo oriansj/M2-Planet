@@ -40,7 +40,7 @@ mkdir -p ${TMPDIR}
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/get_machine.M1 \
 	--entry _start \
 	-o ${TMPDIR}/get_machine-footer.M1 \

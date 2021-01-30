@@ -40,7 +40,7 @@ bin/M2-Planet \
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/chdir.M1 \
 	--entry _start \
 	-o ${TMPDIR}/chdir-footer.M1 \

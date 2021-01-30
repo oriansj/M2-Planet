@@ -42,7 +42,7 @@ mkdir -p ${TMPDIR}
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/kaem.M1 \
 	--entry _start \
 	-o ${TMPDIR}/kaem-footer.M1 \

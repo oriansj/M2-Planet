@@ -44,7 +44,7 @@ mkdir -p ${TMPDIR}
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/M1-macro.M1 \
 	--entry _start \
 	-o ${TMPDIR}/M1-macro-footer.M1 \

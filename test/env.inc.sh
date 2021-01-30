@@ -19,18 +19,22 @@
 case "${ARCH}" in
 	aarch64)
 		BASE_ADDRESS="0x00400000"
+		BLOOD_ELF_WORD_SIZE_FLAG="--64"
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	amd64)
 		BASE_ADDRESS="0x00600000"
+		BLOOD_ELF_WORD_SIZE_FLAG="--64"
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	armv7l)
 		BASE_ADDRESS="0x00010000"
+		BLOOD_ELF_WORD_SIZE_FLAG=""
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	x86)
 		BASE_ADDRESS="0x08048000"
+		BLOOD_ELF_WORD_SIZE_FLAG=""
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	*)

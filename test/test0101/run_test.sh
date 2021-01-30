@@ -42,7 +42,7 @@ mkdir -p ${TMPDIR}
 
 # Build debug footer
 blood-elf \
-	--64 \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/hex2_linker.M1 \
 	--entry _start \
 	-o ${TMPDIR}/hex2_linker-footer.M1 \
