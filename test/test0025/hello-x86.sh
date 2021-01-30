@@ -19,6 +19,7 @@
 set -ex
 
 ARCH="x86"
+. test/env.inc.sh
 TMPDIR="test/test0025/tmp-${ARCH}"
 
 mkdir -p ${TMPDIR}
@@ -48,7 +49,7 @@ M1 \
 	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/array.M1 \
 	-f ${TMPDIR}/array-footer.M1 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
 	-o ${TMPDIR}/array.hex2 \
 	|| exit 2
@@ -57,9 +58,9 @@ M1 \
 hex2 \
 	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/array.hex2 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
-	--base-address 0x8048000 \
+	--base-address ${BASE_ADDRESS} \
 	-o test/results/test0025-${ARCH}-binary \
 	|| exit 3
 

@@ -19,6 +19,7 @@
 set -x
 
 ARCH="armv7l"
+. test/env.inc.sh
 TMPDIR="test/test0102/tmp-${ARCH}"
 
 mkdir -p ${TMPDIR}
@@ -54,7 +55,7 @@ M1 \
 	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/M1-macro.M1 \
 	-f ${TMPDIR}/M1-macro-footer.M1 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
 	-o ${TMPDIR}/M1-macro.hex2 \
 	|| exit 3
@@ -63,9 +64,9 @@ M1 \
 hex2 \
 	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/M1-macro.hex2 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
-	--base-address 0x10000 \
+	--base-address ${BASE_ADDRESS} \
 	-o test/results/test0102-${ARCH}-binary \
 	|| exit 4
 
@@ -82,7 +83,7 @@ then
 		-f M2libc/x86/x86_defs.M1 \
 		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
-		--little-endian \
+		${ENDIANNESS_FLAG} \
 		--architecture x86 \
 		-o test/test0102/proof \
 		|| exit 7

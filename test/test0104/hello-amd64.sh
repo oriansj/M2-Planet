@@ -19,6 +19,7 @@
 set -x
 
 ARCH="amd64"
+. test/env.inc.sh
 TMPDIR="test/test0104/tmp-${ARCH}"
 
 mkdir -p ${TMPDIR}
@@ -53,7 +54,7 @@ M1 \
 	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/kaem.M1 \
 	-f ${TMPDIR}/kaem-footer.M1 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
 	-o ${TMPDIR}/kaem.hex2 \
 	|| exit 3
@@ -62,9 +63,9 @@ M1 \
 hex2 \
 	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/kaem.hex2 \
-	--little-endian \
+	${ENDIANNESS_FLAG} \
 	--architecture ${ARCH} \
-	--base-address 0x00600000 \
+	--base-address ${BASE_ADDRESS} \
 	-o test/results/test0104-${ARCH}-binary \
 	|| exit 4
 
