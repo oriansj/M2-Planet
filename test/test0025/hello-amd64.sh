@@ -21,6 +21,7 @@ set -ex
 TMPDIR="test/test0025/tmp-amd64"
 mkdir -p ${TMPDIR}
 
+# Build the test
 bin/M2-Planet \
 	--architecture amd64 \
 	-f M2libc/amd64/Linux/unistd.h \
