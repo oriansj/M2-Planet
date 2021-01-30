@@ -16,7 +16,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-set -x
+set -ex
 
 TMPDIR="test/test0102/tmp-knight-posix"
 mkdir -p ${TMPDIR}
