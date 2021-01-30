@@ -69,8 +69,11 @@ hex2 \
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
+	EXPECTED=16
+	[ "yes" = "${ARCH_IS_64_BITS}" ] && EXPECTED=32
+
 	out=$(./test/results/test0008-${ARCH}-binary 2>&1 )
-	[ 32 = $? ] || exit 4
+	[ ${EXPECTED} = $? ] || exit 4
 	[ "$out" = "35419896642975313541989657891634" ] || exit 5
 fi
 exit 0

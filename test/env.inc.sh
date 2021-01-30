@@ -18,21 +18,25 @@
 
 case "${ARCH}" in
 	aarch64)
+		ARCH_IS_64_BITS="yes"
 		BASE_ADDRESS="0x00400000"
 		BLOOD_ELF_WORD_SIZE_FLAG="--64"
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	amd64)
+		ARCH_IS_64_BITS="yes"
 		BASE_ADDRESS="0x00600000"
 		BLOOD_ELF_WORD_SIZE_FLAG="--64"
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	armv7l)
+		ARCH_IS_64_BITS="no"
 		BASE_ADDRESS="0x00010000"
 		BLOOD_ELF_WORD_SIZE_FLAG=""
 		ENDIANNESS_FLAG="--little-endian"
 		;;
 	x86)
+		ARCH_IS_64_BITS="no"
 		BASE_ADDRESS="0x08048000"
 		BLOOD_ELF_WORD_SIZE_FLAG=""
 		ENDIANNESS_FLAG="--little-endian"
