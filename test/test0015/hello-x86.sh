@@ -18,15 +18,17 @@
 
 set -ex
 
-TMPDIR="test/test0015/tmp-x86"
+ARCH="x86"
+TMPDIR="test/test0015/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture x86 \
-	-f M2libc/x86/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/x86/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0015/file_read.c \
 	-o ${TMPDIR}/file_read.M1 \
@@ -34,30 +36,30 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/x86/x86_defs.M1 \
-	-f M2libc/x86/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/file_read.M1 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/file_read.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/x86/ELF-x86.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/file_read.hex2 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	--base-address 0x8048000 \
-	-o test/results/test0015-x86-binary \
+	-o test/results/test0015-${ARCH}-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0015-x86-binary test/test0015/file_read.c >| test/test0015/proof || exit 4
+	./test/results/test0015-${ARCH}-binary test/test0015/file_read.c >| test/test0015/proof || exit 4
 	out=$(sha256_check test/test0015/proof.answer)
 	[ "$out" = "test/test0015/proof: OK" ] || exit 5
 fi

@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0005/tmp-armv7l"
+ARCH="armv7l"
+TMPDIR="test/test0005/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture armv7l \
-	-f M2libc/armv7l/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0005/string.c \
 	-o ${TMPDIR}/string.M1 \
@@ -34,29 +36,29 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/armv7l/armv7l_defs.M1 \
-	-f M2libc/armv7l/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/string.M1 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/string.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/armv7l/ELF-armv7l.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/string.hex2 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	--base-address 0x10000 \
-	-o test/results/test0005-armv7l-binary \
+	-o test/results/test0005-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0005-armv7l-binary 2>&1 )
+	out=$(./test/results/test0005-${ARCH}-binary 2>&1 )
 	[ 42 = $? ] || exit 4
 	[ "$out" = "Hello mes" ] || exit 5
 fi

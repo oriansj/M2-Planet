@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0101/tmp-armv7l"
+ARCH="armv7l"
+TMPDIR="test/test0101/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture armv7l \
-	-f M2libc/armv7l/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/file_print.c \
 	-f functions/match.c \
@@ -46,36 +48,36 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/armv7l/armv7l_defs.M1 \
-	-f M2libc/armv7l/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/hex2_linker.M1 \
 	-f ${TMPDIR}/hex2_linker-footer.M1 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/hex2_linker.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/hex2_linker.hex2 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	--base-address 0x10000 \
-	-o test/results/test0101-armv7l-binary \
+	-o test/results/test0101-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0101-armv7l-binary --version 2>&1 )
+	out=$(./test/results/test0101-${ARCH}-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
 	[ "$out" = "hex2 0.3" ] || exit 6
 
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0101-armv7l-binary \
+	./test/results/test0101-${ARCH}-binary \
 		-f M2libc/x86/ELF-x86.hex2 \
 		-f test/test0101/test.hex2 \
 		--LittleEndian \

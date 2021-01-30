@@ -18,41 +18,43 @@
 
 set -x
 
-TMPDIR="test/test0000/tmp-aarch64"
+ARCH="aarch64"
+TMPDIR="test/test0000/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	-f test/test0000/return.c \
 	-o ${TMPDIR}/return.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/aarch64/aarch64_defs.M1 \
-	-f M2libc/aarch64/libc-core.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/return.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/aarch64/ELF-aarch64.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	--base-address 0x400000 \
-	-o test/results/test0000-aarch64-binary \
+	-o test/results/test0000-${ARCH}-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	./test/results/test0000-aarch64-binary
+	./test/results/test0000-${ARCH}-binary
 	[ 42 = $? ] || exit 4
 fi
 exit 0

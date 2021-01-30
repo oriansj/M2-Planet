@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0100/tmp-aarch64"
+ARCH="aarch64"
+TMPDIR="test/test0100/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 ./bin/M2-Planet \
-	--architecture aarch64 \
-	-f M2libc/aarch64/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/aarch64/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/file_print.c \
 	-f functions/match.c \
@@ -45,37 +47,37 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/aarch64/aarch64_defs.M1 \
-	-f M2libc/aarch64/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/blood-elf.M1 \
 	-f ${TMPDIR}/blood-elf-footer.M1 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/blood-elf.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/blood-elf.hex2 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	--base-address 0x400000 \
-	-o test/results/test0100-aarch64-binary \
+	-o test/results/test0100-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0100-aarch64-binary --version 2>&1 )
+	out=$(./test/results/test0100-${ARCH}-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
 	[ "$out" = "blood-elf 0.1
 (Basically Launches Odd Object Dump ExecutabLe Files" ] || exit 6
 
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0100-aarch64-binary -f test/test0100/test.M1 -o test/test0100/proof || exit 7
+	./test/results/test0100-${ARCH}-binary -f test/test0100/test.M1 -o test/test0100/proof || exit 7
 	out=$(sha256_check test/test0100/proof.answer)
 	[ "$out" = "test/test0100/proof: OK" ] || exit 8
 fi

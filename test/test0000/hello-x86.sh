@@ -18,41 +18,43 @@
 
 set -x
 
-TMPDIR="test/test0000/tmp-x86"
+ARCH="x86"
+TMPDIR="test/test0000/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	-f test/test0000/return.c \
 	-o ${TMPDIR}/return.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/x86/x86_defs.M1 \
-	-f M2libc/x86/libc-core.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/return.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/x86/ELF-x86.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	--base-address 0x8048000 \
-	-o test/results/test0000-x86-binary \
+	-o test/results/test0000-${ARCH}-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	./test/results/test0000-x86-binary
+	./test/results/test0000-${ARCH}-binary
 	[ 42 = $? ] || exit 3
 fi
 exit 0

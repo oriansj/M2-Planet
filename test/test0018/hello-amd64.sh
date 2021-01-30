@@ -18,15 +18,17 @@
 
 set -ex
 
-TMPDIR="test/test0018/tmp-amd64"
+ARCH="amd64"
+TMPDIR="test/test0018/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture amd64 \
-	-f M2libc/amd64/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/amd64/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0018/math.c \
 	-o ${TMPDIR}/math.M1 \
@@ -34,30 +36,30 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/amd64/amd64_defs.M1 \
-	-f M2libc/amd64/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/math.M1 \
 	--little-endian \
-	--architecture amd64 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/math.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/amd64/ELF-amd64.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/math.hex2 \
 	--little-endian \
-	--architecture amd64 \
+	--architecture ${ARCH} \
 	--base-address 0x00600000 \
-	-o test/results/test0018-amd64-binary \
+	-o test/results/test0018-${ARCH}-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0018-amd64-binary >| test/test0018/proof || exit 4
+	./test/results/test0018-${ARCH}-binary >| test/test0018/proof || exit 4
 	out=$(sha256_check test/test0018/proof.answer)
 	[ "$out" = "test/test0018/proof: OK" ] || exit 5
 fi

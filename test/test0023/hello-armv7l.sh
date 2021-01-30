@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0023/tmp-armv7l"
+ARCH="armv7l"
+TMPDIR="test/test0023/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture armv7l \
-	-f M2libc/armv7l/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/armv7l/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0023/fseek.c \
 	--debug \
@@ -42,31 +44,31 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/armv7l/armv7l_defs.M1 \
-	-f M2libc/armv7l/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
 	-f ${TMPDIR}/fseek-footer.M1 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/fseek.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	--base-address 0x10000 \
-	-o test/results/test0023-armv7l-binary \
+	-o test/results/test0023-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0023-armv7l-binary test/test0023/question >| test/test0023/proof
+	./test/results/test0023-${ARCH}-binary test/test0023/question >| test/test0023/proof
 	[ 0 = $? ] || exit 5
 	out=$(sha256_check test/test0023/proof.answer)
 	[ "$out" = "test/test0023/proof: OK" ] || exit 6

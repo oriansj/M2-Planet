@@ -18,41 +18,43 @@
 
 set -x
 
-TMPDIR="test/test0024/tmp-armv7l"
+ARCH="armv7l"
+TMPDIR="test/test0024/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	-f test/test0024/return.c \
 	-o ${TMPDIR}/return.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/armv7l/armv7l_defs.M1 \
-	-f M2libc/armv7l/libc-core.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-core.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/return.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/armv7l/ELF-armv7l.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
 	-f ${TMPDIR}/return.hex2 \
 	--little-endian \
-	--architecture armv7l \
+	--architecture ${ARCH} \
 	--base-address 0x10000 \
-	-o test/results/test0024-armv7l-binary \
+	-o test/results/test0024-${ARCH}-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	./test/results/test0024-armv7l-binary
+	./test/results/test0024-${ARCH}-binary
 	[ 42 = $? ] || exit 3
 fi
 exit 0

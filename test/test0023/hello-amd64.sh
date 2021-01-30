@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0023/tmp-amd64"
+ARCH="amd64"
+TMPDIR="test/test0023/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture amd64 \
-	-f M2libc/amd64/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/amd64/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0023/fseek.c \
 	--debug \
@@ -43,31 +45,31 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/amd64/amd64_defs.M1 \
-	-f M2libc/amd64/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
 	-f ${TMPDIR}/fseek-footer.M1 \
 	--little-endian \
-	--architecture amd64 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/fseek.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/amd64/ELF-amd64-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
 	--little-endian \
-	--architecture amd64 \
+	--architecture ${ARCH} \
 	--base-address 0x00600000 \
-	-o test/results/test0023-amd64-binary \
+	-o test/results/test0023-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "amd64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	./test/results/test0023-amd64-binary test/test0023/question >| test/test0023/proof
+	./test/results/test0023-${ARCH}-binary test/test0023/question >| test/test0023/proof
 	[ 0 = $? ] || exit 5
 	out=$(sha256_check test/test0023/proof.answer)
 	[ "$out" = "test/test0023/proof: OK" ] || exit 6

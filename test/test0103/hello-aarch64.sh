@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0103/tmp-aarch64"
+ARCH="aarch64"
+TMPDIR="test/test0103/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 ./bin/M2-Planet \
-	--architecture aarch64 \
-	-f M2libc/aarch64/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/aarch64/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/file_print.c \
 	-f functions/match.c \
@@ -45,31 +47,31 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/aarch64/aarch64_defs.M1 \
-	-f M2libc/aarch64/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/get_machine.M1 \
 	-f ${TMPDIR}/get_machine-footer.M1 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/get_machine.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/get_machine.hex2 \
 	--little-endian \
-	--architecture aarch64 \
+	--architecture ${ARCH} \
 	--base-address 0x400000 \
-	-o test/results/test0103-aarch64-binary \
+	-o test/results/test0103-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "aarch64" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0103-aarch64-binary ${GET_MACHINE_FLAGS} 2>&1 )
+	out=$(./test/results/test0103-${ARCH}-binary ${GET_MACHINE_FLAGS} 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "aarch64" ] || exit 6
+	[ "$out" = "${ARCH}" ] || exit 6
 fi
 exit 0

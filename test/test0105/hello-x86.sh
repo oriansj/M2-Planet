@@ -18,15 +18,17 @@
 
 set -x
 
-TMPDIR="test/test0105/tmp-x86"
+ARCH="x86"
+TMPDIR="test/test0105/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture x86 \
-	-f M2libc/x86/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/x86/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0105/lisp.h \
 	-f functions/in_set.c \
@@ -51,35 +53,35 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/x86/x86_defs.M1 \
-	-f M2libc/x86/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/lisp.M1 \
 	-f ${TMPDIR}/lisp-footer.M1 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/lisp.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/x86/ELF-x86-debug.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/lisp.hex2 \
 	--little-endian \
-	--architecture x86 \
+	--architecture ${ARCH} \
 	--base-address 0x8048000 \
-	-o test/results/test0105-x86-binary \
+	-o test/results/test0105-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "x86" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0105-x86-binary --version 2>&1 )
+	out=$(./test/results/test0105-${ARCH}-binary --version 2>&1 )
 	[ 0 = $? ] || exit 5
 	[ "$out" = "Slow_Lisp 0.1" ] || exit 6
 
 	# Verify that the resulting file works
-	out=$(./test/results/test0105-x86-binary --file test/test0105/test.scm)
+	out=$(./test/results/test0105-${ARCH}-binary --file test/test0105/test.scm)
 	[ "$out" = "42" ] || exit 7
 fi
 exit 0
