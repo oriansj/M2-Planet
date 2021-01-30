@@ -29,21 +29,14 @@ bin/M2-Planet \
 	-f M2libc/armv7l/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0005/string.c \
-	--debug \
 	-o ${TMPDIR}/string.M1 \
 	|| exit 1
-
-blood-elf \
-	-f ${TMPDIR}/string.M1 \
-	-o ${TMPDIR}/string-footer.M1 \
-	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/armv7l/armv7l_defs.M1 \
 	-f M2libc/armv7l/libc-full.M1 \
 	-f ${TMPDIR}/string.M1 \
-	-f ${TMPDIR}/string-footer.M1 \
 	--little-endian \
 	--architecture armv7l \
 	-o ${TMPDIR}/string.hex2 \
@@ -51,7 +44,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/armv7l/ELF-armv7l-debug.hex2 \
+	-f M2libc/armv7l/ELF-armv7l.hex2 \
 	-f ${TMPDIR}/string.hex2 \
 	--little-endian \
 	--architecture armv7l \

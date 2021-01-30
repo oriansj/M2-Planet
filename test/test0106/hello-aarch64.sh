@@ -29,23 +29,14 @@ bin/M2-Planet \
 	-f M2libc/aarch64/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0106/cc500.c \
-	--debug \
 	-o ${TMPDIR}/cc0.M1 \
 	|| exit 1
-
-blood-elf \
-	--64 \
-	-f ${TMPDIR}/cc0.M1 \
-	--entry _start \
-	-o ${TMPDIR}/cc0-footer.M1 \
-	|| exit 2
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/aarch64/aarch64_defs.M1 \
 	-f M2libc/aarch64/libc-full.M1 \
 	-f ${TMPDIR}/cc0.M1 \
-	-f ${TMPDIR}/cc0-footer.M1 \
 	--little-endian \
 	--architecture aarch64 \
 	-o ${TMPDIR}/cc0.hex2 \
@@ -53,7 +44,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/aarch64/ELF-aarch64-debug.hex2 \
+	-f M2libc/aarch64/ELF-aarch64.hex2 \
 	-f ${TMPDIR}/cc0.hex2 \
 	--little-endian \
 	--architecture aarch64 \
