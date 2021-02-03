@@ -35,7 +35,6 @@ mkdir -p ${TMPDIR}
 	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f functions/require.c \
-	-f functions/fixup.c \
 	-f cc.h \
 	-f cc_globals.c \
 	-f cc_reader.c \

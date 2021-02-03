@@ -49,8 +49,6 @@ void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
 struct type* mirror_type(struct type* source, char* name);
 struct type* add_primitive(struct type* a);
-/* Host touchy function will need custom on 64bit systems*/
-int fixup_int32(int a);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -503,7 +501,7 @@ void primary_expr_number()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = fixup_int32(numerate_string(global_token->s));
+		int size = numerate_string(global_token->s);
 		if((32767 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");
