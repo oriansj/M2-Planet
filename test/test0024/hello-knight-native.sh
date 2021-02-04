@@ -30,8 +30,8 @@ bin/M2-Planet \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight-native_defs.M1 \
-	-f test/common_knight/libc-native.M1 \
+	-f M2libc/knight/knight-native_defs.M1 \
+	-f M2libc/knight/libc-native.M1 \
 	-f ${TMPDIR}/return.M1 \
 	--big-endian \
 	--architecture knight-native \

@@ -24,16 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
-	-f test/common_knight/functions/putchar-native.c \
-	-f test/common_knight/functions/exit-native.c \
+	-f M2libc/knight/Native/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/knight/Native/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0004/call.c \
 	-o ${TMPDIR}/call.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight-native_defs.M1 \
-	-f test/common_knight/libc-native.M1 \
+	-f M2libc/knight/knight-native_defs.M1 \
+	-f M2libc/knight/libc-native-file.M1 \
 	-f ${TMPDIR}/call.M1 \
 	--big-endian \
 	--architecture knight-native \
@@ -53,7 +55,7 @@ hex2 \
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight-native" ]
 then
 	# Verify that the compiled program returns the correct result
-	out=$(vm --rom ./test/results/test0004-knight-native-binary )
+	out=$(vm --rom ./test/results/test0004-knight-native-binary --tape_01 /dev/stdin --tape_02 /dev/stdout --memory 2M)
 	[ 0 = $? ] || exit 4
 	[ "$out" = "Hello mes" ] || exit 5
 fi

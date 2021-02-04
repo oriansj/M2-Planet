@@ -24,19 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
-	-f test/common_knight/functions/putchar-tape2.c \
-	-f test/common_knight/functions/getchar-tape1.c \
-	-f test/common_knight/functions/exit-native.c \
-	-f test/common_knight/functions/malloc.c \
+	-f M2libc/knight/Native/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/knight/Native/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0106/cc500.c \
-	--bootstrap-mode \
 	-o ${TMPDIR}/cc0.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight-native_defs.M1 \
-	-f test/common_knight/libc-native-file.M1 \
+	-f M2libc/knight/knight-native_defs.M1 \
+	-f M2libc/knight/libc-native-file.M1 \
 	-f ${TMPDIR}/cc0.M1 \
 	--big-endian \
 	--architecture knight-native \

@@ -24,16 +24,18 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
-	-f test/common_knight/functions/putchar-native.c \
-	-f test/common_knight/functions/exit-native.c \
+	-f M2libc/knight/Native/unistd.h \
+	-f M2libc/stdlib.c \
+	-f M2libc/knight/Native/fcntl.h \
+	-f M2libc/stdio.c \
 	-f test/test0011/break-do.c \
 	-o ${TMPDIR}/break-do.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight-native_defs.M1 \
-	-f test/common_knight/libc-native.M1 \
+	-f M2libc/knight/knight-native_defs.M1 \
+	-f M2libc/knight/libc-native-file.M1 \
 	-f ${TMPDIR}/break-do.M1 \
 	--big-endian \
 	--architecture knight-native \
@@ -54,7 +56,7 @@ if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight-native" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	vm --rom ./test/results/test0011-knight-native-binary --tty-out test/test0011/proof || exit 4
+	vm --rom ./test/results/test0011-knight-native-binary --tape_01 /dev/stdin --tape_02 test/test0011/proof --memory 2M || exit 4
 	out=$(sha256_check test/test0011/proof.answer)
 	[ "$out" = "test/test0011/proof: OK" ] || exit 5
 fi
