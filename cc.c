@@ -49,6 +49,8 @@ int main(int argc, char** argv)
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
 	char* arch;
 	char* name;
+	int env=0;
+	char* val;
 
 	int i = 1;
 	while(i <= argc)
@@ -133,6 +135,23 @@ int main(int argc, char** argv)
 		{
 			PREPROCESSOR_MODE = TRUE;
 			i = i + 1;
+		}
+		else if(match(argv[i], "-D"))
+		{
+			val = argv[i+1];
+			while(0 != val[0])
+			{
+				if('=' == val[0])
+				{
+					val[0] = 0;
+					val = val + 1;
+					break;
+				}
+				val = val + 1;
+			}
+			init_macro_env(argv[i+1], val, "__ARGV__", env);
+			env = env + 1;
+			i = i + 2;
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
