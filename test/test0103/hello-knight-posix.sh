@@ -55,11 +55,22 @@ hex2 \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	# Verify that the resulting file works
+	execve_image \
+		./test/results/test0103-knight-posix-binary \
+		${GET_MACHINE_FLAGS} \
+		>| ${TMPDIR}/image || exit 5
+	out=$(vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M)
+	[ 0 = $? ] || exit 6
+	[ "$out" = "knight" ] || exit 7
+
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test0103-knight-posix-binary ${GET_MACHINE_FLAGS} 2>&1 )
-	[ 0 = $? ] || exit 5
-	[ "$out" = "knight*" ] || exit 6
+	[ 0 = $? ] || exit 6
+	[ "$out" = "knight" ] || exit 7
 fi
 exit 0

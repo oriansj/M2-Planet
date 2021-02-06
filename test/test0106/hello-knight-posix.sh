@@ -53,11 +53,19 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	. ./sha256.sh
+	# Verify that the resulting file works
+	vm --POSIX-MODE --rom ./test/results/test0106-knight-posix-binary --memory 2M < test/test0106/cc500.c >| test/test0106/cc1 || exit 4
+	out=$(sha256_check test/test0106/proof0.answer)
+	[ "$out" = "test/test0106/cc1: OK" ] || exit 5
+
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	. ./sha256.sh
 	# Verify that the compiled program can compile itself
-	./test/results/test0106-binary < test/test0106/cc500.c >| test/test0106/cc1 || exit 4
+	./test/results/test0106-knight-posix-binary < test/test0106/cc500.c >| test/test0106/cc1 || exit 4
 	out=$(sha256_check test/test0106/proof0.answer)
 	[ "$out" = "test/test0106/cc1: OK" ] || exit 5
 fi

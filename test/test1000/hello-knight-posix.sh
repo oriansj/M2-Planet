@@ -24,10 +24,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture knight-posix \
-	-f test/common_knight/functions/file.c \
-	-f test/common_knight/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_knight/functions/exit.c \
+	-f M2libc/knight/Linux/bootstrap.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -50,8 +47,8 @@ mkdir -p ${TMPDIR}
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_knight/knight_defs.M1 \
-	-f test/common_knight/libc-core.M1 \
+	-f M2libc/knight/knight_defs.M1 \
+	-f M2libc/knight/libc-core.M1 \
 	-f ${TMPDIR}/cc.M1 \
 	--big-endian \
 	--architecture knight-posix \
@@ -60,7 +57,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_knight/ELF-knight.hex2 \
+	-f M2libc/knight/ELF-knight.hex2 \
 	-f ${TMPDIR}/cc.hex2 \
 	--big-endian \
 	--architecture knight-posix \
@@ -69,7 +66,46 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	# Verify that the resulting file works
+	execve_image \
+		./test/results/test1000-knight-posix-binary \
+		--architecture x86 \
+		-f test/common_x86/functions/file.c \
+		-f test/common_x86/functions/malloc.c \
+		-f functions/calloc.c \
+		-f test/common_x86/functions/exit.c \
+		-f functions/match.c \
+		-f functions/in_set.c \
+		-f functions/numerate_number.c \
+		-f functions/file_print.c \
+		-f functions/number_pack.c \
+		-f functions/string.c \
+		-f functions/require.c \
+		-f cc.h \
+		-f cc_globals.c \
+		-f cc_reader.c \
+		-f cc_strings.c \
+		-f cc_types.c \
+		-f cc_core.c \
+		-f cc_macro.c \
+		-f cc.c \
+		--bootstrap-mode \
+		-o test/test1000/proof \
+		>| ${TMPDIR}/image \
+		|| exit 4
+
+	vm \
+		--POSIX-MODE \
+		--rom ${TMPDIR}/image \
+		--memory 10M \
+		|| exit 5
+
+	. ./sha256.sh
+	out=$(sha256_check test/test1000/proof.answer)
+	[ "$out" = "test/test1000/proof: OK" ] || exit 6
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	# Verify that the resulting file works
 	./test/results/test1000-knight-posix-binary \
@@ -95,11 +131,10 @@ then
 		-f cc.c \
 		--bootstrap-mode \
 		-o test/test1000/proof \
-		|| exit 4
+		|| exit 7
 
 	. ./sha256.sh
 	out=$(sha256_check test/test1000/proof.answer)
-	[ "$out" = "test/test1000/proof: OK" ] || exit 5
-	[ ! -e bin/M2-Planet ] && mv test/results/test1000-knight-posix-binary bin/M2-Planet
+	[ "$out" = "test/test1000/proof: OK" ] || exit 8
 fi
 exit 0

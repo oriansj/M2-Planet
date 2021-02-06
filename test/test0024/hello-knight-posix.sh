@@ -49,7 +49,13 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	# Verify that the resulting file works
+	vm --POSIX-MODE --rom ./test/results/test0024-knight-posix-binary --memory 2M
+	[ 42 = $? ] || exit 3
+
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	# Verify that the compiled program returns the correct result
 	./test/results/test0024-knight-posix-binary

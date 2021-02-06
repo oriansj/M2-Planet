@@ -59,12 +59,39 @@ hex2 \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	# Verify that the compiled program returns the correct result
+	execve_image \
+		./test/results/test0102-knight-posix-binary \
+		--version \
+		>| ${TMPDIR}/image || exit 5
+	out=$(vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M)
+	[ 0 = $? ] || exit 6
+	[ "$out" = "M1 1.0.0" ] || exit 7
+
+	# Verify that the resulting file works
+	execve_image \
+		./test/results/test0102-knight-posix-binary \
+		-f test/common_x86/x86_defs.M1 \
+		-f test/common_x86/libc-core.M1 \
+		-f test/test0100/test.M1 \
+		--little-endian \
+		--architecture x86 \
+		-o test/test0102/proof \
+		>| ${TMPDIR}/image || exit 8
+	vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M || exit 9
+
+	. ./sha256.sh
+	out=$(sha256_check test/test0102/proof.answer)
+	[ "$out" = "test/test0102/proof: OK" ] || exit 8
+
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test0102-knight-posix-binary --version 2>&1 )
-	[ 0 = $? ] || exit 5
-	[ "$out" = "M1 1.0.0" ] || exit 6
+	[ 0 = $? ] || exit 6
+	[ "$out" = "M1 1.0.0" ] || exit 7
 
 	# Verify that the resulting file works
 	./test/results/test0102-knight-posix-binary \
@@ -74,7 +101,7 @@ then
 		--little-endian \
 		--architecture x86 \
 		-o test/test0102/proof \
-		|| exit 7
+		|| exit 9
 
 	. ./sha256.sh
 	out=$(sha256_check test/test0102/proof.answer)

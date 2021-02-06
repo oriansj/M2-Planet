@@ -53,7 +53,20 @@ hex2 \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight*" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+then
+	. ./sha256.sh
+	# Verify that the resulting file works
+	execve_image \
+		./test/results/test0023-knight-posix-binary \
+		test/test0023/question \
+		>| ${TMPDIR}/image || exit 4
+	vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M >| test/test0023/proof
+	[ 0 = $? ] || exit 5
+	out=$(sha256_check test/test0023/proof.answer)
+	[ "$out" = "test/test0023/proof: OK" ] || exit 6
+
+elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
