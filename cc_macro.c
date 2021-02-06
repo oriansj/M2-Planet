@@ -42,6 +42,18 @@ struct conditional_inclusion* conditional_inclusion_top;
 /* point where we are currently modifying the global_token list */
 struct token_list* macro_token;
 
+void init_macro_env(char* sym, char* value, char* source, int num)
+{
+	struct macro_list* hold = macro_env;
+	macro_env = calloc(1, sizeof(struct macro_list));
+	macro_env->symbol = sym;
+	macro_env->next = hold;
+	macro_env->expansion = calloc(1, sizeof(struct token_list));
+	macro_env->expansion->s = value;
+	macro_env->expansion->filename = source;
+	macro_env->expansion->linenumber = num;
+}
+
 void eat_current_token()
 {
 	int update_global_token = FALSE;

@@ -30,6 +30,7 @@ struct token_list* remove_line_comment_tokens(struct token_list* head);
 struct token_list* remove_preprocessor_directives(struct token_list* head);
 
 void eat_newline_tokens();
+void init_macro_env(char* sym, char* value, char* source, int num);
 void preprocess();
 void program();
 void recursive_output(struct token_list* i, FILE* out);
@@ -45,6 +46,7 @@ int main(int argc, char** argv)
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
 	Architecture = KNIGHT_NATIVE; /* Assume Knight-native */
+	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
 	char* arch;
 	char* name;
 
