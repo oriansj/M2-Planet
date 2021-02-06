@@ -102,8 +102,11 @@ int main()
 #include <stdio.h>
 #include <stdlib.h>
 
-// CONSTANT pointer_size sizeof(char*)
-#define pointer_size 1
+#if defined(__M2__)
+	#define pointer_size sizeof(char*)
+#else
+	#define pointer_size 1
+#endif
 
 void walk_array(char** array, char** array_end)
 {
@@ -139,11 +142,6 @@ M2-Planet doesn't support static initialization for structs yet.
 Simply because time hasn't been made available for the effort.
 
 Patches for adding support are welcome.
-
-* typedef doesn't work
-M2-Planet doesn't support this function yet as the time for its development has not been allocated yet.
-
-Patches are welcome
 
 * C style function pointers
 M2-Planet supports universal function pointer FUNCTION
