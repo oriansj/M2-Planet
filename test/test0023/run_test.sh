@@ -18,59 +18,59 @@
 
 set -ex
 
-TMPDIR="test/test0023/tmp-knight-posix"
+ARCH="$1"
+. test/env.inc.sh
+TMPDIR="test/test0023/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture knight-posix \
-	-f M2libc/knight/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f test/test0023/fseek.c \
+	--debug \
 	-o ${TMPDIR}/fseek.M1 \
 	|| exit 1
 
+# Build debug footer
+blood-elf \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
+	-f ${TMPDIR}/fseek.M1 \
+	--entry _start \
+	-o ${TMPDIR}/fseek-footer.M1 \
+	|| exit 2
+
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/knight/knight_defs.M1 \
-	-f M2libc/knight/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/fseek.M1 \
-	--big-endian \
-	--architecture knight-posix \
+	-f ${TMPDIR}/fseek-footer.M1 \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/fseek.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/knight/ELF-knight.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/fseek.hex2 \
-	--big-endian \
-	--architecture knight-posix \
-	--base-address 0x0 \
-	-o test/results/test0023-knight-posix-binary \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
+	--base-address ${BASE_ADDRESS} \
+	-o test/results/test0023-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	execve_image \
-		./test/results/test0023-knight-posix-binary \
-		test/test0023/question \
-		>| ${TMPDIR}/image || exit 4
-	vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M >| test/test0023/proof
-	[ 0 = $? ] || exit 5
-	out=$(sha256_check test/test0023/proof.answer)
-	[ "$out" = "test/test0023/proof: OK" ] || exit 6
-
-elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
-then
-	. ./sha256.sh
-	# Verify that the resulting file works
-	./test/results/test0023-knight-posix-binary test/test0023/question >| test/test0023/proof
+	./test/results/test0023-${ARCH}-binary test/test0023/question >| test/test0023/proof
 	[ 0 = $? ] || exit 5
 	out=$(sha256_check test/test0023/proof.answer)
 	[ "$out" = "test/test0023/proof: OK" ] || exit 6

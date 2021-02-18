@@ -222,205 +222,205 @@ x86-tests: \
 	test1000-x86-binary | results
 
 test0000-aarch64-binary: M2-Planet | results
-	test/test0000/hello-aarch64.sh
+	test/test0000/run_test.sh aarch64
 
 test0001-aarch64-binary: M2-Planet | results
-	test/test0001/hello-aarch64.sh
+	test/test0001/run_test.sh aarch64
 
 test0002-aarch64-binary: M2-Planet | results
-	test/test0002/hello-aarch64.sh
+	test/test0002/run_test.sh aarch64
 
 test0003-aarch64-binary: M2-Planet | results
-	test/test0003/hello-aarch64.sh
+	test/test0003/run_test.sh aarch64
 
 test0004-aarch64-binary: M2-Planet | results
-	test/test0004/hello-aarch64.sh
+	test/test0004/run_test.sh aarch64
 
 test0005-aarch64-binary: M2-Planet | results
-	test/test0005/hello-aarch64.sh
+	test/test0005/run_test.sh aarch64
 
 test0006-aarch64-binary: M2-Planet | results
-	test/test0006/hello-aarch64.sh
+	test/test0006/run_test.sh aarch64
 
 test0007-aarch64-binary: M2-Planet | results
-	test/test0007/hello-aarch64.sh
+	test/test0007/run_test.sh aarch64
 
 test0008-aarch64-binary: M2-Planet | results
-	test/test0008/hello-aarch64.sh
+	test/test0008/run_test.sh aarch64
 
 test0009-aarch64-binary: M2-Planet | results
-	test/test0009/hello-aarch64.sh
+	test/test0009/run_test.sh aarch64
 
 test0010-aarch64-binary: M2-Planet | results
-	test/test0010/hello-aarch64.sh
+	test/test0010/run_test.sh aarch64
 
 test0011-aarch64-binary: M2-Planet | results
-	test/test0011/hello-aarch64.sh
+	test/test0011/run_test.sh aarch64
 
 test0012-aarch64-binary: M2-Planet | results
-	test/test0012/hello-aarch64.sh
+	test/test0012/run_test.sh aarch64
 
 test0013-aarch64-binary: M2-Planet | results
-	test/test0013/hello-aarch64.sh
+	test/test0013/run_test.sh aarch64
 
 test0014-aarch64-binary: M2-Planet | results
-	test/test0014/hello-aarch64.sh
+	test/test0014/run_test.sh aarch64
 
 test0015-aarch64-binary: M2-Planet | results
-	test/test0015/hello-aarch64.sh
+	test/test0015/run_test.sh aarch64
 
 test0016-aarch64-binary: M2-Planet | results
-	test/test0016/hello-aarch64.sh
+	test/test0016/run_test.sh aarch64
 
 test0017-aarch64-binary: M2-Planet | results
-	test/test0017/hello-aarch64.sh
+	test/test0017/run_test.sh aarch64
 
 test0018-aarch64-binary: M2-Planet | results
-	test/test0018/hello-aarch64.sh
+	test/test0018/run_test.sh aarch64
 
 test0019-aarch64-binary: M2-Planet | results
-	test/test0019/hello-aarch64.sh
+	test/test0019/run_test.sh aarch64
 
 test0020-aarch64-binary: M2-Planet | results
-	test/test0020/hello-aarch64.sh
+	test/test0020/run_test.sh aarch64
 
 test0021-aarch64-binary: M2-Planet | results
-	test/test0021/hello-aarch64.sh
+	test/test0021/run_test.sh aarch64
 
 test0022-aarch64-binary: M2-Planet | results
-	test/test0022/hello-aarch64.sh
+	test/test0022/run_test.sh aarch64
 
 test0023-aarch64-binary: M2-Planet | results
-	test/test0023/hello-aarch64.sh
+	test/test0023/run_test.sh aarch64
 
 test0024-aarch64-binary: M2-Planet | results
-	test/test0024/hello-aarch64.sh
+	test/test0024/run_test.sh aarch64
 
 test0025-aarch64-binary: M2-Planet | results
-	test/test0025/hello-aarch64.sh
+	test/test0025/run_test.sh aarch64
 
 test0100-aarch64-binary: M2-Planet | results
-	test/test0100/hello-aarch64.sh
+	test/test0100/run_test.sh aarch64
 
 test0101-aarch64-binary: M2-Planet | results
-	test/test0101/hello-aarch64.sh
+	test/test0101/run_test.sh aarch64
 
 test0102-aarch64-binary: M2-Planet | results
-	test/test0102/hello-aarch64.sh
+	test/test0102/run_test.sh aarch64
 
 test0103-aarch64-binary: M2-Planet | results
-	test/test0103/hello-aarch64.sh
+	test/test0103/run_test.sh aarch64
 
 test0104-aarch64-binary: M2-Planet | results
-	test/test0104/hello-aarch64.sh
+	test/test0104/run_test.sh aarch64
 
 test0105-aarch64-binary: M2-Planet | results
-	test/test0105/hello-aarch64.sh
+	test/test0105/run_test.sh aarch64
 
 test0106-aarch64-binary: M2-Planet | results
-	test/test0106/hello-aarch64.sh
+	test/test0106/run_test.sh aarch64
 
 test1000-aarch64-binary: M2-Planet | results
 	test/test1000/hello-aarch64.sh
 
 test0000-amd64-binary: M2-Planet | results
-	test/test0000/hello-amd64.sh
+	test/test0000/run_test.sh amd64
 
 test0001-amd64-binary: M2-Planet | results
-	test/test0001/hello-amd64.sh
+	test/test0001/run_test.sh amd64
 
 test0002-amd64-binary: M2-Planet | results
-	test/test0002/hello-amd64.sh
+	test/test0002/run_test.sh amd64
 
 test0003-amd64-binary: M2-Planet | results
-	test/test0003/hello-amd64.sh
+	test/test0003/run_test.sh amd64
 
 test0004-amd64-binary: M2-Planet | results
-	test/test0004/hello-amd64.sh
+	test/test0004/run_test.sh amd64
 
 test0005-amd64-binary: M2-Planet | results
-	test/test0005/hello-amd64.sh
+	test/test0005/run_test.sh amd64
 
 test0006-amd64-binary: M2-Planet | results
-	test/test0006/hello-amd64.sh
+	test/test0006/run_test.sh amd64
 
 test0007-amd64-binary: M2-Planet | results
-	test/test0007/hello-amd64.sh
+	test/test0007/run_test.sh amd64
 
 test0008-amd64-binary: M2-Planet | results
-	test/test0008/hello-amd64.sh
+	test/test0008/run_test.sh amd64
 
 test0009-amd64-binary: M2-Planet | results
-	test/test0009/hello-amd64.sh
+	test/test0009/run_test.sh amd64
 
 test0010-amd64-binary: M2-Planet | results
-	test/test0010/hello-amd64.sh
+	test/test0010/run_test.sh amd64
 
 test0011-amd64-binary: M2-Planet | results
-	test/test0011/hello-amd64.sh
+	test/test0011/run_test.sh amd64
 
 test0012-amd64-binary: M2-Planet | results
-	test/test0012/hello-amd64.sh
+	test/test0012/run_test.sh amd64
 
 test0013-amd64-binary: M2-Planet | results
-	test/test0013/hello-amd64.sh
+	test/test0013/run_test.sh amd64
 
 test0014-amd64-binary: M2-Planet | results
-	test/test0014/hello-amd64.sh
+	test/test0014/run_test.sh amd64
 
 test0015-amd64-binary: M2-Planet | results
-	test/test0015/hello-amd64.sh
+	test/test0015/run_test.sh amd64
 
 test0016-amd64-binary: M2-Planet | results
-	test/test0016/hello-amd64.sh
+	test/test0016/run_test.sh amd64
 
 test0017-amd64-binary: M2-Planet | results
-	test/test0017/hello-amd64.sh
+	test/test0017/run_test.sh amd64
 
 test0018-amd64-binary: M2-Planet | results
-	test/test0018/hello-amd64.sh
+	test/test0018/run_test.sh amd64
 
 test0019-amd64-binary: M2-Planet | results
-	test/test0019/hello-amd64.sh
+	test/test0019/run_test.sh amd64
 
 test0020-amd64-binary: M2-Planet | results
-	test/test0020/hello-amd64.sh
+	test/test0020/run_test.sh amd64
 
 test0021-amd64-binary: M2-Planet | results
-	test/test0021/hello-amd64.sh
+	test/test0021/run_test.sh amd64
 
 test0022-amd64-binary: M2-Planet | results
-	test/test0022/hello-amd64.sh
+	test/test0022/run_test.sh amd64
 
 test0023-amd64-binary: M2-Planet | results
-	test/test0023/hello-amd64.sh
+	test/test0023/run_test.sh amd64
 
 test0024-amd64-binary: M2-Planet | results
-	test/test0024/hello-amd64.sh
+	test/test0024/run_test.sh amd64
 
 test0025-amd64-binary: M2-Planet | results
-	test/test0025/hello-amd64.sh
+	test/test0025/run_test.sh amd64
 
 test0100-amd64-binary: M2-Planet | results
-	test/test0100/hello-amd64.sh
+	test/test0100/run_test.sh amd64
 
 test0101-amd64-binary: M2-Planet | results
-	test/test0101/hello-amd64.sh
+	test/test0101/run_test.sh amd64
 
 test0102-amd64-binary: M2-Planet | results
-	test/test0102/hello-amd64.sh
+	test/test0102/run_test.sh amd64
 
 test0103-amd64-binary: M2-Planet | results
-	test/test0103/hello-amd64.sh
+	test/test0103/run_test.sh amd64
 
 test0104-amd64-binary: M2-Planet | results
-	test/test0104/hello-amd64.sh
+	test/test0104/run_test.sh amd64
 
 test0105-amd64-binary: M2-Planet | results
-	test/test0105/hello-amd64.sh
+	test/test0105/run_test.sh amd64
 
 test0106-amd64-binary: M2-Planet | results
-	test/test0106/hello-amd64.sh
+	test/test0106/run_test.sh amd64
 
 test1000-amd64-binary: M2-Planet | results
 	test/test1000/hello-amd64.sh
@@ -576,205 +576,205 @@ test0106-knight-native-binary: M2-Planet | results
 	test/test0106/hello-knight-native.sh
 
 test0000-armv7l-binary: M2-Planet | results
-	test/test0000/hello-armv7l.sh
+	test/test0000/run_test.sh armv7l
 
 test0001-armv7l-binary: M2-Planet | results
-	test/test0001/hello-armv7l.sh
+	test/test0001/run_test.sh armv7l
 
 test0002-armv7l-binary: M2-Planet | results
-	test/test0002/hello-armv7l.sh
+	test/test0002/run_test.sh armv7l
 
 test0003-armv7l-binary: M2-Planet | results
-	test/test0003/hello-armv7l.sh
+	test/test0003/run_test.sh armv7l
 
 test0004-armv7l-binary: M2-Planet | results
-	test/test0004/hello-armv7l.sh
+	test/test0004/run_test.sh armv7l
 
 test0005-armv7l-binary: M2-Planet | results
-	test/test0005/hello-armv7l.sh
+	test/test0005/run_test.sh armv7l
 
 test0006-armv7l-binary: M2-Planet | results
-	test/test0006/hello-armv7l.sh
+	test/test0006/run_test.sh armv7l
 
 test0007-armv7l-binary: M2-Planet | results
-	test/test0007/hello-armv7l.sh
+	test/test0007/run_test.sh armv7l
 
 test0008-armv7l-binary: M2-Planet | results
-	test/test0008/hello-armv7l.sh
+	test/test0008/run_test.sh armv7l
 
 test0009-armv7l-binary: M2-Planet | results
-	test/test0009/hello-armv7l.sh
+	test/test0009/run_test.sh armv7l
 
 test0010-armv7l-binary: M2-Planet | results
-	test/test0010/hello-armv7l.sh
+	test/test0010/run_test.sh armv7l
 
 test0011-armv7l-binary: M2-Planet | results
-	test/test0011/hello-armv7l.sh
+	test/test0011/run_test.sh armv7l
 
 test0012-armv7l-binary: M2-Planet | results
-	test/test0012/hello-armv7l.sh
+	test/test0012/run_test.sh armv7l
 
 test0013-armv7l-binary: M2-Planet | results
-	test/test0013/hello-armv7l.sh
+	test/test0013/run_test.sh armv7l
 
 test0014-armv7l-binary: M2-Planet | results
-	test/test0014/hello-armv7l.sh
+	test/test0014/run_test.sh armv7l
 
 test0015-armv7l-binary: M2-Planet | results
-	test/test0015/hello-armv7l.sh
+	test/test0015/run_test.sh armv7l
 
 test0016-armv7l-binary: M2-Planet | results
-	test/test0016/hello-armv7l.sh
+	test/test0016/run_test.sh armv7l
 
 test0017-armv7l-binary: M2-Planet | results
-	test/test0017/hello-armv7l.sh
+	test/test0017/run_test.sh armv7l
 
 test0018-armv7l-binary: M2-Planet | results
-	test/test0018/hello-armv7l.sh
+	test/test0018/run_test.sh armv7l
 
 test0019-armv7l-binary: M2-Planet | results
-	test/test0019/hello-armv7l.sh
+	test/test0019/run_test.sh armv7l
 
 test0020-armv7l-binary: M2-Planet | results
-	test/test0020/hello-armv7l.sh
+	test/test0020/run_test.sh armv7l
 
 test0021-armv7l-binary: M2-Planet | results
-	test/test0021/hello-armv7l.sh
+	test/test0021/run_test.sh armv7l
 
 test0022-armv7l-binary: M2-Planet | results
-	test/test0022/hello-armv7l.sh
+	test/test0022/run_test.sh armv7l
 
 test0023-armv7l-binary: M2-Planet | results
-	test/test0023/hello-armv7l.sh
+	test/test0023/run_test.sh armv7l
 
 test0024-armv7l-binary: M2-Planet | results
-	test/test0024/hello-armv7l.sh
+	test/test0024/run_test.sh armv7l
 
 test0025-armv7l-binary: M2-Planet | results
-	test/test0025/hello-armv7l.sh
+	test/test0025/run_test.sh armv7l
 
 test0100-armv7l-binary: M2-Planet | results
-	test/test0100/hello-armv7l.sh
+	test/test0100/run_test.sh armv7l
 
 test0101-armv7l-binary: M2-Planet | results
-	test/test0101/hello-armv7l.sh
+	test/test0101/run_test.sh armv7l
 
 test0102-armv7l-binary: M2-Planet | results
-	test/test0102/hello-armv7l.sh
+	test/test0102/run_test.sh armv7l
 
 test0103-armv7l-binary: M2-Planet | results
-	test/test0103/hello-armv7l.sh
+	test/test0103/run_test.sh armv7l
 
 test0104-armv7l-binary: M2-Planet | results
-	test/test0104/hello-armv7l.sh
+	test/test0104/run_test.sh armv7l
 
 test0105-armv7l-binary: M2-Planet | results
-	test/test0105/hello-armv7l.sh
+	test/test0105/run_test.sh armv7l
 
 test0106-armv7l-binary: M2-Planet | results
-	test/test0106/hello-armv7l.sh
+	test/test0106/run_test.sh armv7l
 
 test1000-armv7l-binary: M2-Planet | results
 	test/test1000/hello-armv7l.sh
 
 test0000-x86-binary: M2-Planet | results
-	test/test0000/hello-x86.sh
+	test/test0000/run_test.sh x86
 
 test0001-x86-binary: M2-Planet | results
-	test/test0001/hello-x86.sh
+	test/test0001/run_test.sh x86
 
 test0002-x86-binary: M2-Planet | results
-	test/test0002/hello-x86.sh
+	test/test0002/run_test.sh x86
 
 test0003-x86-binary: M2-Planet | results
-	test/test0003/hello-x86.sh
+	test/test0003/run_test.sh x86
 
 test0004-x86-binary: M2-Planet | results
-	test/test0004/hello-x86.sh
+	test/test0004/run_test.sh x86
 
 test0005-x86-binary: M2-Planet | results
-	test/test0005/hello-x86.sh
+	test/test0005/run_test.sh x86
 
 test0006-x86-binary: M2-Planet | results
-	test/test0006/hello-x86.sh
+	test/test0006/run_test.sh x86
 
 test0007-x86-binary: M2-Planet | results
-	test/test0007/hello-x86.sh
+	test/test0007/run_test.sh x86
 
 test0008-x86-binary: M2-Planet | results
-	test/test0008/hello-x86.sh
+	test/test0008/run_test.sh x86
 
 test0009-x86-binary: M2-Planet | results
-	test/test0009/hello-x86.sh
+	test/test0009/run_test.sh x86
 
 test0010-x86-binary: M2-Planet | results
-	test/test0010/hello-x86.sh
+	test/test0010/run_test.sh x86
 
 test0011-x86-binary: M2-Planet | results
-	test/test0011/hello-x86.sh
+	test/test0011/run_test.sh x86
 
 test0012-x86-binary: M2-Planet | results
-	test/test0012/hello-x86.sh
+	test/test0012/run_test.sh x86
 
 test0013-x86-binary: M2-Planet | results
-	test/test0013/hello-x86.sh
+	test/test0013/run_test.sh x86
 
 test0014-x86-binary: M2-Planet | results
-	test/test0014/hello-x86.sh
+	test/test0014/run_test.sh x86
 
 test0015-x86-binary: M2-Planet | results
-	test/test0015/hello-x86.sh
+	test/test0015/run_test.sh x86
 
 test0016-x86-binary: M2-Planet | results
-	test/test0016/hello-x86.sh
+	test/test0016/run_test.sh x86
 
 test0017-x86-binary: M2-Planet | results
-	test/test0017/hello-x86.sh
+	test/test0017/run_test.sh x86
 
 test0018-x86-binary: M2-Planet | results
-	test/test0018/hello-x86.sh
+	test/test0018/run_test.sh x86
 
 test0019-x86-binary: M2-Planet | results
-	test/test0019/hello-x86.sh
+	test/test0019/run_test.sh x86
 
 test0020-x86-binary: M2-Planet | results
-	test/test0020/hello-x86.sh
+	test/test0020/run_test.sh x86
 
 test0021-x86-binary: M2-Planet | results
-	test/test0021/hello-x86.sh
+	test/test0021/run_test.sh x86
 
 test0022-x86-binary: M2-Planet | results
-	test/test0022/hello-x86.sh
+	test/test0022/run_test.sh x86
 
 test0023-x86-binary: M2-Planet | results
-	test/test0023/hello-x86.sh
+	test/test0023/run_test.sh x86
 
 test0024-x86-binary: M2-Planet | results
-	test/test0024/hello-x86.sh
+	test/test0024/run_test.sh x86
 
 test0025-x86-binary: M2-Planet | results
-	test/test0025/hello-x86.sh
+	test/test0025/run_test.sh x86
 
 test0100-x86-binary: M2-Planet | results
-	test/test0100/hello-x86.sh
+	test/test0100/run_test.sh x86
 
 test0101-x86-binary: M2-Planet | results
-	test/test0101/hello-x86.sh
+	test/test0101/run_test.sh x86
 
 test0102-x86-binary: M2-Planet | results
-	test/test0102/hello-x86.sh
+	test/test0102/run_test.sh x86
 
 test0103-x86-binary: M2-Planet | results
-	test/test0103/hello-x86.sh
+	test/test0103/run_test.sh x86
 
 test0104-x86-binary: M2-Planet | results
-	test/test0104/hello-x86.sh
+	test/test0104/run_test.sh x86
 
 test0105-x86-binary: M2-Planet | results
-	test/test0105/hello-x86.sh
+	test/test0105/run_test.sh x86
 
 test0106-x86-binary: M2-Planet | results
-	test/test0106/hello-x86.sh
+	test/test0106/run_test.sh x86
 
 test1000-x86-binary: M2-Planet | results
 	test/test1000/hello-x86.sh

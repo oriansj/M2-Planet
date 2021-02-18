@@ -1,6 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2021 deesix <deesix@tuta.io>
+## Copyright (C) 2020-2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -18,55 +18,50 @@
 
 set -ex
 
-TMPDIR="test/test0021/tmp-knight-posix"
+ARCH="$1"
+. test/env.inc.sh
+TMPDIR="test/test0018/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture knight-posix \
-	-f M2libc/knight/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
-	-f functions/file_print.c \
-	-f test/test0021/chdir.c \
-	-o ${TMPDIR}/chdir.M1 \
+	-f test/test0018/math.c \
+	-o ${TMPDIR}/math.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/knight/knight_defs.M1 \
-	-f M2libc/knight/libc-full.M1 \
-	-f ${TMPDIR}/chdir.M1 \
-	--big-endian \
-	--architecture knight-posix \
-	-o ${TMPDIR}/chdir.hex2 \
-	|| exit 3
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
+	-f ${TMPDIR}/math.M1 \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
+	-o ${TMPDIR}/math.hex2 \
+	|| exit 2
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/knight/ELF-knight.hex2 \
-	-f ${TMPDIR}/chdir.hex2 \
-	--big-endian \
-	--architecture knight-posix \
-	--base-address 0x0 \
-	-o test/results/test0021-knight-posix-binary \
-	|| exit 4
+	-f M2libc/${ARCH}/ELF-${ARCH}.hex2 \
+	-f ${TMPDIR}/math.hex2 \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
+	--base-address ${BASE_ADDRESS} \
+	-o test/results/test0018-${ARCH}-binary \
+	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	vm --POSIX-MODE --rom ./test/results/test0021-knight-posix-binary --memory 2M
-	[ 0 = $? ] || exit 5
-
-elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
-then
-	. ./sha256.sh
-	# Verify that the resulting file works
-	./test/results/test0021-knight-posix-binary
-	[ 0 = $? ] || exit 5
+	./test/results/test0018-${ARCH}-binary >| test/test0018/proof || exit 4
+	out=$(sha256_check test/test0018/proof.answer)
+	[ "$out" = "test/test0018/proof: OK" ] || exit 5
 fi
 exit 0

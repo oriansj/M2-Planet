@@ -1,6 +1,6 @@
 #! /bin/sh
 ## Copyright (C) 2017 Jeremiah Orians
-## Copyright (C) 2021 deesix <deesix@tuta.io>
+## Copyright (C) 2020-2021 deesix <deesix@tuta.io>
 ## This file is part of M2-Planet.
 ##
 ## M2-Planet is free software: you can redistribute it and/or modify
@@ -18,15 +18,18 @@
 
 set -ex
 
-TMPDIR="test/test0102/tmp-knight-posix"
+ARCH="$1"
+. test/env.inc.sh
+TMPDIR="test/test0102/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 ./bin/M2-Planet \
-	--architecture knight-posix \
-	-f M2libc/knight/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/file_print.c \
 	-f functions/match.c \
@@ -35,73 +38,56 @@ mkdir -p ${TMPDIR}
 	-f functions/string.c \
 	-f functions/require.c \
 	-f test/test0102/M1-macro.c \
+	--debug \
 	-o ${TMPDIR}/M1-macro.M1 \
 	|| exit 1
 
+# Build debug footer
+blood-elf \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
+	-f ${TMPDIR}/M1-macro.M1 \
+	--entry _start \
+	-o ${TMPDIR}/M1-macro-footer.M1 \
+	|| exit 2
+
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/knight/knight_defs.M1 \
-	-f M2libc/knight/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/M1-macro.M1 \
-	--big-endian \
-	--architecture knight-posix \
+	-f ${TMPDIR}/M1-macro-footer.M1 \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/M1-macro.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/knight/ELF-knight.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/M1-macro.hex2 \
-	--big-endian \
-	--architecture knight-posix \
-	--base-address 0x00 \
-	-o test/results/test0102-knight-posix-binary \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
+	--base-address ${BASE_ADDRESS} \
+	-o test/results/test0102-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	# Verify that the compiled program returns the correct result
-	execve_image \
-		./test/results/test0102-knight-posix-binary \
-		--version \
-		>| ${TMPDIR}/image || exit 5
-	out=$(vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M)
-	[ 0 = $? ] || exit 6
-	[ "$out" = "M1 1.0.0" ] || exit 7
+	out=$(./test/results/test0102-${ARCH}-binary --version 2>&1 )
+	[ 0 = $? ] || exit 5
+	[ "$out" = "M1 1.0.0" ] || exit 6
 
 	# Verify that the resulting file works
-	execve_image \
-		./test/results/test0102-knight-posix-binary \
+	./test/results/test0102-${ARCH}-binary \
 		-f M2libc/x86/x86_defs.M1 \
 		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
-		--little-endian \
+		${ENDIANNESS_FLAG} \
 		--architecture x86 \
 		-o test/test0102/proof \
-		>| ${TMPDIR}/image || exit 8
-	vm --POSIX-MODE --rom ${TMPDIR}/image --memory 2M || exit 9
-
-	. ./sha256.sh
-	out=$(sha256_check test/test0102/proof.answer)
-	[ "$out" = "test/test0102/proof: OK" ] || exit 8
-
-elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
-then
-	# Verify that the compiled program returns the correct result
-	out=$(./test/results/test0102-knight-posix-binary --version 2>&1 )
-	[ 0 = $? ] || exit 6
-	[ "$out" = "M1 1.0.0" ] || exit 7
-
-	# Verify that the resulting file works
-	./test/results/test0102-knight-posix-binary \
-		-f M2libc/x86/x86_defs.M1 \
-		-f M2libc/x86/libc-core.M1 \
-		-f test/test0100/test.M1 \
-		--little-endian \
-		--architecture x86 \
-		-o test/test0102/proof \
-		|| exit 9
+		|| exit 7
 
 	. ./sha256.sh
 	out=$(sha256_check test/test0102/proof.answer)

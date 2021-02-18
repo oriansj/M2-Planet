@@ -18,55 +18,61 @@
 
 set -ex
 
-TMPDIR="test/test0021/tmp-knight-posix"
+ARCH="$1"
+. test/env.inc.sh
+TMPDIR="test/test0021/tmp-${ARCH}"
+
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
-	--architecture knight-posix \
-	-f M2libc/knight/Linux/unistd.h \
+	--architecture ${ARCH} \
+	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
-	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
 	-f functions/match.c \
 	-f functions/file_print.c \
 	-f test/test0021/chdir.c \
+	--debug \
 	-o ${TMPDIR}/chdir.M1 \
 	|| exit 1
 
+# Build debug footer
+blood-elf \
+	${BLOOD_ELF_WORD_SIZE_FLAG} \
+	-f ${TMPDIR}/chdir.M1 \
+	--entry _start \
+	-o ${TMPDIR}/chdir-footer.M1 \
+	|| exit 2
+
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f M2libc/knight/knight_defs.M1 \
-	-f M2libc/knight/libc-full.M1 \
+	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/chdir.M1 \
-	--big-endian \
-	--architecture knight-posix \
+	-f ${TMPDIR}/chdir-footer.M1 \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
 	-o ${TMPDIR}/chdir.hex2 \
 	|| exit 3
 
 # Resolve all linkages
 hex2 \
-	-f M2libc/knight/ELF-knight.hex2 \
+	-f M2libc/${ARCH}/ELF-${ARCH}-debug.hex2 \
 	-f ${TMPDIR}/chdir.hex2 \
-	--big-endian \
-	--architecture knight-posix \
-	--base-address 0x0 \
-	-o test/results/test0021-knight-posix-binary \
+	${ENDIANNESS_FLAG} \
+	--architecture ${ARCH} \
+	--base-address ${BASE_ADDRESS} \
+	-o test/results/test0021-${ARCH}-binary \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
 	. ./sha256.sh
 	# Verify that the resulting file works
-	vm --POSIX-MODE --rom ./test/results/test0021-knight-posix-binary --memory 2M
-	[ 0 = $? ] || exit 5
-
-elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
-then
-	. ./sha256.sh
-	# Verify that the resulting file works
-	./test/results/test0021-knight-posix-binary
+	./test/results/test0021-${ARCH}-binary
 	[ 0 = $? ] || exit 5
 fi
 exit 0
