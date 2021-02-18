@@ -80,10 +80,10 @@ then
 	# Verify that the resulting file works
 	./test/results/test1000-aarch64-binary \
 		--architecture x86 \
-		-f test/common_x86/functions/file.c \
-		-f test/common_x86/functions/malloc.c \
-		-f functions/calloc.c \
-		-f test/common_x86/functions/exit.c \
+		-f M2libc/x86/Linux/unistd.h \
+		-f M2libc/stdlib.c \
+		-f M2libc/x86/Linux/fcntl.h \
+		-f M2libc/stdio.c \
 		-f functions/match.c \
 		-f functions/in_set.c \
 		-f functions/numerate_number.c \
@@ -99,7 +99,6 @@ then
 		-f cc_core.c \
 		-f cc_macro.c \
 		-f cc.c \
-		--bootstrap-mode \
 		-o test/test1000/proof \
 		|| exit 5
 
