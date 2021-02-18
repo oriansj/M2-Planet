@@ -72,7 +72,7 @@ then
 	# Verify that the resulting file works
 	execve_image \
 		./test/results/test0101-knight-posix-binary \
-		-f test/common_x86/ELF-i386.hex2 \
+		-f M2libc/x86/ELF-x86.hex2 \
 		-f test/test0101/test.hex2 \
 		--LittleEndian \
 		--architecture x86 \
@@ -93,7 +93,7 @@ then
 	. ./sha256.sh
 	# Verify that the resulting file works
 	./test/results/test0101-knight-posix-binary \
-		-f test/common_x86/ELF-i386.hex2 \
+		-f M2libc/x86/ELF-x86.hex2 \
 		-f test/test0101/test.hex2 \
 		--LittleEndian \
 		--architecture x86 \

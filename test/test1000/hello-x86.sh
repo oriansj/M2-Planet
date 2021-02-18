@@ -24,10 +24,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture x86 \
-	-f test/common_x86/functions/file.c \
-	-f test/common_x86/functions/malloc.c \
-	-f functions/calloc.c \
-	-f test/common_x86/functions/exit.c \
+	-f M2libc/x86/Linux/bootstrap.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
@@ -57,8 +54,8 @@ blood-elf \
 
 # Macro assemble with libc written in M1-Macro
 M1 \
-	-f test/common_x86/x86_defs.M1 \
-	-f test/common_x86/libc-core.M1 \
+	-f M2libc/x86/x86_defs.M1 \
+	-f M2libc/x86/libc-core.M1 \
 	-f ${TMPDIR}/cc.M1 \
 	-f ${TMPDIR}/cc-footer.M1 \
 	--little-endian \
@@ -68,7 +65,7 @@ M1 \
 
 # Resolve all linkages
 hex2 \
-	-f test/common_x86/ELF-i386-debug.hex2 \
+	-f M2libc/x86/ELF-x86-debug.hex2 \
 	-f ${TMPDIR}/cc.hex2 \
 	--little-endian \
 	--architecture x86 \

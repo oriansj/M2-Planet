@@ -73,8 +73,8 @@ then
 	# Verify that the resulting file works
 	execve_image \
 		./test/results/test0102-knight-posix-binary \
-		-f test/common_x86/x86_defs.M1 \
-		-f test/common_x86/libc-core.M1 \
+		-f M2libc/x86/x86_defs.M1 \
+		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
 		--little-endian \
 		--architecture x86 \
@@ -95,8 +95,8 @@ then
 
 	# Verify that the resulting file works
 	./test/results/test0102-knight-posix-binary \
-		-f test/common_x86/x86_defs.M1 \
-		-f test/common_x86/libc-core.M1 \
+		-f M2libc/x86/x86_defs.M1 \
+		-f M2libc/x86/libc-core.M1 \
 		-f test/test0100/test.M1 \
 		--little-endian \
 		--architecture x86 \
