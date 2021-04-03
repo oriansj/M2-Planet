@@ -42,7 +42,6 @@
 void copy_string(char* target, char* source, int max);
 int in_set(int c, char* s);
 int match(char* a, char* b);
-void file_print(char* s, FILE* f);
 void require(int bool, char* error);
 void reset_hold_string();
 

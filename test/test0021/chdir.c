@@ -25,7 +25,6 @@
 
 int match(char* a, char* b);
 char* get_current_dir_name();
-void file_print(char* s, FILE* f);
 
 char* copy_string(char* target, char* source)
 {
@@ -43,7 +42,7 @@ char* prepend_string(char* add, char* base)
 	char* ret = calloc(MAX_STRING, sizeof(char));
 	if(NULL == ret)
 	{
-		file_print("calloc failed in prepend_string\n", stderr);
+		fputs("calloc failed in prepend_string\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	copy_string(copy_string(ret, add), base);

@@ -24,7 +24,6 @@
 #define FALSE 0
 //CONSTANT FALSE 0
 int in_set(int c, char* s);
-void file_print(char* s, FILE* f);
 
 
 char* numerate_number(int a)
@@ -32,7 +31,7 @@ char* numerate_number(int a)
 	char* result = calloc(16, sizeof(char));
 	if(NULL == result)
 	{
-		file_print("calloc failed in numerate_number\n", stderr);
+		fputs("calloc failed in numerate_number\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	int i = 0;

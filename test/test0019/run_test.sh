@@ -34,7 +34,6 @@ bin/M2-Planet \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
-	-f functions/file_print.c \
 	-f test/test0019/getopt.c \
 	-o ${TMPDIR}/getopt.M1 \
 	|| exit 1

@@ -20,7 +20,6 @@
 #include<stdio.h>
 // void* calloc(int count, int size);
 int hex2char(int c);
-void file_print(char* s, FILE* f);
 void require(int bool, char* error);
 
 char* number_to_hex(int a, int bytes)
@@ -29,7 +28,7 @@ char* number_to_hex(int a, int bytes)
 	char* result = calloc(1 + (bytes << 1), sizeof(char));
 	if(NULL == result)
 	{
-		file_print("calloc failed in number_to_hex\n", stderr);
+		fputs("calloc failed in number_to_hex\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	int i = 0;

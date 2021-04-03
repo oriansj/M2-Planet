@@ -141,13 +141,13 @@ struct type* lookup_member(struct type* parent, char* name)
 		if(match(i->name, name)) return i;
 	}
 
-	file_print("ERROR in lookup_member ", stderr);
-	file_print(parent->name, stderr);
-	file_print("->", stderr);
-	file_print(global_token->s, stderr);
-	file_print(" does not exist\n", stderr);
+	fputs("ERROR in lookup_member ", stderr);
+	fputs(parent->name, stderr);
+	fputs("->", stderr);
+	fputs(global_token->s, stderr);
+	fputs(" does not exist\n", stderr);
 	line_error();
-	file_print("\n", stderr);
+	fputs("\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -177,7 +177,7 @@ struct type* build_member(struct type* last, int offset)
 		i->size = member_type->type->size * numerate_string(global_token->s);
 		if(0 == i->size)
 		{
-			file_print("Struct only supports [num] form\n", stderr);
+			fputs("Struct only supports [num] form\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 		global_token = global_token->next;
@@ -277,9 +277,9 @@ struct type* type_name()
 		ret = lookup_type(global_token->s, global_types);
 		if(NULL == ret)
 		{
-			file_print("Unknown type ", stderr);
-			file_print(global_token->s, stderr);
-			file_print("\n", stderr);
+			fputs("Unknown type ", stderr);
+			fputs(global_token->s, stderr);
+			fputs("\n", stderr);
 			line_error();
 			exit(EXIT_FAILURE);
 		}

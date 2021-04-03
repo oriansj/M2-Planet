@@ -28,7 +28,6 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/knight/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/file_print.c \
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \

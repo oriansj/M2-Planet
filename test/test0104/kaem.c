@@ -31,7 +31,6 @@
 
 char* numerate_number(int a);
 int match(char* a, char* b);
-void file_print(char* s, FILE* f);
 
 char** tokens;
 int command_done;
@@ -49,7 +48,7 @@ void collect_comment(FILE* input)
 		c = fgetc(input);
 		if(-1 == c)
 		{
-			file_print("IMPROPERLY TERMINATED LINE COMMENT!\nABORTING HARD\n", stderr);
+			fputs("IMPROPERLY TERMINATED LINE COMMENT!\nABORTING HARD\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	} while('\n' != c);
@@ -64,7 +63,7 @@ int collect_string(FILE* input, int index, char* target)
 		c = fgetc(input);
 		if(-1 == c)
 		{ /* We never should hit EOF while collecting a RAW string */
-			file_print("IMPROPERLY TERMINATED RAW string!\nABORTING HARD\n", stderr);
+			fputs("IMPROPERLY TERMINATED RAW string!\nABORTING HARD\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 		else if('"' == c)
@@ -88,7 +87,7 @@ char* collect_token(FILE* input)
 		c = fgetc(input);
 		if(-1 == c)
 		{ /* Deal with end of file */
-			file_print("execution complete\n", stderr);
+			fputs("execution complete\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else if((' ' == c) || ('\t' == c))
@@ -314,13 +313,13 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 
 		if(VERBOSE && (0 < i))
 		{
-			file_print(" +> ", stdout);
+			fputs(" +> ", stdout);
 			for(j = 0; j < i; j = j + 1)
 			{
-				file_print(tokens[j], stdout);
+				fputs(tokens[j], stdout);
 				fputc(' ', stdout);
 			}
-			file_print("\n", stdout);
+			fputs("\n", stdout);
 		}
 
 		if(0 < i)
@@ -338,16 +337,16 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 				program = find_executable(tokens[0], PATH);
 				if(NULL == program)
 				{
-					file_print(tokens[0], stderr);
-					file_print("Some weird shit went down with: ", stderr);
-					file_print("\n", stderr);
+					fputs(tokens[0], stderr);
+					fputs("Some weird shit went down with: ", stderr);
+					fputs("\n", stderr);
 					exit(EXIT_FAILURE);
 				}
 
 				f = fork();
 				if (f == -1)
 				{
-					file_print("fork() failure", stderr);
+					fputs("fork() failure", stderr);
 					exit(EXIT_FAILURE);
 				}
 				else if (f == 0)
@@ -364,9 +363,9 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 
 				if(STRICT && (0 != status))
 				{ /* Clearly the script hit an issue that should never have happened */
-					file_print("Subprocess error ", stderr);
-					file_print(numerate_number(status), stderr);
-					file_print("\nABORTING HARD\n", stderr);
+					fputs("Subprocess error ", stderr);
+					fputs(numerate_number(status), stderr);
+					fputs("\nABORTING HARD\n", stderr);
 					/* stop to prevent damage */
 					exit(EXIT_FAILURE);
 				}
@@ -411,7 +410,7 @@ int main(int argc, char** argv, char** envp)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			file_print("kaem only accepts --help, --version, --file, --verbose, --nightmare-mode or no arguments\n", stdout);
+			fputs("kaem only accepts --help, --version, --file, --verbose, --nightmare-mode or no arguments\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "-f") || match(argv[i], "--file"))
@@ -421,13 +420,13 @@ int main(int argc, char** argv, char** envp)
 		}
 		else if(match(argv[i], "n") || match(argv[i], "--nightmare-mode"))
 		{
-			file_print("Begin nightmare", stdout);
+			fputs("Begin nightmare", stdout);
 			envp = NULL;
 			i = i + 1;
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
-			file_print("kaem version 0.6.0\n", stdout);
+			fputs("kaem version 0.6.0\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "--verbose"))
@@ -442,7 +441,7 @@ int main(int argc, char** argv, char** envp)
 		}
 		else
 		{
-			file_print("UNKNOWN ARGUMENT\n", stdout);
+			fputs("UNKNOWN ARGUMENT\n", stdout);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -451,9 +450,9 @@ int main(int argc, char** argv, char** envp)
 
 	if(NULL == script)
 	{
-		file_print("The file: ", stderr);
-		file_print(filename, stderr);
-		file_print(" can not be opened!\n", stderr);
+		fputs("The file: ", stderr);
+		fputs(filename, stderr);
+		fputs(" can not be opened!\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 

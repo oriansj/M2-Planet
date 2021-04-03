@@ -31,7 +31,6 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/file_print.c \
 	-f functions/match.c \
 	-f test/test0100/blood-elf.c \
 	--debug \

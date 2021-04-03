@@ -19,7 +19,6 @@
 #include <stdlib.h>
 
 char* numerate_number(int a);
-void file_print(char* s, FILE* f);
 
 int main()
 {
@@ -27,7 +26,7 @@ int main()
 	int j;
 	for(i = 0; i < 10; i = i + 1)
 	{
-		file_print(numerate_number(i), stdout);
+		fputs(numerate_number(i), stdout);
 		if(i != 1) continue;
 		fputc(' ', stdout);
 	}
@@ -39,8 +38,8 @@ int main()
 		for(j = 0; j < 10; j = j + 1)
 		{
 			if(j == 2) continue;
-			file_print(numerate_number(i), stdout);
-			file_print(numerate_number(j), stdout);
+			fputs(numerate_number(i), stdout);
+			fputs(numerate_number(j), stdout);
 			fputc(' ', stdout);
 		}
 	}
@@ -51,7 +50,7 @@ int main()
 	while(i < 9)
 	{
 		i = i + 1;
-		file_print(numerate_number(i), stdout);
+		fputs(numerate_number(i), stdout);
 		if(i != 3) continue;
 		fputc(' ', stdout);
 	}
@@ -67,8 +66,8 @@ int main()
 		{
 			j = j + 1;
 			if(j == 4) continue;
-			file_print(numerate_number(i), stdout);
-			file_print(numerate_number(j), stdout);
+			fputs(numerate_number(i), stdout);
+			fputs(numerate_number(j), stdout);
 			fputc(' ', stdout);
 		}
 	}
@@ -79,7 +78,7 @@ int main()
 	do
 	{
 		i = i + 1;
-		file_print(numerate_number(i), stdout);
+		fputs(numerate_number(i), stdout);
 		if(i != 5) continue;
 		fputc(' ', stdout);
 	}while(i < 9);
@@ -95,8 +94,8 @@ int main()
 		{
 			j = j + 1;
 			if(j == 6) continue;
-			file_print(numerate_number(i), stdout);
-			file_print(numerate_number(j), stdout);
+			fputs(numerate_number(i), stdout);
+			fputs(numerate_number(j), stdout);
 			fputc(' ', stdout);
 		}while(j < 9);
 	}while(i < 9);

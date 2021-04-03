@@ -62,7 +62,6 @@ int in_set(int c, char* s);
 int match(char* a, char* b);
 int numerate_string(char *a);
 int string_length(char* a);
-void file_print(char* s, FILE* f);
 void require(int bool, char* error);
 
 struct blob
@@ -100,10 +99,10 @@ struct blob** hash_table;
 
 void line_error(char* filename, int linenumber)
 {
-	file_print(filename, stderr);
-	file_print(":", stderr);
-	file_print(numerate_number(linenumber), stderr);
-	file_print(" :", stderr);
+	fputs(filename, stderr);
+	fputs(":", stderr);
+	fputs(numerate_number(linenumber), stderr);
+	fputs(" :", stderr);
 }
 
 void ClearScratch()
@@ -266,9 +265,9 @@ struct blob* store_string(char c, char* filename)
 		if(max_string == i)
 		{
 			line_error(filename, linenumber);
-			file_print("String: ", stderr);
-			file_print(SCRATCH, stderr);
-			file_print(" exceeds max string size\n", stderr);
+			fputs("String: ", stderr);
+			fputs(SCRATCH, stderr);
+			fputs(" exceeds max string size\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	} while(ch != c);
@@ -348,9 +347,9 @@ void line_macro(struct Token* p)
 			if(PROCESSED == i->next->contents->type)
 			{
 				line_error(i->filename, i->linenumber);
-				file_print("Multiple definitions for macro ", stderr);
-				file_print(i->next->contents->Text, stderr);
-				file_print("\n", stderr);
+				fputs("Multiple definitions for macro ", stderr);
+				fputs(i->next->contents->Text, stderr);
+				fputs("\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 
@@ -504,11 +503,11 @@ void bound_values(int displacement, int number_of_bytes, int low, int high)
 {
 	if((high < displacement) || (displacement < low))
 	{
-		file_print("A displacement of ", stderr);
-		file_print(numerate_number(displacement), stderr);
-		file_print(" does not fit in ", stderr);
-		file_print(numerate_number(number_of_bytes), stderr);
-		file_print(" bytes\n", stderr);
+		fputs("A displacement of ", stderr);
+		fputs(numerate_number(displacement), stderr);
+		fputs(" does not fit in ", stderr);
+		fputs(numerate_number(number_of_bytes), stderr);
+		fputs(" bytes\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -532,7 +531,7 @@ void range_check(int displacement, int number_of_bytes)
 		return;
 	}
 
-	file_print("Received an invalid number of bytes in range_check\n", stderr);
+	fputs("Received an invalid number of bytes in range_check\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -628,10 +627,10 @@ char* express_number(int value, char c)
 	}
 	else
 	{
-		file_print("Given symbol ", stderr);
+		fputs("Given symbol ", stderr);
 		fputc(c, stderr);
-		file_print(" to express immediate value ", stderr);
-		file_print(numerate_number(value), stderr);
+		fputs(" to express immediate value ", stderr);
+		fputs(numerate_number(value), stderr);
 		fputc('\n', stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -655,7 +654,7 @@ char* express_number(int value, char c)
 	}
 	else
 	{
-		file_print("Got invalid ByteMode in express_number\n", stderr);
+		fputs("Got invalid ByteMode in express_number\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -699,7 +698,7 @@ void eval_immediates(struct blob* p)
 			}
 			else
 			{
-				file_print("Unknown architecture received in eval_immediates\n", stderr);
+				fputs("Unknown architecture received in eval_immediates\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -718,15 +717,15 @@ void print_hex(struct Token* p)
 		}
 		else if(NULL != i->contents->Expression)
 		{
-			file_print(i->contents->Expression, destination_file);
+			fputs(i->contents->Expression, destination_file);
 			if(NEWLINE != i->next->contents->type) fputc(' ', destination_file);
 		}
 		else
 		{
 			line_error(i->filename, i->linenumber);
-			file_print("Received invalid other; ", stderr);
-			file_print(i->contents->Text, stderr);
-			file_print("\n", stderr);
+			fputs("Received invalid other; ", stderr);
+			fputs(i->contents->Text, stderr);
+			fputs("\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -789,9 +788,9 @@ int main(int argc, char **argv)
 			else if(match("aarch64", arch)) Architecture = AARM64;
 			else
 			{
-				file_print("Unknown architecture: ", stderr);
-				file_print(arch, stderr);
-				file_print(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
+				fputs("Unknown architecture: ", stderr);
+				fputs(arch, stderr);
+				fputs(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
 				exit(EXIT_FAILURE);
 			}
 			option_index = option_index + 2;
@@ -803,11 +802,11 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-h") || match(argv[option_index], "--help"))
 		{
-			file_print("Usage: ", stderr);
-			file_print(argv[0], stderr);
-			file_print(" --file FILENAME1 {-f FILENAME2} (--big-endian|--little-endian) ", stderr);
-			file_print("[--architecture name]\nArchitectures: knight-native, knight-posix, x86, amd64 and armv7\n", stderr);
-			file_print("To leverage octal or binary output: --octal, --binary\n", stderr);
+			fputs("Usage: ", stderr);
+			fputs(argv[0], stderr);
+			fputs(" --file FILENAME1 {-f FILENAME2} (--big-endian|--little-endian) ", stderr);
+			fputs("[--architecture name]\nArchitectures: knight-native, knight-posix, x86, amd64 and armv7\n", stderr);
+			fputs("To leverage octal or binary output: --octal, --binary\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))
@@ -817,9 +816,9 @@ int main(int argc, char **argv)
 
 			if(NULL == source_file)
 			{
-				file_print("The file: ", stderr);
-				file_print(argv[option_index + 1], stderr);
-				file_print(" can not be opened!\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(argv[option_index + 1], stderr);
+				fputs(" can not be opened!\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 
@@ -835,9 +834,9 @@ int main(int argc, char **argv)
 
 			if(NULL == destination_file)
 			{
-				file_print("The file: ", stderr);
-				file_print(argv[option_index + 1], stderr);
-				file_print(" can not be opened!\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(argv[option_index + 1], stderr);
+				fputs(" can not be opened!\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			option_index = option_index + 2;
@@ -849,19 +848,19 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-V") || match(argv[option_index], "--version"))
 		{
-			file_print("M1 1.0.0\n", stdout);
+			fputs("M1 1.0.0\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else
 		{
-			file_print("Unknown option\n", stderr);
+			fputs("Unknown option\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	if(NULL == token_list)
 	{
-		file_print("Either no input files were given or they were empty\n", stderr);
+		fputs("Either no input files were given or they were empty\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 

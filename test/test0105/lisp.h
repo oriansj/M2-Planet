@@ -63,7 +63,6 @@ struct cell* make_cons(struct cell* a, struct cell* b);
 int numerate_string(char *a);
 char* numerate_number(int a);
 int match(char* a, char* b);
-void file_print(char* s, FILE* f);
 
 /* Global objects */
 struct cell *all_symbols;

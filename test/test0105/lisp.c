@@ -85,9 +85,9 @@ int main(int argc, char **argv)
 			console_output = fopen(argv[i + 1], "w");
 			if(NULL == console_output)
 			{
-				file_print("The file: ", stderr);
-				file_print(argv[i + 1], stderr);
-				file_print(" does not appear writable\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(argv[i + 1], stderr);
+				fputs(" does not appear writable\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
@@ -98,9 +98,9 @@ int main(int argc, char **argv)
 			new->file = fopen(argv[i + 1], "r");
 			if(NULL == new->file)
 			{
-				file_print("The file: ", stderr);
-				file_print(argv[i + 1], stderr);
-				file_print(" does not appear readable\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(argv[i + 1], stderr);
+				fputs(" does not appear readable\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			new->next = essential;
@@ -109,9 +109,9 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			file_print("Usage: ", stdout);
-			file_print(argv[0], stdout);
-			file_print(" -f FILENAME1 {-f FILENAME2}\n", stdout);
+			fputs("Usage: ", stdout);
+			fputs(argv[0], stdout);
+			fputs(" -f FILENAME1 {-f FILENAME2}\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "-m") || match(argv[i], "--memory"))
@@ -124,21 +124,21 @@ int main(int argc, char **argv)
 			file_output =  fopen(argv[i + 1], "w");
 			if(NULL == file_output)
 			{
-				file_print("The file: ", stderr);
-				file_print(argv[i + 1], stderr);
-				file_print(" does not appear writable\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(argv[i + 1], stderr);
+				fputs(" does not appear writable\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
 		}
 		else if(match(argv[i], "-v") || match(argv[i], "--version"))
 		{
-			file_print("Slow_Lisp 0.1\n", stdout);
+			fputs("Slow_Lisp 0.1\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else
 		{
-			file_print("Unknown option\n", stderr);
+			fputs("Unknown option\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}

@@ -114,7 +114,7 @@ struct cell* apply(struct cell* proc, struct cell* vals)
 	}
 	else
 	{
-		file_print("Bad argument to apply\n", stderr);
+		fputs("Bad argument to apply\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return temp;
@@ -168,8 +168,8 @@ struct cell* process_sym(struct cell* exp, struct cell* env)
 	struct cell* tmp = assoc(exp, env);
 	if(tmp == nil)
 	{
-		file_print("Unbound symbol:", stderr);
-		file_print(exp->string, stderr);
+		fputs("Unbound symbol:", stderr);
+		fputs(exp->string, stderr);
 		fputc('\n', stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -287,7 +287,7 @@ struct cell* prim_mod(struct cell* args)
 	int mod = args->car->value % args->cdr->car->value;
 	if(nil != args->cdr->cdr)
 	{
-		file_print("wrong number of arguments to mod\n", stderr);
+		fputs("wrong number of arguments to mod\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return make_int(mod);
@@ -432,7 +432,7 @@ struct cell* prim_output(struct cell* args, FILE* out)
 	{
 		if(INT == args->car->type)
 		{
-			file_print(numerate_number(args->car->value), out);
+			fputs(numerate_number(args->car->value), out);
 		}
 		else if(CHAR == args->car->type)
 		{
@@ -444,7 +444,7 @@ struct cell* prim_output(struct cell* args, FILE* out)
 		}
 		else
 		{
-			file_print(args->car->string, out);
+			fputs(args->car->string, out);
 		}
 	}
 	return tee;
@@ -479,8 +479,8 @@ struct cell* prim_freecell(struct cell* args)
 {
 	if(nil == args)
 	{
-		file_print("Remaining Cells: ", stdout);
-		file_print(numerate_number(left_to_take), stdout);
+		fputs("Remaining Cells: ", stdout);
+		fputs(numerate_number(left_to_take), stdout);
 		return nil;
 	}
 	return make_int(left_to_take);

@@ -190,7 +190,7 @@ struct cell* pop_cons()
 {
 	if(NULL == free_cells)
 	{
-		file_print("OOOPS we ran out of cells", stderr);
+		fputs("OOOPS we ran out of cells", stderr);
 		exit(EXIT_FAILURE);
 	}
 	struct cell* i;

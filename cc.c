@@ -71,9 +71,9 @@ int main(int argc, char** argv)
 			in = fopen(name, "r");
 			if(NULL == in)
 			{
-				file_print("Unable to open for reading file: ", stderr);
-				file_print(name, stderr);
-				file_print("\n Aborting to avoid problems\n", stderr);
+				fputs("Unable to open for reading file: ", stderr);
+				fputs(name, stderr);
+				fputs("\n Aborting to avoid problems\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			global_token = read_all_tokens(in, global_token, name);
@@ -85,9 +85,9 @@ int main(int argc, char** argv)
 			destination_file = fopen(argv[i + 1], "w");
 			if(NULL == destination_file)
 			{
-				file_print("Unable to open for writing file: ", stderr);
-				file_print(argv[i + 1], stderr);
-				file_print("\n Aborting to avoid problems\n", stderr);
+				fputs("Unable to open for writing file: ", stderr);
+				fputs(argv[i + 1], stderr);
+				fputs("\n Aborting to avoid problems\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
@@ -103,9 +103,9 @@ int main(int argc, char** argv)
 			else if(match("aarch64", arch)) Architecture = AARCH64;
 			else
 			{
-				file_print("Unknown architecture: ", stderr);
-				file_print(arch, stderr);
-				file_print(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
+				fputs("Unknown architecture: ", stderr);
+				fputs(arch, stderr);
+				fputs(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			file_print(" -f input file\n -o output file\n --help for this message\n --version for file version\n", stdout);
+			fputs(" -f input file\n -o output file\n --help for this message\n --version for file version\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "-E"))
@@ -155,12 +155,12 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
-			file_print("M2-Planet v1.7.0\n", stderr);
+			fputs("M2-Planet v1.7.0\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else
 		{
-			file_print("UNKNOWN ARGUMENT\n", stdout);
+			fputs("UNKNOWN ARGUMENT\n", stdout);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 
 	if(NULL == global_token)
 	{
-		file_print("Either no input files were given or they were empty\n", stderr);
+		fputs("Either no input files were given or they were empty\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = reverse_list(global_token);
@@ -193,7 +193,7 @@ int main(int argc, char** argv)
 
 	if (PREPROCESSOR_MODE)
 	{
-		file_print("\n/* Preprocessed source */\n", destination_file);
+		fputs("\n/* Preprocessed source */\n", destination_file);
 		output_tokens(global_token, destination_file);
 		goto exit_success;
 	}
@@ -207,16 +207,16 @@ int main(int argc, char** argv)
 	program();
 
 	/* Output the program we have compiled */
-	file_print("\n# Core program\n", destination_file);
+	fputs("\n# Core program\n", destination_file);
 	recursive_output(output_list, destination_file);
-	if(KNIGHT_NATIVE == Architecture) file_print("\n", destination_file);
-	else if(DEBUG) file_print("\n:ELF_data\n", destination_file);
-	file_print("\n# Program global variables\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) fputs("\n", destination_file);
+	else if(DEBUG) fputs("\n:ELF_data\n", destination_file);
+	fputs("\n# Program global variables\n", destination_file);
 	recursive_output(globals_list, destination_file);
-	file_print("\n# Program strings\n", destination_file);
+	fputs("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
-	if(KNIGHT_NATIVE == Architecture) file_print("\n:STACK\n", destination_file);
-	else if(!DEBUG) file_print("\n:ELF_end\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) fputs("\n:STACK\n", destination_file);
+	else if(!DEBUG) fputs("\n:ELF_end\n", destination_file);
 
 exit_success:
 	if (destination_file != stdout)

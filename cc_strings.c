@@ -39,7 +39,7 @@ int hexify(int c, int high)
 
 	if(0 > i)
 	{
-		file_print("Tried to print non-hex number\n", stderr);
+		fputs("Tried to print non-hex number\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -95,9 +95,9 @@ int escape_lookup(char* c)
 	else if(c[1] == '\'') return 39;
 	else if(c[1] == '\\') return 92;
 
-	file_print("Unknown escape received: ", stderr);
-	file_print(c, stderr);
-	file_print(" Unable to process\n", stderr);
+	fputs("Unknown escape received: ", stderr);
+	fputs(c, stderr);
+	fputs(" Unable to process\n", stderr);
 	exit(EXIT_FAILURE);
 }
 

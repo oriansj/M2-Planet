@@ -28,7 +28,6 @@ mkdir -p ${TMPDIR}
 	-f functions/match.c \
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
-	-f functions/file_print.c \
 	-f functions/number_pack.c \
 	-f functions/string.c \
 	-f functions/require.c \
@@ -86,7 +85,6 @@ then
 		-f functions/match.c \
 		-f functions/in_set.c \
 		-f functions/numerate_number.c \
-		-f functions/file_print.c \
 		-f functions/number_pack.c \
 		-f functions/string.c \
 		-f functions/require.c \

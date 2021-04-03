@@ -23,7 +23,7 @@ void writeobj(FILE *output_file, struct cell* op)
 
 	if(INT == op->type)
 	{
-		file_print(numerate_number(op->value), output_file);
+		fputs(numerate_number(op->value), output_file);
 	}
 	else if(CONS == op->type)
 	{
@@ -39,7 +39,7 @@ void writeobj(FILE *output_file, struct cell* op)
 			op = op->cdr;
 			if(op->type != CONS)
 			{
-				file_print(" . ", output_file);
+				fputs(" . ", output_file);
 				writeobj(output_file, op);
 				fputc(')', output_file);
 				break;
@@ -49,15 +49,15 @@ void writeobj(FILE *output_file, struct cell* op)
 	}
 	else if(SYM == op->type)
 	{
-		file_print(op->string, output_file);
+		fputs(op->string, output_file);
 	}
 	else if(PRIMOP == op->type)
 	{
-		file_print("#<PRIMOP>", output_file);
+		fputs("#<PRIMOP>", output_file);
 	}
 	else if(PROC == op->type)
 	{
-		file_print("#<PROC>", output_file);
+		fputs("#<PROC>", output_file);
 	}
 	else if(CHAR == op->type)
 	{
@@ -65,13 +65,13 @@ void writeobj(FILE *output_file, struct cell* op)
 	}
 	else if(STRING == op->type)
 	{
-		file_print(op->string, output_file);
+		fputs(op->string, output_file);
 	}
 	else
 	{
-		file_print("Type ", stderr);
-		file_print(numerate_number(op->type), stderr);
-		file_print(" is unknown\nPrint aborting hard\n", stderr);
+		fputs("Type ", stderr);
+		fputs(numerate_number(op->type), stderr);
+		fputs(" is unknown\nPrint aborting hard\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 }

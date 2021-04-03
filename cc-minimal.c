@@ -26,7 +26,6 @@ struct token_list* reverse_list(struct token_list* head);
 struct token_list* program();
 void recursive_output(struct token_list* i, FILE* out);
 int match(char* a, char* b);
-void file_print(char* s, FILE* f);
 char* parse_string(char* string);
 
 int main()
@@ -43,7 +42,7 @@ int main()
 
 	if(NULL == global_token)
 	{
-		file_print("Either no input files were given or they were empty\n", stderr);
+		fputs("Either no input files were given or they were empty\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = reverse_list(global_token);
@@ -54,14 +53,14 @@ int main()
 	program();
 
 	/* Output the program we have compiled */
-	file_print("\n# Core program\n", destination_file);
+	fputs("\n# Core program\n", destination_file);
 	recursive_output(output_list, destination_file);
-	file_print("\n\n# Program global variables\n", destination_file);
+	fputs("\n\n# Program global variables\n", destination_file);
 	recursive_output(globals_list, destination_file);
-	file_print("\n# Program strings\n", destination_file);
+	fputs("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
-	file_print("\n:STACK\n", destination_file);
+	fputs("\n:STACK\n", destination_file);
 
-	fclose(destination_file)
+	fclose(destination_file);
 	return EXIT_SUCCESS;
 }

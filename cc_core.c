@@ -98,10 +98,10 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 void line_error_token(struct token_list *token)
 {
 	require(NULL != token, "EOF reached inside of line_error\n");
-	file_print(token->filename, stderr);
-	file_print(":", stderr);
-	file_print(numerate_number(token->linenumber), stderr);
-	file_print(":", stderr);
+	fputs(token->filename, stderr);
+	fputs(":", stderr);
+	fputs(numerate_number(token->linenumber), stderr);
+	fputs(":", stderr);
 }
 
 void line_error()
@@ -115,7 +115,7 @@ void require_match(char* message, char* required)
 	if(!match(global_token->s, required))
 	{
 		line_error();
-		file_print(message, stderr);
+		fputs(message, stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
@@ -127,8 +127,8 @@ void maybe_bootstrap_error(char* feature)
 	if (BOOTSTRAP_MODE)
 	{
 		line_error();
-		file_print(feature, stderr);
-		file_print(" is not supported in --bootstrap-mode\n", stderr);
+		fputs(feature, stderr);
+		fputs(" is not supported in --bootstrap-mode\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -421,9 +421,9 @@ void primary_expr_failure()
 {
 	require(NULL != global_token, "hit EOF when expecting primary expression\n");
 	line_error();
-	file_print("Received ", stderr);
-	file_print(global_token->s, stderr);
-	file_print(" in primary_expr\n", stderr);
+	fputs("Received ", stderr);
+	fputs(global_token->s, stderr);
+	fputs(" in primary_expr\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -578,8 +578,8 @@ void primary_expr_variable()
 	}
 
 	line_error();
-	file_print(s ,stderr);
-	file_print(" is not a defined symbol\n", stderr);
+	fputs(s ,stderr);
+	fputs(" is not a defined symbol\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -1148,10 +1148,10 @@ void collect_local()
 {
 	if(NULL != break_target_func)
 	{
-		file_print("Local variable initialized inside of loop in file: ", stderr);
+		fputs("Local variable initialized inside of loop in file: ", stderr);
 		line_error();
-		file_print("\nMove the variable outside of the loop to resolve\n", stderr);
-		file_print("Otherwise the binary will segfault while running\n", stderr);
+		fputs("\nMove the variable outside of the loop to resolve\n", stderr);
+		fputs("Otherwise the binary will segfault while running\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	struct type* type_size = type_name();
@@ -1523,7 +1523,7 @@ void process_break()
 	if(NULL == break_target_head)
 	{
 		line_error();
-		file_print("Not inside of a loop or case statement\n", stderr);
+		fputs("Not inside of a loop or case statement\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	struct token_list* i = function->locals;
@@ -1560,7 +1560,7 @@ void process_contine()
 	if(NULL == continue_target_head)
 	{
 		line_error();
-		file_print("Not inside of a loop\n", stderr);
+		fputs("Not inside of a loop\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
@@ -1944,9 +1944,9 @@ new_type:
 			else
 			{
 				line_error();
-				file_print("Received ", stderr);
-				file_print(global_token->s, stderr);
-				file_print(" in program\n", stderr);
+				fputs("Received ", stderr);
+				fputs(global_token->s, stderr);
+				fputs(" in program\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 
@@ -1956,9 +1956,9 @@ new_type:
 		else
 		{
 			line_error();
-			file_print("Received ", stderr);
-			file_print(global_token->s, stderr);
-			file_print(" in program\n", stderr);
+			fputs("Received ", stderr);
+			fputs(global_token->s, stderr);
+			fputs(" in program\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -1970,7 +1970,7 @@ void recursive_output(struct token_list* head, FILE* out)
 	struct token_list* i = reverse_list(head);
 	while(NULL != i)
 	{
-		file_print(i->s, out);
+		fputs(i->s, out);
 		i = i->next;
 	}
 }
@@ -1979,8 +1979,8 @@ void output_tokens(struct token_list *i, FILE* out)
 {
 	while(NULL != i)
 	{
-		file_print(i->s, out);
-		file_print(" ", out);
+		fputs(i->s, out);
+		fputs(" ", out);
 		i = i->next;
 	}
 }

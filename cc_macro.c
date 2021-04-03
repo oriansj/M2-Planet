@@ -443,7 +443,7 @@ void macro_directive()
 		if(NULL == conditional_inclusion_top)
 		{
 			line_error_token(macro_token);
-			file_print("unexpected #endif\n", stderr);
+			fputs("unexpected #endif\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 
@@ -508,10 +508,10 @@ void preprocess()
 				if('\n' != macro_token->s[0])
 				{
 					line_error_token(macro_token);
-					file_print("newline expected at end of macro directive\n", stderr);
-					file_print("found: '", stderr);
-					file_print(macro_token->s, stderr);
-					file_print("'\n", stderr);
+					fputs("newline expected at end of macro directive\n", stderr);
+					fputs("found: '", stderr);
+					fputs(macro_token->s, stderr);
+					fputs("'\n", stderr);
 					exit(EXIT_FAILURE);
 				}
 			}

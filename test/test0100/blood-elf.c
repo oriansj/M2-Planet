@@ -32,7 +32,6 @@
 #define FALSE 0
 //CONSTANT FALSE 0
 
-void file_print(char* s, FILE* f);
 int match(char* a, char* b);
 
 struct entry
@@ -102,9 +101,9 @@ void first_pass(struct entry* input)
 
 	if(NULL == source_file)
 	{
-		file_print("The file: ", stderr);
-		file_print(input->name, stderr);
-		file_print(" can not be opened!\n", stderr);
+		fputs("The file: ", stderr);
+		fputs(input->name, stderr);
+		fputs(" can not be opened!\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -136,19 +135,19 @@ void output_debug(struct entry* node, int stage)
 	{
 		if(stage)
 		{
-			file_print(":ELF_str_", output);
-			file_print(i->name, output);
-			file_print("\n\x22", output);
-			file_print(i->name, output);
-			file_print("\x22\n", output);
+			fputs(":ELF_str_", output);
+			fputs(i->name, output);
+			fputs("\n\x22", output);
+			fputs(i->name, output);
+			fputs("\x22\n", output);
 		}
 		else
 		{
-			file_print("%ELF_str_", output);
-			file_print(i->name, output);
-			file_print(">ELF_str\n&", output);
-			file_print(i->name, output);
-			file_print("\n%10000\n!2\n!0\n@1\n", output);
+			fputs("%ELF_str_", output);
+			fputs(i->name, output);
+			fputs(">ELF_str\n&", output);
+			fputs(i->name, output);
+			fputs("\n%10000\n!2\n!0\n@1\n", output);
 		}
 	}
 }
@@ -185,9 +184,9 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-h") || match(argv[option_index], "--help"))
 		{
-			file_print("Usage: ", stderr);
-			file_print(argv[0], stderr);
-			file_print(" -f FILENAME1 {-f FILENAME2}\n", stderr);
+			fputs("Usage: ", stderr);
+			fputs(argv[0], stderr);
+			fputs(" -f FILENAME1 {-f FILENAME2}\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[option_index], "-f") || match(argv[option_index], "--file"))
@@ -205,21 +204,21 @@ int main(int argc, char **argv)
 
 			if(NULL == output)
 			{
-				file_print("The file: ", stderr);
-				file_print(input->name, stderr);
-				file_print(" can not be opened!\n", stderr);
+				fputs("The file: ", stderr);
+				fputs(input->name, stderr);
+				fputs(" can not be opened!\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			option_index = option_index + 2;
 		}
 		else if(match(argv[option_index], "-V") || match(argv[option_index], "--version"))
 		{
-			file_print("blood-elf 0.1\n(Basically Launches Odd Object Dump ExecutabLe Files\n", stdout);
+			fputs("blood-elf 0.1\n(Basically Launches Odd Object Dump ExecutabLe Files\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else
 		{
-			file_print("Unknown option\n", stderr);
+			fputs("Unknown option\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -236,11 +235,11 @@ int main(int argc, char **argv)
 	/* Reverse their order */
 	jump_table = reverse_list(jump_table);
 
-	file_print(":ELF_str\n!0\n", output);
+	fputs(":ELF_str\n!0\n", output);
 	output_debug(jump_table, TRUE);
-	file_print("%0\n:ELF_sym\n%0\n%0\n%0\n!0\n!0\n@1\n", output);
+	fputs("%0\n:ELF_sym\n%0\n%0\n%0\n!0\n!0\n@1\n", output);
 	output_debug(jump_table, FALSE);
-	file_print("\n:ELF_end\n", output);
+	fputs("\n:ELF_end\n", output);
 
 	if (output != stdout) {
 		fclose(output);

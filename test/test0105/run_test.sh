@@ -35,7 +35,6 @@ mkdir -p ${TMPDIR}
 	-f functions/in_set.c \
 	-f functions/numerate_number.c \
 	-f functions/match.c \
-	-f functions/file_print.c \
 	-f test/test0105/lisp.c \
 	-f test/test0105/lisp_cell.c \
 	-f test/test0105/lisp_eval.c \
