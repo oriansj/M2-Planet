@@ -56,12 +56,10 @@
 
 
 /* Imported functions */
-char* numerate_number(int a);
-int hex2char(int c);
+int strtoint(char *a);
+char* int2str(int x, int base, int signed_p);
 int in_set(int c, char* s);
 int match(char* a, char* b);
-int numerate_string(char *a);
-int string_length(char* a);
 void require(int bool, char* error);
 
 struct blob
@@ -101,7 +99,7 @@ void line_error(char* filename, int linenumber)
 {
 	fputs(filename, stderr);
 	fputs(":", stderr);
-	fputs(numerate_number(linenumber), stderr);
+	fputs(int2str(linenumber, 10, TRUE), stderr);
 	fputs(" :", stderr);
 }
 
@@ -368,6 +366,15 @@ void line_macro(struct Token* p)
 	}
 }
 
+
+int string_length(char* a)
+{
+	int i = 0;
+	while(0 != a[i]) i = i + 1;
+	return i;
+}
+
+
 void hexify_string(struct blob* p)
 {
 	char* table = "0123456789ABCDEF";
@@ -493,7 +500,7 @@ void preserve_other(struct blob* p)
 			}
 			else if('<' == c)
 			{
-				i->Expression = pad_nulls(numerate_string(i->Text + 1), i->Text);
+				i->Expression = pad_nulls(strtoint(i->Text + 1), i->Text);
 			}
 		}
 	}
@@ -504,9 +511,9 @@ void bound_values(int displacement, int number_of_bytes, int low, int high)
 	if((high < displacement) || (displacement < low))
 	{
 		fputs("A displacement of ", stderr);
-		fputs(numerate_number(displacement), stderr);
+		fputs(int2str(displacement, 10, TRUE), stderr);
 		fputs(" does not fit in ", stderr);
-		fputs(numerate_number(number_of_bytes), stderr);
+		fputs(int2str(number_of_bytes, 10, TRUE), stderr);
 		fputs(" bytes\n", stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -587,6 +594,15 @@ void LittleEndian(char* start)
 	if(BigBitEndian) reverseBitOrder(c);
 }
 
+
+int hex2char(int c)
+{
+	if((c >= 0) && (c <= 9)) return (c + 48);
+	else if((c >= 10) && (c <= 15)) return (c + 55);
+	else return -1;
+}
+
+
 int stringify(char* s, int digits, int divisor, int value, int shift)
 {
 	int i = value;
@@ -630,7 +646,7 @@ char* express_number(int value, char c)
 		fputs("Given symbol ", stderr);
 		fputc(c, stderr);
 		fputs(" to express immediate value ", stderr);
-		fputs(numerate_number(value), stderr);
+		fputs(int2str(value, 10, TRUE), stderr);
 		fputc('\n', stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -680,7 +696,7 @@ void eval_immediates(struct blob* p)
 			{
 				if(in_set(i->Text[0], "%~@!"))
 				{
-					value = numerate_string(i->Text + 1);
+					value = strtoint(i->Text + 1);
 
 					if(('0' == i->Text[1]) || (0 != value))
 					{
@@ -690,7 +706,7 @@ void eval_immediates(struct blob* p)
 			}
 			else if(KNIGHT == Architecture)
 			{
-				value = numerate_string(i->Text);
+				value = strtoint(i->Text);
 				if(('0' == i->Text[0]) || (0 != value))
 				{
 					i->Expression = express_number(value, '@');

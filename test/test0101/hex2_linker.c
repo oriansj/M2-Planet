@@ -31,8 +31,8 @@
 //CONSTANT FALSE 0
 
 int match(char* a, char* b);
-char* numerate_number(int a);
-int numerate_string(char *a);
+char* int2str(int x, int base, int signed_p);
+int strtoint(char *a);
 int in_set(int c, char* s);
 
 struct input_files
@@ -65,7 +65,7 @@ void line_error()
 {
 	fputs(filename, stderr);
 	fputs(":", stderr);
-	fputs(numerate_number(linenumber), stderr);
+	fputs(int2str(linenumber, 10, TRUE), stderr);
 	fputs(" :", stderr);
 }
 
@@ -164,7 +164,7 @@ void range_check(int displacement, int number_of_bytes)
 		if((8388607 < displacement) || (displacement < -8388608))
 		{
 			fputs("A displacement of ", stderr);
-			fputs(numerate_number(displacement), stderr);
+			fputs(int2str(displacement, 10, TRUE), stderr);
 			fputs(" does not fit in 3 bytes\n", stderr);
 			exit(EXIT_FAILURE);
 		}
@@ -175,7 +175,7 @@ void range_check(int displacement, int number_of_bytes)
 		if((32767 < displacement) || (displacement < -32768))
 		{
 			fputs("A displacement of ", stderr);
-			fputs(numerate_number(displacement), stderr);
+			fputs(int2str(displacement, 10, TRUE), stderr);
 			fputs(" does not fit in 2 bytes\n", stderr);
 			exit(EXIT_FAILURE);
 		}
@@ -186,7 +186,7 @@ void range_check(int displacement, int number_of_bytes)
 		if((127 < displacement) || (displacement < -128))
 		{
 			fputs("A displacement of ", stderr);
-			fputs(numerate_number(displacement), stderr);
+			fputs(int2str(displacement, 10, TRUE), stderr);
 			fputs(" does not fit in 1 byte\n", stderr);
 			exit(EXIT_FAILURE);
 		}
@@ -592,7 +592,7 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[option_index], "-B") || match(argv[option_index], "--BaseAddress"))
 		{
-			Base_Address = numerate_string(argv[option_index + 1]);
+			Base_Address = strtoint(argv[option_index + 1]);
 			option_index = option_index + 2;
 		}
 		else if(match(argv[option_index], "-h") || match(argv[option_index], "--help"))

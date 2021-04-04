@@ -28,9 +28,7 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/knight/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
+	-f M2libc/bootstrappable.c\
 	-f test/test0101/hex2_linker.c \
 	-o ${TMPDIR}/hex2_linker.M1 \
 	|| exit 1

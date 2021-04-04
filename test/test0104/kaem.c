@@ -29,7 +29,7 @@
 #define max_args 256
 //CONSTANT max_args 256
 
-char* numerate_number(int a);
+char* int2str(int x, int base, int signed_p);
 int match(char* a, char* b);
 
 char** tokens;
@@ -364,7 +364,7 @@ void execute_commands(FILE* script, char** envp, int envp_length)
 				if(STRICT && (0 != status))
 				{ /* Clearly the script hit an issue that should never have happened */
 					fputs("Subprocess error ", stderr);
-					fputs(numerate_number(status), stderr);
+					fputs(int2str(status,10, FALSE), stderr);
 					fputs("\nABORTING HARD\n", stderr);
 					/* stop to prevent damage */
 					exit(EXIT_FAILURE);

@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 		}
 		else if(match(argv[i], "-m") || match(argv[i], "--memory"))
 		{
-			number_of_cells = numerate_string(argv[i + 1]);
+			number_of_cells = strtoint(argv[i + 1]);
 			i = i + 2;
 		}
 		else if(match(argv[i], "-o") || match(argv[i], "--output"))

@@ -27,12 +27,7 @@ all: M2-Planet
 .NOTPARALLEL:
 M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c cc_globals.c cc_globals.h
 	$(CC) $(CFLAGS) \
-	functions/match.c \
-	functions/in_set.c \
-	functions/numerate_number.c \
-	functions/number_pack.c \
-	functions/string.c \
-	functions/require.c \
+	M2libc/bootstrappable.c \
 	cc_reader.c \
 	cc_strings.c \
 	cc_types.c \
@@ -46,12 +41,7 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c c
 
 M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-minimal.c
 	$(CC) $(CFLAGS) \
-	functions/match.c \
-	functions/in_set.c \
-	functions/numerate_number.c \
-	functions/number_pack.c \
-	functions/string.c \
-	functions/require.c \
+	M2libc/bootstrappable.c \
 	cc_reader.c \
 	cc_strings.c \
 	cc_types.c \

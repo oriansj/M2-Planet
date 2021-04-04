@@ -28,7 +28,6 @@ bin/M2-Planet \
 	-f M2libc/stdlib.c \
 	-f M2libc/knight/Native/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
 	-f test/test0018/math.c \
 	-o ${TMPDIR}/math.M1 \
 	|| exit 1

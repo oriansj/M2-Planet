@@ -16,6 +16,7 @@
  */
 #include<stdlib.h>
 #include<stdio.h>
+char* int2str(int x, int base, int signed_p);
 
 int char2int(char c)
 {
@@ -35,7 +36,6 @@ void write_string(char* c, FILE* f)
 	}
 }
 
-char* numerate_number(int a);
 void sum_file(FILE* input, FILE* output)
 {
 	int c = fgetc(input);
@@ -46,7 +46,7 @@ void sum_file(FILE* input, FILE* output)
 		c = fgetc(input);
 	}
 
-	write_string(numerate_number(sum), output);
+	write_string(int2str(sum, 10, 0), output);
 	fputc(10, output);
 }
 

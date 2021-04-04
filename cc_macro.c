@@ -18,7 +18,7 @@
 #include "gcc_req.h"
 
 void require(int bool, char* error);
-int numerate_string(char* a);
+int strtoint(char* a);
 void line_error_token(struct token_list* list);
 struct token_list* eat_token(struct token_list* head);
 
@@ -150,7 +150,7 @@ int macro_variable()
 }
 int macro_number()
 {
-	int result = numerate_string(macro_token->s);
+	int result = strtoint(macro_token->s);
 	eat_current_token();
 	return result;
 }

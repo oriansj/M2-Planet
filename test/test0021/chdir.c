@@ -23,8 +23,27 @@
 #define MAX_STRING 4096
 // CONSTANT MAX_STRING 4096
 
-int match(char* a, char* b);
 char* get_current_dir_name();
+
+#define FALSE 0
+// CONSTANT FALSE 0
+#define TRUE 1
+// CONSTANT TRUE 1
+
+int match(char* a, char* b)
+{
+	int i = -1;
+	do
+	{
+		i = i + 1;
+		if(a[i] != b[i])
+		{
+			return FALSE;
+		}
+	} while((0 != a[i]) && (0 !=b[i]));
+	return TRUE;
+}
+
 
 char* copy_string(char* target, char* source)
 {

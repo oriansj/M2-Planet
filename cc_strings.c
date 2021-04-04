@@ -19,7 +19,6 @@
 #include "cc.h"
 #include <stdint.h>
 
-int char2hex(int c);
 struct token_list* emit(char *s, struct token_list* head);
 void require(int bool, char* error);
 
@@ -31,6 +30,15 @@ char upcase(char a)
 	}
 
 	return a;
+}
+
+
+int char2hex(int c)
+{
+	if (c >= '0' && c <= '9') return (c - 48);
+	else if (c >= 'a' && c <= 'f') return (c - 87);
+	else if (c >= 'A' && c <= 'F') return (c - 55);
+	else return -1;
 }
 
 int hexify(int c, int high)

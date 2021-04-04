@@ -31,10 +31,8 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
+	-f M2libc/bootstrappable.c \
 	-f test/test0105/lisp.h \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/match.c \
 	-f test/test0105/lisp.c \
 	-f test/test0105/lisp_cell.c \
 	-f test/test0105/lisp_eval.c \

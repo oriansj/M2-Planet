@@ -28,8 +28,7 @@ bin/M2-Planet \
 	-f M2libc/stdlib.c \
 	-f M2libc/knight/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
+	-f M2libc/bootstrappable.c \
 	-f test/test0022/continue.c \
 	-o ${TMPDIR}/continue.M1 \
 	|| exit 1

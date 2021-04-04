@@ -31,7 +31,6 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
 	-f test/test0103/get_machine.c \
 	--debug \
 	-o ${TMPDIR}/get_machine.M1 \

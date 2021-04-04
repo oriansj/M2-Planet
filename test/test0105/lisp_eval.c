@@ -432,7 +432,7 @@ struct cell* prim_output(struct cell* args, FILE* out)
 	{
 		if(INT == args->car->type)
 		{
-			fputs(numerate_number(args->car->value), out);
+			fputs(int2str(args->car->value, 10, TRUE), out);
 		}
 		else if(CHAR == args->car->type)
 		{
@@ -480,7 +480,7 @@ struct cell* prim_freecell(struct cell* args)
 	if(nil == args)
 	{
 		fputs("Remaining Cells: ", stdout);
-		fputs(numerate_number(left_to_take), stdout);
+		fputs(int2str(left_to_take, 10, TRUE), stdout);
 		return nil;
 	}
 	return make_int(left_to_take);

@@ -35,7 +35,7 @@ void preprocess();
 void program();
 void recursive_output(struct token_list* i, FILE* out);
 void output_tokens(struct token_list *i, FILE* out);
-int numerate_string(char *a);
+int strtoint(char *a);
 
 int main(int argc, char** argv)
 {
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "--max-string"))
 		{
-			MAX_STRING = numerate_string(argv[i+1]);
+			MAX_STRING = strtoint(argv[i+1]);
 			require(0 < MAX_STRING, "Not a valid string size\nAbort and fix your --max-string\n");
 			i = i + 2;
 		}

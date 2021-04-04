@@ -138,7 +138,7 @@ struct cell* atom(struct cell* a)
 	if(is_integer(a->string))
 	{
 		a->type = INT;
-		a->value = numerate_string(a->string);
+		a->value = strtoint(a->string);
 		return a;
 	}
 

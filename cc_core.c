@@ -40,11 +40,10 @@ int current_count;
 int Address_of;
 
 /* Imported functions */
-char* number_to_hex(int a, int bytes);
-char* numerate_number(int a);
+char* int2str(int x, int base, int signed_p);
+int strtoint(char *a);
 char* parse_string(char* string);
 int escape_lookup(char* c);
-int numerate_string(char *a);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
 struct type* mirror_type(struct type* source, char* name);
@@ -100,7 +99,7 @@ void line_error_token(struct token_list *token)
 	require(NULL != token, "EOF reached inside of line_error\n");
 	fputs(token->filename, stderr);
 	fputs(":", stderr);
-	fputs(numerate_number(token->linenumber), stderr);
+	fputs(int2str(token->linenumber, 10, TRUE), stderr);
 	fputs(":", stderr);
 }
 
@@ -341,7 +340,7 @@ void variable_load(struct token_list* a)
 	require(NULL != global_token, "incomplete variable load recieved\n");
 	if((match("FUNCTION", a->type->name) || match("FUNCTION*", a->type->name)) && match("(", global_token->s))
 	{
-		function_call(numerate_number(a->depth), TRUE);
+		function_call(int2str(a->depth, 10, TRUE), TRUE);
 		return;
 	}
 	current_target = a->type;
@@ -352,7 +351,7 @@ void variable_load(struct token_list* a)
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
 
-	emit_out(numerate_number(a->depth));
+	emit_out(int2str(a->depth, 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
 	else if(AARCH64 == Architecture) emit_out("\nSUB_X0_X0_X1\n");
 	emit_out("\n");
@@ -429,7 +428,7 @@ void primary_expr_failure()
 
 void primary_expr_string()
 {
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
 	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
@@ -491,17 +490,49 @@ void primary_expr_char()
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	emit_out(numerate_number(escape_lookup(global_token->s + 1)));
+	emit_out(int2str(escape_lookup(global_token->s + 1), 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
 	emit_out("\n");
 	global_token = global_token->next;
+}
+
+int hex2char(int c)
+{
+	if((c >= 0) && (c <= 9)) return (c + 48);
+	else if((c >= 10) && (c <= 15)) return (c + 55);
+	else return -1;
+}
+
+char* number_to_hex(int a, int bytes)
+{
+	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
+	char* result = calloc(1 + (bytes << 1), sizeof(char));
+	if(NULL == result)
+	{
+		fputs("calloc failed in number_to_hex\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	int i = 0;
+
+	int divisor = (bytes << 3);
+	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
+
+	/* Simply collect numbers until divisor is gone */
+	while(0 != divisor)
+	{
+		divisor = divisor - 4;
+		result[i] = hex2char((a >> divisor) & 0xF);
+		i = i + 1;
+	}
+
+	return result;
 }
 
 void primary_expr_number()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = numerate_string(global_token->s);
+		int size = strtoint(global_token->s);
 		if((32767 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");
@@ -702,31 +733,31 @@ void postfix_expr_arrow()
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 		{
 			emit_out("ADDUI R0 R0 ");
-			emit_out(numerate_number(i->offset));
+			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\n");
 		}
 		else if(X86 == Architecture)
 		{
 			emit_out("LOAD_IMMEDIATE_ebx %");
-			emit_out(numerate_number(i->offset));
+			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\nADD_ebx_to_eax\n");
 		}
 		else if(AMD64 == Architecture)
 		{
 			emit_out("LOAD_IMMEDIATE_rbx %");
-			emit_out(numerate_number(i->offset));
+			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\nADD_rbx_to_rax\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
 			emit_out("!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-			emit_out(numerate_number(i->offset));
+			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\n'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
 		}
 		else if(AARCH64 == Architecture)
 		{
 			emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-			emit_out(numerate_number(i->offset));
+			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\nADD_X0_X1_X0\n");
 		}
 	}
@@ -772,7 +803,7 @@ void postfix_expr_array()
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 '");
 		else if(AARCH64 == Architecture) emit_out("LOAD_W2_AHEAD\nSKIP_32_DATA\n%");
 
-		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
+		emit_out(int2str(ceil_log2(current_target->indirect->size), 10, TRUE));
 		if(ARMV7L == Architecture) emit_out("' MOVE_ALWAYS");
 		else if(AARCH64 == Architecture) emit_out("\nLSHIFT_X0_X0_X2");
 		emit_out("\n");
@@ -815,7 +846,7 @@ void unary_expr_sizeof()
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	emit_out(numerate_number(a->size));
+	emit_out(int2str(a->size, 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
 	emit_out("\n");
 }
@@ -1222,7 +1253,7 @@ void statement();
 /* Evaluate if statements */
 void process_if()
 {
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	emit_out("# IF_");
@@ -1278,7 +1309,7 @@ void process_for()
 	char* nested_break_num = break_target_num;
 	char* nested_continue_head = continue_target_head;
 
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	break_target_head = "FOR_END_";
@@ -1388,7 +1419,7 @@ void process_do()
 	char* nested_break_num = break_target_num;
 	char* nested_continue_head = continue_target_head;
 
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	break_target_head = "DO_END_";
@@ -1443,7 +1474,7 @@ void process_while()
 	char* nested_break_num = break_target_num;
 	char* nested_continue_head = continue_target_head;
 
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	break_target_head = "END_WHILE_";
@@ -1839,7 +1870,7 @@ new_type:
 			require_match("ERROR in CONSTANT with sizeof\nMissing (\n", "(");
 			struct type* a = type_name();
 			require_match("ERROR in CONSTANT with sizeof\nMissing )\n", ")");
-			global_token->prev->s = numerate_number(a->size);
+			global_token->prev->s = int2str(a->size, 10, TRUE);
 			global_constant_list->arguments = global_token->prev;
 		}
 		else
@@ -1888,7 +1919,7 @@ new_type:
 			global_token = global_token->next->next;
 
 			/* length */
-			size = numerate_string(global_token->s);
+			size = strtoint(global_token->s);
 			globals_list = emit("\n'", globals_list);
 			while (0 != size)
 			{

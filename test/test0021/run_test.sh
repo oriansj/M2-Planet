@@ -31,7 +31,6 @@ bin/M2-Planet \
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
 	-f test/test0021/chdir.c \
 	--debug \
 	-o ${TMPDIR}/chdir.M1 \

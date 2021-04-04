@@ -51,7 +51,20 @@ int preserve_string(int c)
 	return fgetc(input);
 }
 
- void fixup_label()
+
+void copy_string(char* target, char* source, int max)
+{
+	int i = 0;
+	while(0 != source[i])
+	{
+		target[i] = source[i];
+		i = i + 1;
+		if(i == max) break;
+	}
+}
+
+
+void fixup_label()
 {
 	int hold = ':';
 	int prev;

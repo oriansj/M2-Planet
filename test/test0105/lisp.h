@@ -60,8 +60,8 @@ struct cell
 
 /* Common functions */
 struct cell* make_cons(struct cell* a, struct cell* b);
-int numerate_string(char *a);
-char* numerate_number(int a);
+int strtoint(char *a);
+char* int2str(int x, int base, int signed_p);
 int match(char* a, char* b);
 
 /* Global objects */

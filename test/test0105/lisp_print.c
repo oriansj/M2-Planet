@@ -23,7 +23,7 @@ void writeobj(FILE *output_file, struct cell* op)
 
 	if(INT == op->type)
 	{
-		fputs(numerate_number(op->value), output_file);
+		fputs(int2str(op->value, 10, TRUE), output_file);
 	}
 	else if(CONS == op->type)
 	{
@@ -70,7 +70,7 @@ void writeobj(FILE *output_file, struct cell* op)
 	else
 	{
 		fputs("Type ", stderr);
-		fputs(numerate_number(op->type), stderr);
+		fputs(int2str(op->type, 10, TRUE), stderr);
 		fputs(" is unknown\nPrint aborting hard\n", stderr);
 		exit(EXIT_FAILURE);
 	}

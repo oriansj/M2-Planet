@@ -18,7 +18,7 @@
 #include "cc.h"
 
 /* Imported functions */
-int numerate_string(char *a);
+int strtoint(char *a);
 void line_error();
 void require(int bool, char* error);
 
@@ -174,7 +174,7 @@ struct type* build_member(struct type* last, int offset)
 	{
 		global_token = global_token->next;
 		require(NULL != global_token, "struct member arrays can not be EOF sized\n");
-		i->size = member_type->type->size * numerate_string(global_token->s);
+		i->size = member_type->type->size * strtoint(global_token->s);
 		if(0 == i->size)
 		{
 			fputs("Struct only supports [num] form\n", stderr);

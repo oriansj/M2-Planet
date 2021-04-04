@@ -25,13 +25,8 @@ mkdir -p ${TMPDIR}
 ./bin/M2-Planet \
 	--architecture x86 \
 	-f M2libc/x86/Linux/bootstrap.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/number_pack.c \
-	-f functions/string.c \
-	-f functions/require.c \
 	-f cc.h \
+	-f M2libc/bootstrappable.c \
 	-f cc_globals.c \
 	-f cc_reader.c \
 	-f cc_strings.c \
@@ -82,13 +77,8 @@ then
 		-f M2libc/stdlib.c \
 		-f M2libc/x86/Linux/fcntl.h \
 		-f M2libc/stdio.c \
-		-f functions/match.c \
-		-f functions/in_set.c \
-		-f functions/numerate_number.c \
-		-f functions/number_pack.c \
-		-f functions/string.c \
-		-f functions/require.c \
 		-f cc.h \
+		-f M2libc/bootstrappable.c \
 		-f cc_globals.c \
 		-f cc_reader.c \
 		-f cc_strings.c \

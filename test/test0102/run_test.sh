@@ -31,11 +31,7 @@ mkdir -p ${TMPDIR}
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
 	-f M2libc/stdio.c \
-	-f functions/match.c \
-	-f functions/in_set.c \
-	-f functions/numerate_number.c \
-	-f functions/string.c \
-	-f functions/require.c \
+	-f M2libc/bootstrappable.c \
 	-f test/test0102/M1-macro.c \
 	--debug \
 	-o ${TMPDIR}/M1-macro.M1 \
