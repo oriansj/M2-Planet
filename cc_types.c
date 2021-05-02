@@ -261,6 +261,13 @@ struct type* type_name()
 	struct type* ret;
 
 	require(NULL != global_token, "Recieved EOF instead of type name\n");
+
+	if(match("extern", global_token->s))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "unfinished type definition in extern\n");
+	}
+
 	if(match("struct", global_token->s))
 	{
 		global_token = global_token->next;
