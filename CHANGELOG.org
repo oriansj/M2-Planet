@@ -16,6 +16,15 @@
 
 * Current
 ** Added
+
+** Changed
+
+** Fixed
+
+** Removed
+
+* 1.8 - 2021-06-08
+** Added
 AArch64 added support for arithmetic right shift
 AMD64 added support for unsigned comparisons
 armv7l added support for unsigned comparisons
