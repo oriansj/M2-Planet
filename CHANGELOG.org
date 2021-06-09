@@ -16,12 +16,62 @@
 
 * Current
 ** Added
+AArch64 added support for arithmetic right shift
+AMD64 added support for unsigned comparisons
+armv7l added support for unsigned comparisons
+AArch64 added support for unsigned comparison
+added support for --max-string to enable arbitrary large C tokens and strings
+Added prototype output buffering for x86
+List of known M2-Planet issues has been added
+Added first generation implemention of typedef
+Add newline tokens to parse stream
+Add a preprocessor-only mode (-E)
+Add macro directives to token_list
+Add support for conditional inclusion (#if, #elif, #else, #endif)
+Add error checking for unexpected #endif
+Added hacky version of #define support (#if defined($FOO))
+Add a test for supported preprocessor features
+Added simple macro expansion
+Add support for global char foo[12]; definitions
+Added support for make -j $num build operations for tests to speed up testing on multicore systems
+Enable virtualization of bare metal binaries
+Add support for &global_variable
+Added __M2__ to default macro environment to enable #if defined(__M2__)  M2-Planet specific functionality
+Add support for -D variable and -D variable=value
+Added -e (errexit) shell option in scripts, where possible
 
 ** Changed
+knight-posix HEAP pointer now set by kernel rather than libc
+knight now leverages new SET instructions to reduce instruction count and processing time.
+Make type information localized to the inside of statements
+Default types available and added --bootstrap-mode flag to enable the old behavior for cc_* emulation
+Improve error reporting for unexpected non-newline
+Moved all low level primitives into M2libc
+Updated tests to leverage M2libc
+Standardized test scripts
+tests: use new-style mescc-tools flags
+Harmonize --debug behaviour for all scripts of the same test
+Unified all tests for all architectures
+Replace file_print with fputs
+Skip "extern" in type definitions. This makes supporting gcc >= 10 easier in GNU Mes.
 
 ** Fixed
+AArch64 Fix LSEEK syscall number
+Arithmetic recursion to match gcc behavior in regards to if(-1 > 0)
+Fix x86 behavior on unsigned compares
+Remove Segfault that occurs when outputing files in excess of 100MB in size
+Fix x86 close syscall
+Type abuse bugs that resulted in segfaults
+Fixed the backwards assignment of x86/AMD64 division
+Fix e25c1995aab5833323ee0784402ae7d3318b093e SCM MES regression
+Fixed the backwards modulus
+Various segfaults in the new macro preprocessor
+Fix all special cases where line number was wrong
 
 ** Removed
+Removed obsolete bootstrap directory
+Removed need for fixup
+Remove test/common_* files with M2libc transistion
 
 * 1.7 - 2020-11-15
 ** Added
