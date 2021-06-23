@@ -21,6 +21,7 @@
 
 ** Fixed
 Stop hang on large global arrays
+Fixed Memory leak on read token
 
 ** Removed
 

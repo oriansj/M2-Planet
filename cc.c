@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 		{
 			if(NULL == hold_string)
 			{
-				hold_string = calloc(MAX_STRING, sizeof(char));
+				hold_string = calloc(MAX_STRING + 4, sizeof(char));
 				require(NULL != hold_string, "Impossible Exhustion has occured\n");
 			}
 
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{
-		hold_string = calloc(MAX_STRING, sizeof(char));
+		hold_string = calloc(MAX_STRING + 4, sizeof(char));
 		require(NULL != hold_string, "Impossible Exhustion has occured\n");
 		global_token = read_all_tokens(in, global_token, "STDIN");
 	}
