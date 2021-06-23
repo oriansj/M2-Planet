@@ -152,7 +152,7 @@ collect_weird_string_reset:
 	require((MAX_STRING - 6) > string_index, "Attempt at parsing weird string exceeds max length\n");
 	string = string + 1;
 	hold_string[string_index] = ' ';
-	temp = escape_lookup(string);
+	temp = escape_lookup(string) & 0xFF;
 	hold_string[string_index + 1] = table[(temp >> 4)];
 	hold_string[string_index + 2] = table[(temp & 15)];
 

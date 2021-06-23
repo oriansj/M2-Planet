@@ -22,6 +22,7 @@
 ** Fixed
 Stop hang on large global arrays
 Fixed Memory leak on read token
+Fixed Global buffer overflow in collect_weird_string
 
 ** Removed
 
