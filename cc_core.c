@@ -1920,6 +1920,15 @@ new_type:
 
 			/* length */
 			size = strtoint(global_token->s);
+
+			/* Ensure properly closed */
+			global_token = global_token->next;
+			require_match("missing close bracket\n", "]");
+			require_match("missing ;\n", ";");
+
+			/* Stop bad states */
+			require(size > 0, "Negative values are not supported\n");
+			require(size < 4096, "M2-Planet is very inefficient so you probably don't want to allocate 4+K bytes into your binary for NULLs\n");
 			globals_list = emit("\n'", globals_list);
 			while (0 != size)
 			{
@@ -1927,10 +1936,6 @@ new_type:
 				size = size - 1;
 			}
 			globals_list = emit("'\n", globals_list);
-
-			global_token = global_token->next;
-			require_match("missing close bracket\n", "]");
-			require_match("missing ;\n", ";");
 
 			goto new_type;
 		}

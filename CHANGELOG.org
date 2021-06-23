@@ -20,6 +20,7 @@
 ** Changed
 
 ** Fixed
+Stop hang on large global arrays
 
 ** Removed
 
