@@ -1,11 +1,12 @@
 -*-mode:org-*-
 
 M2-Planet being based on the goal of bootstrapping the Minimal C compiler
-required to support structs, arrays, inline assembly and self hosting;
-is rather small, under 1.7Kloc according to sloccount
+required to support C macros, structs, arrays, inline assembly and self hosting;
+is rather small, around 3Kloc according to sloccount
 
 * SETUP
-The most obvious way to setup for M2-Planet development is to clone and setup mescc-tools first (https://github.com/oriansj/mescc-tools.git)
+The most obvious way to setup for M2-Planet development is to clone --recursive
+and setup mescc-tools first (https://github.com/oriansj/mescc-tools.git)
 Then be sure to install any C compiler and make clone of your choice.
 
 * BUILD
@@ -23,17 +24,18 @@ To all future release of M2-Planet. All minor releases are buildable by the last
 major release and All major releases are buildable by the last major release.
 
 * DEBUG
-To get a properly debuggable binary: make M2-Planet-gcc
-However if you are comfortable with gdb, knowing that function names are
-prefixed with FUNCTION_ the M2-Planet binary is quite debuggable.
+To get a properly debuggable binary of M2-Planet: make M2-Planet
+M2-Planet also can create debuggable binaries with the help of blood-elf and the
+--debug option. if you are comfortable with gdb, knowing that function names are
+prefixed with FUNCTION_ M2-Planet built binaries are quite debuggable.
 
 * Bugs
 M2-Planet assumes a very heavily restricted subset of the C language and many C
 programs will break hard when passed to M2-Planet.
 
 M2-Planet does not actually implement any primitive functionality, it is assumed
-that will be written in inline assembly by the programmer or provided by the
-programmer durring the assembly and linking stages
+that will be written in inline assembly by the programmer or leveraged via M2libc
+which is the C library written in the M2-Planet C subset.
 
 * Magic
 ** argument and local stack
