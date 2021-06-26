@@ -1893,7 +1893,7 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* length */
-	size = strtoint(global_token->s);
+	size = strtoint(global_token->s) * type_size->size;
 
 	/* Ensure properly closed */
 	global_token = global_token->next;
@@ -1957,7 +1957,10 @@ void global_assignment()
  *
  * declaration:
  *     CONSTANT identifer value
+ *     typedef identifer type;
  *     type-name identifier ;
+ *     type-name identifier = value ;
+ *     type-name identifier [ value ];
  *     type-name identifier ( parameter-list ) ;
  *     type-name identifier ( parameter-list ) statement
  *
@@ -2004,13 +2007,6 @@ new_type:
 	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
 	global_token = global_token->next;
 
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		global_static_array(type_size, global_token->prev);
-		goto new_type;
-	}
-
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
@@ -2034,6 +2030,13 @@ new_type:
 	if(match("=",global_token->s))
 	{
 		global_assignment();
+		goto new_type;
+	}
+
+	/* Deal with global static arrays */
+	if(match("[", global_token->s))
+	{
+		global_static_array(type_size, global_token->prev);
 		goto new_type;
 	}
 
