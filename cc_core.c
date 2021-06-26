@@ -1830,6 +1830,126 @@ void declare_function()
 	}
 }
 
+void global_constant()
+{
+	global_token = global_token->next;
+	require(NULL != global_token, "CONSTANT lacks a name\n");
+	global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+
+	require(NULL != global_token->next, "CONSTANT lacks a value\n");
+	if(match("sizeof", global_token->next->s))
+	{
+		global_token = global_token->next->next;
+		require_match("ERROR in CONSTANT with sizeof\nMissing (\n", "(");
+		struct type* a = type_name();
+		require_match("ERROR in CONSTANT with sizeof\nMissing )\n", ")");
+		global_token->prev->s = int2str(a->size, 10, TRUE);
+		global_constant_list->arguments = global_token->prev;
+	}
+	else
+	{
+		global_constant_list->arguments = global_token->next;
+		global_token = global_token->next->next;
+	}
+}
+
+struct type* global_typedef()
+{
+	struct type* type_size;
+	/* typedef $TYPE $NAME; */
+	global_token = global_token->next;
+	type_size = type_name();
+	type_size = mirror_type(type_size, global_token->s);
+	add_primitive(type_size);
+	global_token = global_token->next;
+	require_match("ERROR in typedef statement\nMissing ;\n", ";");
+	return type_size;
+}
+
+void global_static_array(struct type* type_size, struct token_list* name)
+{
+	int size;
+	maybe_bootstrap_error("global array definitions");
+	globals_list = emit(":GLOBAL_", globals_list);
+	globals_list = emit(name->s, globals_list);
+	globals_list = emit("\n&GLOBAL_STORAGE_", globals_list);
+	globals_list = emit(name->s, globals_list);
+	if (AARCH64 == Architecture || AMD64 == Architecture)
+	{
+		globals_list = emit(" %0", globals_list);
+	}
+	globals_list = emit("\n:GLOBAL_STORAGE_", globals_list);
+	globals_list = emit(name->s, globals_list);
+
+	require(NULL != global_token->next, "Unterminated global\n");
+	global_token = global_token->next;
+
+	/* Make sure not negative */
+	if(match("-", global_token->s))
+	{
+		line_error();
+		fputs("Negative values are not supported\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	/* length */
+	size = strtoint(global_token->s);
+
+	/* Ensure properly closed */
+	global_token = global_token->next;
+	require_match("missing close bracket\n", "]");
+	require_match("missing ;\n", ";");
+
+	/* Stop bad states */
+	require(size > 0, "M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n");
+	require(size < 0x100000, "M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n");
+	globals_list = emit("\n'", globals_list);
+	while (0 != size)
+	{
+		globals_list = emit(" 00", globals_list);
+		size = size - 1;
+	}
+	globals_list = emit("'\n", globals_list);
+}
+
+void global_assignment()
+{
+	/* Store the global's value*/
+	globals_list = emit(":GLOBAL_", globals_list);
+	globals_list = emit(global_token->prev->s, globals_list);
+	globals_list = emit("\n", globals_list);
+	global_token = global_token->next;
+	require(NULL != global_token, "Global locals value in assignment\n");
+	if(in_set(global_token->s[0], "0123456789"))
+	{ /* Assume Int */
+		globals_list = emit("%", globals_list);
+		globals_list = emit(global_token->s, globals_list);
+		globals_list = emit("\n", globals_list);
+	}
+	else if(('"' == global_token->s[0]))
+	{ /* Assume a string*/
+		globals_list = emit("&GLOBAL_", globals_list);
+		globals_list = emit(global_token->prev->prev->s, globals_list);
+		globals_list = emit("_contents\n", globals_list);
+
+		globals_list = emit(":GLOBAL_", globals_list);
+		globals_list = emit(global_token->prev->prev->s, globals_list);
+		globals_list = emit("_contents\n", globals_list);
+		globals_list = emit(parse_string(global_token->s), globals_list);
+	}
+	else
+	{
+		line_error();
+		fputs("Received ", stderr);
+		fputs(global_token->s, stderr);
+		fputs(" in program\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	global_token = global_token->next;
+	require_match("ERROR in Program\nMissing ;\n", ";");
+}
+
 /*
  * program:
  *     declaration
@@ -1853,160 +1973,76 @@ void program()
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
-	int size;
 
 new_type:
+	/* Deal with garbage input */
 	if (NULL == global_token) return;
+	require('#' != global_token->s[0], "unhandled macro directive\n");
+	require(!match("\n", global_token->s), "unexpected newline token\n");
+
+	/* Handle cc_* CONSTANT statements */
 	if(match("CONSTANT", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "CONSTANT lacks a name\n");
-		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
-
-		require(NULL != global_token->next, "CONSTANT lacks a value\n");
-		if(match("sizeof", global_token->next->s))
-		{
-			global_token = global_token->next->next;
-			require_match("ERROR in CONSTANT with sizeof\nMissing (\n", "(");
-			struct type* a = type_name();
-			require_match("ERROR in CONSTANT with sizeof\nMissing )\n", ")");
-			global_token->prev->s = int2str(a->size, 10, TRUE);
-			global_constant_list->arguments = global_token->prev;
-		}
-		else
-		{
-			global_constant_list->arguments = global_token->next;
-			global_token = global_token->next->next;
-		}
+		global_constant();
+		goto new_type;
 	}
-	else if(match("typedef", global_token->s))
+
+	/* Handle c typedef statements */
+	if(match("typedef", global_token->s))
 	{
-		/* typedef $TYPE $NAME; */
-		global_token = global_token->next;
-		type_size = type_name();
-		type_size = mirror_type(type_size, global_token->s);
-		add_primitive(type_size);
-		global_token = global_token->next;
-		require_match("ERROR in typedef statement\nMissing ;\n", ";");
+		type_size = global_typedef();
+		goto new_type;
 	}
-	else
+
+	type_size = type_name();
+	/* Deal with case of struct definitions */
+	if(NULL == type_size) goto new_type;
+
+	require(NULL != global_token->next, "Unterminated global\n");
+
+	/* Add to global symbol table */
+	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
+	global_token = global_token->next;
+
+	/* Deal with global static arrays */
+	if(match("[", global_token->s))
 	{
-		require('#' != global_token->s[0], "unhandled macro directive\n");
-		require(!match("\n", global_token->s), "unexpected newline token\n");
-		type_size = type_name();
-		if(NULL == type_size)
-		{
-			goto new_type;
-		}
-
-		require(NULL != global_token->next, "Unterminated global\n");
-		if(match("[", global_token->next->s))
-		{
-			maybe_bootstrap_error("global array definitions");
-			globals_list = emit(":GLOBAL_", globals_list);
-			globals_list = emit(global_token->s, globals_list);
-			globals_list = emit("\n&GLOBAL_STORAGE_", globals_list);
-			globals_list = emit(global_token->s, globals_list);
-			if (AARCH64 == Architecture || AMD64 == Architecture)
-			{
-				globals_list = emit(" %0", globals_list);
-			}
-			globals_list = emit("\n:GLOBAL_STORAGE_", globals_list);
-			globals_list = emit(global_token->s, globals_list);
-			global_symbol_list = sym_declare(global_token->s, type_size->indirect, global_symbol_list);
-
-			require(NULL != global_token->next->next, "Unterminated global\n");
-			global_token = global_token->next->next;
-
-			/* Make sure not negative */
-			if(match("-", global_token->s))
-			{
-				line_error();
-				fputs("Negative values are not supported\n", stderr);
-				exit(EXIT_FAILURE);
-			}
-
-			/* length */
-			size = strtoint(global_token->s);
-
-			/* Ensure properly closed */
-			global_token = global_token->next;
-			require_match("missing close bracket\n", "]");
-			require_match("missing ;\n", ";");
-
-			/* Stop bad states */
-			require(size > 0, "M2-Planet is very inefficient so you probably don't want to allocate 4+K bytes into your binary for NULLs\n");
-			require(size < 4096, "M2-Planet is very inefficient so you probably don't want to allocate 4+K bytes into your binary for NULLs\n");
-			globals_list = emit("\n'", globals_list);
-			while (0 != size)
-			{
-				globals_list = emit(" 00", globals_list);
-				size = size - 1;
-			}
-			globals_list = emit("'\n", globals_list);
-
-			goto new_type;
-		}
-		/* Add to global symbol table */
-		global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
-		global_token = global_token->next;
-		if(match(";", global_token->s))
-		{
-			/* Ensure 4 bytes are allocated for the global */
-			globals_list = emit(":GLOBAL_", globals_list);
-			globals_list = emit(global_token->prev->s, globals_list);
-			globals_list = emit("\nNULL\n", globals_list);
-
-			global_token = global_token->next;
-		}
-		else if(match("(", global_token->s)) declare_function();
-		else if(match("=",global_token->s))
-		{
-			/* Store the global's value*/
-			globals_list = emit(":GLOBAL_", globals_list);
-			globals_list = emit(global_token->prev->s, globals_list);
-			globals_list = emit("\n", globals_list);
-			global_token = global_token->next;
-			require(NULL != global_token, "Global locals value in assignment\n");
-			if(in_set(global_token->s[0], "0123456789"))
-			{ /* Assume Int */
-				globals_list = emit("%", globals_list);
-				globals_list = emit(global_token->s, globals_list);
-				globals_list = emit("\n", globals_list);
-			}
-			else if(('"' == global_token->s[0]))
-			{ /* Assume a string*/
-				globals_list = emit("&GLOBAL_", globals_list);
-				globals_list = emit(global_token->prev->prev->s, globals_list);
-				globals_list = emit("_contents\n", globals_list);
-
-				globals_list = emit(":GLOBAL_", globals_list);
-				globals_list = emit(global_token->prev->prev->s, globals_list);
-				globals_list = emit("_contents\n", globals_list);
-				globals_list = emit(parse_string(global_token->s), globals_list);
-			}
-			else
-			{
-				line_error();
-				fputs("Received ", stderr);
-				fputs(global_token->s, stderr);
-				fputs(" in program\n", stderr);
-				exit(EXIT_FAILURE);
-			}
-
-			global_token = global_token->next;
-			require_match("ERROR in Program\nMissing ;\n", ";");
-		}
-		else
-		{
-			line_error();
-			fputs("Received ", stderr);
-			fputs(global_token->s, stderr);
-			fputs(" in program\n", stderr);
-			exit(EXIT_FAILURE);
-		}
+		global_static_array(type_size, global_token->prev);
+		goto new_type;
 	}
-	goto new_type;
+
+	/* Deal with global variables */
+	if(match(";", global_token->s))
+	{
+		/* Ensure 4 bytes are allocated for the global */
+		globals_list = emit(":GLOBAL_", globals_list);
+		globals_list = emit(global_token->prev->s, globals_list);
+		globals_list = emit("\nNULL\n", globals_list);
+
+		global_token = global_token->next;
+		goto new_type;
+	}
+
+	/* Deal with global functions */
+	if(match("(", global_token->s))
+	{
+		declare_function();
+		goto new_type;
+	}
+
+	/* Deal with assignment to a global variable */
+	if(match("=",global_token->s))
+	{
+		global_assignment();
+		goto new_type;
+	}
+
+	/* Everything else is just an error */
+	line_error();
+	fputs("Received ", stderr);
+	fputs(global_token->s, stderr);
+	fputs(" in program\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 void recursive_output(struct token_list* head, FILE* out)
