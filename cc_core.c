@@ -1918,6 +1918,14 @@ new_type:
 			require(NULL != global_token->next->next, "Unterminated global\n");
 			global_token = global_token->next->next;
 
+			/* Make sure not negative */
+			if(match("-", global_token->s))
+			{
+				line_error();
+				fputs("Negative values are not supported\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
 			/* length */
 			size = strtoint(global_token->s);
 
@@ -1927,7 +1935,7 @@ new_type:
 			require_match("missing ;\n", ";");
 
 			/* Stop bad states */
-			require(size > 0, "Negative values are not supported\n");
+			require(size > 0, "M2-Planet is very inefficient so you probably don't want to allocate 4+K bytes into your binary for NULLs\n");
 			require(size < 4096, "M2-Planet is very inefficient so you probably don't want to allocate 4+K bytes into your binary for NULLs\n");
 			globals_list = emit("\n'", globals_list);
 			while (0 != size)
