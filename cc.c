@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 			if(NULL == hold_string)
 			{
 				hold_string = calloc(MAX_STRING + 4, sizeof(char));
-				require(NULL != hold_string, "Impossible Exhustion has occured\n");
+				require(NULL != hold_string, "Impossible Exhaustion has occured\n");
 			}
 
 			name = argv[i + 1];
@@ -101,11 +101,12 @@ int main(int argc, char** argv)
 			else if(match("amd64", arch)) Architecture = AMD64;
 			else if(match("armv7l", arch)) Architecture = ARMV7L;
 			else if(match("aarch64", arch)) Architecture = AARCH64;
+			else if(match("riscv64", arch)) Architecture = RISCV64;
 			else
 			{
 				fputs("Unknown architecture: ", stderr);
 				fputs(arch, stderr);
-				fputs(" know values are: knight-native, knight-posix, x86, amd64, armv7l and aarch64", stderr);
+				fputs(" know values are: knight-native, knight-posix, x86, amd64, armv7l, aarch64 and riscv64\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
@@ -169,7 +170,7 @@ int main(int argc, char** argv)
 	if(stdin == in)
 	{
 		hold_string = calloc(MAX_STRING + 4, sizeof(char));
-		require(NULL != hold_string, "Impossible Exhustion has occured\n");
+		require(NULL != hold_string, "Impossible Exhaustion has occured\n");
 		global_token = read_all_tokens(in, global_token, "STDIN");
 	}
 

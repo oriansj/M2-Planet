@@ -134,7 +134,7 @@ collect_regular_string_reset:
 	hold_string[string_index] = '"';
 	hold_string[string_index + 1] = '\n';
 	char* message = calloc(string_index + 3, sizeof(char));
-	require(NULL != message, "Exhusted memory while storing regular string\n");
+	require(NULL != message, "Exhausted memory while storing regular string\n");
 	copy_string(message, hold_string, string_index + 2);
 	reset_hold_string();
 	return message;
@@ -172,7 +172,7 @@ collect_weird_string_reset:
 	hold_string[string_index + 4] = '\n';
 
 	char* hold = calloc(string_index + 6, sizeof(char));
-	require(NULL != hold, "Exhusted available memory while attempting to collect a weird string\n");
+	require(NULL != hold, "Exhausted available memory while attempting to collect a weird string\n");
 	copy_string(hold, hold_string, string_index + 5);
 	reset_hold_string();
 	return hold;

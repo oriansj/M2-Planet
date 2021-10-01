@@ -41,7 +41,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 {
 	/* Create type** */
 	struct type* a = calloc(1, sizeof(struct type));
-	require(NULL != a, "Exhusted memory while declaring new primitive**\n");
+	require(NULL != a, "Exhausted memory while declaring new primitive**\n");
 	a->name = name2;
 	a->size = register_size;
 	a->indirect = a;
@@ -49,7 +49,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 
 	/* Create type* */
 	struct type* b = calloc(1, sizeof(struct type));
-	require(NULL != b, "Exhusted memory while declaring new primitive*\n");
+	require(NULL != b, "Exhausted memory while declaring new primitive*\n");
 	b->name = name1;
 	b->size = register_size;
 	b->is_signed = sign;
@@ -58,7 +58,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 	a->type = b;
 
 	struct type* r = calloc(1, sizeof(struct type));
-	require(NULL != r, "Exhusted memory while declaring new primitive\n");
+	require(NULL != r, "Exhausted memory while declaring new primitive\n");
 	r->name = name0;
 	r->size = size;
 	r->is_signed = sign;
@@ -71,7 +71,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 /* Initialize default types */
 void initialize_types()
 {
-	if(AMD64 == Architecture || AARCH64 == Architecture) register_size = 8;
+	if(AMD64 == Architecture || AARCH64 == Architecture || RISCV64 == Architecture) register_size = 8;
 	else register_size = 4;
 
 	/* Define void */
@@ -158,7 +158,7 @@ int member_size;
 struct type* build_member(struct type* last, int offset)
 {
 	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhusted memory while building a struct member\n");
+	require(NULL != i, "Exhausted memory while building a struct member\n");
 	i->members = last;
 	i->offset = offset;
 
@@ -217,9 +217,9 @@ void create_struct()
 	int offset = 0;
 	member_size = 0;
 	struct type* head = calloc(1, sizeof(struct type));
-	require(NULL != head, "Exhusted memory while creating a struct\n");
+	require(NULL != head, "Exhausted memory while creating a struct\n");
 	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhusted memory while creating a struct indirection\n");
+	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
 	head->name = global_token->s;
 	head->type = head;
 	i->name = global_token->s;
@@ -314,9 +314,9 @@ struct type* type_name()
 struct type* mirror_type(struct type* source, char* name)
 {
 	struct type* head = calloc(1, sizeof(struct type));
-	require(NULL != head, "Exhusted memory while creating a struct\n");
+	require(NULL != head, "Exhausted memory while creating a struct\n");
 	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhusted memory while creating a struct indirection\n");
+	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
 
 	head->name = name;
 	i->name = name;
