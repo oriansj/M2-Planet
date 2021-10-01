@@ -24,6 +24,8 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
 	-f M2libc/knight/Native/unistd.h \
 	-f M2libc/stdlib.c \
 	-f M2libc/knight/Native/fcntl.h \

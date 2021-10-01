@@ -27,9 +27,12 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture ${ARCH} \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
 	-f M2libc/${ARCH}/Linux/unistd.h \
 	-f M2libc/stdlib.c \
 	-f M2libc/${ARCH}/Linux/fcntl.h \
+	-f M2libc/${ARCH}/Linux/sys/stat.h \
 	-f M2libc/stdio.c \
 	-f M2libc/bootstrappable.c \
 	-f test/test0101/hex2_linker.c \

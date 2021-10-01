@@ -66,6 +66,8 @@ then
 	execve_image \
 		./test/results/test1000-knight-posix-binary \
 		--architecture x86 \
+		-f M2libc/sys/types.h \
+		-f M2libc/stddef.h \
 		-f M2libc/x86/Linux/unistd.h \
 		-f M2libc/stdlib.c \
 		-f M2libc/x86/Linux/fcntl.h \
@@ -97,6 +99,8 @@ then
 	# Verify that the resulting file works
 	./test/results/test1000-knight-posix-binary \
 		--architecture x86 \
+		-f M2libc/sys/types.h \
+		-f M2libc/stddef.h \
 		-f M2libc/x86/Linux/unistd.h \
 		-f M2libc/stdlib.c \
 		-f M2libc/x86/Linux/fcntl.h \
