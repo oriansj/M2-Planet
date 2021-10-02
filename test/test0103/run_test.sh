@@ -42,6 +42,7 @@ mkdir -p ${TMPDIR}
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/get_machine.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/get_machine-footer.M1 \
 	|| exit 2

@@ -42,6 +42,7 @@ mkdir -p ${TMPDIR}
 # Build debug footer
 blood-elf \
 	-f ${TMPDIR}/cc.M1 \
+	--little-endian \
 	--entry _start \
 	-o ${TMPDIR}/cc-footer.M1 \
 	|| exit 2

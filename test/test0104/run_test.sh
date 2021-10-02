@@ -43,6 +43,7 @@ mkdir -p ${TMPDIR}
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/kaem.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/kaem-footer.M1 \
 	|| exit 2

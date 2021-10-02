@@ -43,6 +43,7 @@ mkdir -p ${TMPDIR}
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/M1-macro.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/M1-macro-footer.M1 \
 	|| exit 2

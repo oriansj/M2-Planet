@@ -43,6 +43,7 @@ bin/M2-Planet \
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/continue.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/continue-footer.M1 \
 	|| exit 2

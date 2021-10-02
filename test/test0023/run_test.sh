@@ -42,6 +42,7 @@ bin/M2-Planet \
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/fseek.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/fseek-footer.M1 \
 	|| exit 2

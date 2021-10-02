@@ -42,6 +42,7 @@ bin/M2-Planet \
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/chdir.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/chdir-footer.M1 \
 	|| exit 2

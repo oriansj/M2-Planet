@@ -44,6 +44,7 @@ mkdir -p ${TMPDIR}
 blood-elf \
 	${BLOOD_ELF_WORD_SIZE_FLAG} \
 	-f ${TMPDIR}/hex2_linker.M1 \
+	${ENDIANNESS_FLAG} \
 	--entry _start \
 	-o ${TMPDIR}/hex2_linker-footer.M1 \
 	|| exit 2
