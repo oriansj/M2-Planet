@@ -96,7 +96,12 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 
 void line_error_token(struct token_list *token)
 {
-	require(NULL != token, "EOF reached inside of line_error\n");
+	if(NULL == token)
+	{
+		fputs("EOF reached inside of line_error\n", stderr);
+		fputs("problem at end of file\n", stderr);
+		return;
+	}
 	fputs(token->filename, stderr);
 	fputs(":", stderr);
 	fputs(int2str(token->linenumber, 10, TRUE), stderr);
@@ -110,7 +115,14 @@ void line_error()
 
 void require_match(char* message, char* required)
 {
-	require(NULL != global_token, "EOF reached inside of require match\n");
+	if(NULL == global_token)
+	{
+		line_error();
+		fputs("EOF reached inside of require match\n", stderr);
+		fputs("problem at end of file\n", stderr);
+		fputs(message, stderr);
+		exit(EXIT_FAILURE);
+	}
 	if(!match(global_token->s, required))
 	{
 		line_error();
@@ -118,7 +130,6 @@ void require_match(char* message, char* required)
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
-	require(NULL != global_token, "EOF after require match occurred\n");
 }
 
 void maybe_bootstrap_error(char* feature)
@@ -2066,21 +2077,26 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	if(match("-", global_token->s))
 	{
 		line_error();
-		fputs("Negative values are not supported\n", stderr);
+		fputs("Negative values are not supported for allocated arrays\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
 	/* length */
 	size = strtoint(global_token->s) * type_size->size;
 
+	/* Stop bad states */
+	if((size < 0) || (size > 0x100000))
+	{
+		line_error();
+		fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	/* Ensure properly closed */
 	global_token = global_token->next;
 	require_match("missing close bracket\n", "]");
 	require_match("missing ;\n", ";");
 
-	/* Stop bad states */
-	require(size > 0, "M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n");
-	require(size < 0x100000, "M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n");
 	globals_list = emit("\n'", globals_list);
 	while (0 != size)
 	{
