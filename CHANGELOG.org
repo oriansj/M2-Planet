@@ -16,13 +16,23 @@
 
 * Current
 ** Added
+Add riscv64 port
+Add tests for riscv64
 
 ** Changed
+Breakup program function to reduce complexity and risk of errors
+Update M2libc to enable RISC-V Development
+Update all tests to work around breaking update in blood-elf
 
 ** Fixed
 Stop hang on large global arrays
 Fixed Memory leak on read token
 Fixed Global buffer overflow in collect_weird_string
+Updated info in HACKING
+Report proper error message for negative global array values
+Fix global array initialization to allocate the correct amount of memory
+Fix  Problem with global arrays
+Catch truncated function calls and truncated array statements
 
 ** Removed
 
