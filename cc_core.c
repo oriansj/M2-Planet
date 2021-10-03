@@ -147,6 +147,7 @@ void expression();
 void function_call(char* s, int bool)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
+	require(NULL != global_token, "Improper function call\n");
 	int passed = 0;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
@@ -928,6 +929,7 @@ void postfix_expr_array()
 	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 ADD\n");
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
+	require(NULL != global_token, "truncated array expression\n");
 
 	if(match("=", global_token->s))
 	{
