@@ -654,13 +654,32 @@ void primary_expr_number()
 			emit_out(global_token->s);
 			emit_out(" ADDI");
 		}
-		else {
+		else if (0 == (size >> 30))
+		{
 			emit_out("RD_A0 ~");
 			emit_out(global_token->s);
 			emit_out(" LUI\n");
 			emit_out("RD_A0 RS1_A0 !");
 			emit_out(global_token->s);
 			emit_out(" ADDI");
+		}
+		else {
+			int high = size >> 30;
+			int low = ((size >> 30) << 30) ^ size;
+			emit_out("RD_A0 ~");
+			emit_out(int2str(high, 10, TRUE));
+			emit_out(" LUI\n");
+			emit_out("RD_A0 RS1_A0 !");
+			emit_out(int2str(high, 10, TRUE));
+			emit_out(" ADDI\n");
+			emit_out("RD_A0 RS1_A0 RS2_X30 SLLI\n");
+			emit_out("RD_T1 ~");
+			emit_out(int2str(low, 10, TRUE));
+			emit_out(" LUI\n");
+			emit_out("RD_T1 RS1_T1 !");
+			emit_out(int2str(low, 10, TRUE));
+			emit_out(" ADDI\n");
+			emit_out("RD_A0 RS1_A0 RS2_T1 OR\n");
 		}
 	}
 	emit_out("\n");
