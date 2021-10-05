@@ -49,6 +49,7 @@ int main(int argc, char** argv)
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
 	char* arch;
 	char* name;
+	char* hold;
 	int env=0;
 	char* val;
 
@@ -68,6 +69,12 @@ int main(int argc, char** argv)
 			}
 
 			name = argv[i + 1];
+			if(NULL == name)
+			{
+				fputs("did not receive a file name\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
 			in = fopen(name, "r");
 			if(NULL == in)
 			{
@@ -113,7 +120,13 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "--max-string"))
 		{
-			MAX_STRING = strtoint(argv[i+1]);
+			hold = argv[i+1];
+			if(NULL == hold)
+			{
+				fputs("--max-string requires a numeric argument\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			MAX_STRING = strtoint(hold);
 			require(0 < MAX_STRING, "Not a valid string size\nAbort and fix your --max-string\n");
 			i = i + 2;
 		}
@@ -140,6 +153,11 @@ int main(int argc, char** argv)
 		else if(match(argv[i], "-D"))
 		{
 			val = argv[i+1];
+			if(NULL == val)
+			{
+				fputs("-D requires an argument", stderr);
+				exit(EXIT_FAILURE);
+			}
 			while(0 != val[0])
 			{
 				if('=' == val[0])
