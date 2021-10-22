@@ -359,7 +359,8 @@ int macro_expression()
 void handle_define()
 {
 	struct macro_list* hold;
-	struct token_list* expansion_end;
+	struct token_list* expansion_end = NULL;
+	struct token_list* line_start = macro_token;
 
 	eat_current_token();
 
@@ -381,6 +382,12 @@ void handle_define()
 
 		if ('\n' == macro_token->s[0])
 		{
+			if(NULL == expansion_end)
+			{
+				line_error_token(line_start);
+				fputs("#define missing actual definition\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			expansion_end->next = NULL;
 			return;
 		}
@@ -459,6 +466,16 @@ void macro_directive()
 	}
 	else
 	{
+		if(!match("#include", macro_token->s))
+		{
+			/* Put a big fat warning but see if we can just ignore */
+			fputs(">>WARNING<<\n>>WARNING<<\n", stderr);
+			line_error_token(macro_token);
+			fputs("feature: ", stderr);
+			fputs(macro_token->s, stderr);
+			fputs(" unsupported in M2-Planet\nIgnoring line, may result in bugs\n>>WARNING<<\n>>WARNING<<\n\n", stderr);
+		}
+
 		/* unhandled macro directive; let's eat until a newline; om nom nom */
 		while(TRUE)
 		{
