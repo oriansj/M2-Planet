@@ -362,6 +362,16 @@ void handle_define()
 	struct token_list* expansion_end = NULL;
 	struct token_list* line_start = macro_token;
 
+	/* don't use #define statements from non-included blocks */
+	int conditional_define = TRUE;
+	if(NULL != conditional_inclusion_top)
+	{
+		if(FALSE == conditional_inclusion_top->include)
+		{
+			conditional_define = FALSE;
+		}
+	}
+
 	eat_current_token();
 
 	require(NULL != macro_token, "got an EOF terminated #define\n");
@@ -371,7 +381,8 @@ void handle_define()
 	hold = calloc(1, sizeof(struct macro_list));
 	hold->symbol = macro_token->s;
 	hold->next = macro_env;
-	macro_env = hold;
+	/* provided it isn't in a non-included block */
+	if(conditional_define) macro_env = hold;
 
 	/* discard the macro name */
 	eat_current_token();
@@ -400,6 +411,9 @@ void handle_define()
 		{
 			hold->expansion = macro_token;
 		}
+
+		/* throw away if not used */
+		if(!conditional_define) free(hold);
 
 		eat_current_token();
 	}
