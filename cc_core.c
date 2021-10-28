@@ -1272,20 +1272,20 @@ void primary_expr()
 	}
 	else if('!' == global_token->s[0])
 	{
-		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))  emit_out("LOADI R0 1\n");
+		else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
 		else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %1\n");
 		else if(ARMV7L == Architecture) emit_out("!1 R0 LOADI8_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_1\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 !1 ADDI\n");
 
 		common_recursion(postfix_expr);
 
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("XORI R0 R0 1\n");
-		else if(X86 == Architecture) emit_out("XOR_ebx_eax_into_eax\n");
-		else if(AMD64 == Architecture) emit_out("XOR_rbx_rax_into_rax\n");
-		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 XOR R1 ARITH2_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("XOR_X0_X1_X0\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 XOR\n");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R1 R0\nSET.G R0 R0 1\n");
+		else if(X86 == Architecture) emit_out("CMP\nSETA\nMOVEZBL\n");
+		else if(AMD64 == Architecture) emit_out("CMP\nSETA\nMOVEZX\n");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_HI\n");
+		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_HI\nSET_X0_TO_0\n");
+		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 !1 SLTIU\n");
 	}
 	else if('~' == global_token->s[0])
 	{
