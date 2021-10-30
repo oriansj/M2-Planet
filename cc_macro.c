@@ -395,9 +395,9 @@ void handle_define()
 		{
 			if(NULL == expansion_end)
 			{
-				line_error_token(line_start);
-				fputs("#define missing actual definition\n", stderr);
-				exit(EXIT_FAILURE);
+				hold->expansion = NULL;
+				expansion_end = macro_token;
+				return;
 			}
 			expansion_end->next = NULL;
 			return;
@@ -518,6 +518,10 @@ struct token_list* maybe_expand(struct token_list* token)
 	}
 
 	token = eat_token(token);
+	if (NULL == hold->expansion)
+	{
+		return token->next;
+	}
 	hold2 = insert_tokens(token, hold->expansion);
 
 	return hold2->next;
