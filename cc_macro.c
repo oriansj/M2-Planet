@@ -444,6 +444,60 @@ void macro_directive()
 
 		t->previous_condition_matched = t->include;
 	}
+	else if(match("#ifdef", macro_token->s))
+	{
+		eat_current_token();
+		require(NULL != macro_token, "got an EOF terminated macro defined expression\n");
+		if (NULL != lookup_macro(macro_token))
+		{
+			result = TRUE;
+		}
+		else
+		{
+			result = FALSE;
+		}
+		eat_current_token();
+
+		/* push conditional inclusion */
+		t = calloc(1, sizeof(struct conditional_inclusion));
+		t->prev = conditional_inclusion_top;
+		conditional_inclusion_top = t;
+		t->include = TRUE;
+
+		if(FALSE == result)
+		{
+			t->include = FALSE;
+		}
+
+		t->previous_condition_matched = t->include;
+	}
+	else if(match("#ifndef", macro_token->s))
+	{
+		eat_current_token();
+		require(NULL != macro_token, "got an EOF terminated macro defined expression\n");
+		if (NULL != lookup_macro(macro_token))
+		{
+			result = FALSE;
+		}
+		else
+		{
+			result = TRUE;
+		}
+		eat_current_token();
+
+		/* push conditional inclusion */
+		t = calloc(1, sizeof(struct conditional_inclusion));
+		t->prev = conditional_inclusion_top;
+		conditional_inclusion_top = t;
+		t->include = TRUE;
+
+		if(FALSE == result)
+		{
+			t->include = FALSE;
+		}
+
+		t->previous_condition_matched = t->include;
+	}
 	else if(match("#elif", macro_token->s))
 	{
 		eat_current_token();
