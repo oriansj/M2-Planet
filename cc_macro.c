@@ -420,6 +420,44 @@ void handle_define()
 
 }
 
+void handle_error()
+{
+	/* don't use #error statements from non-included blocks */
+	int conditional_error = TRUE;
+	if(NULL != conditional_inclusion_top)
+	{
+		if(FALSE == conditional_inclusion_top->include)
+		{
+			conditional_error = FALSE;
+		}
+	}
+	eat_current_token();
+	/* provided it isn't in a non-included block */
+	if(conditional_error)
+	{
+		line_error_token(macro_token);
+		fputs(" error: #error ", stderr);
+		while (TRUE)
+		{
+			if ('\n' == macro_token->s[0]) break;
+			fputs(macro_token->s, stderr);
+			macro_token = macro_token->next;
+			fputs(" ", stderr);
+		}
+		fputs("\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	while (TRUE)
+	{
+		/* discard the error */
+		if ('\n' == macro_token->s[0])
+		{
+			return;
+		}
+		eat_current_token();
+	}
+}
+
 void macro_directive()
 {
 	struct conditional_inclusion *t;
@@ -531,6 +569,10 @@ void macro_directive()
 	else if(match("#define", macro_token->s))
 	{
 		handle_define();
+	}
+	else if(match("#error", macro_token->s))
+	{
+		handle_error();
 	}
 	else
 	{
