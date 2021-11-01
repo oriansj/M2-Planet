@@ -104,11 +104,37 @@ int main(int argc, char** argv)
 			arch = argv[i + 1];
 			if(match("knight-native", arch)) Architecture = KNIGHT_NATIVE;
 			else if(match("knight-posix", arch)) Architecture = KNIGHT_POSIX;
-			else if(match("x86", arch)) Architecture = X86;
-			else if(match("amd64", arch)) Architecture = AMD64;
-			else if(match("armv7l", arch)) Architecture = ARMV7L;
-			else if(match("aarch64", arch)) Architecture = AARCH64;
-			else if(match("riscv64", arch)) Architecture = RISCV64;
+			else if(match("x86", arch))
+			{
+				Architecture = X86;
+				init_macro_env("__i386__", "1", "--architecture", env);
+				env = env + 1;
+			}
+			else if(match("amd64", arch))
+			{
+				Architecture = AMD64;
+				init_macro_env("__x86_64__", "1", "--architecture", env);
+				env = env + 1;
+			}
+			else if(match("armv7l", arch))
+			{
+				Architecture = ARMV7L;
+				init_macro_env("__arm__", "1", "--architecture", env);
+				env = env + 1;
+			}
+			else if(match("aarch64", arch))
+			{
+				Architecture = AARCH64;
+				init_macro_env("__aarch64__", "1", "--architecture", env);
+				env = env + 1;
+			}
+			else if(match("riscv64", arch))
+			{
+				Architecture = RISCV64;
+				init_macro_env("__riscv", "1", "--architecture", env);
+				init_macro_env("__riscv_xlen", "64", "--architecture", env + 1);
+				env = env + 2;
+			}
 			else
 			{
 				fputs("Unknown architecture: ", stderr);
