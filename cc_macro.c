@@ -145,8 +145,14 @@ struct macro_list* lookup_macro(struct token_list* token)
 int macro_expression();
 int macro_variable()
 {
+	int value = 0;
+	struct macro_list* hold = lookup_macro(macro_token);
+	if (NULL != hold)
+	{
+		value = strtoint(hold->expansion->s);
+	}
 	eat_current_token();
-	return 0;
+	return value;
 }
 int macro_number()
 {
