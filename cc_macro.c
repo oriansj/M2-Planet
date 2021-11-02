@@ -142,6 +142,36 @@ struct macro_list* lookup_macro(struct token_list* token)
 	return NULL;
 }
 
+void remove_macro(struct token_list* token)
+{
+	struct macro_list* hold = macro_env;
+	struct macro_list* temp;
+
+	/* Deal with the first element */
+	if (match(token->s, hold->symbol)) {
+		macro_env = hold->next;
+		free(hold);
+		return;
+	}
+
+	/* Remove element form the middle of linked list */
+	while (NULL != hold->next)
+	{
+		if (match(token->s, hold->next->symbol))
+		{
+			temp = hold->next;
+			hold->next = hold->next->next;
+			free(temp);
+			return;
+		}
+
+		hold = hold->next;
+	}
+
+	/* nothing to undefine */
+	return;
+}
+
 int macro_expression();
 int macro_variable()
 {
@@ -423,7 +453,13 @@ void handle_define()
 
 		eat_current_token();
 	}
+}
 
+void handle_undef()
+{
+	eat_current_token();
+	remove_macro(macro_token);
+	eat_current_token();
 }
 
 void handle_error()
@@ -575,6 +611,10 @@ void macro_directive()
 	else if(match("#define", macro_token->s))
 	{
 		handle_define();
+	}
+	else if(match("#undef", macro_token->s))
+	{
+		handle_undef();
 	}
 	else if(match("#error", macro_token->s))
 	{
