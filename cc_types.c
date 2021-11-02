@@ -288,6 +288,7 @@ struct type* type_name()
 			fputs(global_token->s, stderr);
 			fputs("\n", stderr);
 			line_error();
+			fputs("\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
