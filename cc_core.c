@@ -954,6 +954,9 @@ void postfix_expr_array()
 	{
 		assign = "";
 	}
+	if(match("[", global_token->s)) {
+		current_target = current_target->type;
+	}
 
 	emit_out(assign);
 }
