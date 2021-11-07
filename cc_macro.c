@@ -125,6 +125,13 @@ struct token_list* insert_tokens(struct token_list* point, struct token_list* to
 
 struct macro_list* lookup_macro(struct token_list* token)
 {
+	if(NULL == token)
+	{
+		line_error_token(macro_token);
+		fputs("null token recieved in lookup_macro\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	struct macro_list* hold = macro_env;
 
 	while (NULL != hold)
