@@ -396,7 +396,6 @@ void handle_define()
 {
 	struct macro_list* hold;
 	struct token_list* expansion_end = NULL;
-	struct token_list* line_start = macro_token;
 
 	/* don't use #define statements from non-included blocks */
 	int conditional_define = TRUE;
@@ -439,6 +438,8 @@ void handle_define()
 			return;
 		}
 
+		require(NULL != hold, "#define got something it can't handle\n");
+
 		expansion_end = macro_token;
 
 		/* in the first iteration, we set the first token of the expansion, if
@@ -449,7 +450,11 @@ void handle_define()
 		}
 
 		/* throw away if not used */
-		if(!conditional_define) free(hold);
+		if(!conditional_define && (NULL != hold))
+		{
+			free(hold);
+			hold = NULL;
+		}
 
 		eat_current_token();
 	}
