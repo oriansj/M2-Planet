@@ -676,14 +676,31 @@ void macro_directive()
 
 struct token_list* maybe_expand(struct token_list* token)
 {
+	if(NULL == token)
+	{
+		line_error_token(macro_token);
+		fputs("maybe_expand passed a null token\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	struct macro_list* hold = lookup_macro(token);
 	struct token_list* hold2;
+	if(NULL == token->next)
+	{
+		line_error_token(macro_token);
+		fputs("we can't expand a null token: ", stderr);
+		fputs(token->s, stderr);
+		fputc('\n', stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	if (NULL == hold)
 	{
 		return token->next;
 	}
 
 	token = eat_token(token);
+
 	if (NULL == hold->expansion)
 	{
 		return token->next;
