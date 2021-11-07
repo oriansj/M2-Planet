@@ -179,6 +179,12 @@ int macro_variable()
 	struct macro_list* hold = lookup_macro(macro_token);
 	if (NULL != hold)
 	{
+		if(NULL == hold->expansion)
+		{
+			line_error_token(macro_token);
+			fputs("hold->expansion is a null\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 		value = strtoint(hold->expansion->s);
 	}
 	eat_current_token();
@@ -236,6 +242,12 @@ int macro_primary_expr()
 
 		if(TRUE == defined_has_paren)
 		{
+			if(NULL == macro_token)
+			{
+				line_error_token(macro_token);
+				fputs("unterminated define ( statement\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			require(')' == macro_token->s[0], "missing close parenthesis for defined()\n");
 			eat_current_token();
 		}
