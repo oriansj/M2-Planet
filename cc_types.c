@@ -54,7 +54,6 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 	b->size = register_size;
 	b->is_signed = sign;
 	b->indirect = a;
-	b->type = b;
 	a->type = b;
 
 	struct type* r = calloc(1, sizeof(struct type));
@@ -64,6 +63,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 	r->is_signed = sign;
 	r->indirect = b;
 	r->type = r;
+	b->type = r;
 
 	return r;
 }

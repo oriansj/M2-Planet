@@ -388,7 +388,28 @@ void constant_load(struct token_list* a)
 	emit_out("\n");
 }
 
-void variable_load(struct token_list* a)
+void emit_dereference(int load_byte) {
+	if(load_byte)
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD8 R0 R0 0\n");
+		else if(X86 == Architecture) emit_out("LOAD_BYTE\n");
+		else if(AMD64 == Architecture) emit_out("LOAD_BYTE\n");
+		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD8 R0 MEMORY\n");
+		else if(AARCH64 == Architecture) emit_out("DEREF_X0_BYTE\n");
+		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LBU\n");
+	}
+	else
+        {
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
+		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
+		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
+		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
+		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
+		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
+        }
+}
+
+void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
 	if((match("FUNCTION", a->type->name) || match("FUNCTION*", a->type->name)) && match("(", global_token->s))
@@ -412,14 +433,23 @@ void variable_load(struct token_list* a)
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
-	if(match("=", global_token->s)) return;
+	if(!match("=", global_token->s)) {
+		emit_dereference(FALSE);
+	}
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
-	else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
+	while (num_dereference > 0)
+	{
+		if(match("char*", current_target->name)) {
+			/* Load a single byte */
+			emit_dereference(TRUE);
+		}
+		else
+		{
+			emit_dereference(FALSE);
+		}
+		current_target = current_target->type;
+		num_dereference = num_dereference - 1;
+	}
 }
 
 void function_load(struct token_list* a)
@@ -688,6 +718,11 @@ void primary_expr_number()
 
 void primary_expr_variable()
 {
+	int num_dereference = 0;
+	while(global_token->s[0] == '*') {
+		global_token = global_token->next;
+		num_dereference = num_dereference + 1;
+	}
 	char* s = global_token->s;
 	global_token = global_token->next;
 	struct token_list* a = sym_lookup(s, global_constant_list);
@@ -697,21 +732,21 @@ void primary_expr_variable()
 		return;
 	}
 
-	a= sym_lookup(s, function->locals);
+	a = sym_lookup(s, function->locals);
 	if(NULL != a)
 	{
-		variable_load(a);
+		variable_load(a, num_dereference);
 		return;
 	}
 
 	a = sym_lookup(s, function->arguments);
 	if(NULL != a)
 	{
-		variable_load(a);
+		variable_load(a, num_dereference);
 		return;
 	}
 
-	a= sym_lookup(s, global_function_list);
+	a = sym_lookup(s, global_function_list);
 	if(NULL != a)
 	{
 		function_load(a);
@@ -1310,6 +1345,7 @@ void primary_expr()
 	else if(global_token->s[0] == '\'') primary_expr_char();
 	else if(global_token->s[0] == '"') primary_expr_string();
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) primary_expr_variable();
+	else if(global_token->s[0] == '*') primary_expr_variable();
 	else if(in_set(global_token->s[0], "0123456789")) primary_expr_number();
 	else primary_expr_failure();
 }
