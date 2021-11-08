@@ -151,6 +151,13 @@ struct macro_list* lookup_macro(struct token_list* token)
 
 void remove_macro(struct token_list* token)
 {
+	if(NULL == token)
+	{
+		line_error_token(macro_token);
+		fputs("recieved a null in remove_macro\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	struct macro_list* hold = macro_env;
 	struct macro_list* temp;
 
