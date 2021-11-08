@@ -50,6 +50,7 @@ aarch64-tests: \
 	test0023-aarch64-binary \
 	test0024-aarch64-binary \
 	test0025-aarch64-binary \
+	test0026-aarch64-binary \
 	test0100-aarch64-binary \
 	test0101-aarch64-binary \
 	test0102-aarch64-binary \
@@ -86,6 +87,7 @@ amd64-tests: \
 	test0023-amd64-binary \
 	test0024-amd64-binary \
 	test0025-amd64-binary \
+	test0026-amd64-binary \
 	test0100-amd64-binary \
 	test0101-amd64-binary \
 	test0102-amd64-binary \
@@ -176,6 +178,7 @@ armv7l-tests: \
 	test0023-armv7l-binary \
 	test0024-armv7l-binary \
 	test0025-armv7l-binary \
+	test0026-armv7l-binary \
 	test0100-armv7l-binary \
 	test0101-armv7l-binary \
 	test0102-armv7l-binary \
@@ -212,6 +215,7 @@ x86-tests: \
 	test0023-x86-binary \
 	test0024-x86-binary \
 	test0025-x86-binary \
+	test0026-x86-binary \
 	test0100-x86-binary \
 	test0101-x86-binary \
 	test0102-x86-binary \
@@ -250,6 +254,7 @@ riscv64-tests: \
 	test0023-riscv64-binary \
 	test0024-riscv64-binary \
 	test0025-riscv64-binary \
+	test0026-riscv64-binary \
 	test0100-riscv64-binary \
 	test0101-riscv64-binary \
 	test0102-riscv64-binary \
@@ -336,6 +341,9 @@ test0024-riscv64-binary: M2-Planet | results
 
 test0025-riscv64-binary: M2-Planet | results
 	test/test0025/run_test.sh riscv64
+
+test0026-riscv64-binary: M2-Planet | results
+	test/test0026/run_test.sh riscv64
 
 test0100-riscv64-binary: M2-Planet | results
 	test/test0100/run_test.sh riscv64
@@ -439,6 +447,9 @@ test0024-aarch64-binary: M2-Planet | results
 test0025-aarch64-binary: M2-Planet | results
 	test/test0025/run_test.sh aarch64
 
+test0026-aarch64-binary: M2-Planet | results
+	test/test0026/run_test.sh aarch64
+
 test0100-aarch64-binary: M2-Planet | results
 	test/test0100/run_test.sh aarch64
 
@@ -540,6 +551,9 @@ test0024-amd64-binary: M2-Planet | results
 
 test0025-amd64-binary: M2-Planet | results
 	test/test0025/run_test.sh amd64
+
+test0026-amd64-binary: M2-Planet | results
+	test/test0026/run_test.sh amd64
 
 test0100-amd64-binary: M2-Planet | results
 	test/test0100/run_test.sh amd64
@@ -793,6 +807,9 @@ test0024-armv7l-binary: M2-Planet | results
 test0025-armv7l-binary: M2-Planet | results
 	test/test0025/run_test.sh armv7l
 
+test0026-armv7l-binary: M2-Planet | results
+	test/test0026/run_test.sh armv7l
+
 test0100-armv7l-binary: M2-Planet | results
 	test/test0100/run_test.sh armv7l
 
@@ -894,6 +911,9 @@ test0024-x86-binary: M2-Planet | results
 
 test0025-x86-binary: M2-Planet | results
 	test/test0025/run_test.sh x86
+
+test0026-x86-binary: M2-Planet | results
+	test/test0026/run_test.sh x86
 
 test0100-x86-binary: M2-Planet | results
 	test/test0100/run_test.sh x86

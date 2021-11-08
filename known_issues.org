@@ -35,34 +35,6 @@ int main()
 	return 0;
 }
 
-* multidimensional arrays return wrong results
-
-** example of failing code
-#include <stdio.h>
-
-char** env_argv;
-
-char getargchar(int n, int k)
-{
-	return env_argv[n][k];
-}
-
-int main(int argc, char** argv)
-{
-	env_argv = argv;
-	fputc(getargchar(2, 4), stdout);
-	return 0;
-}
-
-run with: ./example 12345 abcdef ABCDEF
-
-** work around code
-char getargchar(int n, int k)
-{
-	char *tmp = env_argv[n];
-	return tmp[k];
-}
-
 * Pointer arithmetic wrong
 It isn't uncommon for complex C programs to iterate over an array using a pointer.
 
