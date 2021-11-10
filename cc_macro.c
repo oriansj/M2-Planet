@@ -1,4 +1,5 @@
 /* Copyright (C) 2021 Sanne Wouda
+ * Copyright (C) 2021 Andrius Štikonas <andrius@stikonas.eu>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -128,7 +129,7 @@ struct macro_list* lookup_macro(struct token_list* token)
 	if(NULL == token)
 	{
 		line_error_token(macro_token);
-		fputs("null token recieved in lookup_macro\n", stderr);
+		fputs("null token received in lookup_macro\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -154,7 +155,7 @@ void remove_macro(struct token_list* token)
 	if(NULL == token)
 	{
 		line_error_token(macro_token);
-		fputs("recieved a null in remove_macro\n", stderr);
+		fputs("received a null in remove_macro\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -204,6 +205,7 @@ int macro_variable()
 	eat_current_token();
 	return value;
 }
+
 int macro_number()
 {
 	int result = strtoint(macro_token->s);

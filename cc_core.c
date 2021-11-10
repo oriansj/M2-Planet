@@ -1,6 +1,7 @@
 /* Copyright (C) 2016 Jeremiah Orians
  * Copyright (C) 2018 Jan (janneke) Nieuwenhuizen <janneke@gnu.org>
  * Copyright (C) 2020 deesix <deesix@tuta.io>
+ * Copyright (C) 2021 Andrius Štikonas <andrius@stikonas.eu>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -399,14 +400,14 @@ void emit_dereference(int load_byte) {
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LBU\n");
 	}
 	else
-		{
+	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
-		}
+	}
 }
 
 void variable_load(struct token_list* a, int num_dereference)
@@ -433,7 +434,8 @@ void variable_load(struct token_list* a, int num_dereference)
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
-	if(!match("=", global_token->s)) {
+	if(!match("=", global_token->s))
+	{
 		emit_dereference(FALSE);
 	}
 
