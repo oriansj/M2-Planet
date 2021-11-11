@@ -377,6 +377,7 @@ struct token_list* replace_assignment(struct token_list* head, char* c)
 {
 	line = head->linenumber;
 	file = head->filename;
+	require(NULL != head->prev, "Expecting identifier before assignment\n");
 	head = eat_token(head)->prev;
 	head = insert_token(head, "=");
 	head = insert_token(head, head->prev->s);
