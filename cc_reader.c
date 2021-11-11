@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Jeremiah Orians
+ * Copyright (C) 2021 Andrius Štikonas <andrius@stikonas.eu>
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -121,6 +122,21 @@ struct token_list* eat_token(struct token_list* token)
 	return token->next;
 }
 
+struct token_list* insert_token(struct token_list* token, char* new_token)
+{
+	struct token_list* current = calloc(1, sizeof(struct token_list));
+	require(NULL != current, "Exhausted memory while getting token\n");
+
+	current->s = new_token;
+	current->prev = token;
+	current->next = token->next;
+	current->filename = file;
+	current->linenumber = line;
+	token->next->prev = current;
+	token->next = current;
+	return current;
+}
+
 struct token_list* eat_until_newline(struct token_list* head)
 {
 	while (NULL != head)
@@ -237,9 +253,9 @@ reset:
 			c = ' ';
 		}
 	}
-	else if(in_set(c, "<=>|&!-"))
+	else if(in_set(c, "<=>|&!^%"))
 	{
-		c = preserve_keyword(c, "<=>|&!-");
+		c = preserve_keyword(c, "<=>|&!^%");
 	}
 	else if(in_set(c, "'\""))
 	{
@@ -268,10 +284,50 @@ reset:
 		{
 			c = consume_byte(c);
 		}
+		else if(c == '=')
+		{
+			c = consume_byte(c);
+		}
 	}
 	else if (c == '\n')
 	{
 		c = consume_byte(c);
+	}
+	else if(c == '*')
+	{
+		c = consume_byte(c);
+		if(c == '=')
+		{
+			c = consume_byte(c);
+		}
+	}
+	else if(c == '+')
+	{
+		c = consume_byte(c);
+		if(c == '=')
+		{
+			c = consume_byte(c);
+		}
+		if(c == '+')
+		{
+			c = consume_byte(c);
+		}
+	}
+	else if(c == '-')
+	{
+		c = consume_byte(c);
+		if(c == '=')
+		{
+			c = consume_byte(c);
+		}
+		if(c == '>')
+		{
+			c = consume_byte(c);
+		}
+		if(c == '-')
+		{
+			c = consume_byte(c);
+		}
 	}
 	else
 	{
@@ -311,8 +367,46 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 	line = 1;
 	file = filename;
 	token = current;
-	int ch =grab_byte();
+	int ch = grab_byte();
 	while(EOF != ch) ch = get_token(ch);
 
 	return token;
+}
+
+struct token_list* replace_assignment(struct token_list* head, char* c)
+{
+	line = head->linenumber;
+	file = head->filename;
+	head = eat_token(head)->prev;
+	head = insert_token(head, "=");
+	head = insert_token(head, head->prev->s);
+	head = insert_token(head, c);
+}
+
+struct token_list* process_assignment_operators(struct token_list* head)
+{
+	struct token_list* first = NULL;
+	while (NULL != head)
+	{
+		if(match("+=", head->s)) head = replace_assignment(head, "+");
+		else if(match("-=", head->s)) head = replace_assignment(head, "-");
+		else if(match("*=", head->s)) head = replace_assignment(head, "*");
+		else if(match("/=", head->s)) head = replace_assignment(head, "/");
+		else if(match("%=", head->s)) head = replace_assignment(head, "%");
+		else if(match("<<=", head->s)) head = replace_assignment(head, "<<");
+		else if(match(">>=", head->s)) head = replace_assignment(head, ">>");
+		else if(match("&=", head->s)) head = replace_assignment(head, "&");
+		else if(match("^=", head->s)) head = replace_assignment(head, "^");
+		else if(match("|=", head->s)) head = replace_assignment(head, "|");
+		else
+		{
+			if(NULL == first)
+			{
+				first = head;
+			}
+			head = head->next;
+		}
+	}
+
+	return first;
 }
