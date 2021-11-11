@@ -399,14 +399,14 @@ void emit_dereference(int load_byte) {
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LBU\n");
 	}
 	else
-        {
+		{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
-        }
+		}
 }
 
 void variable_load(struct token_list* a, int num_dereference)
@@ -721,6 +721,7 @@ void primary_expr_variable()
 	int num_dereference = 0;
 	while(global_token->s[0] == '*') {
 		global_token = global_token->next;
+		require(NULL != global_token, "Walked off the end of a variable dereference\n");
 		num_dereference = num_dereference + 1;
 	}
 	char* s = global_token->s;
