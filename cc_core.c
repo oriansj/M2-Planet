@@ -1005,8 +1005,6 @@ void postfix_expr_array()
  *         - postfix-expr
  *         !postfix-expr
  *         sizeof ( type )
- *         ++postfix-expr
- *         --postfix-expr
  */
 struct type* type_name();
 void unary_expr_sizeof()
@@ -1027,44 +1025,6 @@ void unary_expr_sizeof()
 	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
 	else if(RISCV64 == Architecture) emit_out(" ADDI");
 	emit_out("\n");
-}
-
-void unary_expr_increment()
-{
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))  emit_out("LOADI R0 1\n");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
-	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %1\n");
-	else if(ARMV7L == Architecture) emit_out("!1 R0 LOADI8_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("SET_X0_TO_1\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 !1 ADDI\n");
-
-	common_recursion(primary_expr);
-
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");
-	else if(X86 == Architecture) emit_out("ADD_ebx_to_eax\n");
-	else if(AMD64 == Architecture) emit_out("ADD_rbx_to_rax\n");
-	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("ADD_X0_X1_X0\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 ADD\n");
-}
-
-void unary_expr_decrement()
-{
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))  emit_out("LOADI R0 -1\n");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %-1\n");
-	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %-1\n");
-	else if(ARMV7L == Architecture) emit_out("!-1 R0 LOADI8_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("SET_X0_TO_MINUS_1\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 !1 ADDI\n");
-
-	common_recursion(primary_expr);
-
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");
-	else if(X86 == Architecture) emit_out("ADD_ebx_to_eax\n");
-	else if(AMD64 == Architecture) emit_out("ADD_rbx_to_rax\n");
-	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("ADD_X0_X1_X0\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 SUB\n");
 }
 
 void postfix_expr_stub()
@@ -1334,8 +1294,6 @@ void primary_expr()
 	}
 
 	if(match("sizeof", global_token->s)) unary_expr_sizeof();
-	else if (match("++", global_token->s)) unary_expr_increment();
-	else if (match("--", global_token->s)) unary_expr_decrement();
 	else if('-' == global_token->s[0])
 	{
 		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %0\n");
