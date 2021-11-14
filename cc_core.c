@@ -410,6 +410,21 @@ void emit_dereference(int load_byte) {
 	}
 }
 
+int is_compound_assignment(char* token)
+{
+	if(match("+=", token)) return TRUE;
+	else if(match("-=", token)) return TRUE;
+	else if(match("*=", token)) return TRUE;
+	else if(match("/=", token)) return TRUE;
+	else if(match("%=", token)) return TRUE;
+	else if(match("<<=", token)) return TRUE;
+	else if(match(">>=", token)) return TRUE;
+	else if(match("&=", token)) return TRUE;
+	else if(match("^=", token)) return TRUE;
+	else if(match("|=", token)) return TRUE;
+	return FALSE;
+}
+
 void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
@@ -434,7 +449,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
-	if(!match("=", global_token->s))
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
 	{
 		emit_dereference(FALSE);
 	}
@@ -499,7 +514,7 @@ void global_load(struct token_list* a)
 
 	require(NULL != global_token, "unterminated global load\n");
 	if(TRUE == Address_of) return;
-	if(match("=", global_token->s)) return;
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
 	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
@@ -926,7 +941,7 @@ void postfix_expr_arrow()
 		}
 	}
 
-	if((!match("=", global_token->s) && (register_size >= i->size)))
+	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
 		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
@@ -988,7 +1003,7 @@ void postfix_expr_array()
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
 
-	if(match("=", global_token->s))
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s))
 	{
 		assign = "";
 	}
@@ -1353,6 +1368,213 @@ void primary_expr()
 	else primary_expr_failure();
 }
 
+char* compound_operation(char* operator, int is_signed)
+{
+	char* operation = "";
+	if(match("+=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "ADD R0 R1 R0\n";
+			else operation = "ADDU R0 R1 R0\n";
+		}
+		else if(X86 == Architecture) operation = "ADD_ebx_to_eax\n";
+		else if(AMD64 == Architecture) operation = "ADD_rbx_to_rax\n";
+		else if(ARMV7L == Architecture) operation = "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "ADD_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 ADD\n";
+	}
+	else if(match("-=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "SUB R0 R1 R0\n";
+			else operation =  "SUBU R0 R1 R0\n";
+		}
+		else if(X86 == Architecture) operation = "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n";
+		else if(AMD64 == Architecture) operation = "SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n";
+		else if(ARMV7L == Architecture) operation = "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "SUB_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 SUB\n";
+	}
+	else if(match("*=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "MUL R0 R1 R0\n";
+			else operation =  "MULU R0 R1 R0\n";
+		}
+		else if(X86 == Architecture)
+		{
+			if(is_signed) operation = "MULTIPLYS_eax_by_ebx_into_eax\n";
+			else operation = "MULTIPLY_eax_by_ebx_into_eax\n";
+		}
+		else if(AMD64 == Architecture)
+		{
+			if(is_signed) operation = "MULTIPLYS_rax_by_rbx_into_rax\n";
+			else operation = "MULTIPLY_rax_by_rbx_into_rax\n";
+		}
+		else if(ARMV7L == Architecture) operation = "'9' R0 '0' R1 MULS R0 ARITH2_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "MUL_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 MUL\n";
+	}
+	else if(match("/=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "DIV R0 R1 R0\n";
+			else operation =  "DIVU R0 R1 R0\n";
+		}
+		else if(X86 == Architecture)
+		{
+			if (is_signed) operation = "XCHG_eax_ebx\nCDTQ\nDIVIDES_eax_by_ebx_into_eax\n";
+			else operation = "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n";
+		}
+		else if(AMD64 == Architecture)
+		{
+			if(is_signed) operation = "XCHG_rax_rbx\nCQTO\nDIVIDES_rax_by_rbx_into_rax\n";
+			else operation = "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nDIVIDE_rax_by_rbx_into_rax\n";
+		}
+		else if(ARMV7L == Architecture)
+		{
+			if(is_signed) operation = "{LR} PUSH_ALWAYS\n^~divides CALL_ALWAYS\n{LR} POP_ALWAYS\n";
+			else operation = "{LR} PUSH_ALWAYS\n^~divide CALL_ALWAYS\n{LR} POP_ALWAYS\n";
+		}
+		else if(AARCH64 == Architecture)
+		{
+			if(is_signed) operation = "SDIV_X0_X1_X0\n";
+			else operation = "UDIV_X0_X1_X0\n";
+		}
+		else if(RISCV64 == Architecture)
+		{
+			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 DIV\n";
+			else operation = "RD_A0 RS1_A1 RS2_A0 DIVU\n";
+		}
+	}
+	else if(match("%=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "MOD R0 R1 R0\n";
+			else operation = "MODU R0 R1 R0\n";
+		}
+		else if(X86 == Architecture)
+		{
+			if(is_signed) operation = "XCHG_eax_ebx\nCDTQ\nMODULUSS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n";
+			else operation = "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n";
+		}
+		else if(AMD64 == Architecture)
+		{
+			if(is_signed) operation = "XCHG_rax_rbx\nCQTO\nMODULUSS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n";
+			else operation = "XCHG_rax_rbx\nLOAD_IMMEDIATE_rdx %0\nMODULUS_rax_from_rbx_into_rbx\nMOVE_rdx_to_rax\n";
+		}
+		else if(ARMV7L == Architecture)
+		{
+			if(is_signed) operation = "{LR} PUSH_ALWAYS\n^~moduluss CALL_ALWAYS\n{LR} POP_ALWAYS\n";
+			else operation = "{LR} PUSH_ALWAYS\n^~modulus CALL_ALWAYS\n{LR} POP_ALWAYS\n";
+		}
+		else if(AARCH64 == Architecture)
+		{
+			if(is_signed) operation = "SDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n";
+			else operation = "UDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n";
+		}
+		else if(RISCV64 == Architecture)
+		{
+			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 REM\n";
+			else operation = "RD_A0 RS1_A1 RS2_A0 REMU\n";
+		}
+	}
+	else if(match("<<=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "SAL R0 R1 R0\n";
+			else operation = "SL0 R0 R1 R0\n";
+		}
+		else if(X86 == Architecture)
+		{
+			if(is_signed) operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n";
+			else operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHL_eax_cl\n";
+		}
+		else if(AMD64 == Architecture)
+		{
+			if(is_signed) operation = "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAL_rax_cl\n";
+			else operation = "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSHL_rax_cl\n";
+		}
+		else if(ARMV7L == Architecture) operation = "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "LSHIFT_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 SLL\n";
+	}
+	else if(match(">>=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			if(is_signed) operation = "SAR R0 R1 R0\n";
+			else operation = "SR0 R0 R1 R0\n";
+		}
+		else if(X86 == Architecture)
+		{
+			if(is_signed) operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n";
+			else operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHR_eax_cl\n";
+		}
+		else if(AMD64 == Architecture)
+		{
+			if(is_signed) operation = "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSAR_rax_cl\n";
+			else operation = "COPY_rax_to_rcx\nCOPY_rbx_to_rax\nSHR_rax_cl\n";
+		}
+		else if(ARMV7L == Architecture)
+		{
+			if(is_signed) operation = "ARITH_RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n";
+			else operation = "RIGHT R1 R0 R0 SHIFT AUX_ALWAYS\n";
+		}
+		else if(AARCH64 == Architecture)
+		{
+			if(is_signed) operation = "ARITH_RSHIFT_X0_X1_X0\n";
+			else operation = "LOGICAL_RSHIFT_X0_X1_X0\n";
+		}
+		else if(RISCV64 == Architecture)
+		{
+			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 SRA\n";
+			else operation = "RD_A0 RS1_A1 RS2_A0 SRL\n";
+		}
+	}
+	else if(match("&=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "AND R0 R0 R1\n";
+		else if(X86 == Architecture) operation = "AND_eax_ebx\n";
+		else if(AMD64 == Architecture) operation = "AND_rax_rbx\n";
+		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 AND R1 ARITH2_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "AND_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 AND\n";
+	}
+	else if(match("^=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "XOR R0 R0 R1\n";
+		else if(X86 == Architecture) operation = "XOR_ebx_eax_into_eax\n";
+		else if(AMD64 == Architecture) operation = "XOR_rbx_rax_into_rax\n";
+		else if(ARMV7L == Architecture) operation = "'0' R0 R0 XOR R1 ARITH2_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "XOR_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 XOR\n";
+	}
+	else if(match("|=", operator))
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "OR R0 R0 R1\n";
+		else if(X86 == Architecture) operation = "OR_eax_ebx\n";
+		else if(AMD64 == Architecture) operation = "OR_rax_rbx\n";
+		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n";
+		else if(AARCH64 == Architecture) operation = "OR_X0_X1_X0\n";
+		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 OR\n";
+	}
+	else
+	{
+		fputs("Found illegal compound assignment operator: ", stderr);
+		fputs(operator, stderr);
+		fputc('\n', stderr);
+		exit(EXIT_FAILURE);
+	}
+	return operation;
+}
+
 void expression()
 {
 	bitwise_expr();
@@ -1379,6 +1601,80 @@ void expression()
 		}
 
 		common_recursion(expression);
+		emit_out(store);
+		current_target = integer;
+	}
+	else if(is_compound_assignment(global_token->s))
+	{
+		maybe_bootstrap_error("compound operator");
+		char* push = "";
+		char* load = "";
+		char* operation = "";
+		char* pop = "";
+		char* store = "";
+		struct type* last_type = current_target;
+
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) push = "PUSHR R1 R15\n";
+		else if(X86 == Architecture) push = "PUSH_ebx\n";
+		else if(AMD64 == Architecture) push = "PUSH_RBX\n";
+		else if(ARMV7L == Architecture) push = "{R1} PUSH_ALWAYS\n";
+		else if(AARCH64 == Architecture) push = "PUSH_X1\n";
+		else if(RISCV64 == Architecture) push = "RS1_SP RS2_A1 @-8 SD\n";
+
+		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD R1 R1 0\n";
+			else if(X86 == Architecture) load = "LOAD_INTEGER_ebx\n";
+			else if(AMD64 == Architecture) load = "LOAD_INTEGER_rbx\n";
+			else if(ARMV7L == Architecture) load = "!0 R1 LOAD32 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) load = "DEREF_X1\n";
+			else if(RISCV64 == Architecture) load = "RD_A1 RS1_A1 LD\n";
+		}
+		else
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD8 R1 R1 0\n";
+			else if(X86 == Architecture) load = "LOAD_BYTE_ebx\n";
+			else if(AMD64 == Architecture) load = "LOAD_BYTE_rbx\n";
+			else if(ARMV7L == Architecture) load = "!0 R1 LOAD8 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) load = "DEREF_X1_BYTE\n";
+			else if(RISCV64 == Architecture) load = "RD_A1 RS1_A1 LBU\n";
+		}
+
+		char *operator = global_token->s;
+
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) pop = "POPR R1 R15\n";
+		else if(X86 == Architecture) pop = "POP_ebx\n";
+		else if(AMD64 == Architecture) pop = "POP_RBX\n";
+		else if(ARMV7L == Architecture) pop = "{R1} POP_ALWAYS\n";
+		else if(AARCH64 == Architecture) pop = "POP_X1\n";
+		else if(RISCV64 == Architecture) pop = "RD_A1 RS1_SP !-8 LD\n";
+
+		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE R0 R1 0\n";
+			else if(X86 == Architecture) store = "STORE_INTEGER\n";
+			else if(AMD64 == Architecture) store = "STORE_INTEGER\n";
+			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
+			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SD\n";
+		}
+		else
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE8 R0 R1 0\n";
+			else if(X86 == Architecture) store = "STORE_CHAR\n";
+			else if(AMD64 == Architecture) store = "STORE_CHAR\n";
+			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
+			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
+			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SB\n";
+		}
+
+		common_recursion(expression);
+		current_target = promote_type(current_target, last_type);
+		emit_out(push);
+		emit_out(load);
+		operation = compound_operation(operator, current_target->is_signed);
+		emit_out(operation);
+		emit_out(pop);
 		emit_out(store);
 		current_target = integer;
 	}
@@ -2284,7 +2580,7 @@ new_type:
 	}
 
 	/* Deal with assignment to a global variable */
-	if(match("=",global_token->s))
+	if(match("=", global_token->s))
 	{
 		global_assignment();
 		goto new_type;

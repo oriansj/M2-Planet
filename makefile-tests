@@ -127,6 +127,7 @@ knight-posix-tests: \
 	test0022-knight-posix-binary \
 	test0023-knight-posix-binary \
 	test0024-knight-posix-binary \
+	test0028-knight-posix-binary \
 	test0100-knight-posix-binary \
 	test0101-knight-posix-binary \
 	test0102-knight-posix-binary \
@@ -153,6 +154,7 @@ knight-native-tests: \
 	test0018-knight-native-binary\
 	test0020-knight-native-binary\
 	test0024-knight-native-binary\
+	test0028-knight-native-binary\
 	test0106-knight-native-binary | results
 
 armv7l-tests: \
@@ -682,6 +684,9 @@ test0023-knight-posix-binary: M2-Planet | results
 test0024-knight-posix-binary: M2-Planet | results
 	test/test0024/hello-knight-posix.sh
 
+test0028-knight-posix-binary: M2-Planet | results
+	test/test0028/hello-knight-posix.sh
+
 test0100-knight-posix-binary: M2-Planet | results
 	test/test0100/hello-knight-posix.sh
 
@@ -753,6 +758,9 @@ test0020-knight-native-binary: M2-Planet | results
 
 test0024-knight-native-binary: M2-Planet | results
 	test/test0024/hello-knight-native.sh
+
+test0028-knight-native-binary: M2-Planet | results
+	test/test0028/hello-knight-native.sh
 
 test0106-knight-native-binary: M2-Planet | results
 	test/test0106/hello-knight-native.sh

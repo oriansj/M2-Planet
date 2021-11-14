@@ -237,8 +237,6 @@ int main(int argc, char** argv)
 		preprocess();
 	}
 
-	global_token = process_assignment_operators(global_token);
-
 	if (PREPROCESSOR_MODE)
 	{
 		fputs("\n/* Preprocessed source */\n", destination_file);
