@@ -2210,6 +2210,7 @@ void recursive_statement()
 struct type* lookup_type(char* s, struct type* start);
 void statement()
 {
+	require(NULL != global_token, "expected a C statement but received EOF\n");
 	/* Always an integer until told otherwise */
 	current_target = integer;
 
