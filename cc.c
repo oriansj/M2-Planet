@@ -28,7 +28,6 @@ struct token_list* reverse_list(struct token_list* head);
 struct token_list* remove_line_comments(struct token_list* head);
 struct token_list* remove_line_comment_tokens(struct token_list* head);
 struct token_list* remove_preprocessor_directives(struct token_list* head);
-struct token_list* process_assignment_operators(struct token_list* head);
 
 void eat_newline_tokens();
 void init_macro_env(char* sym, char* value, char* source, int num);
