@@ -29,6 +29,12 @@ case "${ARCH}" in
 		BLOOD_ELF_WORD_SIZE_FLAG="--64"
 		ENDIANNESS_FLAG="--little-endian"
 		;;
+	riscv32)
+		ARCH_IS_64_BITS="no"
+		BASE_ADDRESS="0x00600000"
+		BLOOD_ELF_WORD_SIZE_FLAG=""
+		ENDIANNESS_FLAG="--little-endian"
+		;;
 	riscv64)
 		ARCH_IS_64_BITS="yes"
 		BASE_ADDRESS="0x00600000"

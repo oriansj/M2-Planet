@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 			if(NULL == hold_string)
 			{
 				hold_string = calloc(MAX_STRING + 4, sizeof(char));
-				require(NULL != hold_string, "Impossible Exhaustion has occured\n");
+				require(NULL != hold_string, "Impossible Exhaustion has occurred\n");
 			}
 
 			name = argv[i + 1];
@@ -127,6 +127,13 @@ int main(int argc, char** argv)
 				Architecture = AARCH64;
 				init_macro_env("__aarch64__", "1", "--architecture", env);
 				env = env + 1;
+			}
+			else if(match("riscv32", arch))
+			{
+				Architecture = RISCV32;
+				init_macro_env("__riscv", "1", "--architecture", env);
+				init_macro_env("__riscv_xlen", "32", "--architecture", env + 1);
+				env = env + 2;
 			}
 			else if(match("riscv64", arch))
 			{

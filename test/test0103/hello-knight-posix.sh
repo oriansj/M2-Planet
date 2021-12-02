@@ -27,8 +27,8 @@ mkdir -p ${TMPDIR}
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/knight/Linux/unistd.h \
-	-f M2libc/stdlib.c \
 	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/stdlib.c \
 	-f M2libc/stdio.c \
 	-f test/test0103/get_machine.c \
 	-o ${TMPDIR}/get_machine.M1 \

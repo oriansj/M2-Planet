@@ -27,8 +27,8 @@ bin/M2-Planet \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/knight/Native/unistd.h \
-	-f M2libc/stdlib.c \
 	-f M2libc/knight/Native/fcntl.h \
+	-f M2libc/stdlib.c \
 	-f M2libc/stdio.c \
 	-f test/test0010/nested_struct.c \
 	-o ${TMPDIR}/nested_struct.M1 \

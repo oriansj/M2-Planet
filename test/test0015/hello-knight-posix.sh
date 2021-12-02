@@ -27,8 +27,8 @@ bin/M2-Planet \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/knight/Linux/unistd.h \
-	-f M2libc/stdlib.c \
 	-f M2libc/knight/Linux/fcntl.h \
+	-f M2libc/stdlib.c \
 	-f M2libc/stdio.c \
 	-f test/test0015/file_read.c \
 	-o ${TMPDIR}/file_read.M1 \

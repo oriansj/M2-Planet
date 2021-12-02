@@ -182,6 +182,14 @@ void function_call(char* s, int bool)
 		emit_out("PUSH_BP\t# Protect the old base pointer\n");
 		emit_out("SET_X16_FROM_SP\t# The base pointer to-be\n");
 	}
+	else if(RISCV32 == Architecture)
+	{
+		emit_out("RD_SP RS1_SP !-12 ADDI\t# Allocate stack\n");
+		emit_out("RS1_SP RS2_RA @4 SW\t# Protect the old return pointer\n");
+		emit_out("RS1_SP RS2_FP SW\t# Protect the old frame pointer\n");
+		emit_out("RS1_SP RS2_TP @8 SW\t# Protect temp register we are going to use\n");
+		emit_out("RD_TP RS1_SP MV\t# The base pointer to-be\n");
+	}
 	else if(RISCV64 == Architecture)
 	{
 		emit_out("RD_SP RS1_SP !-24 ADDI\t# Allocate stack\n");
@@ -200,6 +208,7 @@ void function_call(char* s, int bool)
 		else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_process_expression1\n");
 		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
 		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression1\n");
+		else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\nRS1_SP RS2_A0 SW\t#_process_expression1\n");
 		else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\nRS1_SP RS2_A0 SD\t#_process_expression1\n");
 		passed = 1;
 
@@ -213,6 +222,7 @@ void function_call(char* s, int bool)
 			else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_process_expression2\n");
 			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression2\n");
 			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression2\n");
+			else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\nRS1_SP RS2_A0 SW\t#_process_expression2\n");
 			else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\nRS1_SP RS2_A0 SD\t#_process_expression2\n");
 			passed = passed + 1;
 		}
@@ -267,6 +277,15 @@ void function_call(char* s, int bool)
 			emit_out("SET_X16_FROM_X0\n");
 			emit_out("BLR_X16\n");
 		}
+		else if(RISCV32 == Architecture)
+		{
+			emit_out("RD_A0 RS1_FP !-");
+			emit_out(s);
+			emit_out(" ADDI\n");
+			emit_out("RD_A0 RS1_A0 LW\n");
+			emit_out("RD_FP RS1_TP MV\n");
+			emit_out("RD_RA RS1_A0 JALR\n");
+		}
 		else if(RISCV64 == Architecture)
 		{
 			emit_out("RD_A0 RS1_FP !-");
@@ -317,7 +336,7 @@ void function_call(char* s, int bool)
 			emit_out("\n");
 			emit_out("BLR_X16\n");
 		}
-		else if(RISCV64 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			emit_out("RD_FP RS1_TP MV\n");
 			emit_out("RD_RA $FUNCTION_");
@@ -333,6 +352,7 @@ void function_call(char* s, int bool)
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# _process_expression_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _process_expression_locals\n");
 		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _process_expression_locals\n");
+		else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW\t# _process_expression_locals\nRD_SP RS1_SP !4 ADDI\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD\t# _process_expression_locals\nRD_SP RS1_SP !8 ADDI\n");
 	}
 
@@ -362,6 +382,13 @@ void function_call(char* s, int bool)
 		emit_out("POP_LR\t# Restore the old return pointer (link)\n");
 		emit_out("POP_X16\t# Restore a register we used as tmp\n");
 	}
+	else if(RISCV32 == Architecture)
+	{
+		emit_out("RD_FP RS1_SP LW\t# Restore old frame pointer\n");
+		emit_out("RD_TP RS1_SP !8 LW\t# Restore temp register\n");
+		emit_out("RD_RA RS1_SP !4 LW\t# Restore return address\n");
+		emit_out("RD_SP RS1_SP !12 ADDI\t# Deallocate stack\n");
+	}
 	else if(RISCV64 == Architecture)
 	{
 		emit_out("RD_FP RS1_SP LD\t# Restore old frame pointer\n");
@@ -379,13 +406,15 @@ void constant_load(struct token_list* a)
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	else if(RISCV64 == Architecture) {
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
 		emit_out("RD_A0 ~");
 		emit_out(a->arguments->s);
 		emit_out(" LUI\nRD_A0 RS1_A0 !");
 	}
 	emit_out(a->arguments->s);
-	if(RISCV64 == Architecture) emit_out(" ADDIW\n");
+	if(RISCV32 == Architecture) emit_out(" ADDI\n");
+	else if(RISCV64 == Architecture) emit_out(" ADDIW\n");
 	emit_out("\n");
 }
 
@@ -397,7 +426,7 @@ void emit_dereference(int load_byte) {
 		else if(AMD64 == Architecture) emit_out("LOAD_BYTE\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD8 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0_BYTE\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LBU\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A0 LBU\n");
 	}
 	else
 	{
@@ -406,6 +435,7 @@ void emit_dereference(int load_byte) {
 		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
+		else if(RISCV32 == Architecture) emit_out("RD_A0 RS1_A0 LW\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
 	}
 }
@@ -440,12 +470,12 @@ void variable_load(struct token_list* a, int num_dereference)
 	else if(AMD64 == Architecture) emit_out("LOAD_BASE_ADDRESS_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_FP !-");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_FP !-");
 
 	emit_out(int2str(a->depth, 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
 	else if(AARCH64 == Architecture) emit_out("\nSUB_X0_X0_X1\n");
-	else if(RISCV64 == Architecture) emit_out(" ADDI");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" ADDI");
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
@@ -483,9 +513,17 @@ void function_load(struct token_list* a)
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &FUNCTION_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 ~FUNCTION_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 ~FUNCTION_");
 	emit_out(a->s);
-	if(RISCV64 == Architecture) {
+	if(RISCV32 == Architecture)
+	{
+		emit_out(" AUIPC\n");
+		emit_out("RD_A0 RS1_A0 !FUNCTION_");
+		emit_out(a->s);
+		emit_out(" ADDI");
+	}
+	else if(RISCV64 == Architecture)
+	{
 		emit_out(" AUIPC\n");
 		emit_out("RD_A0 RS1_A0 !FUNCTION_");
 		emit_out(a->s);
@@ -502,9 +540,10 @@ void global_load(struct token_list* a)
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &GLOBAL_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&GLOBAL_");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 ~GLOBAL_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 ~GLOBAL_");
 	emit_out(a->s);
-	if(RISCV64 == Architecture) {
+	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
 		emit_out(" AUIPC\n");
 		emit_out("RD_A0 RS1_A0 !GLOBAL_");
 		emit_out(a->s);
@@ -521,6 +560,7 @@ void global_load(struct token_list* a)
 	else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
+	else if(RISCV32 == Architecture) emit_out("RD_A0 RS1_A0 LW\n");
 	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
 }
 
@@ -553,9 +593,10 @@ void primary_expr_string()
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax &STRING_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&STRING_");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 ~STRING_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 ~STRING_");
 	uniqueID_out(function->s, number_string);
-	if(RISCV64 == Architecture) {
+	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
 		emit_out("AUIPC\n");
 		emit_out("RD_A0 RS1_A0 !STRING_");
 		uniqueID_out(function->s, number_string);
@@ -615,10 +656,10 @@ void primary_expr_char()
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 !");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 !");
 	emit_out(int2str(escape_lookup(global_token->s + 1), 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
-	else if(RISCV64 == Architecture) emit_out(" ADDI");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" ADDI");
 	emit_out("\n");
 	global_token = global_token->next;
 }
@@ -692,7 +733,7 @@ void primary_expr_number()
 		emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
 		emit_out(global_token->s);
 	}
-	else if(RISCV64 == Architecture)
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		int size = strtoint(global_token->s);
 		if((2047 > size) && (size > -2048))
@@ -710,7 +751,8 @@ void primary_expr_number()
 			emit_out(global_token->s);
 			emit_out(" ADDI");
 		}
-		else {
+		else
+		{
 			int high = size >> 30;
 			int low = ((size >> 30) << 30) ^ size;
 			emit_out("RD_A0 ~");
@@ -813,6 +855,7 @@ void common_recursion(FUNCTION f)
 	else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#_common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_common_recursion\n");
 	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_common_recursion\n");
+	else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\t# _common_recursion\nRS1_SP RS2_A0 SW\n");
 	else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\t# _common_recursion\nRS1_SP RS2_A0 SD\n");
 
 	struct type* last_type = current_target;
@@ -826,6 +869,7 @@ void common_recursion(FUNCTION f)
 	else if(AMD64 == Architecture) emit_out("POP_RBX\t# _common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _common_recursion\n");
 	else if(AARCH64 == Architecture) emit_out("POP_X1\t# _common_recursion\n");
+	else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW\nRD_SP RS1_SP !4 ADDI\t# _common_recursion\n");
 	else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD\nRD_SP RS1_SP !8 ADDI\t# _common_recursion\n");
 }
 
@@ -932,7 +976,7 @@ void postfix_expr_arrow()
 			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\nADD_X0_X1_X0\n");
 		}
-		else if(RISCV64 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			emit_out("RD_A1 !");
 			emit_out(int2str(i->offset, 10, TRUE));
@@ -948,6 +992,7 @@ void postfix_expr_arrow()
 		else if(AMD64 == Architecture) emit_out("LOAD_INTEGER\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
+		else if(RISCV32 == Architecture) emit_out("RD_A0 RS1_A0 LW\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
 	}
 }
@@ -965,6 +1010,7 @@ void postfix_expr_array()
 	else if(AMD64 == Architecture) assign = "LOAD_INTEGER\n";
 	else if(ARMV7L == Architecture) assign = "!0 R0 LOAD32 R0 MEMORY\n";
 	else if(AARCH64 == Architecture) assign = "DEREF_X0\n";
+	else if(RISCV32 == Architecture) assign = "RD_A0 RS1_A0 LW\n";
 	else if(RISCV64 == Architecture) assign = "RD_A0 RS1_A0 LD\n";
 
 	/* Add support for Ints */
@@ -975,7 +1021,7 @@ void postfix_expr_array()
 		else if(AMD64 == Architecture) assign = "LOAD_BYTE\n";
 		else if(ARMV7L == Architecture) assign = "!0 R0 LOAD8 R0 MEMORY\n";
 		else if(AARCH64 == Architecture) assign = "DEREF_X0_BYTE\n";
-		else if(RISCV64 == Architecture) assign = "RD_A0 RS1_A0 LBU\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) assign = "RD_A0 RS1_A0 LBU\n";
 	}
 	else
 	{
@@ -984,12 +1030,12 @@ void postfix_expr_array()
 		else if(AMD64 == Architecture) emit_out("SAL_rax_Immediate8 !");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 '");
 		else if(AARCH64 == Architecture) emit_out("LOAD_W2_AHEAD\nSKIP_32_DATA\n%");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 RS2_X");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A0 RS2_X");
 
 		emit_out(int2str(ceil_log2(current_target->indirect->size), 10, TRUE));
 		if(ARMV7L == Architecture) emit_out("' MOVE_ALWAYS");
 		else if(AARCH64 == Architecture) emit_out("\nLSHIFT_X0_X0_X2");
-		else if(RISCV64 == Architecture) emit_out(" SLLI");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" SLLI");
 		emit_out("\n");
 	}
 
@@ -998,7 +1044,7 @@ void postfix_expr_array()
 	else if(AMD64 == Architecture) emit_out("ADD_rbx_to_rax\n");
 	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("ADD_X0_X1_X0\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 ADD\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A1 RS2_A0 ADD\n");
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
@@ -1035,10 +1081,10 @@ void unary_expr_sizeof()
 	else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 !");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 !");
 	emit_out(int2str(a->size, 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
-	else if(RISCV64 == Architecture) emit_out(" ADDI");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" ADDI");
 	emit_out("\n");
 }
 
@@ -1127,7 +1173,7 @@ void additive_expr_stub()
 		general_recursion(postfix_expr, "LSHIFT_X0_X1_X0\n", "<<", additive_expr_stub);
 		arithmetic_recursion(postfix_expr, "ARITH_RSHIFT_X0_X1_X0\n", "LOGICAL_RSHIFT_X0_X1_X0\n", ">>", additive_expr_stub);
 	}
-	else if(RISCV64 == Architecture)
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		general_recursion(postfix_expr, "RD_A0 RS1_A1 RS2_A0 ADD\n", "+", additive_expr_stub);
 		general_recursion(postfix_expr, "RD_A0 RS1_A1 RS2_A0 SUB\n", "-", additive_expr_stub);
@@ -1203,7 +1249,7 @@ void relational_expr_stub()
 		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_EQ\nSET_X0_TO_0\n", "==", relational_expr_stub);
 		general_recursion(additive_expr, "CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_NE\nSET_X0_TO_0\n", "!=", relational_expr_stub);
 	}
-	else if(RISCV64 == Architecture)
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		arithmetic_recursion(additive_expr, "RD_A0 RS1_A1 RS2_A0 SLT\n", "RD_A0 RS1_A1 RS2_A0 SLTU\n", "<", relational_expr_stub);
 		arithmetic_recursion(additive_expr, "RD_A0 RS1_A0 RS2_A1 SLT\nRD_A0 RS1_A0 !1 XORI\n", "RD_A0 RS1_A0 RS2_A1 SLTU\nRD_A0 RS1_A0 !1 XORI\n", "<=", relational_expr_stub);
@@ -1271,7 +1317,7 @@ void bitwise_expr_stub()
 		general_recursion(relational_expr, "OR_X0_X1_X0\n", "||", bitwise_expr_stub);
 		general_recursion(relational_expr, "XOR_X0_X1_X0\n", "^", bitwise_expr_stub);
 	}
-	else if(RISCV64 == Architecture)
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		general_recursion(relational_expr, "RD_A0 RS1_A1 RS2_A0 AND\n", "&", bitwise_expr_stub);
 		general_recursion(relational_expr, "RD_A0 RS1_A1 RS2_A0 AND\n", "&&", bitwise_expr_stub);
@@ -1315,7 +1361,7 @@ void primary_expr()
 		else if(AMD64 == Architecture) emit_out("LOAD_IMMEDIATE_rax %0\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOADI8_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_0\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 MV\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 MV\n");
 
 		common_recursion(primary_expr);
 
@@ -1324,7 +1370,7 @@ void primary_expr()
 		else if(AMD64 == Architecture) emit_out("SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SUB_X0_X1_X0\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A1 RS2_A0 SUB\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A1 RS2_A0 SUB\n");
 	}
 	else if('!' == global_token->s[0])
 	{
@@ -1341,7 +1387,7 @@ void primary_expr()
 		else if(AMD64 == Architecture) emit_out("CMP\nSETA\nMOVEZX\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_HI\n");
 		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_HI\nSET_X0_TO_0\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 !1 SLTIU\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A0 !1 SLTIU\n");
 	}
 	else if('~' == global_token->s[0])
 	{
@@ -1352,7 +1398,7 @@ void primary_expr()
 		else if(AMD64 == Architecture) emit_out("NOT_rax\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 MVN_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("MVN_X0\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 NOT\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A0 NOT\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
@@ -1382,7 +1428,7 @@ char* compound_operation(char* operator, int is_signed)
 		else if(AMD64 == Architecture) operation = "ADD_rbx_to_rax\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "ADD_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 ADD\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 ADD\n";
 	}
 	else if(match("-=", operator))
 	{
@@ -1395,7 +1441,7 @@ char* compound_operation(char* operator, int is_signed)
 		else if(AMD64 == Architecture) operation = "SUBTRACT_rax_from_rbx_into_rbx\nMOVE_rbx_to_rax\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "SUB_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 SUB\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 SUB\n";
 	}
 	else if(match("*=", operator))
 	{
@@ -1416,7 +1462,7 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(ARMV7L == Architecture) operation = "'9' R0 '0' R1 MULS R0 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "MUL_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 MUL\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 MUL\n";
 	}
 	else if(match("/=", operator))
 	{
@@ -1445,7 +1491,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "SDIV_X0_X1_X0\n";
 			else operation = "UDIV_X0_X1_X0\n";
 		}
-		else if(RISCV64 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 DIV\n";
 			else operation = "RD_A0 RS1_A1 RS2_A0 DIVU\n";
@@ -1478,7 +1524,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "SDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n";
 			else operation = "UDIV_X2_X1_X0\nMSUB_X0_X0_X2_X1\n";
 		}
-		else if(RISCV64 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 REM\n";
 			else operation = "RD_A0 RS1_A1 RS2_A0 REMU\n";
@@ -1503,7 +1549,7 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(ARMV7L == Architecture) operation = "LEFT R1 R0 R0 SHIFT AUX_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "LSHIFT_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 SLL\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 SLL\n";
 	}
 	else if(match(">>=", operator))
 	{
@@ -1532,7 +1578,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "ARITH_RSHIFT_X0_X1_X0\n";
 			else operation = "LOGICAL_RSHIFT_X0_X1_X0\n";
 		}
-		else if(RISCV64 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			if(is_signed) operation = "RD_A0 RS1_A1 RS2_A0 SRA\n";
 			else operation = "RD_A0 RS1_A1 RS2_A0 SRL\n";
@@ -1545,7 +1591,7 @@ char* compound_operation(char* operator, int is_signed)
 		else if(AMD64 == Architecture) operation = "AND_rax_rbx\n";
 		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 AND R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "AND_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 AND\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 AND\n";
 	}
 	else if(match("^=", operator))
 	{
@@ -1554,7 +1600,7 @@ char* compound_operation(char* operator, int is_signed)
 		else if(AMD64 == Architecture) operation = "XOR_rbx_rax_into_rax\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 XOR R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "XOR_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 XOR\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 XOR\n";
 	}
 	else if(match("|=", operator))
 	{
@@ -1563,7 +1609,7 @@ char* compound_operation(char* operator, int is_signed)
 		else if(AMD64 == Architecture) operation = "OR_rax_rbx\n";
 		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "OR_X0_X1_X0\n";
-		else if(RISCV64 == Architecture) operation = "RD_A0 RS1_A1 RS2_A0 OR\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "RD_A0 RS1_A1 RS2_A0 OR\n";
 	}
 	else
 	{
@@ -1588,6 +1634,7 @@ void expression()
 			else if(AMD64 == Architecture) store = "STORE_INTEGER\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
+			else if(RISCV32 == Architecture) store = "RS1_A1 RS2_A0 SW\n";
 			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SD\n";
 		}
 		else
@@ -1597,7 +1644,7 @@ void expression()
 			else if(AMD64 == Architecture) store = "STORE_CHAR\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
-			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SB\n";
+			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) store = "RS1_A1 RS2_A0 SB\n";
 		}
 
 		common_recursion(expression);
@@ -1619,6 +1666,7 @@ void expression()
 		else if(AMD64 == Architecture) push = "PUSH_RBX\n";
 		else if(ARMV7L == Architecture) push = "{R1} PUSH_ALWAYS\n";
 		else if(AARCH64 == Architecture) push = "PUSH_X1\n";
+		else if(RISCV32 == Architecture) push = "RS1_SP RS2_A1 @-4 SW\n";
 		else if(RISCV64 == Architecture) push = "RS1_SP RS2_A1 @-8 SD\n";
 
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
@@ -1628,6 +1676,7 @@ void expression()
 			else if(AMD64 == Architecture) load = "LOAD_INTEGER_rbx\n";
 			else if(ARMV7L == Architecture) load = "!0 R1 LOAD32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) load = "DEREF_X1\n";
+			else if(RISCV32 == Architecture) load = "RD_A1 RS1_A1 LW\n";
 			else if(RISCV64 == Architecture) load = "RD_A1 RS1_A1 LD\n";
 		}
 		else
@@ -1637,7 +1686,7 @@ void expression()
 			else if(AMD64 == Architecture) load = "LOAD_BYTE_rbx\n";
 			else if(ARMV7L == Architecture) load = "!0 R1 LOAD8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) load = "DEREF_X1_BYTE\n";
-			else if(RISCV64 == Architecture) load = "RD_A1 RS1_A1 LBU\n";
+			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) load = "RD_A1 RS1_A1 LBU\n";
 		}
 
 		char *operator = global_token->s;
@@ -1647,6 +1696,7 @@ void expression()
 		else if(AMD64 == Architecture) pop = "POP_RBX\n";
 		else if(ARMV7L == Architecture) pop = "{R1} POP_ALWAYS\n";
 		else if(AARCH64 == Architecture) pop = "POP_X1\n";
+		else if(RISCV32 == Architecture) pop = "RD_A1 RS1_SP !-4 LW\n";
 		else if(RISCV64 == Architecture) pop = "RD_A1 RS1_SP !-8 LD\n";
 
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
@@ -1656,6 +1706,7 @@ void expression()
 			else if(AMD64 == Architecture) store = "STORE_INTEGER\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
+			else if(RISCV32 == Architecture) store = "RS1_A1 RS2_A0 SW\n";
 			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SD\n";
 		}
 		else
@@ -1665,7 +1716,7 @@ void expression()
 			else if(AMD64 == Architecture) store = "STORE_CHAR\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
-			else if(RISCV64 == Architecture) store = "RS1_A1 RS2_A0 SB\n";
+			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) store = "RS1_A1 RS2_A0 SB\n";
 		}
 
 		common_recursion(expression);
@@ -1702,6 +1753,7 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = -40;
 		else if(ARMV7L == Architecture) a->depth = 16;
 		else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
+		else if(RISCV32 == Architecture) a->depth = 16;
 		else if(RISCV64 == Architecture) a->depth = 32;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
@@ -1711,6 +1763,7 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = -16;
 		else if(ARMV7L == Architecture) a->depth = 8;
 		else if(AARCH64 == Architecture) a->depth = register_size;
+		else if(RISCV32 == Architecture) a->depth = 4;
 		else if(RISCV64 == Architecture) a->depth = 8;
 	}
 	else if(NULL == function->locals)
@@ -1720,6 +1773,7 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
 		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
 		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
+		else if(RISCV32 == Architecture) a->depth = function->arguments->depth + 4;
 		else if(RISCV64 == Architecture) a->depth = function->arguments->depth + 8;
 	}
 	else
@@ -1729,6 +1783,7 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
 		else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
+		else if(RISCV32 == Architecture) a->depth = function->locals->depth + register_size;
 		else if(RISCV64 == Architecture) a->depth = function->locals->depth + register_size;
 	}
 
@@ -1755,6 +1810,7 @@ void collect_local()
 	else if(AMD64 == Architecture) emit_out("PUSH_RAX\t#");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
 	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
+	else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\nRS1_SP RS2_A0 SW\t#");
 	else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\nRS1_SP RS2_A0 SD\t#");
 	emit_out(a->s);
 	emit_out("\n");
@@ -1780,12 +1836,12 @@ void process_if()
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
-	else if(RISCV64 == Architecture) emit_out("RS1_A0 @8 BNEZ\n$ELSE_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RS1_A0 @8 BNEZ\n$ELSE_");
 
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
@@ -1796,12 +1852,12 @@ void process_if()
 	else if(AMD64 == Architecture) emit_out("JUMP %_END_IF_");
 	else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
-	else if(RISCV64 == Architecture) emit_out("$_END_IF_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_END_IF_");
 
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	emit_out(":ELSE_");
 	uniqueID_out(function->s, number_string);
@@ -1856,22 +1912,22 @@ void process_for()
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
-	else if(RISCV64 == Architecture) emit_out("RS1_A0 @8 BNEZ\n$FOR_END_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RS1_A0 @8 BNEZ\n$FOR_END_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_THEN_");
 	else if(X86 == Architecture) emit_out("JUMP %FOR_THEN_");
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_THEN_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_THEN_");
-	else if(RISCV64 == Architecture) emit_out("$FOR_THEN_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_THEN_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	emit_out(":FOR_ITER_");
 	uniqueID_out(function->s, number_string);
@@ -1884,11 +1940,11 @@ void process_for()
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_");
-	else if(RISCV64 == Architecture) emit_out("$FOR_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	emit_out(":FOR_THEN_");
 	uniqueID_out(function->s, number_string);
@@ -1902,11 +1958,11 @@ void process_for()
 	else if(AMD64 == Architecture) emit_out("JUMP %FOR_ITER_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_ITER_");
-	else if(RISCV64 == Architecture) emit_out("$FOR_ITER_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_ITER_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	emit_out(":FOR_END_");
 	uniqueID_out(function->s, number_string);
@@ -1974,11 +2030,12 @@ void process_do()
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
-	else if(RISCV64 == Architecture) emit_out("RS1_A0 @DO_END_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RS1_A0 @DO_END_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) {
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
 		emit_out("BEQZ\n$DO_");
 		uniqueID_out(function->s, number_string);
 		emit_out("JAL\n");
@@ -2025,11 +2082,11 @@ void process_while()
 	else if(AMD64 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
-	else if(RISCV64 == Architecture) emit_out("RS1_A0 @8 BNEZ\n$END_WHILE_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RS1_A0 @8 BNEZ\n$END_WHILE_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 	emit_out("# THEN_while_");
 	uniqueID_out(function->s, number_string);
 
@@ -2042,11 +2099,11 @@ void process_while()
 	else if(AMD64 == Architecture) emit_out("JUMP %WHILE_");
 	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&WHILE_");
-	else if(RISCV64 == Architecture) emit_out("$WHILE_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$WHILE_");
 	uniqueID_out(function->s, number_string);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if(RISCV64 == Architecture) emit_out("JAL\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 	emit_out(":END_WHILE_");
 	uniqueID_out(function->s, number_string);
 
@@ -2074,6 +2131,7 @@ void return_result()
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# _return_result_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
 		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _return_result_locals\n");
+		else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW	# _return_result_locals\nRD_SP RS1_SP !4 ADDI\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD	# _return_result_locals\nRD_SP RS1_SP !8 ADDI\n");
 	}
 
@@ -2082,7 +2140,7 @@ void return_result()
 	else if(AMD64 == Architecture) emit_out("RETURN\n");
 	else if(ARMV7L == Architecture) emit_out("'1' LR RETURN\n");
 	else if(AARCH64 == Architecture) emit_out("RETURN\n");
-	else if(RISCV64 == Architecture) emit_out("RETURN\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RETURN\n");
 }
 
 void process_break()
@@ -2102,6 +2160,7 @@ void process_break()
 		else if(AMD64 == Architecture) emit_out("POP_RBX\t# break_cleanup_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# break_cleanup_locals\n");
 		else if(AARCH64 == Architecture) emit_out("POP_X1\t# break_cleanup_locals\n");
+		else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW\t# break_cleanup_locals\nRD_SP RS1_SP !4 ADDI\n");
 		else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD\t# break_cleanup_locals\nRD_SP RS1_SP !8 ADDI\n");
 		i = i->next;
 	}
@@ -2112,7 +2171,7 @@ void process_break()
 	else if(AMD64 == Architecture) emit_out("JUMP %");
 	else if(ARMV7L == Architecture) emit_out("^~");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-	else if(RISCV64 == Architecture) emit_out("$");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
 
 	emit_out(break_target_head);
 	emit_out(break_target_func);
@@ -2120,7 +2179,7 @@ void process_break()
 	emit_out(break_target_num);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-	else if(RISCV64 == Architecture) emit_out(" JAL");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" JAL");
 	emit_out("\n");
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
@@ -2140,7 +2199,7 @@ void process_continue()
 	else if(AMD64 == Architecture) emit_out("JUMP %");
 	else if(ARMV7L == Architecture) emit_out("^~");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-	else if(RISCV64 == Architecture) emit_out("$");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
 
 	emit_out(continue_target_head);
 	emit_out(break_target_func);
@@ -2148,7 +2207,7 @@ void process_continue()
 	emit_out(break_target_num);
 	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-	else if(RISCV64 == Architecture) emit_out(" JAL");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" JAL");
 	emit_out("\n");
 	require_match("ERROR in continue statement\nMissing ;\n", ";");
 }
@@ -2173,7 +2232,7 @@ void recursive_statement()
 	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
 	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) ||
 	   ((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) ||
-	   ((RISCV64 == Architecture) && !match("RETURN\n", output_list->s)))
+	   (((RISCV32 == Architecture) || (RISCV64 == Architecture)) && !match("RETURN\n", output_list->s)))
 	{
 		struct token_list* i;
 		for(i = function->locals; frame != i; i = i->next)
@@ -2183,6 +2242,7 @@ void recursive_statement()
 			else if(AMD64 == Architecture) emit_out("POP_RBX\t# _recursive_statement_locals\n");
 			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
 			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _recursive_statement_locals\n");
+			else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW\t# _recursive_statement_locals\nRD_SP RS1_SP !4 ADDI\n");
 			else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD\t# _recursive_statement_locals\nRD_SP RS1_SP !8 ADDI\n");
 		}
 	}
@@ -2258,11 +2318,11 @@ void statement()
 		else if(AMD64 == Architecture) emit_out("JUMP %");
 		else if(ARMV7L == Architecture) emit_out("^~");
 		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-		else if(RISCV64 == Architecture) emit_out("$");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
 		emit_out(global_token->s);
 		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
 		else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-		else if(RISCV64 == Architecture) emit_out(" JAL");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" JAL");
 		emit_out("\n");
 		global_token = global_token->next;
 		require_match("ERROR in statement\nMissing ;\n", ";");
@@ -2313,6 +2373,7 @@ void collect_arguments()
 				else if(AMD64 == Architecture) a->depth = -8;
 				else if(ARMV7L == Architecture) a->depth = 4;
 				else if(AARCH64 == Architecture) a->depth = register_size;
+				else if(RISCV32 == Architecture) a->depth = 4;
 				else if(RISCV64 == Architecture) a->depth = 8;
 			}
 			else
@@ -2322,6 +2383,7 @@ void collect_arguments()
 				else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
 				else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
+				else if(RISCV32 == Architecture) a->depth = function->arguments->depth + register_size;
 				else if(RISCV64 == Architecture) a->depth = function->arguments->depth + register_size;
 			}
 
@@ -2375,6 +2437,7 @@ void declare_function()
 		else if((AMD64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
 		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
+		else if((RISCV32 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 		else if((RISCV64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
 	}
 }

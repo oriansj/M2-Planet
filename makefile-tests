@@ -235,7 +235,44 @@ x86-tests: \
 	test0106-x86-binary \
 	test1000-x86-binary | results
 
-
+riscv32-tests: \
+	test0000-riscv32-binary \
+	test0001-riscv32-binary \
+	test0002-riscv32-binary \
+	test0003-riscv32-binary \
+	test0004-riscv32-binary \
+	test0005-riscv32-binary \
+	test0006-riscv32-binary \
+	test0007-riscv32-binary \
+	test0008-riscv32-binary \
+	test0009-riscv32-binary \
+	test0010-riscv32-binary \
+	test0011-riscv32-binary \
+	test0012-riscv32-binary \
+	test0013-riscv32-binary \
+	test0014-riscv32-binary \
+	test0015-riscv32-binary \
+	test0016-riscv32-binary \
+	test0017-riscv32-binary \
+	test0018-riscv32-binary \
+	test0019-riscv32-binary \
+	test0020-riscv32-binary \
+	test0021-riscv32-binary \
+	test0022-riscv32-binary \
+	test0023-riscv32-binary \
+	test0024-riscv32-binary \
+	test0025-riscv32-binary \
+	test0026-riscv32-binary \
+	test0027-riscv32-binary \
+	test0028-riscv32-binary \
+	test0100-riscv32-binary \
+	test0101-riscv32-binary \
+	test0102-riscv32-binary \
+	test0103-riscv32-binary \
+	test0104-riscv32-binary \
+	test0105-riscv32-binary \
+	test0106-riscv32-binary \
+	test1000-riscv32-binary | results
 
 riscv64-tests: \
 	test0000-riscv64-binary \
@@ -275,6 +312,117 @@ riscv64-tests: \
 	test0105-riscv64-binary \
 	test0106-riscv64-binary \
 	test1000-riscv64-binary | results
+
+test0000-riscv32-binary: M2-Planet | results
+	test/test0000/run_test.sh riscv32
+
+test0001-riscv32-binary: M2-Planet | results
+	test/test0001/run_test.sh riscv32
+
+test0002-riscv32-binary: M2-Planet | results
+	test/test0002/run_test.sh riscv32
+
+test0003-riscv32-binary: M2-Planet | results
+	test/test0003/run_test.sh riscv32x
+
+test0004-riscv32-binary: M2-Planet | results
+	test/test0004/run_test.sh riscv32
+
+test0005-riscv32-binary: M2-Planet | results
+	test/test0005/run_test.sh riscv32
+
+test0006-riscv32-binary: M2-Planet | results
+	test/test0006/run_test.sh riscv32
+
+test0007-riscv32-binary: M2-Planet | results
+	test/test0007/run_test.sh riscv32
+
+test0008-riscv32-binary: M2-Planet | results
+	test/test0008/run_test.sh riscv32
+
+test0009-riscv32-binary: M2-Planet | results
+	test/test0009/run_test.sh riscv32
+
+test0010-riscv32-binary: M2-Planet | results
+	test/test0010/run_test.sh riscv32
+
+test0011-riscv32-binary: M2-Planet | results
+	test/test0011/run_test.sh riscv32
+
+test0012-riscv32-binary: M2-Planet | results
+	test/test0012/run_test.sh riscv32
+
+test0013-riscv32-binary: M2-Planet | results
+	test/test0013/run_test.sh riscv32
+
+test0014-riscv32-binary: M2-Planet | results
+	test/test0014/run_test.sh riscv32
+
+test0015-riscv32-binary: M2-Planet | results
+	test/test0015/run_test.sh riscv32
+
+test0016-riscv32-binary: M2-Planet | results
+	test/test0016/run_test.sh riscv32
+
+test0017-riscv32-binary: M2-Planet | results
+	test/test0017/run_test.sh riscv32
+
+test0018-riscv32-binary: M2-Planet | results
+	test/test0018/run_test.sh riscv32
+
+test0019-riscv32-binary: M2-Planet | results
+	test/test0019/run_test.sh riscv32
+
+test0020-riscv32-binary: M2-Planet | results
+	test/test0020/run_test.sh riscv32
+
+test0021-riscv32-binary: M2-Planet | results
+	test/test0021/run_test.sh riscv32
+
+test0022-riscv32-binary: M2-Planet | results
+	test/test0022/run_test.sh riscv32
+
+test0023-riscv32-binary: M2-Planet | results
+	test/test0023/run_test.sh riscv32
+
+test0024-riscv32-binary: M2-Planet | results
+	test/test0024/run_test.sh riscv32
+
+test0025-riscv32-binary: M2-Planet | results
+	test/test0025/run_test.sh riscv32
+
+test0026-riscv32-binary: M2-Planet | results
+	test/test0026/run_test.sh riscv32
+
+test0027-riscv32-binary: M2-Planet | results
+	test/test0027/run_test.sh riscv32
+
+test0028-riscv32-binary: M2-Planet | results
+	test/test0028/run_test.sh riscv32
+
+test0100-riscv32-binary: M2-Planet | results
+	test/test0100/run_test.sh riscv32
+
+test0101-riscv32-binary: M2-Planet | results
+	test/test0101/run_test.sh riscv32
+
+test0102-riscv32-binary: M2-Planet | results
+	test/test0102/run_test.sh riscv32
+
+test0103-riscv32-binary: M2-Planet | results
+	test/test0103/run_test.sh riscv32
+
+test0104-riscv32-binary: M2-Planet | results
+	test/test0104/run_test.sh riscv32
+
+test0105-riscv32-binary: M2-Planet | results
+	test/test0105/run_test.sh riscv32
+
+test0106-riscv32-binary: M2-Planet | results
+	test/test0106/run_test.sh riscv32
+
+test1000-riscv32-binary: M2-Planet | results
+	test/test1000/hello-riscv32.sh
 
 test0000-riscv64-binary: M2-Planet | results
 	test/test0000/run_test.sh riscv64

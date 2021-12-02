@@ -69,8 +69,8 @@ then
 		-f M2libc/sys/types.h \
 		-f M2libc/stddef.h \
 		-f M2libc/x86/Linux/unistd.h \
-		-f M2libc/stdlib.c \
 		-f M2libc/x86/Linux/fcntl.h \
+		-f M2libc/stdlib.c \
 		-f M2libc/stdio.c \
 		-f cc.h \
 		-f M2libc/bootstrappable.c \

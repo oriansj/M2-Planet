@@ -37,8 +37,10 @@
 #define ARMV7L 4
 // CONSTANT AARCH64 5
 #define AARCH64 5
-// CONSTANT RISCV64 6
-#define RISCV64 6
+// CONSTANT RISCV32 6
+#define RISCV32 6
+// CONSTANT RISCV64 7
+#define RISCV64 7
 
 
 void copy_string(char* target, char* source, int max);
