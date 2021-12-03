@@ -97,6 +97,6 @@ then
 	. ./sha256.sh
 	out=$(sha256_check test/test1000/proof.answer)
 	[ "$out" = "test/test1000/proof: OK" ] || exit 6
-	[ ! -e bin/M2-Planet ] && mv test/results/test1000-x86-binary bin/M2-Planet
+	[ ! -e bin/M2-Planet ] && mv test/results/test1000-riscv32-binary bin/M2-Planet
 fi
 exit 0
