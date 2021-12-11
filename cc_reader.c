@@ -18,6 +18,8 @@
 
 #include "cc.h"
 
+int strtoint(char *a);
+
 /* Globals */
 FILE* input;
 struct token_list* token;
@@ -332,6 +334,38 @@ reset:
 	return c;
 }
 
+int change_filename(int ch)
+{
+	require(EOF != ch, "#FILENAME failed to receive filename\n");
+	/* Remove the #FILENAME */
+	token = token->next;
+
+	/* Get new filename */
+	ch = get_token(ch);
+	file = token->s;
+	/* Remove it from the processing list */
+	token = token->next;
+	require(EOF != ch, "#FILENAME failed to receive filename\n");
+
+	/* Get new line number */
+	ch = get_token(ch);
+	line = strtoint(token->s);
+	if(0 == line)
+	{
+		if('0' != token->s[0])
+		{
+			fputs("non-line number: ", stderr);
+			fputs(token->s, stderr);
+			fputs(" provided to #FILENAME\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+	/* Remove it from the processing list */
+	token = token->next;
+
+	return ch;
+}
+
 struct token_list* reverse_list(struct token_list* head)
 {
 	struct token_list* root = NULL;
@@ -353,7 +387,11 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 	file = filename;
 	token = current;
 	int ch = grab_byte();
-	while(EOF != ch) ch = get_token(ch);
+	while(EOF != ch)
+	{
+		ch = get_token(ch);
+		if(match("#FILENAME", token->s)) ch = change_filename(ch);
+	}
 
 	return token;
 }
