@@ -683,6 +683,40 @@ void macro_directive()
 	}
 }
 
+
+void eat_until_endif()
+{
+	/* This #if block is nested inside of an #if block that needs to be dropped, lose EVERYTHING */
+	do
+	{
+		if(match("#if", macro_token->s) || match("#ifdef", macro_token->s) || match("#ifndef", macro_token->s))
+		{
+			eat_current_token();
+			eat_until_endif();
+		}
+
+		eat_current_token();
+		require(NULL != macro_token, "Unterminated #if block\n");
+	} while(!match("#endif", macro_token->s));
+}
+
+void eat_block()
+{
+	/* This conditional #if block is wrong, drop everything until the #elif/#else/#endif */
+	do
+	{
+		if(match("#if", macro_token->s) || match("#ifdef", macro_token->s) || match("#ifndef", macro_token->s))
+		{
+			eat_current_token();
+			eat_until_endif();
+		}
+
+		eat_current_token();
+		require(NULL != macro_token, "Unterminated #if block\n");
+	} while(!match("#elif", macro_token->s) && !match("#else", macro_token->s) && !match("#endif", macro_token->s));
+}
+
+
 struct token_list* maybe_expand(struct token_list* token)
 {
 	if(NULL == token)
@@ -758,7 +792,8 @@ void preprocess()
 			else if(!conditional_inclusion_top->include)
 			{
 				/* rewrite the token stream to exclude the current token */
-				eat_current_token();
+				eat_block();
+				start_of_line = TRUE;
 			}
 			else
 			{

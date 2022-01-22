@@ -396,7 +396,6 @@ void function_call(char* s, int bool)
 		emit_out("RD_RA RS1_SP !8 LD\t# Restore return address\n");
 		emit_out("RD_SP RS1_SP !24 ADDI\t# Deallocate stack\n");
 	}
-
 }
 
 void constant_load(struct token_list* a)
@@ -418,7 +417,8 @@ void constant_load(struct token_list* a)
 	emit_out("\n");
 }
 
-void emit_dereference(int load_byte) {
+void emit_dereference(int load_byte)
+{
 	if(load_byte)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD8 R0 R0 0\n");
@@ -486,7 +486,8 @@ void variable_load(struct token_list* a, int num_dereference)
 
 	while (num_dereference > 0)
 	{
-		if(match("char*", current_target->name)) {
+		if(match("char*", current_target->name))
+		{
 			/* Load a single byte */
 			emit_dereference(TRUE);
 		}
