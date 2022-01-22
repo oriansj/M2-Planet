@@ -99,12 +99,13 @@ int preserve_keyword(int c, char* S)
 
 void reset_hold_string()
 {
-	int i = string_index + 2;
-	while(0 != i)
+	int i = MAX_STRING;
+	while(0 <= i)
 	{
 		hold_string[i] = 0;
 		i = i - 1;
 	}
+	string_index = 0;
 }
 
 /* note if this is the first token in the list, head needs fixing up */
@@ -210,6 +211,22 @@ struct token_list* remove_preprocessor_directives(struct token_list* head)
 	return first;
 }
 
+void new_token(char* s, int size)
+{
+	struct token_list* current = calloc(1, sizeof(struct token_list));
+	require(NULL != current, "Exhausted memory while getting token\n");
+
+	/* More efficiently allocate memory for string */
+	current->s = calloc(size, sizeof(char));
+	require(NULL != current->s, "Exhausted memory while trying to copy a token\n");
+	copy_string(current->s, s, MAX_STRING);
+
+	current->prev = token;
+	current->next = token;
+	current->linenumber = line;
+	current->filename = file;
+	token = current;
+}
 
 int get_token(int c)
 {
@@ -321,18 +338,43 @@ reset:
 		c = consume_byte(c);
 	}
 
-	/* More efficiently allocate memory for string */
-	current->s = calloc(string_index + 2, sizeof(char));
-	require(NULL != current->s, "Exhausted memory while trying to copy a token\n");
-	copy_string(current->s, hold_string, MAX_STRING);
-
-	current->prev = token;
-	current->next = token;
-	current->linenumber = line;
-	current->filename = file;
-	token = current;
+	new_token(hold_string, string_index + 2);
 	return c;
 }
+
+
+int consume_filename(int c)
+{
+	reset_hold_string();
+	int done = FALSE;
+
+	while(!done)
+	{
+		if(c == EOF)
+		{
+			fputs("we don't support EOF as a filename in #FILENAME statements\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+		else if((32 == c) || (9 == c) || (c == '\n'))
+		{
+			c = grab_byte();
+		}
+		else
+		{
+			do
+			{
+				c = consume_byte(c);
+				require(EOF != c, "Unterminated filename in #FILENAME\n");
+			} while((32 != c) && (9 != c) && ('\n' != c));
+			done = TRUE;
+		}
+	}
+
+	/* with just a little extra to put in the matching at the end */
+	new_token(hold_string, string_index + 3);
+	return c;
+}
+
 
 int change_filename(int ch)
 {
@@ -341,7 +383,7 @@ int change_filename(int ch)
 	token = token->next;
 
 	/* Get new filename */
-	ch = get_token(ch);
+	ch = consume_filename(ch);
 	file = token->s;
 	/* Remove it from the processing list */
 	token = token->next;
