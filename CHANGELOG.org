@@ -16,6 +16,47 @@
 
 * Current
 ** Added
+Generates a warning on unknown preprocessor commands
+Implemented C99 negation
+Add support for empty defines
+Implemented support for #ifdef and #ifndef
+Implemented #error statement support
+Add support for evaluating macro variables
+Define arch specific variables
+	__i386__
+	__x86_64__
+	__arm__
+	__aarch64__
+	__riscv
+	__riscv_xlen
+Implemented #undef statement support
+Add support for char** arrays
+Added basic test for multi-dimensional arrays
+Implemented minimal variable dereferencing support (base types only)
+Add support for assignment operators
+Add riscv32 port
+Enable riscv32 tests
+Added #FILENAME statement functionality to enable more flexiblity with debug messages
+
+** Changed
+Updated M2libc dependency
+
+** Fixed
+--max-string now validates passed input is an integer
+-D now throws an error if not passed an argument
+Fix segfault on half done #define statements
+Correct #define behavior inside of #if/#elif/#else/#endif blocks
+make clean now cleans up RISCV tests
+catch half broken #define (statements instead of segfaulting
+no longer segfault on null macro name
+no longer try to expand null tokens
+Catch the special case of attempting to remove a NULL macro token
+Fixed nested #if behavior to do the actual correct thing
+
+** Removed
+
+* 1.9 - 2021-10-03
+** Added
 Add riscv64 port
 Add tests for riscv64
 
