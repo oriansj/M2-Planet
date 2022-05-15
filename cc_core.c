@@ -1745,6 +1745,7 @@ void collect_local()
 		exit(EXIT_FAILURE);
 	}
 	struct type* type_size = type_name();
+	require(NULL != global_token, "Received EOF while collecting locals\n");
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
@@ -2358,6 +2359,7 @@ void collect_arguments()
 	while(!match(")", global_token->s))
 	{
 		type_size = type_name();
+		require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
 		if(global_token->s[0] == ')')
 		{
 			/* foo(int,char,void) doesn't need anything done */
@@ -2472,6 +2474,7 @@ struct type* global_typedef()
 	/* typedef $TYPE $NAME; */
 	global_token = global_token->next;
 	type_size = type_name();
+	require(NULL != global_token, "Received EOF while reading typedef\n");
 	type_size = mirror_type(type_size, global_token->s);
 	add_primitive(type_size);
 	global_token = global_token->next;
