@@ -432,6 +432,7 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 	while(EOF != ch)
 	{
 		ch = get_token(ch);
+		require(NULL != token, "Empty files don't need to be compiled\n");
 		if(match("#FILENAME", token->s)) ch = change_filename(ch);
 	}
 

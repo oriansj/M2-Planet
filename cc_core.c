@@ -1733,6 +1733,44 @@ void expression()
 }
 
 
+int iskeywordp(char* s)
+{
+	if(match("auto", s)) return TRUE;
+	if(match("break", s)) return TRUE;
+	if(match("case", s)) return TRUE;
+	if(match("char", s)) return TRUE;
+	if(match("const", s)) return TRUE;
+	if(match("continue", s)) return TRUE;
+	if(match("default", s)) return TRUE;
+	if(match("do", s)) return TRUE;
+	if(match("double", s)) return TRUE;
+	if(match("else", s)) return TRUE;
+	if(match("enum", s)) return TRUE;
+	if(match("extern", s)) return TRUE;
+	if(match("float", s)) return TRUE;
+	if(match("for", s)) return TRUE;
+	if(match("goto", s)) return TRUE;
+	if(match("if", s)) return TRUE;
+	if(match("int", s)) return TRUE;
+	if(match("long", s)) return TRUE;
+	if(match("register", s)) return TRUE;
+	if(match("return", s)) return TRUE;
+	if(match("short", s)) return TRUE;
+	if(match("signed", s)) return TRUE;
+	if(match("sizeof", s)) return TRUE;
+	if(match("static", s)) return TRUE;
+	if(match("struct", s)) return TRUE;
+	if(match("switch", s)) return TRUE;
+	if(match("typedef", s)) return TRUE;
+	if(match("union", s)) return TRUE;
+	if(match("unsigned", s)) return TRUE;
+	if(match("void", s)) return TRUE;
+	if(match("volatile", s)) return TRUE;
+	if(match("while", s)) return TRUE;
+	return FALSE;
+}
+
+
 /* Process local variable */
 void collect_local()
 {
@@ -1746,6 +1784,9 @@ void collect_local()
 	}
 	struct type* type_size = type_name();
 	require(NULL != global_token, "Received EOF while collecting locals\n");
+	require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
+	require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
+	require(NULL != type_size, "Must have non-null type\n");
 	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
 	if(match("main", function->s) && (NULL == function->locals))
 	{
@@ -2360,6 +2401,7 @@ void collect_arguments()
 	{
 		type_size = type_name();
 		require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
+		require(NULL != type_size, "Must have non-null type\n");
 		if(global_token->s[0] == ')')
 		{
 			/* foo(int,char,void) doesn't need anything done */
@@ -2368,6 +2410,8 @@ void collect_arguments()
 		else if(global_token->s[0] != ',')
 		{
 			/* deal with foo(int a, char b) */
+			require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in argument variable name\n");
+			require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a argument variable name\n");
 			a = sym_declare(global_token->s, type_size, function->arguments);
 			if(NULL == function->arguments)
 			{
