@@ -516,6 +516,7 @@ void handle_error(int warning_p)
 		else fputs(" error: #error ", stderr);
 		while (TRUE)
 		{
+			require(NULL != macro_token, "\nFailed to properly terminate error message with \\n\n");
 			if ('\n' == macro_token->s[0]) break;
 			fputs(macro_token->s, stderr);
 			macro_token = macro_token->next;
@@ -526,6 +527,7 @@ void handle_error(int warning_p)
 	}
 	while (TRUE)
 	{
+		require(NULL != macro_token, "\nFailed to properly terminate error message with \\n\n");
 		/* discard the error */
 		if ('\n' == macro_token->s[0])
 		{
