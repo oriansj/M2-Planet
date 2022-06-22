@@ -232,7 +232,7 @@ void create_struct()
 	i->size = register_size;
 	require_match("ERROR in create_struct\n Missing {\n", "{");
 	struct type* last = NULL;
-	require(NULL != global_token, "incomplete struction defintion at end of file\n");
+	require(NULL != global_token, "Incomplete struct definition at end of file\n");
 	while('}' != global_token->s[0])
 	{
 		if(match(global_token->s, "union"))
