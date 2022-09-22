@@ -697,6 +697,7 @@ void eat_until_endif()
 	/* This #if block is nested inside of an #if block that needs to be dropped, lose EVERYTHING */
 	do
 	{
+		require(NULL != macro_token, "Unterminated #if block\n");
 		if(match("#if", macro_token->s) || match("#ifdef", macro_token->s) || match("#ifndef", macro_token->s))
 		{
 			eat_current_token();
