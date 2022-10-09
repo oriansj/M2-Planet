@@ -102,8 +102,16 @@ int main(int argc, char** argv)
 		else if(match(argv[i], "-A") || match(argv[i], "--architecture"))
 		{
 			arch = argv[i + 1];
-			if(match("knight-native", arch)) Architecture = KNIGHT_NATIVE;
-			else if(match("knight-posix", arch)) Architecture = KNIGHT_POSIX;
+			if(match("knight-native", arch)) {
+				Architecture = KNIGHT_NATIVE;
+				init_macro_env("__knight__", "1", "--architecture", env);
+				env = env + 1;
+			}
+			else if(match("knight-posix", arch)) {
+				Architecture = KNIGHT_POSIX;
+				init_macro_env("__knight_posix__", "1", "--architecture", env);
+				env = env + 1;
+			}
 			else if(match("x86", arch))
 			{
 				Architecture = X86;

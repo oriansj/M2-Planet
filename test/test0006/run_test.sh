@@ -30,8 +30,9 @@ bin/M2-Planet \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/signal.h \
-	-f M2libc/${ARCH}/Linux/unistd.h \
-	-f M2libc/${ARCH}/Linux/fcntl.h \
+	-f M2libc/${ARCH}/linux/unistd.c \
+	-f M2libc/${ARCH}/linux/fcntl.c \
+	-f M2libc/fcntl.c \
 	-f M2libc/stdlib.c \
 	-f M2libc/stdio.c \
 	-f test/test0006/for.c \

@@ -24,7 +24,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture riscv32 \
-	-f M2libc/riscv32/Linux/bootstrap.c \
+	-f M2libc/riscv32/linux/bootstrap.c \
 	-f cc.h \
 	-f M2libc/bootstrappable.c \
 	-f cc_globals.c \
@@ -78,8 +78,9 @@ then
 		-f M2libc/sys/types.h \
 		-f M2libc/stddef.h \
 		-f M2libc/signal.h \
-		-f M2libc/x86/Linux/unistd.h \
-		-f M2libc/x86/Linux/fcntl.h \
+		-f M2libc/x86/linux/unistd.c \
+		-f M2libc/x86/linux/fcntl.c \
+		-f M2libc/fcntl.c \
 		-f M2libc/stdlib.c \
 		-f M2libc/stdio.c \
 		-f cc.h \
