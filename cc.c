@@ -229,7 +229,7 @@ int main(int argc, char** argv)
 	if(stdin == in)
 	{
 		hold_string = calloc(MAX_STRING + 4, sizeof(char));
-		require(NULL != hold_string, "Impossible Exhaustion has occured\n");
+		require(NULL != hold_string, "Impossible Exhaustion has occurred\n");
 		global_token = read_all_tokens(in, global_token, "STDIN");
 	}
 
