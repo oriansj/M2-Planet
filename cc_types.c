@@ -261,7 +261,7 @@ struct type* type_name()
 {
 	struct type* ret;
 
-	require(NULL != global_token, "Recieved EOF instead of type name\n");
+	require(NULL != global_token, "Received EOF instead of type name\n");
 
 	if(match("extern", global_token->s))
 	{

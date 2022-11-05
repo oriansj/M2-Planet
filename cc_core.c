@@ -533,6 +533,8 @@ void function_load(struct token_list* a)
 	emit_out("\n");
 }
 
+void postfix_expr_stub();
+
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
@@ -554,6 +556,11 @@ void global_load(struct token_list* a)
 
 	require(NULL != global_token, "unterminated global load\n");
 	if(TRUE == Address_of) return;
+	if(match(".", global_token->s))
+	{
+		postfix_expr_stub();
+		return;
+	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
@@ -931,6 +938,7 @@ int ceil_log2(int a)
  *         postfix-expr [ expression ]
  *         postfix-expr ( expression-list-opt )
  *         postfix-expr -> member
+ *         postfix-expr . member
  */
 struct type* lookup_member(struct type* parent, char* name);
 void postfix_expr_arrow()
@@ -998,6 +1006,73 @@ void postfix_expr_arrow()
 	}
 }
 
+void postfix_expr_dot()
+{
+	maybe_bootstrap_error("Member access using .");
+	emit_out("# looking up offset\n");
+	global_token = global_token->next;
+	require(NULL != global_token, "naked . not allowed\n");
+
+	struct type* i = lookup_member(current_target, global_token->s);
+	current_target = i->type;
+	global_token = global_token->next;
+	require(NULL != global_token, "Unterminated . expression not allowed\n");
+
+	if(0 != i->offset)
+	{
+		emit_out("# . offset calculation\n");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		{
+			emit_out("ADDUI R0 R0 ");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out("\n");
+		}
+		else if(X86 == Architecture)
+		{
+			emit_out("LOAD_IMMEDIATE_ebx %");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out("\nADD_ebx_to_eax\n");
+		}
+		else if(AMD64 == Architecture)
+		{
+			emit_out("mov_rbx, %");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out("\nadd_rax,rbx\n");
+		}
+		else if(ARMV7L == Architecture)
+		{
+			emit_out("!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out("\n'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
+		}
+		else if(AARCH64 == Architecture)
+		{
+			emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out("\nADD_X0_X1_X0\n");
+		}
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		{
+			emit_out("RD_A1 !");
+			emit_out(int2str(i->offset, 10, TRUE));
+			emit_out(" ADDI\n");
+			emit_out("RD_A0 RS1_A1 RS2_A0 ADD\n");
+		}
+	}
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
+	if(match("[", global_token->s)) return;
+
+	if(match("char", current_target->name))
+	{
+		/* Load a single byte */
+		emit_dereference(TRUE);
+	}
+	else
+	{
+		emit_dereference(FALSE);
+	}
+}
+
 void postfix_expr_array()
 {
 	struct type* array = current_target;
@@ -1054,7 +1129,8 @@ void postfix_expr_array()
 	{
 		assign = "";
 	}
-	if(match("[", global_token->s)) {
+	if(match("[", global_token->s))
+	{
 		current_target = current_target->type;
 	}
 
@@ -1101,6 +1177,12 @@ void postfix_expr_stub()
 	if(match("->", global_token->s))
 	{
 		postfix_expr_arrow();
+		postfix_expr_stub();
+	}
+
+	if(match(".", global_token->s))
+	{
+		postfix_expr_dot();
 		postfix_expr_stub();
 	}
 }
@@ -2638,6 +2720,7 @@ void global_assignment()
  */
 void program()
 {
+	unsigned i;
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
@@ -2675,11 +2758,18 @@ new_type:
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
-		/* Ensure 4 bytes are allocated for the global */
+		/* Ensure enough bytes are allocated to store global variable.
+		   In some cases it allocates too much but that is harmless. */
 		globals_list = emit(":GLOBAL_", globals_list);
 		globals_list = emit(global_token->prev->s, globals_list);
-		globals_list = emit("\nNULL\n", globals_list);
-
+		/* round up division */
+		i = (type_size->size + register_size - 1) / register_size;
+		globals_list = emit("\n", globals_list);
+		while(i > 0)
+		{
+			globals_list = emit("NULL\n", globals_list);
+			i = i - 1;
+		}
 		global_token = global_token->next;
 		goto new_type;
 	}
