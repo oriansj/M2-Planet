@@ -279,7 +279,7 @@ void function_call(char* s, int bool)
 		}
 		else if(RISCV32 == Architecture)
 		{
-			emit_out("RD_A0 RS1_FP !-");
+			emit_out("RD_A0 RS1_FP !");
 			emit_out(s);
 			emit_out(" ADDI\n");
 			emit_out("RD_A0 RS1_A0 LW\n");
@@ -288,7 +288,7 @@ void function_call(char* s, int bool)
 		}
 		else if(RISCV64 == Architecture)
 		{
-			emit_out("RD_A0 RS1_FP !-");
+			emit_out("RD_A0 RS1_FP !");
 			emit_out(s);
 			emit_out(" ADDI\n");
 			emit_out("RD_A0 RS1_A0 LD\n");
@@ -470,7 +470,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	else if(AMD64 == Architecture) emit_out("lea_rax,[rbp+DWORD] %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_FP !-");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_FP !");
 
 	emit_out(int2str(a->depth, 10, TRUE));
 	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
@@ -1878,8 +1878,8 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = -40;
 		else if(ARMV7L == Architecture) a->depth = 16;
 		else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
-		else if(RISCV32 == Architecture) a->depth = 16;
-		else if(RISCV64 == Architecture) a->depth = 32;
+		else if(RISCV32 == Architecture) a->depth = -16;
+		else if(RISCV64 == Architecture) a->depth = -32;
 	}
 	else if((NULL == function->arguments) && (NULL == function->locals))
 	{
@@ -1888,8 +1888,8 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = -16;
 		else if(ARMV7L == Architecture) a->depth = 8;
 		else if(AARCH64 == Architecture) a->depth = register_size;
-		else if(RISCV32 == Architecture) a->depth = 4;
-		else if(RISCV64 == Architecture) a->depth = 8;
+		else if(RISCV32 == Architecture) a->depth = -4;
+		else if(RISCV64 == Architecture) a->depth = -8;
 	}
 	else if(NULL == function->locals)
 	{
@@ -1898,8 +1898,8 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
 		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
 		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
-		else if(RISCV32 == Architecture) a->depth = function->arguments->depth + 4;
-		else if(RISCV64 == Architecture) a->depth = function->arguments->depth + 8;
+		else if(RISCV32 == Architecture) a->depth = function->arguments->depth - 4;
+		else if(RISCV64 == Architecture) a->depth = function->arguments->depth - 8;
 	}
 	else
 	{
@@ -1908,8 +1908,8 @@ void collect_local()
 		else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
 		else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
 		else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
-		else if(RISCV32 == Architecture) a->depth = function->locals->depth + register_size;
-		else if(RISCV64 == Architecture) a->depth = function->locals->depth + register_size;
+		else if(RISCV32 == Architecture) a->depth = function->locals->depth - register_size;
+		else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
 	}
 
 	function->locals = a;
@@ -2502,8 +2502,8 @@ void collect_arguments()
 				else if(AMD64 == Architecture) a->depth = -8;
 				else if(ARMV7L == Architecture) a->depth = 4;
 				else if(AARCH64 == Architecture) a->depth = register_size;
-				else if(RISCV32 == Architecture) a->depth = 4;
-				else if(RISCV64 == Architecture) a->depth = 8;
+				else if(RISCV32 == Architecture) a->depth = -4;
+				else if(RISCV64 == Architecture) a->depth = -8;
 			}
 			else
 			{
@@ -2512,8 +2512,8 @@ void collect_arguments()
 				else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
 				else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
 				else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
-				else if(RISCV32 == Architecture) a->depth = function->arguments->depth + register_size;
-				else if(RISCV64 == Architecture) a->depth = function->arguments->depth + register_size;
+				else if(RISCV32 == Architecture) a->depth = function->arguments->depth - register_size;
+				else if(RISCV64 == Architecture) a->depth = function->arguments->depth - register_size;
 			}
 
 			global_token = global_token->next;
