@@ -27,16 +27,21 @@ struct s a;
 int main() {
 	a.x = 3;
 	a.y = 5;
-	if(a.x * a.y != 15)
-	{
-	    return 1;
-	}
-	if((&a)->y != 5)
-	{
-	    return 2;
-	}
+	if(a.x * a.y != 15) return 1;
+	if((&a)->y != 5) return 2;
 	a.z[0] = 1;
 	a.z[1] = 2;
 	a.z[2] = 3;
-	return a.z[0] + a.z[1] + a.z[2] - 6;
+	if (a.z[0] + a.z[1] + a.z[2] != 6) return 3;
+
+	struct s b;
+	b.x = 3;
+	b.y = 5;
+	if(b.x * b.y != 15) return 4;
+	if((&b)->y != 5) return 5;
+	b.z[0] = 1;
+	b.z[1] = 2;
+	b.z[2] = 3;
+	if (b.z[0] + b.z[1] + b.z[2] != 6) return 6;
+	return 0;
 }

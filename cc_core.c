@@ -455,6 +455,7 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
+void postfix_expr_stub();
 void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
@@ -479,6 +480,11 @@ void variable_load(struct token_list* a, int num_dereference)
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
+	if(match(".", global_token->s))
+	{
+		postfix_expr_stub();
+		return;
+	}
 	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
 	{
 		emit_dereference(FALSE);
@@ -532,8 +538,6 @@ void function_load(struct token_list* a)
 	}
 	emit_out("\n");
 }
-
-void postfix_expr_stub();
 
 void global_load(struct token_list* a)
 {
@@ -1852,6 +1856,11 @@ int iskeywordp(char* s)
 	return FALSE;
 }
 
+/* Similar to integer division a / b but rounds up */
+unsigned ceil_div(unsigned a, unsigned b)
+{
+    return (a + b - 1) / b;
+}
 
 /* Process local variable */
 void collect_local()
@@ -1912,6 +1921,18 @@ void collect_local()
 		else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
 	}
 
+	/* Adjust the depth of local structs. When stack grows downwards, we want them to 
+	   start at the bottom of allocated space. */
+	unsigned struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
+	if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
+	else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
+	else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+	else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+	else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
+	else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
+	else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+	else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+
 	function->locals = a;
 
 	emit_out("# Defining local ");
@@ -1930,15 +1951,20 @@ void collect_local()
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
-	else if(X86 == Architecture) emit_out("PUSH_eax\t#");
-	else if(AMD64 == Architecture) emit_out("push_rax\t#");
-	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
-	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
-	else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\nRS1_SP RS2_A0 SW\t#");
-	else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\nRS1_SP RS2_A0 SD\t#");
-	emit_out(a->s);
-	emit_out("\n");
+	unsigned i = (a->type->size + register_size - 1) / register_size;
+	while(i != 0)
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
+		else if(X86 == Architecture) emit_out("PUSH_eax\t#");
+		else if(AMD64 == Architecture) emit_out("push_rax\t#");
+		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
+		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
+		else if(RISCV32 == Architecture) emit_out("RD_SP RS1_SP !-4 ADDI\nRS1_SP RS2_A0 SW\t#");
+		else if(RISCV64 == Architecture) emit_out("RD_SP RS1_SP !-8 ADDI\nRS1_SP RS2_A0 SD\t#");
+		emit_out(a->s);
+		emit_out("\n");
+		i = i - 1;
+	}
 }
 
 void statement();
@@ -2249,15 +2275,21 @@ void return_result()
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
 	struct token_list* i;
+	unsigned size_local_var;
 	for(i = function->locals; NULL != i; i = i->next)
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _return_result_locals\n");
-		else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
-		else if(AMD64 == Architecture) emit_out("pop_rbx\t# _return_result_locals\n");
-		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
-		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _return_result_locals\n");
-		else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW	# _return_result_locals\nRD_SP RS1_SP !4 ADDI\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD	# _return_result_locals\nRD_SP RS1_SP !8 ADDI\n");
+		size_local_var = ceil_div(i->type->size, register_size);
+		while(size_local_var != 0)
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _return_result_locals\n");
+			else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
+			else if(AMD64 == Architecture) emit_out("pop_rbx\t# _return_result_locals\n");
+			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
+			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _return_result_locals\n");
+			else if(RISCV32 == Architecture) emit_out("RD_A1 RS1_SP LW	# _return_result_locals\nRD_SP RS1_SP !4 ADDI\n");
+			else if(RISCV64 == Architecture) emit_out("RD_A1 RS1_SP LD	# _return_result_locals\nRD_SP RS1_SP !8 ADDI\n");
+			size_local_var = size_local_var - 1;
+		}
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
@@ -2762,10 +2794,11 @@ new_type:
 		   In some cases it allocates too much but that is harmless. */
 		globals_list = emit(":GLOBAL_", globals_list);
 		globals_list = emit(global_token->prev->s, globals_list);
+
 		/* round up division */
-		i = (type_size->size + register_size - 1) / register_size;
+		i = ceil_div(type_size->size, register_size);
 		globals_list = emit("\n", globals_list);
-		while(i > 0)
+		while(i != 0)
 		{
 			globals_list = emit("NULL\n", globals_list);
 			i = i - 1;
