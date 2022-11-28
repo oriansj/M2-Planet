@@ -225,7 +225,7 @@ void create_struct()
 	i->name = global_token->s;
 	i->type = i;
 	head->indirect = i;
-	i->indirect = head;
+	i->indirect = i;
 	head->next = global_types;
 	global_types = head;
 	global_token = global_token->next;
