@@ -87,12 +87,36 @@ void initialize_types()
 	prim_types = add_primitive(hold);
 
 	/* Define UNSIGNED */
-	hold = new_primitive("unsigned", "unsigned*", "unsigned**",register_size, FALSE);
+	hold = new_primitive("unsigned", "unsigned*", "unsigned**", register_size, FALSE);
 	prim_types = add_primitive(hold);
 
 	/* Define int */
 	integer = new_primitive("int", "int*", "int**", register_size, TRUE);
 	prim_types = add_primitive(integer);
+
+	/* Define uint32_t */
+	hold = new_primitive("uint32_t", "uint32_t*", "uint32_t**", 4, FALSE);
+	prim_types = add_primitive(hold);
+
+	/* Define int32_t */
+	hold = new_primitive("int32_t", "int32_t*", "int32_t**", 4, TRUE);
+	prim_types = add_primitive(hold);
+
+	/* Define uint16_t */
+	hold = new_primitive("uint16_t", "uint16_t*", "uint16_t**", 2, FALSE);
+	prim_types = add_primitive(hold);
+
+	/* Define int16_t */
+	hold = new_primitive("int16_t", "int16_t*", "int16_t**", 2, TRUE);
+	prim_types = add_primitive(hold);
+
+	/* Define uint8_t */
+	hold = new_primitive("uint8_t", "uint8_t*", "uint8_t**", 1, FALSE);
+	prim_types = add_primitive(hold);
+
+	/* Define int8_t */
+	hold = new_primitive("int8_t", "int8_t*", "int8_t**", 1, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define char */
 	hold = new_primitive("char", "char*", "char**", 1, TRUE);
