@@ -159,9 +159,9 @@ void function_call(char* s, int bool)
 	}
 	else if(X86 == Architecture)
 	{
-		emit_out("PUSH_edi\t# Prevent overwriting in recursion\n");
-		emit_out("PUSH_ebp\t# Protect the old base pointer\n");
-		emit_out("COPY_esp_to_edi\t# Copy new base pointer\n");
+		emit_out("push_edi\t# Prevent overwriting in recursion\n");
+		emit_out("push_ebp\t# Protect the old base pointer\n");
+		emit_out("mov_edi,esp\t# Copy new base pointer\n");
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -204,7 +204,7 @@ void function_call(char* s, int bool)
 		expression();
 		require(NULL != global_token, "incomplete function call, received EOF instead of )\n");
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression1\n");
-		else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression1\n");
+		else if(X86 == Architecture) emit_out("push_eax\t#_process_expression1\n");
 		else if(AMD64 == Architecture) emit_out("push_rax\t#_process_expression1\n");
 		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
 		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression1\n");
@@ -218,7 +218,7 @@ void function_call(char* s, int bool)
 			require(NULL != global_token, "incomplete function call, received EOF instead of argument\n");
 			expression();
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression2\n");
-			else if(X86 == Architecture) emit_out("PUSH_eax\t#_process_expression2\n");
+			else if(X86 == Architecture) emit_out("push_eax\t#_process_expression2\n");
 			else if(AMD64 == Architecture) emit_out("push_rax\t#_process_expression2\n");
 			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression2\n");
 			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression2\n");
@@ -241,11 +241,11 @@ void function_call(char* s, int bool)
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("LOAD_BASE_ADDRESS_eax %");
+			emit_out("lea_eax,[ebp+DWORD] %");
 			emit_out(s);
-			emit_out("\nLOAD_INTEGER\n");
-			emit_out("COPY_edi_to_ebp\n");
-			emit_out("CALL_eax\n");
+			emit_out("\nmov_eax,[eax]\n");
+			emit_out("mov_ebp,edi\n");
+			emit_out("call_eax\n");
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -307,8 +307,8 @@ void function_call(char* s, int bool)
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("COPY_edi_to_ebp\n");
-			emit_out("CALL_IMMEDIATE %FUNCTION_");
+			emit_out("mov_ebp,edi\n");
+			emit_out("call %FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
 		}
@@ -348,7 +348,7 @@ void function_call(char* s, int bool)
 	for(; passed > 0; passed = passed - 1)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _process_expression_locals\n");
-		else if(X86 == Architecture) emit_out("POP_ebx\t# _process_expression_locals\n");
+		else if(X86 == Architecture) emit_out("pop_ebx\t# _process_expression_locals\n");
 		else if(AMD64 == Architecture) emit_out("pop_rbx\t# _process_expression_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _process_expression_locals\n");
 		else if(AARCH64 == Architecture) emit_out("POP_X1\t# _process_expression_locals\n");
@@ -363,8 +363,8 @@ void function_call(char* s, int bool)
 	}
 	else if(X86 == Architecture)
 	{
-		emit_out("POP_ebp\t# Restore old base pointer\n");
-		emit_out("POP_edi\t# Prevent overwrite\n");
+		emit_out("pop_ebp\t# Restore old base pointer\n");
+		emit_out("pop_edi\t# Prevent overwrite\n");
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -401,7 +401,7 @@ void function_call(char* s, int bool)
 void constant_load(struct token_list* a)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADI R0 ");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	else if(X86 == Architecture) emit_out("mov_eax, %");
 	else if(AMD64 == Architecture) emit_out("mov_rax, %");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
@@ -422,7 +422,7 @@ void emit_dereference(int load_byte)
 	if(load_byte)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD8 R0 R0 0\n");
-		else if(X86 == Architecture) emit_out("LOAD_BYTE\n");
+		else if(X86 == Architecture) emit_out("movsx_eax,BYTE_PTR_[eax]\n");
 		else if(AMD64 == Architecture) emit_out("movsx_rax,BYTE_PTR_[rax]\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD8 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0_BYTE\n");
@@ -431,7 +431,7 @@ void emit_dereference(int load_byte)
 	else
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
+		else if(X86 == Architecture) emit_out("mov_eax,[eax]\n");
 		else if(AMD64 == Architecture) emit_out("mov_rax,[rax]\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
@@ -467,7 +467,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	current_target = a->type;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADDI R0 R14 ");
-	else if(X86 == Architecture) emit_out("LOAD_BASE_ADDRESS_eax %");
+	else if(X86 == Architecture) emit_out("lea_eax,[ebp+DWORD] %");
 	else if(AMD64 == Architecture) emit_out("lea_rax,[rbp+DWORD] %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
@@ -516,7 +516,7 @@ void function_load(struct token_list* a)
 	}
 
 	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &FUNCTION_");
+	else if(X86 == Architecture) emit_out("mov_eax, &FUNCTION_");
 	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %FUNCTION_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
@@ -543,7 +543,7 @@ void global_load(struct token_list* a)
 {
 	current_target = a->type;
 	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &GLOBAL_");
+	else if(X86 == Architecture) emit_out("mov_eax, &GLOBAL_");
 	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %GLOBAL_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&GLOBAL_");
@@ -568,7 +568,7 @@ void global_load(struct token_list* a)
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-	else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
+	else if(X86 == Architecture) emit_out("mov_eax,[eax]\n");
 	else if(AMD64 == Architecture) emit_out("mov_rax,[rax]\n");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
@@ -601,7 +601,7 @@ void primary_expr_string()
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax &STRING_");
+	else if(X86 == Architecture) emit_out("mov_eax, &STRING_");
 	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %STRING_");
 	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&STRING_");
@@ -664,7 +664,7 @@ void primary_expr_string()
 void primary_expr_char()
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADI R0 ");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	else if(X86 == Architecture) emit_out("mov_eax, %");
 	else if(AMD64 == Architecture) emit_out("mov_rax, %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
@@ -727,7 +727,7 @@ void primary_expr_number()
 	}
 	else if(X86 == Architecture)
 	{
-		emit_out("LOAD_IMMEDIATE_eax %");
+		emit_out("mov_eax, %");
 		emit_out(global_token->s);
 	}
 	else if(AMD64 == Architecture)
@@ -863,7 +863,7 @@ struct type* promote_type(struct type* a, struct type* b)
 void common_recursion(FUNCTION f)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_common_recursion\n");
-	else if(X86 == Architecture) emit_out("PUSH_eax\t#_common_recursion\n");
+	else if(X86 == Architecture) emit_out("push_eax\t#_common_recursion\n");
 	else if(AMD64 == Architecture) emit_out("push_rax\t#_common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_common_recursion\n");
 	else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_common_recursion\n");
@@ -877,7 +877,7 @@ void common_recursion(FUNCTION f)
 	current_target = promote_type(current_target, last_type);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _common_recursion\n");
-	else if(X86 == Architecture) emit_out("POP_ebx\t# _common_recursion\n");
+	else if(X86 == Architecture) emit_out("pop_ebx\t# _common_recursion\n");
 	else if(AMD64 == Architecture) emit_out("pop_rbx\t# _common_recursion\n");
 	else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _common_recursion\n");
 	else if(AARCH64 == Architecture) emit_out("POP_X1\t# _common_recursion\n");
@@ -967,9 +967,9 @@ void postfix_expr_arrow()
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("LOAD_IMMEDIATE_ebx %");
+			emit_out("mov_ebx, %");
 			emit_out(int2str(i->offset, 10, TRUE));
-			emit_out("\nADD_ebx_to_eax\n");
+			emit_out("\nadd_eax,ebx\n");
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1001,7 +1001,7 @@ void postfix_expr_arrow()
 	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-		else if(X86 == Architecture) emit_out("LOAD_INTEGER\n");
+		else if(X86 == Architecture) emit_out("mov_eax,[eax]\n");
 		else if(AMD64 == Architecture) emit_out("mov_rax,[rax]\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
@@ -1033,9 +1033,9 @@ void postfix_expr_dot()
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("LOAD_IMMEDIATE_ebx %");
+			emit_out("mov_ebx, %");
 			emit_out(int2str(i->offset, 10, TRUE));
-			emit_out("\nADD_ebx_to_eax\n");
+			emit_out("\nadd_eax,ebx\n");
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1086,7 +1086,7 @@ void postfix_expr_array()
 
 	char* assign;
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) assign = "LOAD R0 R0 0\n";
-	else if(X86 == Architecture) assign = "LOAD_INTEGER\n";
+	else if(X86 == Architecture) assign = "mov_eax,[eax]\n";
 	else if(AMD64 == Architecture) assign = "mov_rax,[rax]\n";
 	else if(ARMV7L == Architecture) assign = "!0 R0 LOAD32 R0 MEMORY\n";
 	else if(AARCH64 == Architecture) assign = "DEREF_X0\n";
@@ -1097,7 +1097,7 @@ void postfix_expr_array()
 	if(match("char*", current_target->name))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) assign = "LOAD8 R0 R0 0\n";
-		else if(X86 == Architecture) assign = "LOAD_BYTE\n";
+		else if(X86 == Architecture) assign = "movsx_eax,BYTE_PTR_[eax]\n";
 		else if(AMD64 == Architecture) assign = "movsx_rax,BYTE_PTR_[rax]\n";
 		else if(ARMV7L == Architecture) assign = "!0 R0 LOAD8 R0 MEMORY\n";
 		else if(AARCH64 == Architecture) assign = "DEREF_X0_BYTE\n";
@@ -1106,7 +1106,7 @@ void postfix_expr_array()
 	else
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("SALI R0 ");
-		else if(X86 == Architecture) emit_out("SAL_eax_Immediate8 !");
+		else if(X86 == Architecture) emit_out("sal_eax, !");
 		else if(AMD64 == Architecture) emit_out("sal_rax, !");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 '");
 		else if(AARCH64 == Architecture) emit_out("LOAD_W2_AHEAD\nSKIP_32_DATA\n%");
@@ -1120,7 +1120,7 @@ void postfix_expr_array()
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");
-	else if(X86 == Architecture) emit_out("ADD_ebx_to_eax\n");
+	else if(X86 == Architecture) emit_out("add_eax,ebx\n");
 	else if(AMD64 == Architecture) emit_out("add_rax,rbx\n");
 	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
 	else if(AARCH64 == Architecture) emit_out("ADD_X0_X1_X0\n");
@@ -1158,7 +1158,7 @@ void unary_expr_sizeof()
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADUI R0 ");
-	else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %");
+	else if(X86 == Architecture) emit_out("mov_eax, %");
 	else if(AMD64 == Architecture) emit_out("mov_rax, %");
 	else if(ARMV7L == Architecture) emit_out("!");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
@@ -1222,13 +1222,13 @@ void additive_expr_stub()
 	}
 	else if(X86 == Architecture)
 	{
-		arithmetic_recursion(postfix_expr, "ADD_ebx_to_eax\n", "ADD_ebx_to_eax\n", "+", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n", "-", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "MULTIPLYS_eax_by_ebx_into_eax\n", "MULTIPLY_eax_by_ebx_into_eax\n", "*", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nCDTQ\nDIVIDES_eax_by_ebx_into_eax\n", "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n", "/", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "XCHG_eax_ebx\nCDTQ\nMODULUSS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n", "%", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHL_eax_cl\n", "<<", additive_expr_stub);
-		arithmetic_recursion(postfix_expr, "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n", "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHR_eax_cl\n", ">>", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "add_eax,ebx\n", "add_eax,ebx\n", "+", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "sub_ebx,eax\nmov_eax,ebx\n", "sub_ebx,eax\nmov_eax,ebx\n", "-", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "imul_ebx\n", "mul_ebx\n", "*", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n", "/", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n", "%", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "mov_ecx,eax\nmov_eax,ebx\nsal_eax,cl\n", "mov_ecx,eax\nmov_eax,ebx\nshl_eax,cl\n", "<<", additive_expr_stub);
+		arithmetic_recursion(postfix_expr, "mov_ecx,eax\nmov_eax,ebx\nsar_eax,cl\n", "mov_ecx,eax\nmov_eax,ebx\nshr_eax,cl\n", ">>", additive_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -1302,12 +1302,12 @@ void relational_expr_stub()
 	}
 	else if(X86 == Architecture)
 	{
-		arithmetic_recursion(additive_expr, "CMP\nSETL\nMOVEZBL\n", "CMP\nSETB\nMOVEZBL\n", "<", relational_expr_stub);
-		arithmetic_recursion(additive_expr, "CMP\nSETLE\nMOVEZBL\n", "CMP\nSETBE\nMOVEZBL\n", "<=", relational_expr_stub);
-		arithmetic_recursion(additive_expr, "CMP\nSETGE\nMOVEZBL\n", "CMP\nSETAE\nMOVEZBL\n", ">=", relational_expr_stub);
-		arithmetic_recursion(additive_expr, "CMP\nSETG\nMOVEZBL\n", "CMP\nSETA\nMOVEZBL\n", ">", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETE\nMOVEZBL\n", "==", relational_expr_stub);
-		general_recursion(additive_expr, "CMP\nSETNE\nMOVEZBL\n", "!=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "cmp\nsetl_al\nmovzx_eax,al\n", "cmp\nsetb_al\nmovzx_eax,al\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "cmp\nsetle_al\nmovzx_eax,al\n", "cmp\nsetbe_al\nmovzx_eax,al\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "cmp\nsetge_al\nmovzx_eax,al\n", "cmp\nsetae_al\nmovzx_eax,al\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr, "cmp\nsetg_al\nmovzx_eax,al\n", "cmp\nseta_al\nmovzx_eax,al\n", ">", relational_expr_stub);
+		general_recursion(additive_expr, "cmp\nsete_al\nmovzx_eax,al\n", "==", relational_expr_stub);
+		general_recursion(additive_expr, "cmp\nsetne_al\nmovzx_eax,al\n", "!=", relational_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -1374,11 +1374,11 @@ void bitwise_expr_stub()
 	}
 	else if(X86 == Architecture)
 	{
-		general_recursion(relational_expr, "AND_eax_ebx\n", "&", bitwise_expr_stub);
-		general_recursion(relational_expr, "AND_eax_ebx\n", "&&", bitwise_expr_stub);
-		general_recursion(relational_expr, "OR_eax_ebx\n", "|", bitwise_expr_stub);
-		general_recursion(relational_expr, "OR_eax_ebx\n", "||", bitwise_expr_stub);
-		general_recursion(relational_expr, "XOR_ebx_eax_into_eax\n", "^", bitwise_expr_stub);
+		general_recursion(relational_expr, "and_eax,ebx\n", "&", bitwise_expr_stub);
+		general_recursion(relational_expr, "and_eax,ebx\n", "&&", bitwise_expr_stub);
+		general_recursion(relational_expr, "or_eax,ebx\n", "|", bitwise_expr_stub);
+		general_recursion(relational_expr, "or_eax,ebx\n", "||", bitwise_expr_stub);
+		general_recursion(relational_expr, "xor_eax,ebx\n", "^", bitwise_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -1444,7 +1444,7 @@ void primary_expr()
 	if(match("sizeof", global_token->s)) unary_expr_sizeof();
 	else if('-' == global_token->s[0])
 	{
-		if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %0\n");
+		if(X86 == Architecture) emit_out("mov_eax, %0\n");
 		else if(AMD64 == Architecture) emit_out("mov_rax, %0\n");
 		else if(ARMV7L == Architecture) emit_out("!0 R0 LOADI8_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_0\n");
@@ -1453,7 +1453,7 @@ void primary_expr()
 		common_recursion(primary_expr);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("NEG R0 R0\n");
-		else if(X86 == Architecture) emit_out("SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n");
+		else if(X86 == Architecture) emit_out("sub_ebx,eax\nmov_eax,ebx\n");
 		else if(AMD64 == Architecture) emit_out("sub_rbx,rax\nmov_rax,rbx\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SUB_X0_X1_X0\n");
@@ -1462,7 +1462,7 @@ void primary_expr()
 	else if('!' == global_token->s[0])
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))  emit_out("LOADI R0 1\n");
-		else if(X86 == Architecture) emit_out("LOAD_IMMEDIATE_eax %1\n");
+		else if(X86 == Architecture) emit_out("mov_eax, %1\n");
 		else if(AMD64 == Architecture) emit_out("mov_rax, %1\n");
 		else if(ARMV7L == Architecture) emit_out("!1 R0 LOADI8_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_1\n");
@@ -1470,7 +1470,7 @@ void primary_expr()
 		common_recursion(postfix_expr);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R1 R0\nSET.G R0 R0 1\n");
-		else if(X86 == Architecture) emit_out("CMP\nSETA\nMOVEZBL\n");
+		else if(X86 == Architecture) emit_out("cmp\nseta_al\nmovzx_eax,al\n");
 		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nseta_al\nmovzx_rax,al\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_HI\n");
 		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_HI\nSET_X0_TO_0\n");
@@ -1481,7 +1481,7 @@ void primary_expr()
 		common_recursion(postfix_expr);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("NOT R0 R0\n");
-		else if(X86 == Architecture) emit_out("NOT_eax\n");
+		else if(X86 == Architecture) emit_out("not_eax\n");
 		else if(AMD64 == Architecture) emit_out("not_rax\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 MVN_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("MVN_X0\n");
@@ -1511,7 +1511,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "ADD R0 R1 R0\n";
 			else operation = "ADDU R0 R1 R0\n";
 		}
-		else if(X86 == Architecture) operation = "ADD_ebx_to_eax\n";
+		else if(X86 == Architecture) operation = "add_eax,ebx\n";
 		else if(AMD64 == Architecture) operation = "add_rax,rbx\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "ADD_X0_X1_X0\n";
@@ -1524,7 +1524,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "SUB R0 R1 R0\n";
 			else operation =  "SUBU R0 R1 R0\n";
 		}
-		else if(X86 == Architecture) operation = "SUBTRACT_eax_from_ebx_into_ebx\nMOVE_ebx_to_eax\n";
+		else if(X86 == Architecture) operation = "sub_ebx,eax\nmov_eax,ebx\n";
 		else if(AMD64 == Architecture) operation = "sub_rbx,rax\nmov_rax,rbx\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "SUB_X0_X1_X0\n";
@@ -1539,8 +1539,8 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(X86 == Architecture)
 		{
-			if(is_signed) operation = "MULTIPLYS_eax_by_ebx_into_eax\n";
-			else operation = "MULTIPLY_eax_by_ebx_into_eax\n";
+			if(is_signed) operation = "imul_ebx\n";
+			else operation = "mul_ebx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1560,8 +1560,8 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(X86 == Architecture)
 		{
-			if (is_signed) operation = "XCHG_eax_ebx\nCDTQ\nDIVIDES_eax_by_ebx_into_eax\n";
-			else operation = "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nDIVIDE_eax_by_ebx_into_eax\n";
+			if (is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\n";
+			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1593,8 +1593,8 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(X86 == Architecture)
 		{
-			if(is_signed) operation = "XCHG_eax_ebx\nCDTQ\nMODULUSS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n";
-			else operation = "XCHG_eax_ebx\nLOAD_IMMEDIATE_edx %0\nMODULUS_eax_from_ebx_into_ebx\nMOVE_edx_to_eax\n";
+			if(is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n";
+			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1626,8 +1626,8 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(X86 == Architecture)
 		{
-			if(is_signed) operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAL_eax_cl\n";
-			else operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHL_eax_cl\n";
+			if(is_signed) operation = "mov_ecx,eax\nmov_eax,ebx\nsal_eax,cl\n";
+			else operation = "mov_ecx,eax\nmov_eax,ebx\nshl_eax,cl\n";
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1647,8 +1647,8 @@ char* compound_operation(char* operator, int is_signed)
 		}
 		else if(X86 == Architecture)
 		{
-			if(is_signed) operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSAR_eax_cl\n";
-			else operation = "COPY_eax_to_ecx\nCOPY_ebx_to_eax\nSHR_eax_cl\n";
+			if(is_signed) operation = "mov_ecx,eax\nmov_eax,ebx\nsar_eax,cl\n";
+			else operation = "mov_ecx,eax\nmov_eax,ebx\nshr_eax,cl\n";
 		}
 		else if(AMD64 == Architecture)
 		{
@@ -1674,7 +1674,7 @@ char* compound_operation(char* operator, int is_signed)
 	else if(match("&=", operator))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "AND R0 R0 R1\n";
-		else if(X86 == Architecture) operation = "AND_eax_ebx\n";
+		else if(X86 == Architecture) operation = "and_eax,ebx\n";
 		else if(AMD64 == Architecture) operation = "and_rax,rbx\n";
 		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 AND R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "AND_X0_X1_X0\n";
@@ -1683,7 +1683,7 @@ char* compound_operation(char* operator, int is_signed)
 	else if(match("^=", operator))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "XOR R0 R0 R1\n";
-		else if(X86 == Architecture) operation = "XOR_ebx_eax_into_eax\n";
+		else if(X86 == Architecture) operation = "xor_eax,ebx\n";
 		else if(AMD64 == Architecture) operation = "xor_rax,rbx\n";
 		else if(ARMV7L == Architecture) operation = "'0' R0 R0 XOR R1 ARITH2_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "XOR_X0_X1_X0\n";
@@ -1692,7 +1692,7 @@ char* compound_operation(char* operator, int is_signed)
 	else if(match("|=", operator))
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) operation = "OR R0 R0 R1\n";
-		else if(X86 == Architecture) operation = "OR_eax_ebx\n";
+		else if(X86 == Architecture) operation = "or_eax,ebx\n";
 		else if(AMD64 == Architecture) operation = "or_rax,rbx\n";
 		else if(ARMV7L == Architecture) operation = "NO_SHIFT R0 R0 OR R1 AUX_ALWAYS\n";
 		else if(AARCH64 == Architecture) operation = "OR_X0_X1_X0\n";
@@ -1717,7 +1717,7 @@ void expression()
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE R0 R1 0\n";
-			else if(X86 == Architecture) store = "STORE_INTEGER\n";
+			else if(X86 == Architecture) store = "mov_[ebx],eax\n";
 			else if(AMD64 == Architecture) store = "mov_[rbx],rax\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
@@ -1727,7 +1727,7 @@ void expression()
 		else
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE8 R0 R1 0\n";
-			else if(X86 == Architecture) store = "STORE_CHAR\n";
+			else if(X86 == Architecture) store = "mov_[ebx],al\n";
 			else if(AMD64 == Architecture) store = "mov_[rbx],al\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
@@ -1749,7 +1749,7 @@ void expression()
 		struct type* last_type = current_target;
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) push = "PUSHR R1 R15\n";
-		else if(X86 == Architecture) push = "PUSH_ebx\n";
+		else if(X86 == Architecture) push = "push_ebx\n";
 		else if(AMD64 == Architecture) push = "push_rbx\n";
 		else if(ARMV7L == Architecture) push = "{R1} PUSH_ALWAYS\n";
 		else if(AARCH64 == Architecture) push = "PUSH_X1\n";
@@ -1759,7 +1759,7 @@ void expression()
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD R1 R1 0\n";
-			else if(X86 == Architecture) load = "LOAD_INTEGER_ebx\n";
+			else if(X86 == Architecture) load = "mov_ebx,[ebx]\n";
 			else if(AMD64 == Architecture) load = "mov_rbx,[rbx]\n";
 			else if(ARMV7L == Architecture) load = "!0 R1 LOAD32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) load = "DEREF_X1\n";
@@ -1769,7 +1769,7 @@ void expression()
 		else
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD8 R1 R1 0\n";
-			else if(X86 == Architecture) load = "LOAD_BYTE_ebx\n";
+			else if(X86 == Architecture) load = "movsx_ebx,BYTE_PTR_[ebx]\n";
 			else if(AMD64 == Architecture) load = "movsx_rbx,BYTE_PTR_[rbx]\n";
 			else if(ARMV7L == Architecture) load = "!0 R1 LOAD8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) load = "DEREF_X1_BYTE\n";
@@ -1779,7 +1779,7 @@ void expression()
 		char *operator = global_token->s;
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) pop = "POPR R1 R15\n";
-		else if(X86 == Architecture) pop = "POP_ebx\n";
+		else if(X86 == Architecture) pop = "pop_ebx\n";
 		else if(AMD64 == Architecture) pop = "pop_rbx\n";
 		else if(ARMV7L == Architecture) pop = "{R1} POP_ALWAYS\n";
 		else if(AARCH64 == Architecture) pop = "POP_X1\n";
@@ -1789,7 +1789,7 @@ void expression()
 		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE R0 R1 0\n";
-			else if(X86 == Architecture) store = "STORE_INTEGER\n";
+			else if(X86 == Architecture) store = "mov_[ebx],eax\n";
 			else if(AMD64 == Architecture) store = "mov_[rbx],rax\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE32 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_X0_[X1]\n";
@@ -1799,7 +1799,7 @@ void expression()
 		else
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) store = "STORE8 R0 R1 0\n";
-			else if(X86 == Architecture) store = "STORE_CHAR\n";
+			else if(X86 == Architecture) store = "mov_[ebx],al\n";
 			else if(AMD64 == Architecture) store = "mov_[rbx],al\n";
 			else if(ARMV7L == Architecture) store = "!0 R0 STORE8 R1 MEMORY\n";
 			else if(AARCH64 == Architecture) store = "STR_BYTE_W0_[X1]\n";
@@ -1955,7 +1955,7 @@ void collect_local()
 	while(i != 0)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
-		else if(X86 == Architecture) emit_out("PUSH_eax\t#");
+		else if(X86 == Architecture) emit_out("push_eax\t#");
 		else if(AMD64 == Architecture) emit_out("push_rax\t#");
 		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
 		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
@@ -1983,7 +1983,7 @@ void process_if()
 	expression();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @ELSE_");
-	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %ELSE_");
+	else if(X86 == Architecture) emit_out("test_eax,eax\nje %ELSE_");
 	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %ELSE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
@@ -1999,7 +1999,7 @@ void process_if()
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_END_IF_");
-	else if(X86 == Architecture) emit_out("JUMP %_END_IF_");
+	else if(X86 == Architecture) emit_out("jmp %_END_IF_");
 	else if(AMD64 == Architecture) emit_out("jmp %_END_IF_");
 	else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
@@ -2059,7 +2059,7 @@ void process_for()
 	expression();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @FOR_END_");
-	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %FOR_END_");
+	else if(X86 == Architecture) emit_out("test_eax,eax\nje %FOR_END_");
 	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %FOR_END_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
@@ -2070,7 +2070,7 @@ void process_for()
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("JAL\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_THEN_");
-	else if(X86 == Architecture) emit_out("JUMP %FOR_THEN_");
+	else if(X86 == Architecture) emit_out("jmp %FOR_THEN_");
 	else if(AMD64 == Architecture) emit_out("jmp %FOR_THEN_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_THEN_");
@@ -2087,7 +2087,7 @@ void process_for()
 	expression();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_");
-	else if(X86 == Architecture) emit_out("JUMP %FOR_");
+	else if(X86 == Architecture) emit_out("jmp %FOR_");
 	else if(AMD64 == Architecture) emit_out("jmp %FOR_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_");
@@ -2105,7 +2105,7 @@ void process_for()
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_ITER_");
-	else if(X86 == Architecture) emit_out("JUMP %FOR_ITER_");
+	else if(X86 == Architecture) emit_out("jmp %FOR_ITER_");
 	else if(AMD64 == Architecture) emit_out("jmp %FOR_ITER_");
 	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_ITER_");
@@ -2177,7 +2177,7 @@ void process_do()
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.NZ R0 @DO_");
-	else if(X86 == Architecture) emit_out("TEST\nJUMP_NE %DO_");
+	else if(X86 == Architecture) emit_out("test_eax,eax\njne %DO_");
 	else if(AMD64 == Architecture) emit_out("test_rax,rax\njne %DO_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
@@ -2229,7 +2229,7 @@ void process_while()
 	expression();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @END_WHILE_");
-	else if(X86 == Architecture) emit_out("TEST\nJUMP_EQ %END_WHILE_");
+	else if(X86 == Architecture) emit_out("test_eax,eax\nje %END_WHILE_");
 	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %END_WHILE_");
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
@@ -2246,7 +2246,7 @@ void process_while()
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @WHILE_");
-	else if(X86 == Architecture) emit_out("JUMP %WHILE_");
+	else if(X86 == Architecture) emit_out("jmp %WHILE_");
 	else if(AMD64 == Architecture) emit_out("jmp %WHILE_");
 	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&WHILE_");
@@ -2282,7 +2282,7 @@ void return_result()
 		while(size_local_var != 0)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _return_result_locals\n");
-			else if(X86 == Architecture) emit_out("POP_ebx\t# _return_result_locals\n");
+			else if(X86 == Architecture) emit_out("pop_ebx\t# _return_result_locals\n");
 			else if(AMD64 == Architecture) emit_out("pop_rbx\t# _return_result_locals\n");
 			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _return_result_locals\n");
 			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _return_result_locals\n");
@@ -2293,7 +2293,7 @@ void return_result()
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
-	else if(X86 == Architecture) emit_out("RETURN\n");
+	else if(X86 == Architecture) emit_out("ret\n");
 	else if(AMD64 == Architecture) emit_out("ret\n");
 	else if(ARMV7L == Architecture) emit_out("'1' LR RETURN\n");
 	else if(AARCH64 == Architecture) emit_out("RETURN\n");
@@ -2313,7 +2313,7 @@ void process_break()
 	{
 		if(NULL == i) break;
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# break_cleanup_locals\n");
-		else if(X86 == Architecture) emit_out("POP_ebx\t# break_cleanup_locals\n");
+		else if(X86 == Architecture) emit_out("pop_ebx\t# break_cleanup_locals\n");
 		else if(AMD64 == Architecture) emit_out("pop_rbx\t# break_cleanup_locals\n");
 		else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# break_cleanup_locals\n");
 		else if(AARCH64 == Architecture) emit_out("POP_X1\t# break_cleanup_locals\n");
@@ -2324,7 +2324,7 @@ void process_break()
 	global_token = global_token->next;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-	else if(X86 == Architecture) emit_out("JUMP %");
+	else if(X86 == Architecture) emit_out("jmp %");
 	else if(AMD64 == Architecture) emit_out("jmp %");
 	else if(ARMV7L == Architecture) emit_out("^~");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
@@ -2352,7 +2352,7 @@ void process_continue()
 	global_token = global_token->next;
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-	else if(X86 == Architecture) emit_out("JUMP %");
+	else if(X86 == Architecture) emit_out("jmp %");
 	else if(AMD64 == Architecture) emit_out("jmp %");
 	else if(ARMV7L == Architecture) emit_out("^~");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
@@ -2384,7 +2384,7 @@ void recursive_statement()
 
 	/* Clean up any locals added */
 
-	if(((X86 == Architecture) && !match("RETURN\n", output_list->s)) ||
+	if(((X86 == Architecture) && !match("ret\n", output_list->s)) ||
 	   ((AMD64 == Architecture) && !match("ret\n", output_list->s)) ||
 	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
 	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) ||
@@ -2395,7 +2395,7 @@ void recursive_statement()
 		for(i = function->locals; frame != i; i = i->next)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
-			else if(X86 == Architecture) emit_out( "POP_ebx\t# _recursive_statement_locals\n");
+			else if(X86 == Architecture) emit_out( "pop_ebx\t# _recursive_statement_locals\n");
 			else if(AMD64 == Architecture) emit_out("pop_rbx\t# _recursive_statement_locals\n");
 			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
 			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _recursive_statement_locals\n");
@@ -2471,7 +2471,7 @@ void statement()
 		global_token = global_token->next;
 		require(NULL != global_token, "naked goto is not supported\n");
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-		else if(X86 == Architecture) emit_out("JUMP %");
+		else if(X86 == Architecture) emit_out("jmp %");
 		else if(AMD64 == Architecture) emit_out("jmp %");
 		else if(ARMV7L == Architecture) emit_out("^~");
 		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
@@ -2594,7 +2594,7 @@ void declare_function()
 
 		/* Prevent duplicate RETURNS */
 		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) emit_out("RET R15\n");
-		else if((X86 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
+		else if((X86 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
 		else if((AMD64 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
 		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
 		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");

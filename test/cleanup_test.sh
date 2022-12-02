@@ -15,7 +15,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-for ARCH in aarch64 amd64 armv7l knight-native knight-posix x86 riscv64; do
+for ARCH in aarch64 amd64 armv7l knight-native knight-posix x86 riscv32 riscv64; do
 	rm -rf "test/test$1/tmp-$ARCH"
 done
 

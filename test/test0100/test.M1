@@ -3,1605 +3,1605 @@
 
 # Defining function exit
 :FUNCTION_exit
-POP_ebx
-POP_ebx
-LOAD_IMMEDIATE_eax %1
-INT_80
-RETURN
+pop_ebx
+pop_ebx
+mov_eax, %1
+int !0x80
+ret
 # Defining function fgetc
 :FUNCTION_fgetc
-LOAD_IMMEDIATE_eax %3
-LOAD_EFFECTIVE_ADDRESS_ebx %4
-LOAD_INTEGER_ebx
-PUSH_ebx
-COPY_esp_to_ecx
-LOAD_IMMEDIATE_edx %1
-INT_80
-TEST
-POP_eax
-JUMP_NE8 !FUNCTION_fgetc_Done
-LOAD_IMMEDIATE_eax %-1
+mov_eax, %3
+lea_ebx,[esp+DWORD] %4
+mov_ebx,[ebx]
+push_ebx
+mov_ecx,esp
+mov_edx, %1
+int !0x80
+test_eax,eax
+pop_eax
+jne %FUNCTION_fgetc_Done
+mov_eax, %-1
 :FUNCTION_fgetc_Done
-RETURN
+ret
 # Defining function fputc
 :FUNCTION_fputc
-LOAD_IMMEDIATE_eax %4
-LOAD_EFFECTIVE_ADDRESS_ebx %4
-LOAD_INTEGER_ebx
-LOAD_EFFECTIVE_ADDRESS_ecx %8
-LOAD_IMMEDIATE_edx %1
-INT_80
-RETURN
+mov_eax, %4
+lea_ebx,[esp+DWORD] %4
+mov_ebx,[ebx]
+lea_ecx,[esp+DWORD] %8
+mov_edx, %1
+int !0x80
+ret
 # Defining function open
 :FUNCTION_open
-LOAD_EFFECTIVE_ADDRESS_ebx %12
-LOAD_INTEGER_ebx
-LOAD_EFFECTIVE_ADDRESS_ecx %8
-LOAD_INTEGER_ecx
-LOAD_EFFECTIVE_ADDRESS_edx %4
-LOAD_INTEGER_edx
-LOAD_IMMEDIATE_eax %5
-INT_80
-RETURN
+lea_ebx,[esp+DWORD] %12
+mov_ebx,[ebx]
+lea_ecx,[esp+DWORD] %8
+mov_ecx,[ecx]
+lea_edx,[esp+DWORD] %4
+mov_edx,[edx]
+mov_eax, %5
+int !0x80
+ret
 # Defining function fopen
 :FUNCTION_fopen
 # Defining local f
-PUSH_eax	#f
+push_eax	#f
 # IF_0
 
-LOAD_IMMEDIATE_eax %119
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_0
+mov_eax, %119
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_0
 
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %577
-PUSH_eax	#_process_expression2
-LOAD_IMMEDIATE_eax %384
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_open
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %_END_IF_0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %577
+push_eax	#_process_expression2
+mov_eax, %384
+push_eax	#_process_expression2
+call %FUNCTION_open
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %_END_IF_0
 
 :ELSE_0
 
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression2
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_open
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %0
+push_eax	#_process_expression2
+mov_eax, %0
+push_eax	#_process_expression2
+call %FUNCTION_open
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 :_END_IF_0
 
 # IF_1
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETG
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_1
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _return_result_locals
-RETURN
-JUMP %_END_IF_1
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setg_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_1
+mov_eax, %0
+pop_ebx	# _return_result_locals
+ret
+jmp %_END_IF_1
 :ELSE_1
 :_END_IF_1
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-POP_ebx	# _return_result_locals
-RETURN
+mov_eax,[eax]
+pop_ebx	# _return_result_locals
+ret
 # Defining function close
 :FUNCTION_close
-LOAD_EFFECTIVE_ADDRESS_ebx %4
-LOAD_IMMEDIATE_eax %6
-INT_80
-RETURN
+lea_ebx,[esp+DWORD] %4
+mov_eax, %6
+int !0x80
+ret
 # Defining function fclose
 :FUNCTION_fclose
 # Defining local error
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_close
-POP_ebx	# _process_expression_locals
-PUSH_eax	#error
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_close
+pop_ebx	# _process_expression_locals
+push_eax	#error
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-POP_ebx	# _return_result_locals
-RETURN
+mov_eax,[eax]
+pop_ebx	# _return_result_locals
+ret
 # Defining function file_print
 :FUNCTION_file_print
 :WHILE_0
 
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-TEST
-JUMP_EQ %END_WHILE_0
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+test_eax,eax
+je %END_WHILE_0
 
 # THEN_while_0
 
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-PUSH_eax	#_process_expression1
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_fputc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %8
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %WHILE_0
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+push_eax	#_process_expression1
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_fputc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %8
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %WHILE_0
 
 :END_WHILE_0
 
-RETURN
+ret
 # Defining function malloc
 :FUNCTION_malloc
-LOAD_ESP_IMMEDIATE_into_eax %4
-PUSH_eax
-LOAD_IMMEDIATE_eax %45
-LOAD_IMMEDIATE_ebx %0
-INT_80
-POP_ebx
-ADD_eax_to_ebx
-PUSH_eax
-PUSH_ebx
-LOAD_IMMEDIATE_eax %45
-INT_80
-POP_ebx
-CMP
-POP_eax
-JUMP_EQ8 !FUNCTION_malloc_Done
-LOAD_IMMEDIATE_eax %-1
+mov_eax,[esp+DWORD] %4
+push_eax
+mov_eax, %45
+mov_ebx, %0
+int !0x80
+pop_ebx
+add_ebx,eax
+push_eax
+push_ebx
+mov_eax, %45
+int !0x80
+pop_ebx
+cmp
+pop_eax
+je %FUNCTION_malloc_Done
+mov_eax, %-1
 :FUNCTION_malloc_Done
-RETURN
+ret
 # Defining function memset
 :FUNCTION_memset
 # Defining local s
-PUSH_eax	#s
+push_eax	#s
 # FOR_initialization_0
 
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %20
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %20
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 :FOR_0
 
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETL
-MOVEZBL
-TEST
-JUMP_EQ %FOR_END_0
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setl_al
+movzx_eax,al
+test_eax,eax
+je %FOR_END_0
 
-JUMP %FOR_THEN_0
+jmp %FOR_THEN_0
 
 :FOR_ITER_0
 
-LOAD_EFFECTIVE_ADDRESS %8
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-SUBTRACT_eax_from_ebx_into_ebx
-MOVE_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %FOR_0
+lea_eax,[esp+DWORD] %8
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+sub_ebx,eax
+mov_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %FOR_0
 
 :FOR_THEN_0
 
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_CHAR
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+add_eax,ebx
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],al
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %FOR_ITER_0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %FOR_ITER_0
 
 :FOR_END_0
 
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function calloc
 :FUNCTION_calloc
 # Defining local ret
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-MULTIPLY_eax_by_ebx_into_eax
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_malloc
-POP_ebx	# _process_expression_locals
-PUSH_eax	#ret
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+imul_ebx
+push_eax	#_process_expression1
+call %FUNCTION_malloc
+pop_ebx	# _process_expression_locals
+push_eax	#ret
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression2
-LOAD_EFFECTIVE_ADDRESS %20
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %20
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-MULTIPLY_eax_by_ebx_into_eax
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_memset
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %0
+push_eax	#_process_expression2
+lea_eax,[esp+DWORD] %20
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %20
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+imul_ebx
+push_eax	#_process_expression2
+call %FUNCTION_memset
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-POP_ebx	# _return_result_locals
-RETURN
+mov_eax,[eax]
+pop_ebx	# _return_result_locals
+ret
 # Defining function free
 :FUNCTION_free
-RETURN
+ret
 # Defining function match
 :FUNCTION_match
 # Defining local i
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-SUBTRACT_eax_from_ebx_into_ebx
-MOVE_ebx_to_eax
-PUSH_eax	#i
+mov_eax, %0
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+sub_ebx,eax
+mov_eax,ebx
+push_eax	#i
 :DO_0
 
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 # IF_2
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_2
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _return_result_locals
-RETURN
-JUMP %_END_IF_2
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_2
+mov_eax, %0
+pop_ebx	# _return_result_locals
+ret
+jmp %_END_IF_2
 :ELSE_2
 :_END_IF_2
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-TEST
-JUMP_NE %DO_0
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+push_eax	#_common_recursion
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+test_eax,eax
+jne %DO_0
 
 :DO_END_0
 
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _return_result_locals
-RETURN
+mov_eax, %1
+pop_ebx	# _return_result_locals
+ret
 # Defining function consume_token
 :FUNCTION_consume_token
 # Defining local i
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#i
+mov_eax, %0
+push_eax	#i
 # Defining local c
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-PUSH_eax	#c
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+push_eax	#c
 :DO_1
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_CHAR
-LOAD_EFFECTIVE_ADDRESS %4
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+add_eax,ebx
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],al
+lea_eax,[esp+DWORD] %4
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %20
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_IMMEDIATE_eax %32
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %9
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %10
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %62
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-TEST
-JUMP_NE %DO_1
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %20
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+mov_eax, %32
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+push_eax	#_common_recursion
+mov_eax, %9
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+push_eax	#_common_recursion
+mov_eax, %10
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+push_eax	#_common_recursion
+mov_eax, %62
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+test_eax,eax
+jne %DO_1
 :DO_END_1
-POP_ebx	# _recursive_statement_locals
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function storeLabel
 :FUNCTION_storeLabel
 # Defining local entry
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %8
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_calloc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#entry
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax, %1
+push_eax	#_process_expression1
+mov_eax, %8
+push_eax	#_process_expression2
+call %FUNCTION_calloc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#entry
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %0
+push_eax	#_common_recursion
+mov_eax, &GLOBAL_jump_table
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+mov_eax, &GLOBAL_jump_table
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %4096
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_calloc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
+mov_ebx, %4
+add_eax,ebx
+push_eax	#_common_recursion
+mov_eax, %4096
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+push_eax	#_process_expression1
+mov_eax, %1
+push_eax	#_process_expression2
+call %FUNCTION_calloc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression1
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_consume_token
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_consume_token
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
 # IF_3
-LOAD_IMMEDIATE_eax %95
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
+mov_eax, %95
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-LOAD_BYTE
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_3
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-LOAD_INTEGER
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+add_eax,ebx
+movsx_eax,BYTE_PTR_[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_3
+mov_eax, &GLOBAL_jump_table
+push_eax	#_common_recursion
+mov_eax, &GLOBAL_jump_table
+mov_eax,[eax]
 # looking up offset
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %_END_IF_3
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %_END_IF_3
 :ELSE_3
 :_END_IF_3
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function line_Comment
 :FUNCTION_line_Comment
 # Defining local c
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-PUSH_eax	#c
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+push_eax	#c
 :WHILE_1
-LOAD_IMMEDIATE_eax %10
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %13
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-TEST
-JUMP_EQ %END_WHILE_1
+mov_eax, %10
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+push_eax	#_common_recursion
+mov_eax, %13
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+test_eax,eax
+je %END_WHILE_1
 # THEN_while_1
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %WHILE_1
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %WHILE_1
 :END_WHILE_1
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function purge_string
 :FUNCTION_purge_string
 # Defining local c
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-PUSH_eax	#c
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+push_eax	#c
 :WHILE_2
-LOAD_IMMEDIATE_eax %0xFFFFFFFF
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %34
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-POP_ebx	# _common_recursion
-AND_eax_ebx
-TEST
-JUMP_EQ %END_WHILE_2
+mov_eax, %0xFFFFFFFF
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+push_eax	#_common_recursion
+mov_eax, %34
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+and_eax,ebx
+test_eax,eax
+je %END_WHILE_2
 # THEN_while_2
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %WHILE_2
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %WHILE_2
 :END_WHILE_2
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function first_pass
 :FUNCTION_first_pass
 # IF_4
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_4
-RETURN
-JUMP %_END_IF_4
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_4
+ret
+jmp %_END_IF_4
 :ELSE_4
 :_END_IF_4
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
 # looking up offset
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_first_pass
-POP_ebx	# _process_expression_locals
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_first_pass
+pop_ebx	# _process_expression_locals
 # Defining local source_file
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_0
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_0
 
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_fopen
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#source_file
+push_eax	#_process_expression2
+call %FUNCTION_fopen
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#source_file
 # IF_5
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_5
-LOAD_IMMEDIATE_eax &STRING_1
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_5
+mov_eax, &STRING_1
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_2
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_exit
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_5
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_2
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %1
+push_eax	#_process_expression1
+call %FUNCTION_exit
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_5
 :ELSE_5
 :_END_IF_5
 # Defining local c
-PUSH_eax	#c
+push_eax	#c
 # FOR_initialization_1
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 :FOR_1
-LOAD_IMMEDIATE_eax %0xFFFFFFFF
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-TEST
-JUMP_EQ %FOR_END_1
-JUMP %FOR_THEN_1
+mov_eax, %0xFFFFFFFF
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+test_eax,eax
+je %FOR_END_1
+jmp %FOR_THEN_1
 :FOR_ITER_1
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fgetc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %FOR_1
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fgetc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %FOR_1
 :FOR_THEN_1
 # IF_6
-LOAD_IMMEDIATE_eax %58
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_6
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_storeLabel
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_6
+mov_eax, %58
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_6
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_storeLabel
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_6
 :ELSE_6
 # IF_7
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %35
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %59
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-POP_ebx	# _common_recursion
-OR_eax_ebx
-TEST
-JUMP_EQ %ELSE_7
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_line_Comment
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_7
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %35
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %59
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+pop_ebx	# _common_recursion
+or_eax,ebx
+test_eax,eax
+je %ELSE_7
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_line_Comment
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_7
 :ELSE_7
 # IF_8
-LOAD_IMMEDIATE_eax %34
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_8
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_purge_string
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_8
+mov_eax, %34
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_8
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_purge_string
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_8
 :ELSE_8
 :_END_IF_8
 :_END_IF_7
 :_END_IF_6
-JUMP %FOR_ITER_1
+jmp %FOR_ITER_1
 :FOR_END_1
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_fclose
-POP_ebx	# _process_expression_locals
-POP_ebx	# _recursive_statement_locals
-POP_ebx	# _recursive_statement_locals
-RETURN
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_fclose
+pop_ebx	# _process_expression_locals
+pop_ebx	# _recursive_statement_locals
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function output_debug
 :FUNCTION_output_debug
 # Defining local i
-PUSH_eax	#i
+push_eax	#i
 # FOR_initialization_2
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 :FOR_2
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-TEST
-JUMP_EQ %FOR_END_2
-JUMP %FOR_THEN_2
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+test_eax,eax
+je %FOR_END_2
+jmp %FOR_THEN_2
 :FOR_ITER_2
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
 # looking up offset
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %FOR_2
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %FOR_2
 :FOR_THEN_2
 # IF_9
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-TEST
-JUMP_EQ %ELSE_9
-LOAD_IMMEDIATE_eax &STRING_3
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+test_eax,eax
+je %ELSE_9
+mov_eax, &STRING_3
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_4
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %0
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_4
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_5
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_9
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_5
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_9
 :ELSE_9
-LOAD_IMMEDIATE_eax &STRING_6
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax, &STRING_6
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_7
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %0
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_7
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_8
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_8
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
 :_END_IF_9
-JUMP %FOR_ITER_2
+jmp %FOR_ITER_2
 :FOR_END_2
-POP_ebx	# _recursive_statement_locals
-RETURN
+pop_ebx	# _recursive_statement_locals
+ret
 # Defining function reverse_list
 :FUNCTION_reverse_list
 # Defining local root
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#root
+mov_eax, %0
+push_eax	#root
 # Defining local next
-PUSH_eax	#next
+push_eax	#next
 :WHILE_3
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETNE
-MOVEZBL
-TEST
-JUMP_EQ %END_WHILE_3
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setne_al
+movzx_eax,al
+test_eax,eax
+je %END_WHILE_3
 # THEN_while_3
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
 # looking up offset
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
 # looking up offset
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %4
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %12
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %WHILE_3
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %4
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %12
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %WHILE_3
 :END_WHILE_3
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _return_result_locals
-POP_ebx	# _return_result_locals
-RETURN
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _return_result_locals
+pop_ebx	# _return_result_locals
+ret
 # Defining function main
 :FUNCTION_main
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-STORE_INTEGER
+mov_eax, &GLOBAL_jump_table
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 # Defining local input
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#input
-LOAD_IMMEDIATE_eax &GLOBAL_output
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-STORE_INTEGER
+mov_eax, %0
+push_eax	#input
+mov_eax, &GLOBAL_output
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 # Defining local output_file
-LOAD_IMMEDIATE_eax &STRING_9
-PUSH_eax	#output_file
+mov_eax, &STRING_9
+push_eax	#output_file
 # Defining local option_index
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#option_index
+mov_eax, %1
+push_eax	#option_index
 :WHILE_4
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %20
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETLE
-MOVEZBL
-TEST
-JUMP_EQ %END_WHILE_4
+mov_eax,[eax]
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %20
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+setle_al
+movzx_eax,al
+test_eax,eax
+je %END_WHILE_4
 # THEN_while_4
 # IF_10
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_10
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_10
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %_END_IF_10
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %_END_IF_10
 :ELSE_10
 # IF_11
-LOAD_EFFECTIVE_ADDRESS %20
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_10
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_11
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-OR_eax_ebx
-TEST
-JUMP_EQ %ELSE_11
-LOAD_IMMEDIATE_eax &STRING_12
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %20
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_13
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_exit
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_11
+lea_eax,[esp+DWORD] %20
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_10
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_11
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+or_eax,ebx
+test_eax,eax
+je %ELSE_11
+mov_eax, &STRING_12
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %20
+push_eax	#_common_recursion
+mov_eax, %0
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_13
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %0
+push_eax	#_process_expression1
+call %FUNCTION_exit
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_11
 :ELSE_11
 # IF_12
-LOAD_EFFECTIVE_ADDRESS %20
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_14
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_15
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-OR_eax_ebx
-TEST
-JUMP_EQ %ELSE_12
+lea_eax,[esp+DWORD] %20
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_14
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_15
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+or_eax,ebx
+test_eax,eax
+je %ELSE_12
 # Defining local temp
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %8
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_calloc
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#temp
-LOAD_EFFECTIVE_ADDRESS %0
+mov_eax, %1
+push_eax	#_process_expression1
+mov_eax, %8
+push_eax	#_process_expression2
+call %FUNCTION_calloc
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#temp
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %28
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %0
+mov_ebx, %4
+add_eax,ebx
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %28
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %0
 
-LOAD_INTEGER
+mov_eax,[eax]
 # looking up offset
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %16
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %12
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_EFFECTIVE_ADDRESS %4
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %2
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-POP_ebx	# _recursive_statement_locals
-JUMP %_END_IF_12
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %16
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %12
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+lea_eax,[esp+DWORD] %4
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %2
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+pop_ebx	# _recursive_statement_locals
+jmp %_END_IF_12
 :ELSE_12
 # IF_13
-LOAD_EFFECTIVE_ADDRESS %20
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_16
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_17
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-OR_eax_ebx
-TEST
-JUMP_EQ %ELSE_13
-LOAD_EFFECTIVE_ADDRESS %4
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_IMMEDIATE_eax &GLOBAL_output
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_18
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_fopen
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
+lea_eax,[esp+DWORD] %20
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_16
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_17
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+or_eax,ebx
+test_eax,eax
+je %ELSE_13
+lea_eax,[esp+DWORD] %4
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %1
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+mov_eax, &GLOBAL_output
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_18
+push_eax	#_process_expression2
+call %FUNCTION_fopen
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
 # IF_14
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_14
-LOAD_IMMEDIATE_eax &STRING_19
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
+mov_eax, %0
+push_eax	#_common_recursion
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_14
+mov_eax, &STRING_19
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
 # looking up offset
 # -> offset calculation
-LOAD_IMMEDIATE_ebx %4
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_20
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_exit
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_14
+mov_ebx, %4
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_20
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %1
+push_eax	#_process_expression1
+call %FUNCTION_exit
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_14
 :ELSE_14
 :_END_IF_14
-LOAD_EFFECTIVE_ADDRESS %0
+lea_eax,[esp+DWORD] %0
 
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax %2
-POP_ebx	# _common_recursion
-ADD_ebx_to_eax
-POP_ebx	# _common_recursion
-STORE_INTEGER
-JUMP %_END_IF_13
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+push_eax	#_common_recursion
+mov_eax, %2
+pop_ebx	# _common_recursion
+add_eax,ebx
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+jmp %_END_IF_13
 :ELSE_13
 # IF_15
-LOAD_EFFECTIVE_ADDRESS %20
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %4
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_21
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %24
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-SAL_eax_Immediate8 !2
-ADD_ebx_to_eax
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &STRING_22
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_match
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-OR_eax_ebx
-TEST
-JUMP_EQ %ELSE_15
-LOAD_IMMEDIATE_eax &STRING_23
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_exit
-POP_ebx	# _process_expression_locals
-JUMP %_END_IF_15
+lea_eax,[esp+DWORD] %20
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %4
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_21
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %24
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+sal_eax, !2
+add_eax,ebx
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, &STRING_22
+push_eax	#_process_expression2
+call %FUNCTION_match
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+or_eax,ebx
+test_eax,eax
+je %ELSE_15
+mov_eax, &STRING_23
+push_eax	#_process_expression1
+mov_eax, %1
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %0
+push_eax	#_process_expression1
+call %FUNCTION_exit
+pop_ebx	# _process_expression_locals
+jmp %_END_IF_15
 :ELSE_15
-LOAD_IMMEDIATE_eax &STRING_24
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %2
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_exit
-POP_ebx	# _process_expression_locals
+mov_eax, &STRING_24
+push_eax	#_process_expression1
+mov_eax, %2
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %1
+push_eax	#_process_expression1
+call %FUNCTION_exit
+pop_ebx	# _process_expression_locals
 :_END_IF_15
 :_END_IF_13
 :_END_IF_12
 :_END_IF_11
 :_END_IF_10
-JUMP %WHILE_4
+jmp %WHILE_4
 :END_WHILE_4
 # IF_16
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_common_recursion
-LOAD_EFFECTIVE_ADDRESS %12
-LOAD_INTEGER
-POP_ebx	# _common_recursion
-CMP
-SETE
-MOVEZBL
-TEST
-JUMP_EQ %ELSE_16
-LOAD_IMMEDIATE_eax %1
-POP_ebx	# _return_result_locals
-POP_ebx	# _return_result_locals
-POP_ebx	# _return_result_locals
-RETURN
-JUMP %_END_IF_16
+mov_eax, %0
+push_eax	#_common_recursion
+lea_eax,[esp+DWORD] %12
+mov_eax,[eax]
+pop_ebx	# _common_recursion
+cmp
+sete_al
+movzx_eax,al
+test_eax,eax
+je %ELSE_16
+mov_eax, %1
+pop_ebx	# _return_result_locals
+pop_ebx	# _return_result_locals
+pop_ebx	# _return_result_locals
+ret
+jmp %_END_IF_16
 :ELSE_16
 :_END_IF_16
-LOAD_EFFECTIVE_ADDRESS %8
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_first_pass
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-PUSH_eax	#_common_recursion
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-CALL_IMMEDIATE %FUNCTION_reverse_list
-POP_ebx	# _process_expression_locals
-POP_ebx	# _common_recursion
-STORE_INTEGER
-LOAD_IMMEDIATE_eax &STRING_25
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %1
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_output_debug
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_26
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &GLOBAL_jump_table
-LOAD_INTEGER
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax %0
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_output_debug
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax &STRING_27
-PUSH_eax	#_process_expression1
-LOAD_IMMEDIATE_eax &GLOBAL_output
-LOAD_INTEGER
-PUSH_eax	#_process_expression2
-CALL_IMMEDIATE %FUNCTION_file_print
-POP_ebx	# _process_expression_locals
-POP_ebx	# _process_expression_locals
-LOAD_IMMEDIATE_eax %0
-POP_ebx	# _return_result_locals
-POP_ebx	# _return_result_locals
-POP_ebx	# _return_result_locals
-RETURN
+lea_eax,[esp+DWORD] %8
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_first_pass
+pop_ebx	# _process_expression_locals
+mov_eax, &GLOBAL_jump_table
+push_eax	#_common_recursion
+mov_eax, &GLOBAL_jump_table
+mov_eax,[eax]
+push_eax	#_process_expression1
+call %FUNCTION_reverse_list
+pop_ebx	# _process_expression_locals
+pop_ebx	# _common_recursion
+mov_[ebx],eax
+mov_eax, &STRING_25
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &GLOBAL_jump_table
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %1
+push_eax	#_process_expression2
+call %FUNCTION_output_debug
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_26
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &GLOBAL_jump_table
+mov_eax,[eax]
+push_eax	#_process_expression1
+mov_eax, %0
+push_eax	#_process_expression2
+call %FUNCTION_output_debug
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, &STRING_27
+push_eax	#_process_expression1
+mov_eax, &GLOBAL_output
+mov_eax,[eax]
+push_eax	#_process_expression2
+call %FUNCTION_file_print
+pop_ebx	# _process_expression_locals
+pop_ebx	# _process_expression_locals
+mov_eax, %0
+pop_ebx	# _return_result_locals
+pop_ebx	# _return_result_locals
+pop_ebx	# _return_result_locals
+ret
 
 # Program global variables
 
