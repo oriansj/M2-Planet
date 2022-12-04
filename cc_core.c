@@ -452,6 +452,11 @@ char* load_value(unsigned size)
 		else if(AARCH64 == Architecture) return "DEREF_X0\n";
 		else if(RISCV64 == Architecture) return "RD_A0 RS1_A0 LD\n";
 	}
+	line_error();
+	fputs(" Got unsupported size ", stderr);
+	fputs(int2str(size, 10, TRUE), stderr);
+	fputs(" when trying to load value.\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 char* store_value(unsigned size)
