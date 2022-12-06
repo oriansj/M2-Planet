@@ -42,6 +42,10 @@ int main() {
 	b.z[0] = 1;
 	b.z[1] = 2;
 	b.z[2] = 3;
-	if (b.z[0] + b.z[1] + b.z[2] != 6) return 6;
+	if(b.z[0] + b.z[1] + b.z[2] != 6) return 6;
+
+	struct s* p = &b;
+	if(p[0].x != 3) return 7;
+
 	return 0;
 }

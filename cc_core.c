@@ -1176,7 +1176,7 @@ void postfix_expr_array()
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
 
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s))
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s))
 	{
 		assign = "";
 	}
