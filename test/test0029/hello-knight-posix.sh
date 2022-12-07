@@ -24,6 +24,13 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-posix \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
+	-f M2libc/knight/linux/unistd.c \
+	-f M2libc/knight/linux/fcntl.c \
+	-f M2libc/fcntl.c \
+	-f M2libc/stdlib.c \
+	-f M2libc/stdio.c \
 	-f test/test0029/member_access.c \
 	-o ${TMPDIR}/member_access.M1 \
 	|| exit 1
@@ -31,7 +38,7 @@ bin/M2-Planet \
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/knight/knight_defs.M1 \
-	-f M2libc/knight/libc-core.M1 \
+	-f M2libc/knight/libc-full.M1 \
 	-f ${TMPDIR}/member_access.M1 \
 	--big-endian \
 	--architecture knight-posix \

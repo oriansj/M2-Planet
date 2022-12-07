@@ -973,23 +973,6 @@ void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION i
 	}
 }
 
-int ceil_log2(int a)
-{
-	int result = 0;
-	if((a & (a - 1)) == 0)
-	{
-		result = -1;
-	}
-
-	while(a > 0)
-	{
-		result = result + 1;
-		a = a >> 1;
-	}
-
-	if(ARMV7L == Architecture) return (result >> 1);
-	return result;
-}
 
 /*
  * postfix-expr:
@@ -1152,18 +1135,21 @@ void postfix_expr_array()
 	}
 	else
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("SALI R0 ");
-		else if(X86 == Architecture) emit_out("sal_eax, !");
-		else if(AMD64 == Architecture) emit_out("sal_rax, !");
-		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 '");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W2_AHEAD\nSKIP_32_DATA\n%");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A0 RS1_A0 RS2_X");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R1 R15\nLOADI R1 ");
+		else if(X86 == Architecture) emit_out("push_ebx\nmov_ebx, %");
+		else if(AMD64 == Architecture) emit_out("push_rbx\nmov_rbx, %");
+		else if(ARMV7L == Architecture) emit_out("{R1} PUSH_ALWAYS\n!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+		else if(AARCH64 == Architecture) emit_out("PUSH_X1\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("RD_A2 RS1_A1 ADDI\nRD_A1 !");
+		emit_out(int2str(current_target->type->size, 10, TRUE));
+		if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" ADDI");
 
-		emit_out(int2str(ceil_log2(current_target->indirect->size), 10, TRUE));
-		if(ARMV7L == Architecture) emit_out("' MOVE_ALWAYS");
-		else if(AARCH64 == Architecture) emit_out("\nLSHIFT_X0_X0_X2");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" SLLI");
-		emit_out("\n");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("\nMULU R0 R1 R0\nPOPR R1 R15\n");
+		else if(X86 == Architecture) emit_out("\nmul_ebx\npop_ebx\n");
+		else if(AMD64 == Architecture) emit_out("\nmul_rbx\npop_rbx\n");
+		else if(ARMV7L == Architecture) emit_out("\n'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n{R1} POP_ALWAYS\n");
+		else if(AARCH64 == Architecture) emit_out("\nMUL_X0_X1_X0\nPOP_X1\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("\nRD_A0 RS1_A1 RS2_A0 MUL\nRD_A1 RS1_A2 ADDI\n");
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");

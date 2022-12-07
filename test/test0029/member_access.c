@@ -15,6 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+
 struct s
 {
 	char x;
@@ -44,8 +46,11 @@ int main() {
 	b.z[2] = 3;
 	if(b.z[0] + b.z[1] + b.z[2] != 6) return 6;
 
-	struct s* p = &b;
+	struct s* p = calloc(2, sizeof(struct s));
+	p->x = 3;
+	p[1].y = 4;
 	if(p[0].x != 3) return 7;
+	if(p[1].y != 4) return 8;
 
 	return 0;
 }

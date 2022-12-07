@@ -27,8 +27,16 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture ${ARCH} \
-	--debug \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
+	-f M2libc/signal.h \
+	-f M2libc/${ARCH}/linux/unistd.c \
+	-f M2libc/${ARCH}/linux/fcntl.c \
+	-f M2libc/fcntl.c \
+	-f M2libc/stdlib.c \
+	-f M2libc/stdio.c \
 	-f test/test0029/member_access.c \
+	--debug \
 	-o ${TMPDIR}/member_access.M1 \
 	|| exit 1
 
@@ -44,7 +52,7 @@ blood-elf \
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/${ARCH}/${ARCH}_defs.M1 \
-	-f M2libc/${ARCH}/libc-core.M1 \
+	-f M2libc/${ARCH}/libc-full.M1 \
 	-f ${TMPDIR}/member_access.M1 \
 	-f ${TMPDIR}/member_access-footer.M1 \
 	${ENDIANNESS_FLAG} \

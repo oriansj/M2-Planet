@@ -161,7 +161,6 @@ knight-native-tests: \
 	test0020-knight-native-binary\
 	test0024-knight-native-binary\
 	test0028-knight-native-binary\
-	test0029-knight-native-binary\
 	test0030-knight-native-binary\
 	test0106-knight-native-binary | results
 
@@ -955,9 +954,6 @@ test0024-knight-native-binary: M2-Planet | results
 
 test0028-knight-native-binary: M2-Planet | results
 	test/test0028/hello-knight-native.sh
-
-test0029-knight-native-binary: M2-Planet | results
-	test/test0029/hello-knight-native.sh
 
 test0030-knight-native-binary: M2-Planet | results
 	test/test0030/hello-knight-native.sh
