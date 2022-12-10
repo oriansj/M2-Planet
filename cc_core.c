@@ -417,15 +417,15 @@ void constant_load(struct token_list* a)
 	emit_out("\n");
 }
 
-char* load_value(unsigned size)
+char* load_value_signed(unsigned size)
 {
 	if(size == 1)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) return "LOAD8 R0 R0 0\n";
 		else if(X86 == Architecture) return "movsx_eax,BYTE_PTR_[eax]\n";
 		else if(AMD64 == Architecture) return "movsx_rax,BYTE_PTR_[rax]\n";
-		else if(ARMV7L == Architecture) return "!0 R0 LOAD8 R0 MEMORY\n";
-		else if(AARCH64 == Architecture) return "DEREF_X0_BYTE\n";
+		else if(ARMV7L == Architecture) return "LOADS8 R0 LOAD R0 HALF_MEMORY\n";
+		else if(AARCH64 == Architecture) return "LDRSB_X0_[X0]\n";
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) return "RD_A0 RS1_A0 LB\n";
 	}
 	else if(size == 2)
@@ -433,8 +433,8 @@ char* load_value(unsigned size)
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) return "LOAD16 R0 R0 0\n";
 		else if(X86 == Architecture) return "movsx_eax,WORD_PTR_[eax]\n";
 		else if(AMD64 == Architecture) return "movsx_rax,WORD_PTR_[rax]\n";
-		else if(ARMV7L == Architecture) return "NO_OFFSET R0 LOAD16 R0 HALF_MEMORY\n";
-		else if(AARCH64 == Architecture) return "LDRH_W0_[X0]\n";
+		else if(ARMV7L == Architecture) return "LOADS16 R0 LOAD R0 HALF_MEMORY\n";
+		else if(AARCH64 == Architecture) return "LDRSH_X0_[X0]\n";
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) return "RD_A0 RS1_A0 LH\n";
 	}
 	else if(size == 4)
@@ -457,6 +457,55 @@ char* load_value(unsigned size)
 	fputs(int2str(size, 10, TRUE), stderr);
 	fputs(" when trying to load value.\n", stderr);
 	exit(EXIT_FAILURE);
+}
+
+char* load_value_unsigned(unsigned size)
+{
+	if(size == 1)
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) return "LOADU8 R0 R0 0\n";
+		else if(X86 == Architecture) return "movzx_eax,BYTE_PTR_[eax]\n";
+		else if(AMD64 == Architecture) return "movzx_rax,BYTE_PTR_[rax]\n";
+		else if(ARMV7L == Architecture) return "!0 R0 LOAD R0 MEMORY\n";
+		else if(AARCH64 == Architecture) return "DEREF_X0_BYTE\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) return "RD_A0 RS1_A0 LBU\n";
+	}
+	else if(size == 2)
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) return "LOADU16 R0 R0 0\n";
+		else if(X86 == Architecture) return "movzx_eax,WORD_PTR_[eax]\n";
+		else if(AMD64 == Architecture) return "movzx_rax,WORD_PTR_[rax]\n";
+		else if(ARMV7L == Architecture) return "NO_OFFSET R0 LOAD R0 HALF_MEMORY\n";
+		else if(AARCH64 == Architecture) return "LDRH_W0_[X0]\n";
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) return "RD_A0 RS1_A0 LHU\n";
+	}
+	else if(size == 4)
+	{
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) return "LOAD R0 R0 0\n";
+		else if(X86 == Architecture) return "mov_eax,[eax]\n";
+		else if(AMD64 == Architecture) return "mov_eax,[rax]\n";
+		else if(ARMV7L == Architecture) return "!0 R0 LOAD32 R0 MEMORY\n";
+		else if(AARCH64 == Architecture) return "LDR_W0_[X0]\n";
+		else if(RISCV32 == Architecture) return "RD_A0 RS1_A0 LW\n";
+		else if(RISCV64 == Architecture) return "RD_A0 RS1_A0 LWU\n";
+	}
+	else if(size == 8)
+	{
+		if(AMD64 == Architecture) return "mov_rax,[rax]\n";
+		else if(AARCH64 == Architecture) return "DEREF_X0\n";
+		else if(RISCV64 == Architecture) return "RD_A0 RS1_A0 LD\n";
+	}
+	line_error();
+	fputs(" Got unsupported size ", stderr);
+	fputs(int2str(size, 10, TRUE), stderr);
+	fputs(" when trying to load value.\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+char* load_value(unsigned size, int is_signed)
+{
+	if(is_signed) return load_value_signed(size);
+	return load_value_unsigned(size);
 }
 
 char* store_value(unsigned size)
@@ -550,13 +599,13 @@ void variable_load(struct token_list* a, int num_dereference)
 	}
 	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
 	{
-		emit_out(load_value(current_target->size));
+		emit_out(load_value(current_target->size, current_target->is_signed));
 	}
 
 	while (num_dereference > 0)
 	{
 		current_target = current_target->type;
-		emit_out(load_value(current_target->size));
+		emit_out(load_value(current_target->size, current_target->is_signed));
 		num_dereference = num_dereference - 1;
 	}
 }
@@ -622,13 +671,7 @@ void global_load(struct token_list* a)
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-	else if(X86 == Architecture) emit_out("mov_eax,[eax]\n");
-	else if(AMD64 == Architecture) emit_out("mov_rax,[rax]\n");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-	else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
-	else if(RISCV32 == Architecture) emit_out("RD_A0 RS1_A0 LW\n");
-	else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
+	emit_out(load_value(register_size, current_target->is_signed));
 }
 
 /*
@@ -1036,15 +1079,10 @@ void postfix_expr_arrow()
 		}
 	}
 
+	/* We don't yet support assigning structs to structs */
 	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOAD R0 R0 0\n");
-		else if(X86 == Architecture) emit_out("mov_eax,[eax]\n");
-		else if(AMD64 == Architecture) emit_out("mov_rax,[rax]\n");
-		else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-		else if(AARCH64 == Architecture) emit_out("DEREF_X0\n");
-		else if(RISCV32 == Architecture) emit_out("RD_A0 RS1_A0 LW\n");
-		else if(RISCV64 == Architecture) emit_out("RD_A0 RS1_A0 LD\n");
+		emit_out(load_value(i->size, i->is_signed));
 	}
 }
 
@@ -1104,7 +1142,7 @@ void postfix_expr_dot()
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 	if(match("[", global_token->s)) return;
 
-	emit_out(load_value(current_target->size));
+	emit_out(load_value(current_target->size, current_target->is_signed));
 }
 
 void postfix_expr_array()
@@ -1114,24 +1152,12 @@ void postfix_expr_array()
 	current_target = array;
 	require(NULL != current_target, "Arrays only apply to variables\n");
 
-	char* assign;
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) assign = "LOAD R0 R0 0\n";
-	else if(X86 == Architecture) assign = "mov_eax,[eax]\n";
-	else if(AMD64 == Architecture) assign = "mov_rax,[rax]\n";
-	else if(ARMV7L == Architecture) assign = "!0 R0 LOAD32 R0 MEMORY\n";
-	else if(AARCH64 == Architecture) assign = "DEREF_X0\n";
-	else if(RISCV32 == Architecture) assign = "RD_A0 RS1_A0 LW\n";
-	else if(RISCV64 == Architecture) assign = "RD_A0 RS1_A0 LD\n";
+	char* assign = load_value(register_size, current_target->is_signed);
 
 	/* Add support for Ints */
 	if(match("char*", current_target->name))
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) assign = "LOAD8 R0 R0 0\n";
-		else if(X86 == Architecture) assign = "movsx_eax,BYTE_PTR_[eax]\n";
-		else if(AMD64 == Architecture) assign = "movsx_rax,BYTE_PTR_[rax]\n";
-		else if(ARMV7L == Architecture) assign = "!0 R0 LOAD8 R0 MEMORY\n";
-		else if(AARCH64 == Architecture) assign = "DEREF_X0_BYTE\n";
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) assign = "RD_A0 RS1_A0 LBU\n";
+		assign = load_value(1, TRUE);
 	}
 	else
 	{
@@ -1794,7 +1820,7 @@ void expression()
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD8 R1 R1 0\n";
 			else if(X86 == Architecture) load = "movsx_ebx,BYTE_PTR_[ebx]\n";
 			else if(AMD64 == Architecture) load = "movsx_rbx,BYTE_PTR_[rbx]\n";
-			else if(ARMV7L == Architecture) load = "!0 R1 LOAD8 R1 MEMORY\n";
+			else if(ARMV7L == Architecture) load = "LOADU8 R1 LOAD R1 MEMORY\n";
 			else if(AARCH64 == Architecture) load = "DEREF_X1_BYTE\n";
 			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) load = "RD_A1 RS1_A1 LBU\n";
 		}
