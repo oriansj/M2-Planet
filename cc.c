@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
-	Architecture = KNIGHT_NATIVE; /* Assume Knight-native */
+	Architecture = 0; /* catch unset */
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
 	char* arch;
 	char* name;
@@ -223,6 +223,13 @@ int main(int argc, char** argv)
 			fputs("UNKNOWN ARGUMENT\n", stdout);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	/* Deal with special case of architecture not being set */
+	if(0 == Architecture)
+	{
+		Architecture = KNIGHT_NATIVE;
+		init_macro_env("__knight__", "1", "--architecture", env);
 	}
 
 	/* Deal with special case of wanting to read from standard input */

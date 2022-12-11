@@ -100,11 +100,11 @@ clean:
 bin:
 	mkdir -p bin
 
-results:
+test/results:
 	mkdir -p test/results
 
 # tests
-test: M2-Planet | bin results
+test: M2-Planet | bin test/results
 	+make -f makefile-tests --output-sync
 	sha256sum -c test/test.answers
 

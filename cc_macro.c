@@ -537,6 +537,7 @@ void handle_error(int warning_p)
 	}
 }
 
+void eat_block();
 void macro_directive()
 {
 	struct conditional_inclusion *t;
@@ -557,6 +558,7 @@ void macro_directive()
 		if(FALSE == result)
 		{
 			t->include = FALSE;
+			eat_block();
 		}
 
 		t->previous_condition_matched = t->include;
@@ -568,12 +570,13 @@ void macro_directive()
 		if (NULL != lookup_macro(macro_token))
 		{
 			result = TRUE;
+			eat_current_token();
 		}
 		else
 		{
 			result = FALSE;
+			eat_block();
 		}
-		eat_current_token();
 
 		/* push conditional inclusion */
 		t = calloc(1, sizeof(struct conditional_inclusion));
@@ -599,8 +602,8 @@ void macro_directive()
 		else
 		{
 			result = TRUE;
+			eat_current_token();
 		}
-		eat_current_token();
 
 		/* push conditional inclusion */
 		t = calloc(1, sizeof(struct conditional_inclusion));
@@ -611,6 +614,7 @@ void macro_directive()
 		if(FALSE == result)
 		{
 			t->include = FALSE;
+			eat_block();
 		}
 
 		t->previous_condition_matched = t->include;
@@ -623,12 +627,20 @@ void macro_directive()
 		conditional_inclusion_top->include = result && !conditional_inclusion_top->previous_condition_matched;
 		conditional_inclusion_top->previous_condition_matched =
 		    conditional_inclusion_top->previous_condition_matched || conditional_inclusion_top->include;
+		if(FALSE == result)
+		{
+			eat_block();
+		}
 	}
 	else if(match("#else", macro_token->s))
 	{
 		eat_current_token();
 		require(NULL != conditional_inclusion_top, "#else without leading #if\n");
 		conditional_inclusion_top->include = !conditional_inclusion_top->previous_condition_matched;
+		if(FALSE == conditional_inclusion_top->include)
+		{
+			eat_block();
+		}
 	}
 	else if(match("#endif", macro_token->s))
 	{
@@ -722,7 +734,14 @@ void eat_block()
 
 		eat_current_token();
 		require(NULL != macro_token, "Unterminated #if block\n");
-	} while(!match("#elif", macro_token->s) && !match("#else", macro_token->s) && !match("#endif", macro_token->s));
+		if(match("#elif", macro_token->s)) break;
+		if(match("#else", macro_token->s)) break;
+		if(match("#endif", macro_token->s)) break;
+	} while(TRUE);
+	require(NULL != macro_token->prev, "impossible #if block\n");
+
+	/* rewind the newline */
+	if(match("\n", macro_token->prev->s)) macro_token = macro_token->prev;
 }
 
 
