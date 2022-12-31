@@ -30,6 +30,7 @@ bin/M2-Planet \
 	-f M2libc/knight/linux/fcntl.c \
 	-f M2libc/fcntl.c \
 	-f M2libc/stdlib.c \
+	-f M2libc/stdio.h \
 	-f M2libc/stdio.c \
 	-f test/test0106/cc500.c \
 	-o ${TMPDIR}/cc0.M1 \

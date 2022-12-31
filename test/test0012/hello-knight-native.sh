@@ -30,6 +30,7 @@ bin/M2-Planet \
 	-f M2libc/knight/native/fcntl.c \
 	-f M2libc/fcntl.c \
 	-f M2libc/stdlib.c \
+	-f M2libc/stdio.h \
 	-f M2libc/stdio.c \
 	-f test/test0012/break-for.c \
 	-o ${TMPDIR}/break-for.M1 \

@@ -82,6 +82,7 @@ then
 		-f M2libc/x86/linux/fcntl.c \
 		-f M2libc/fcntl.c \
 		-f M2libc/stdlib.c \
+		-f M2libc/stdio.h \
 		-f M2libc/stdio.c \
 		-f cc.h \
 		-f M2libc/bootstrappable.c \

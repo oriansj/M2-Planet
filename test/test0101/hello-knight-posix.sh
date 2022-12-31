@@ -31,6 +31,7 @@ mkdir -p ${TMPDIR}
 	-f M2libc/knight/linux/sys/stat.c \
 	-f M2libc/fcntl.c \
 	-f M2libc/stdlib.c \
+	-f M2libc/stdio.h \
 	-f M2libc/stdio.c \
 	-f M2libc/bootstrappable.c\
 	-f test/test0101/hex2_linker.c \
