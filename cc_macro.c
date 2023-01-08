@@ -233,7 +233,10 @@ int macro_primary_expr()
 	else if('(' == macro_token->s[0])
 	{
 		eat_current_token();
-		return macro_expression();
+		hold = macro_expression();
+		require(')' == macro_token->s[0], "missing ) in macro expression\n");
+		eat_current_token();
+		return hold;
 	}
 	else if(match("defined", macro_token->s))
 	{
