@@ -2742,7 +2742,9 @@ void global_assignment()
 	{ /* Assume Int */
 		globals_list = emit("%", globals_list);
 		globals_list = emit(global_token->s, globals_list);
-		padding_zeroes = register_size / 4 - 1;
+
+		/* broken for big endian architectures */
+		padding_zeroes = (register_size / 4) - 1;
 		while(padding_zeroes > 0)
 		{
 			/* Assume positive Int */
