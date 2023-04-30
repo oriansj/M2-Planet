@@ -2737,10 +2737,18 @@ void global_assignment()
 	globals_list = emit("\n", globals_list);
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
+	unsigned padding_zeroes;
 	if(in_set(global_token->s[0], "0123456789"))
 	{ /* Assume Int */
 		globals_list = emit("%", globals_list);
 		globals_list = emit(global_token->s, globals_list);
+		padding_zeroes = register_size / 4 - 1;
+		while(padding_zeroes > 0)
+		{
+			/* Assume positive Int */
+			globals_list = emit(" %0", globals_list);
+			padding_zeroes = padding_zeroes - 1;
+		}
 		globals_list = emit("\n", globals_list);
 	}
 	else if(('"' == global_token->s[0]))
