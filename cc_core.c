@@ -1219,12 +1219,11 @@ void unary_expr_sizeof()
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADUI R0 ");
 	else if(X86 == Architecture) emit_out("mov_eax, %");
 	else if(AMD64 == Architecture) emit_out("mov_rax, %");
-	else if(ARMV7L == Architecture) emit_out("!");
+	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 !");
 	emit_out(int2str(a->size, 10, TRUE));
-	if(ARMV7L == Architecture) emit_out(" R0 LOADI8_ALWAYS");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
+	if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
 	emit_out("\n");
 }
 
