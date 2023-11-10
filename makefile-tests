@@ -55,6 +55,7 @@ aarch64-tests: \
 	test0028-aarch64-binary \
 	test0029-aarch64-binary \
 	test0030-aarch64-binary \
+	test0031-aarch64-binary \
 	test0100-aarch64-binary \
 	test0101-aarch64-binary \
 	test0102-aarch64-binary \
@@ -96,6 +97,7 @@ amd64-tests: \
 	test0028-amd64-binary \
 	test0029-amd64-binary \
 	test0030-amd64-binary \
+	test0031-amd64-binary \
 	test0100-amd64-binary \
 	test0101-amd64-binary \
 	test0102-amd64-binary \
@@ -134,6 +136,7 @@ knight-posix-tests: \
 	test0028-knight-posix-binary \
 	test0029-knight-posix-binary \
 	test0030-knight-posix-binary \
+	test0031-knight-posix-binary \
 	test0100-knight-posix-binary \
 	test0101-knight-posix-binary \
 	test0102-knight-posix-binary \
@@ -162,6 +165,7 @@ knight-native-tests: \
 	test0024-knight-native-binary\
 	test0028-knight-native-binary\
 	test0030-knight-native-binary\
+	test0031-knight-native-binary\
 	test0106-knight-native-binary | results
 
 armv7l-tests: \
@@ -196,6 +200,7 @@ armv7l-tests: \
 	test0028-armv7l-binary \
 	test0029-armv7l-binary \
 	test0030-armv7l-binary \
+	test0031-armv7l-binary \
 	test0100-armv7l-binary \
 	test0101-armv7l-binary \
 	test0102-armv7l-binary \
@@ -237,6 +242,7 @@ x86-tests: \
 	test0028-x86-binary \
 	test0029-x86-binary \
 	test0030-x86-binary \
+	test0031-x86-binary \
 	test0100-x86-binary \
 	test0101-x86-binary \
 	test0102-x86-binary \
@@ -278,6 +284,7 @@ riscv32-tests: \
 	test0028-riscv32-binary \
 	test0029-riscv32-binary \
 	test0030-riscv32-binary \
+	test0031-riscv32-binary \
 	test0100-riscv32-binary \
 	test0101-riscv32-binary \
 	test0102-riscv32-binary \
@@ -319,6 +326,7 @@ riscv64-tests: \
 	test0028-riscv64-binary \
 	test0029-riscv64-binary \
 	test0030-riscv64-binary \
+	test0031-riscv64-binary \
 	test0100-riscv64-binary \
 	test0101-riscv64-binary \
 	test0102-riscv64-binary \
@@ -420,6 +428,9 @@ test0029-riscv32-binary: M2-Planet | results
 
 test0030-riscv32-binary: M2-Planet | results
 	test/test0030/run_test.sh riscv32
+
+test0031-riscv32-binary: M2-Planet | results
+	test/test0031/run_test.sh riscv32
 
 test0100-riscv32-binary: M2-Planet | results
 	test/test0100/run_test.sh riscv32
@@ -538,6 +549,9 @@ test0029-riscv64-binary: M2-Planet | results
 test0030-riscv64-binary: M2-Planet | results
 	test/test0030/run_test.sh riscv64
 
+test0031-riscv64-binary: M2-Planet | results
+	test/test0031/run_test.sh riscv64
+
 test0100-riscv64-binary: M2-Planet | results
 	test/test0100/run_test.sh riscv64
 
@@ -654,6 +668,9 @@ test0029-aarch64-binary: M2-Planet | results
 
 test0030-aarch64-binary: M2-Planet | results
 	test/test0030/run_test.sh aarch64
+
+test0031-aarch64-binary: M2-Planet | results
+	test/test0031/run_test.sh aarch64
 
 test0100-aarch64-binary: M2-Planet | results
 	test/test0100/run_test.sh aarch64
@@ -772,6 +789,9 @@ test0029-amd64-binary: M2-Planet | results
 test0030-amd64-binary: M2-Planet | results
 	test/test0030/run_test.sh amd64
 
+test0031-amd64-binary: M2-Planet | results
+	test/test0031/run_test.sh amd64
+
 test0100-amd64-binary: M2-Planet | results
 	test/test0100/run_test.sh amd64
 
@@ -880,6 +900,9 @@ test0029-knight-posix-binary: M2-Planet | results
 test0030-knight-posix-binary: M2-Planet | results
 	test/test0030/hello-knight-posix.sh
 
+test0031-knight-posix-binary: M2-Planet | results
+	test/test0031/hello-knight-posix.sh
+
 test0100-knight-posix-binary: M2-Planet | results
 	test/test0100/hello-knight-posix.sh
 
@@ -957,6 +980,9 @@ test0028-knight-native-binary: M2-Planet | results
 
 test0030-knight-native-binary: M2-Planet | results
 	test/test0030/hello-knight-native.sh
+
+test0031-knight-native-binary: M2-Planet | results
+	test/test0031/hello-knight-native.sh
 
 test0106-knight-native-binary: M2-Planet | results
 	test/test0106/hello-knight-native.sh
@@ -1053,6 +1079,9 @@ test0029-armv7l-binary: M2-Planet | results
 
 test0030-armv7l-binary: M2-Planet | results
 	test/test0030/run_test.sh armv7l
+
+test0031-armv7l-binary: M2-Planet | results
+	test/test0031/run_test.sh armv7l
 
 test0100-armv7l-binary: M2-Planet | results
 	test/test0100/run_test.sh armv7l
@@ -1170,6 +1199,9 @@ test0029-x86-binary: M2-Planet | results
 
 test0030-x86-binary: M2-Planet | results
 	test/test0030/run_test.sh x86
+
+test0031-x86-binary: M2-Planet | results
+	test/test0031/run_test.sh x86
 
 test0100-x86-binary: M2-Planet | results
 	test/test0100/run_test.sh x86

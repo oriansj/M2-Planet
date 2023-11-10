@@ -84,4 +84,10 @@ struct token_list
 	};
 };
 
+struct case_list
+{
+	struct case_list* next;
+	char* value;
+};
+
 #include "cc_globals.h"

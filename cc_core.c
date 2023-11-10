@@ -398,7 +398,7 @@ void function_call(char* s, int bool)
 	}
 }
 
-void constant_load(struct token_list* a)
+void constant_load(char* s)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADI R0 ");
 	else if(X86 == Architecture) emit_out("mov_eax, %");
@@ -408,10 +408,10 @@ void constant_load(struct token_list* a)
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		emit_out("rd_a0 ~");
-		emit_out(a->arguments->s);
+		emit_out(s);
 		emit_out(" lui\nrd_a0 rs1_a0 !");
 	}
-	emit_out(a->arguments->s);
+	emit_out(s);
 	if(RISCV32 == Architecture) emit_out(" addi\n");
 	else if(RISCV64 == Architecture) emit_out(" addiw\n");
 	emit_out("\n");
@@ -806,15 +806,15 @@ char* number_to_hex(int a, int bytes)
 	return result;
 }
 
-void primary_expr_number()
+void primary_expr_number(char* s)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		int size = strtoint(global_token->s);
+		int size = strtoint(s);
 		if((32767 > size) && (size > -32768))
 		{
 			emit_out("LOADI R0 ");
-			emit_out(global_token->s);
+			emit_out(s);
 		}
 		else
 		{
@@ -826,39 +826,39 @@ void primary_expr_number()
 	else if(X86 == Architecture)
 	{
 		emit_out("mov_eax, %");
-		emit_out(global_token->s);
+		emit_out(s);
 	}
 	else if(AMD64 == Architecture)
 	{
 		emit_out("mov_rax, %");
-		emit_out(global_token->s);
+		emit_out(s);
 	}
 	else if(ARMV7L == Architecture)
 	{
 		emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-		emit_out(global_token->s);
+		emit_out(s);
 	}
 	else if(AARCH64 == Architecture)
 	{
 		emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-		emit_out(global_token->s);
+		emit_out(s);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		int size = strtoint(global_token->s);
+		int size = strtoint(s);
 		if((2047 > size) && (size > -2048))
 		{
 			emit_out("rd_a0 !");
-			emit_out(global_token->s);
+			emit_out(s);
 			emit_out(" addi");
 		}
 		else if (0 == (size >> 30))
 		{
 			emit_out("rd_a0 ~");
-			emit_out(global_token->s);
+			emit_out(s);
 			emit_out(" lui\n");
 			emit_out("rd_a0 rs1_a0 !");
-			emit_out(global_token->s);
+			emit_out(s);
 			emit_out(" addi");
 		}
 		else
@@ -882,7 +882,6 @@ void primary_expr_number()
 		}
 	}
 	emit_out("\n");
-	global_token = global_token->next;
 }
 
 void primary_expr_variable()
@@ -898,7 +897,7 @@ void primary_expr_variable()
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
-		constant_load(a);
+		constant_load(a->arguments->s);
 		return;
 	}
 
@@ -1555,7 +1554,11 @@ void primary_expr()
 	else if(global_token->s[0] == '"') primary_expr_string();
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) primary_expr_variable();
 	else if(global_token->s[0] == '*') primary_expr_variable();
-	else if(in_set(global_token->s[0], "0123456789")) primary_expr_number();
+	else if(in_set(global_token->s[0], "0123456789"))
+	{
+		primary_expr_number(global_token->s);
+		global_token = global_token->next;
+	}
 	else primary_expr_failure();
 }
 
@@ -1896,7 +1899,7 @@ int iskeywordp(char* s)
 /* Similar to integer division a / b but rounds up */
 unsigned ceil_div(unsigned a, unsigned b)
 {
-    return (a + b - 1) / b;
+	return (a + b - 1) / b;
 }
 
 /* Process local variable */
@@ -2059,6 +2062,177 @@ void process_if()
 	}
 	emit_out(":_END_IF_");
 	uniqueID_out(function->s, number_string);
+}
+
+void process_case()
+{
+process_case_iter:
+	if(match("case", global_token->s)) return;
+	if(match(":default", global_token->s)) return;
+
+	if(match("break", global_token->s))
+	{
+		statement();
+	}
+	else
+	{
+		statement();
+		goto process_case_iter;
+	}
+}
+
+void process_switch()
+{
+	maybe_bootstrap_error("switch/case statements");
+	struct token_list* nested_locals = break_frame;
+	char* nested_break_head = break_target_head;
+	char* nested_break_func = break_target_func;
+	char* nested_break_num = break_target_num;
+	char* nested_continue_head = continue_target_head;
+
+	char* number_string = int2str(current_count, 10, TRUE);
+	current_count = current_count + 1;
+
+	break_target_head = "_SWITCH_END_";
+	continue_target_head = NULL; /* don't allow continue in switch statements */
+	break_target_num = number_string;
+	break_frame = function->locals;
+	break_target_func = function->s;
+
+	emit_out("# switch_");
+	uniqueID_out(function->s, number_string);
+
+	/* get what we are casing on */
+	global_token = global_token->next;
+	require_match("ERROR in process_switch\nMISSING (\n", "(");
+	expression();
+	require_match("ERROR in process_switch\nMISSING )\n", ")");
+
+	/* Put the value in R1 as it is currently in R0 */
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("MOVE R1 R0\n");
+	else if(X86 == Architecture) emit_out("mov_ebx,eax\n");
+	else if(AMD64 == Architecture) emit_out("push_rax\npop_rbx\n");
+	else if(ARMV7L == Architecture) emit_out("'0' R1 R0 NO_SHIFT MOVE_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("SET_X1_FROM_X0\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a1 rs1_a0 mv\n");
+
+	/* Jump to the switch table */
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_TABLE_");
+	else if(X86 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
+	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
+	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_TABLE_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_TABLE_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_TABLE_");
+
+	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+
+	/* must be switch (exp) {$STATEMENTS}; form */
+	require_match("ERROR in process_switch\nMISSING {\n", "{");
+	struct case_list* backtrack = NULL;
+process_switch_iter:
+	if(match("case", global_token->s))
+	{
+		global_token = global_token->next;
+		if(':' == global_token->s[0])
+		{
+			struct case_list* c = calloc(1, sizeof(struct case_list));
+			c->next = backtrack;
+			c->value = global_token->s + 1;
+			backtrack = c;
+			emit_out(":_SWITCH_CASE_");
+			emit_out(c->value);
+			emit_out("_");
+			uniqueID_out(function->s, number_string);
+			global_token = global_token->next;
+			process_case();
+		}
+		else line_error();
+		goto process_switch_iter;
+	}
+	else if(match(":default", global_token->s))
+	{ /* because of how M2-Planet treats labels */
+		global_token = global_token->next;
+		emit_out(":_SWITCH_DEFAULT_");
+		uniqueID_out(function->s, number_string);
+
+		/* collect statements until } */
+		while(!match("}", global_token->s))
+		{
+			statement();
+		}
+
+		/* jump over the switch table */
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_END_");
+		else if(X86 == Architecture) emit_out("jmp %_SWITCH_END_");
+		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_END_");
+		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_END_");
+		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_END_");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_END_");
+
+		uniqueID_out(function->s, number_string);
+		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	}
+
+	/* Switch statements must end with } */
+	require_match("ERROR in process_switch\nMISSING }\n", "}");
+
+	/* create the table */
+	emit_out(":_SWITCH_TABLE_");
+	uniqueID_out(function->s, number_string);
+
+	struct case_list* hold;
+	while(NULL != backtrack)
+	{
+		/* put case value in R0 as the switch (value) is in R1 */
+		primary_expr_number(backtrack->value);
+		hold = backtrack->next;
+
+		/* compare R0 and R1 and jump to case if equal */
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R0 R1\nJUMP.E R0 @_SWITCH_CASE_");
+		else if(X86 == Architecture) emit_out("cmp\nje %_SWITCH_CASE_");
+		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nje %_SWITCH_CASE_");
+		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n^~_SWITCH_CASE_");
+		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSKIP_32_DATA\n&_SWITCH_CASE_");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 rs2_a1 sub\nrs1_a0 @8 bnez\n$_SWITCH_CASE_");
+
+		emit_out(backtrack->value);
+		emit_out("_");
+		uniqueID_out(function->s, number_string);
+		if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
+		else if(AARCH64 == Architecture) emit_out("\nSKIP_INST_NE\nBR_X16\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+
+		free(backtrack);
+		backtrack = hold;
+	}
+
+	/* Default to :default */
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
+	else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
+	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
+	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
+	else if(AARCH64 == Architecture) emit_out("SKIP_32_DATA\n&_SWITCH_DEFAULT_");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
+
+	uniqueID_out(function->s, number_string);
+	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+
+	/* put the exit of the switch */
+	emit_out(":_SWITCH_END_");
+	uniqueID_out(function->s, number_string);
+
+	break_target_head = nested_break_head;
+	break_target_func = nested_break_func;
+	break_target_num = nested_break_num;
+	continue_target_head = nested_continue_head;
+	break_frame = nested_locals;
 }
 
 void process_for()
@@ -2486,6 +2660,10 @@ void statement()
 	else if(match("if", global_token->s))
 	{
 		process_if();
+	}
+	else if(match("switch", global_token->s))
+	{
+		process_switch();
 	}
 	else if(match("do", global_token->s))
 	{
