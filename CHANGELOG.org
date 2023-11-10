@@ -14,7 +14,27 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-* Current
+* 1.11 - 2023-11-01
+** Added
+Added support for #warning.
+Added global structs (and . operator).
+Added local structs.
+Added (u)int8_t, (u)int16_t and (u)int32_t.
+Properly remove blocks that are not used (e.g. after #if 0)
+
+** Changed
+Updated M2libc dependency
+
+** Fixed
+Fixed doubly indirect structs.
+Fixed a few segfaults.
+Fixed macro expressions with ).
+Add sufficient padding when assigning global constants on 64-bit architectures.
+Fix structs greater than 512bytes in size on armv7l.
+
+** Removed
+
+* 1.10 - 2022-05-01
 ** Added
 Generates a warning on unknown preprocessor commands
 Implemented C99 negation
