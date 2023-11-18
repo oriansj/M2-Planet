@@ -165,7 +165,6 @@ knight-native-tests: \
 	test0024-knight-native-binary\
 	test0028-knight-native-binary\
 	test0030-knight-native-binary\
-	test0031-knight-native-binary\
 	test0106-knight-native-binary | results
 
 armv7l-tests: \
@@ -980,9 +979,6 @@ test0028-knight-native-binary: M2-Planet | results
 
 test0030-knight-native-binary: M2-Planet | results
 	test/test0030/hello-knight-native.sh
-
-test0031-knight-native-binary: M2-Planet | results
-	test/test0031/hello-knight-native.sh
 
 test0106-knight-native-binary: M2-Planet | results
 	test/test0106/hello-knight-native.sh

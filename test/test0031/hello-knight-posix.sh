@@ -23,6 +23,16 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-posix \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
+	-f M2libc/knight/linux/unistd.c \
+	-f M2libc/knight/linux/fcntl.c \
+	-f M2libc/knight/linux/sys/stat.c \
+	-f M2libc/fcntl.c \
+	-f M2libc/stdlib.c \
+	-f M2libc/stdio.h \
+	-f M2libc/stdio.c \
+	-f M2libc/bootstrappable.c\
 	-f test/test0031/switch.c \
 	-o ${TMPDIR}/switch.M1 \
 	|| exit 1

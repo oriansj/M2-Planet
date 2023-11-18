@@ -27,6 +27,16 @@ mkdir -p ${TMPDIR}
 bin/M2-Planet \
 	--architecture ${ARCH} \
 	--debug \
+	-f M2libc/sys/types.h \
+	-f M2libc/stddef.h \
+	-f M2libc/signal.h \
+	-f M2libc/${ARCH}/linux/unistd.c \
+	-f M2libc/${ARCH}/linux/fcntl.c \
+	-f M2libc/fcntl.c \
+	-f M2libc/stdlib.c \
+	-f M2libc/stdio.h \
+	-f M2libc/stdio.c \
+	-f M2libc/bootstrappable.c \
 	-f test/test0031/switch.c \
 	-o ${TMPDIR}/switch.M1 \
 	|| exit 1
@@ -64,8 +74,30 @@ hex2 \
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
 then
-	# Verify that the resulting file works
+	# Verify that the resulting file works first default case
 	./test/results/test0031-${ARCH}-binary
-	[ 42 = $? ] || exit 4
+	[ 111 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test1
+	[ 122 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test2
+	[ 31 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test3
+	[ 43 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test4
+	[ 155 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test5
+	[ 133 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test6
+	[ 84 = $? ] || exit 4
+
+	./test/results/test0031-${ARCH}-binary test7
+	[ 151 = $? ] || exit 4
+
 fi
 exit 0
