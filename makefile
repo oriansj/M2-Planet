@@ -56,7 +56,7 @@ bin/M2-minimal: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_cor
 	-o $@
 
 # Clean up after ourselves
-.PHONY: clean
+.PHONY: clean M2-Planet M2-minimal
 clean:
 	rm -rf bin/ test/results/
 	./test/cleanup_test.sh 0000
