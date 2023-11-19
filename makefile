@@ -16,16 +16,15 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 # Prevent rebuilding
-VPATH = bin:test:test/results
 PACKAGE = m2-planet
 
 # C compiler settings
 CC?=gcc
 CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb
 
-all: M2-Planet
+all: bin/M2-Planet
 .NOTPARALLEL:
-M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c cc_globals.c cc_globals.h cc_macro.c | bin
+bin/M2-Planet: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c cc_globals.c cc_globals.h cc_macro.c | bin
 	$(CC) $(CFLAGS) \
 	M2libc/bootstrappable.c \
 	cc_reader.c \
@@ -37,9 +36,9 @@ M2-Planet: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c c
 	cc.h \
 	cc_globals.c \
 	gcc_req.h \
-	-o bin/M2-Planet
+	-o $@
 
-M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-minimal.c
+bin/M2-minimal: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-minimal.c
 	$(CC) $(CFLAGS) \
 	M2libc/bootstrappable.c \
 	cc_reader.c \
@@ -50,7 +49,7 @@ M2-minimal: bin results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-mi
 	cc.h \
 	cc_globals.c \
 	gcc_req.h \
-	-o bin/M2-minimal
+	-o $@
 
 # Clean up after ourselves
 .PHONY: clean
@@ -104,7 +103,7 @@ test/results:
 	mkdir -p test/results
 
 # tests
-test: M2-Planet | bin test/results
+test: bin/M2-Planet | bin test/results
 	+make -f makefile-tests --output-sync
 	sha256sum -c test/test.answers
 
@@ -117,7 +116,7 @@ DESTDIR:=
 PREFIX:=/usr/local
 bindir:=$(DESTDIR)$(PREFIX)/bin
 .PHONY: install
-install: M2-Planet
+install: bin/M2-Planet
 	mkdir -p $(bindir)
 	cp $^ $(bindir)
 
