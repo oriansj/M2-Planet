@@ -24,6 +24,8 @@ CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb
 
 all: bin/M2-Planet
 .NOTPARALLEL:
+M2-Planet: bin/M2-Planet
+
 bin/M2-Planet: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc.c cc_globals.c cc_globals.h cc_macro.c | bin
 	$(CC) $(CFLAGS) \
 	M2libc/bootstrappable.c \
@@ -37,6 +39,8 @@ bin/M2-Planet: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_core
 	cc_globals.c \
 	gcc_req.h \
 	-o $@
+
+M2-minimal: bin/M2-minimal
 
 bin/M2-minimal: bin test/results cc.h cc_reader.c cc_strings.c cc_types.c cc_core.c cc-minimal.c
 	$(CC) $(CFLAGS) \
