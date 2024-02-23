@@ -30,6 +30,7 @@ bin/M2-Planet \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/signal.h \
+	-f M2libc/sys/utsname.h \
 	-f M2libc/${ARCH}/linux/unistd.c \
 	-f M2libc/${ARCH}/linux/fcntl.c \
 	-f M2libc/fcntl.c \

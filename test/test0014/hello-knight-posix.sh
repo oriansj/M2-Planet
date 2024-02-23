@@ -26,6 +26,7 @@ bin/M2-Planet \
 	--architecture knight-posix \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
+	-f M2libc/sys/utsname.h \
 	-f M2libc/knight/linux/unistd.c \
 	-f M2libc/knight/linux/fcntl.c \
 	-f M2libc/fcntl.c \
