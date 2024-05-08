@@ -18,4 +18,4 @@
 // Exists only because gcc doesn't support naked Function pointers
 // And thus adds just enough support that M2-Plant can leverage the feature
 // in its self-host
-typedef void (*FUNCTION) ();
+typedef void (*FUNCTION) (void);
