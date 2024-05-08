@@ -109,7 +109,7 @@ void line_error_token(struct token_list *token)
 	fputs(":", stderr);
 }
 
-void line_error()
+void line_error(void)
 {
 	line_error_token(global_token);
 }
@@ -144,7 +144,7 @@ void maybe_bootstrap_error(char* feature)
 	}
 }
 
-void expression();
+void expression(void);
 void function_call(char* s, int bool)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
@@ -567,7 +567,7 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
-void postfix_expr_stub();
+void postfix_expr_stub(void);
 void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
@@ -684,7 +684,7 @@ void global_load(struct token_list* a)
  * ( expression )
  */
 
-void primary_expr_failure()
+void primary_expr_failure(void)
 {
 	require(NULL != global_token, "hit EOF when expecting primary expression\n");
 	line_error();
@@ -694,7 +694,7 @@ void primary_expr_failure()
 	exit(EXIT_FAILURE);
 }
 
-void primary_expr_string()
+void primary_expr_string(void)
 {
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
@@ -759,7 +759,7 @@ void primary_expr_string()
 	}
 }
 
-void primary_expr_char()
+void primary_expr_char(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADI R0 ");
 	else if(X86 == Architecture) emit_out("mov_eax, %");
@@ -884,7 +884,7 @@ void primary_expr_number(char* s)
 	emit_out("\n");
 }
 
-void primary_expr_variable()
+void primary_expr_variable(void)
 {
 	int num_dereference = 0;
 	while(global_token->s[0] == '*') {
@@ -935,7 +935,7 @@ void primary_expr_variable()
 	exit(EXIT_FAILURE);
 }
 
-void primary_expr();
+void primary_expr(void);
 struct type* promote_type(struct type* a, struct type* b)
 {
 	require(NULL != b, "impossible case 1 in promote_type\n");
@@ -1025,7 +1025,7 @@ void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION i
  *         postfix-expr . member
  */
 struct type* lookup_member(struct type* parent, char* name);
-void postfix_expr_arrow()
+void postfix_expr_arrow(void)
 {
 	emit_out("# looking up offset\n");
 	global_token = global_token->next;
@@ -1085,7 +1085,7 @@ void postfix_expr_arrow()
 	}
 }
 
-void postfix_expr_dot()
+void postfix_expr_dot(void)
 {
 	maybe_bootstrap_error("Member access using .");
 	emit_out("# looking up offset\n");
@@ -1144,7 +1144,7 @@ void postfix_expr_dot()
 	emit_out(load_value(current_target->size, current_target->is_signed));
 }
 
-void postfix_expr_array()
+void postfix_expr_array(void)
 {
 	struct type* array = current_target;
 	common_recursion(expression);
@@ -1206,8 +1206,8 @@ void postfix_expr_array()
  *         !postfix-expr
  *         sizeof ( type )
  */
-struct type* type_name();
-void unary_expr_sizeof()
+struct type* type_name(void);
+void unary_expr_sizeof(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Received EOF when starting sizeof\n");
@@ -1226,7 +1226,7 @@ void unary_expr_sizeof()
 	emit_out("\n");
 }
 
-void postfix_expr_stub()
+void postfix_expr_stub(void)
 {
 	require(NULL != global_token, "Unexpected EOF, improperly terminated primary expression\n");
 	if(match("[", global_token->s))
@@ -1248,7 +1248,7 @@ void postfix_expr_stub()
 	}
 }
 
-void postfix_expr()
+void postfix_expr(void)
 {
 	primary_expr();
 	postfix_expr_stub();
@@ -1265,7 +1265,7 @@ void postfix_expr()
  *         additive-expr << postfix-expr
  *         additive-expr >> postfix-expr
  */
-void additive_expr_stub_a()
+void additive_expr_stub_a(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -1306,13 +1306,13 @@ void additive_expr_stub_a()
 }
 
 
-void additive_expr_a()
+void additive_expr_a(void)
 {
 	postfix_expr();
 	additive_expr_stub_a();
 }
 
-void additive_expr_stub_b()
+void additive_expr_stub_b(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -1347,13 +1347,13 @@ void additive_expr_stub_b()
 }
 
 
-void additive_expr_b()
+void additive_expr_b(void)
 {
 	additive_expr_a();
 	additive_expr_stub_b();
 }
 
-void additive_expr_stub_c()
+void additive_expr_stub_c(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -1388,7 +1388,7 @@ void additive_expr_stub_c()
 }
 
 
-void additive_expr_c()
+void additive_expr_c(void)
 {
 	additive_expr_b();
 	additive_expr_stub_c();
@@ -1404,7 +1404,7 @@ void additive_expr_c()
  *         relational-expr > additive_expr
  */
 
-void relational_expr_stub()
+void relational_expr_stub(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -1462,7 +1462,7 @@ void relational_expr_stub()
 	}
 }
 
-void relational_expr()
+void relational_expr(void)
 {
 	additive_expr_c();
 	relational_expr_stub();
@@ -1477,7 +1477,7 @@ void relational_expr()
  *         bitwise-expr || bitwise-expr
  *         bitwise-expr ^ bitwise-expr
  */
-void bitwise_expr_stub()
+void bitwise_expr_stub(void)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -1530,7 +1530,7 @@ void bitwise_expr_stub()
 }
 
 
-void bitwise_expr()
+void bitwise_expr(void)
 {
 	relational_expr();
 	bitwise_expr_stub();
@@ -1542,7 +1542,7 @@ void bitwise_expr()
  *         bitwise-or-expr = expression
  */
 
-void primary_expr()
+void primary_expr(void)
 {
 	require(NULL != global_token, "Received EOF where primary expression expected\n");
 	if(match("&", global_token->s))
@@ -1828,7 +1828,7 @@ char* compound_operation(char* operator, int is_signed)
 }
 
 
-void expression()
+void expression(void)
 {
 	bitwise_expr();
 	if(match("=", global_token->s))
@@ -1961,7 +1961,7 @@ unsigned ceil_div(unsigned a, unsigned b)
 }
 
 /* Process local variable */
-void collect_local()
+void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
@@ -2065,10 +2065,10 @@ void collect_local()
 	}
 }
 
-void statement();
+void statement(void);
 
 /* Evaluate if statements */
-void process_if()
+void process_if(void)
 {
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
@@ -2122,7 +2122,7 @@ void process_if()
 	uniqueID_out(function->s, number_string);
 }
 
-void process_case()
+void process_case(void)
 {
 process_case_iter:
 	if(match("case", global_token->s)) return;
@@ -2139,7 +2139,7 @@ process_case_iter:
 	}
 }
 
-void process_switch()
+void process_switch(void)
 {
 	maybe_bootstrap_error("switch/case statements");
 	struct token_list* nested_locals = break_frame;
@@ -2293,7 +2293,7 @@ process_switch_iter:
 	break_frame = nested_locals;
 }
 
-void process_for()
+void process_for(void)
 {
 	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
@@ -2395,7 +2395,7 @@ void process_for()
 }
 
 /* Process Assembly statements */
-void process_asm()
+void process_asm(void)
 {
 	global_token = global_token->next;
 	require_match("ERROR in process_asm\nMISSING (\n", "(");
@@ -2411,7 +2411,7 @@ void process_asm()
 }
 
 /* Process do while loops */
-void process_do()
+void process_do(void)
 {
 	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
@@ -2473,7 +2473,7 @@ void process_do()
 
 
 /* Process while loops */
-void process_while()
+void process_while(void)
 {
 	struct token_list* nested_locals = break_frame;
 	char* nested_break_head = break_target_head;
@@ -2535,7 +2535,7 @@ void process_while()
 }
 
 /* Ensure that functions return */
-void return_result()
+void return_result(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Incomplete return statement received\n");
@@ -2569,7 +2569,7 @@ void return_result()
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("ret\n");
 }
 
-void process_break()
+void process_break(void)
 {
 	if(NULL == break_target_head)
 	{
@@ -2610,7 +2610,7 @@ void process_break()
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
 
-void process_continue()
+void process_continue(void)
 {
 	if(NULL == continue_target_head)
 	{
@@ -2638,7 +2638,7 @@ void process_continue()
 	require_match("ERROR in continue statement\nMissing ;\n", ";");
 }
 
-void recursive_statement()
+void recursive_statement(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Received EOF in recursive statement\n");
@@ -2694,7 +2694,7 @@ void recursive_statement()
  */
 
 struct type* lookup_type(char* s, struct type* start);
-void statement()
+void statement(void)
 {
 	require(NULL != global_token, "expected a C statement but received EOF\n");
 	/* Always an integer until told otherwise */
@@ -2777,7 +2777,7 @@ void statement()
 }
 
 /* Collect function arguments */
-void collect_arguments()
+void collect_arguments(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
@@ -2838,7 +2838,7 @@ void collect_arguments()
 	global_token = global_token->next;
 }
 
-void declare_function()
+void declare_function(void)
 {
 	current_count = 0;
 	function = sym_declare(global_token->prev->s, NULL, global_function_list);
@@ -2876,7 +2876,7 @@ void declare_function()
 	}
 }
 
-void global_constant()
+void global_constant(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "CONSTANT lacks a name\n");
@@ -2899,7 +2899,7 @@ void global_constant()
 	}
 }
 
-struct type* global_typedef()
+struct type* global_typedef(void)
 {
 	struct type* type_size;
 	/* typedef $TYPE $NAME; */
@@ -2964,7 +2964,7 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	globals_list = emit("'\n", globals_list);
 }
 
-void global_assignment()
+void global_assignment(void)
 {
 	/* Store the global's value*/
 	globals_list = emit(":GLOBAL_", globals_list);
@@ -3033,7 +3033,7 @@ void global_assignment()
  * parameter-declaration:
  *     type-name identifier-opt
  */
-void program()
+void program(void)
 {
 	unsigned i;
 	function = NULL;

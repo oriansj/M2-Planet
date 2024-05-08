@@ -26,7 +26,7 @@ struct token_list* token;
 int line;
 char* file;
 
-int grab_byte()
+int grab_byte(void)
 {
 	int c = fgetc(input);
 	if(10 == c) line = line + 1;
@@ -74,7 +74,7 @@ void copy_string(char* target, char* source, int max)
 }
 
 
-void fixup_label()
+void fixup_label(void)
 {
 	int hold = ':';
 	int prev;
@@ -97,7 +97,7 @@ int preserve_keyword(int c, char* S)
 	return c;
 }
 
-void reset_hold_string()
+void reset_hold_string(void)
 {
 	int i = MAX_STRING;
 	while(0 <= i)

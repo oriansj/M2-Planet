@@ -19,7 +19,7 @@
 
 /* Imported functions */
 int strtoint(char *a);
-void line_error();
+void line_error(void);
 void require(int bool, char* error);
 
 /* enable easy primitive extension */
@@ -69,7 +69,7 @@ struct type* new_primitive(char* name0, char* name1, char* name2, int size, int 
 }
 
 /* Initialize default types */
-void initialize_types()
+void initialize_types(void)
 {
 	if(AMD64 == Architecture || AARCH64 == Architecture || RISCV64 == Architecture) register_size = 8;
 	else register_size = 4;
@@ -175,7 +175,7 @@ struct type* lookup_member(struct type* parent, char* name)
 	exit(EXIT_FAILURE);
 }
 
-struct type* type_name();
+struct type* type_name(void);
 void require_match(char* message, char* required);
 
 int member_size;
@@ -236,7 +236,7 @@ struct type* build_union(struct type* last, int offset)
 	return last;
 }
 
-void create_struct()
+void create_struct(void)
 {
 	int offset = 0;
 	member_size = 0;
@@ -287,7 +287,7 @@ void create_struct()
 }
 
 
-struct type* type_name()
+struct type* type_name(void)
 {
 	struct type* ret;
 

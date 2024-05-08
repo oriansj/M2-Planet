@@ -21,7 +21,7 @@
 #include"cc.h"
 
 /* The core functions */
-void initialize_types();
+void initialize_types(void);
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
 struct token_list* reverse_list(struct token_list* head);
 
@@ -29,10 +29,10 @@ struct token_list* remove_line_comments(struct token_list* head);
 struct token_list* remove_line_comment_tokens(struct token_list* head);
 struct token_list* remove_preprocessor_directives(struct token_list* head);
 
-void eat_newline_tokens();
+void eat_newline_tokens(void);
 void init_macro_env(char* sym, char* value, char* source, int num);
-void preprocess();
-void program();
+void preprocess(void);
+void program(void);
 void recursive_output(struct token_list* i, FILE* out);
 void output_tokens(struct token_list *i, FILE* out);
 int strtoint(char *a);

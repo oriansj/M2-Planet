@@ -20,7 +20,7 @@ PACKAGE = m2-planet
 
 # C compiler settings
 CC?=gcc
-CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb
+CFLAGS:=$(CFLAGS) -D_GNU_SOURCE -O0 -std=c99 -ggdb -Wall -Wextra -Wstrict-prototypes
 
 all: bin/M2-Planet
 .NOTPARALLEL:

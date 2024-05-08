@@ -47,7 +47,7 @@ void copy_string(char* target, char* source, int max);
 int in_set(int c, char* s);
 int match(char* a, char* b);
 void require(int bool, char* error);
-void reset_hold_string();
+void reset_hold_string(void);
 
 
 struct type
