@@ -65,23 +65,14 @@ struct type
 struct token_list
 {
 	struct token_list* next;
-	union
-	{
-		struct token_list* locals;
-		struct token_list* prev;
-	};
+	struct token_list* locals;
+	struct token_list* prev;
 	char* s;
-	union
-	{
-		struct type* type;
-		char* filename;
-	};
-	union
-	{
-		struct token_list* arguments;
-		int depth;
-		int linenumber;
-	};
+	struct type* type;
+	char* filename;
+	struct token_list* arguments;
+	int depth;
+	int linenumber;
 };
 
 struct case_list
