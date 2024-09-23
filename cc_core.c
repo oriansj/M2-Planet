@@ -2669,15 +2669,20 @@ void recursive_statement(void)
 	   (((RISCV32 == Architecture) || (RISCV64 == Architecture)) && !match("ret\n", output_list->s)))
 	{
 		struct token_list* i;
+		int j;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
-			else if(X86 == Architecture) emit_out( "pop_ebx\t# _recursive_statement_locals\n");
-			else if(AMD64 == Architecture) emit_out("pop_rbx\t# _recursive_statement_locals\n");
-			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
-			else if(AARCH64 == Architecture) emit_out("POP_X1\t# _recursive_statement_locals\n");
-			else if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp lw\t# _recursive_statement_locals\nrd_sp rs1_sp !4 addi\n");
-			else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp ld\t# _recursive_statement_locals\nrd_sp rs1_sp !8 addi\n");
+			j = ceil_div(i->type->size, register_size);
+			while (j != 0) {
+				if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
+				else if(X86 == Architecture) emit_out( "pop_ebx\t# _recursive_statement_locals\n");
+				else if(AMD64 == Architecture) emit_out("pop_rbx\t# _recursive_statement_locals\n");
+				else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# _recursive_statement_locals\n");
+				else if(AARCH64 == Architecture) emit_out("POP_X1\t# _recursive_statement_locals\n");
+				else if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp lw\t# _recursive_statement_locals\nrd_sp rs1_sp !4 addi\n");
+				else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp ld\t# _recursive_statement_locals\nrd_sp rs1_sp !8 addi\n");
+				j = j - 1;
+			}
 		}
 	}
 	function->locals = frame;
