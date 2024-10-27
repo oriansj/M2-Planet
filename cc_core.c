@@ -2019,7 +2019,7 @@ void collect_local(void)
 		else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
 	}
 
-	/* Adjust the depth of local structs. When stack grows downwards, we want them to 
+	/* Adjust the depth of local structs. When stack grows downwards, we want them to
 	   start at the bottom of allocated space. */
 	unsigned struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
 	if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
@@ -2049,7 +2049,7 @@ void collect_local(void)
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
 
-	unsigned i = (a->type->size + register_size - 1) / register_size;
+	unsigned i = ceil_div(a->type->size, register_size);
 	while(i != 0)
 	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
