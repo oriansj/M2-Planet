@@ -48,7 +48,7 @@ int in_set(int c, char* s);
 int match(char* a, char* b);
 void require(int bool, char* error);
 void reset_hold_string(void);
-
+char* int2str(int x, int base, int signed_p);
 
 struct type
 {
@@ -80,5 +80,7 @@ struct case_list
 	struct case_list* next;
 	char* value;
 };
+
+struct token_list* sym_declare(char *s, struct type* t, struct token_list* list);
 
 #include "cc_globals.h"
