@@ -299,6 +299,12 @@ struct type* type_name(void)
 		require(NULL != global_token, "unfinished type definition in extern\n");
 	}
 
+	if(match("const", global_token->s))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "unfinished type definition in const\n");
+	}
+
 	if(match("struct", global_token->s))
 	{
 		global_token = global_token->next;

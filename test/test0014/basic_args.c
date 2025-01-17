@@ -17,7 +17,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-void write_string(char* a)
+void write_string(const char* a)
 {
 	while(0 != a[0])
 	{
