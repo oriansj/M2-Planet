@@ -18,8 +18,8 @@
 const int unused;
 
 int main() {
-    const int one = 1;
-    const int three = 3;
+	const int one = 1;
+	const int three = 3;
 	int a = 44;
 	a += one;
 	a *= three;
