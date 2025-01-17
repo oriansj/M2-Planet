@@ -15,10 +15,14 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const int unused;
+
 int main() {
+    const int one = 1;
+    const int three = 3;
 	int a = 44;
-	a += 1;
-	a *= 3;
+	a += one;
+	a *= three;
 	a /= 4;
 	a %= 7;
 	a <<= 8;
