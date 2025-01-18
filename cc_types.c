@@ -122,6 +122,10 @@ void initialize_types(void)
 	hold = new_primitive("char", "char*", "char**", 1, TRUE);
 	prim_types = add_primitive(hold);
 
+	/* Define _Bool */
+	hold = new_primitive("_Bool", "_Bool*", "_Bool**", 1, TRUE);
+	prim_types = add_primitive(hold);
+
 	/* Define FUNCTION */
 	hold = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
 	prim_types = add_primitive(hold);
@@ -297,6 +301,12 @@ struct type* type_name(void)
 	{
 		global_token = global_token->next;
 		require(NULL != global_token, "unfinished type definition in extern\n");
+	}
+
+	if(match("const", global_token->s))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "unfinished type definition in const\n");
 	}
 
 	if(match("struct", global_token->s))

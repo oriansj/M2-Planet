@@ -2711,7 +2711,8 @@ void statement(void)
 		global_token = global_token->next;
 	}
 	else if((NULL != lookup_type(global_token->s, prim_types)) ||
-	          match("struct", global_token->s))
+	          match("struct", global_token->s) ||
+	          match("const", global_token->s))
 	{
 		collect_local();
 	}
