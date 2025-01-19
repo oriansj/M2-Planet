@@ -22,8 +22,6 @@ int strtoint(char *a);
 void line_error(void);
 void require(int bool, char* error);
 
-extern struct token_list* global_constant_list;
-
 /* enable easy primitive extension */
 struct type* add_primitive(struct type* a)
 {
