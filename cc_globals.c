@@ -27,6 +27,7 @@ struct token_list* global_token;
 struct token_list* output_list;
 struct token_list* strings_list;
 struct token_list* globals_list;
+struct token_list* global_constant_list;
 
 /* Make our string collection more efficient */
 char* hold_string;
