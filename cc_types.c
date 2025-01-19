@@ -22,6 +22,8 @@ int strtoint(char *a);
 void line_error(void);
 void require(int bool, char* error);
 
+extern struct token_list* global_constant_list;
+
 /* enable easy primitive extension */
 struct type* add_primitive(struct type* a)
 {
@@ -290,6 +292,69 @@ void create_struct(void)
 	i->members = last;
 }
 
+void create_enum(void)
+{
+	struct type* head = calloc(1, sizeof(struct type));
+	require(NULL != head, "Exhausted memory while creating an enum\n");
+
+	head->name = global_token->s;
+	head->type = head;
+	head->indirect = NULL;
+	head->next = global_types;
+
+	head->size = register_size; /* We treat enums as always being ints. */
+	head->is_signed = TRUE;
+
+	global_types = head;
+
+	global_token = global_token->next;
+	require_match("ERROR in create_enum\n Missing {\n", "{");
+	require(NULL != global_token, "Incomplete enum definition at end of file\n");
+
+	int next_enum_value = 0;
+	while('}' != global_token->s[0])
+	{
+		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete enumerator definition at end of file\n");
+		if(match("=", global_token->s))
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete enumerator value at end of file\n");
+
+			next_enum_value = strtoint(global_token->s) + 1;
+		}
+		else
+		{
+			global_token->s = int2str(next_enum_value, 10, TRUE);
+			next_enum_value = next_enum_value + 1;
+		}
+
+		global_constant_list->arguments = global_token;
+
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete enumerator termination at end of file\n");
+
+		if(match(";", global_token->s))
+		{
+			/* The last enumerator did not have an enumerator-expression nor a closing comma
+			 * so we overwrote the closing curly brace with the int2str value. */
+			global_token = global_token->next;
+			return;
+		}
+		else if(match(",", global_token->s))
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete enumerator comma at end of file\n");
+		}
+
+		require(NULL != global_token, "Unterminated enum\n");
+	}
+
+	global_token = global_token->next;
+	require_match("ERROR in create_enum\n Missing ;\n", ";");
+}
 
 struct type* type_name(void)
 {
@@ -317,6 +382,17 @@ struct type* type_name(void)
 		if(NULL == ret)
 		{
 			create_struct();
+			return NULL;
+		}
+	}
+	else if(match("enum", global_token->s))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "enums can not have a EOF type name\n");
+		ret = lookup_type(global_token->s, global_types);
+		if(NULL == ret)
+		{
+			create_enum();
 			return NULL;
 		}
 	}

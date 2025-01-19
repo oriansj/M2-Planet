@@ -91,6 +91,7 @@ clean:
 	./test/cleanup_test.sh 0029
 	./test/cleanup_test.sh 0030
 	./test/cleanup_test.sh 0031
+	./test/cleanup_test.sh 0032
 	./test/cleanup_test.sh 0100
 	./test/cleanup_test.sh 0101
 	./test/cleanup_test.sh 0102
