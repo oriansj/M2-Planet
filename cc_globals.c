@@ -45,3 +45,6 @@ int BOOTSTRAP_MODE;
 
 /* enable preprocessor-only mode */
 int PREPROCESSOR_MODE;
+
+/* feature unsupported by cc_* */
+void maybe_bootstrap_error(char* feature);

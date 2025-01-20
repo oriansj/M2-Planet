@@ -292,6 +292,7 @@ void create_struct(void)
 
 void create_enum(void)
 {
+	maybe_bootstrap_error("enum statement");
 	struct type* head = calloc(1, sizeof(struct type));
 	require(NULL != head, "Exhausted memory while creating an enum\n");
 
@@ -385,6 +386,7 @@ struct type* type_name(void)
 	}
 	else if(match("enum", global_token->s))
 	{
+		maybe_bootstrap_error("enum statements");
 		global_token = global_token->next;
 		require(NULL != global_token, "enums can not have a EOF type name\n");
 		ret = lookup_type(global_token->s, global_types);

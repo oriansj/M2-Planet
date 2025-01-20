@@ -25,7 +25,6 @@
 /* Global lists */
 struct token_list* global_symbol_list;
 struct token_list* global_function_list;
-struct token_list* global_constant_list;
 
 /* Core lists for this file */
 struct token_list* function;
