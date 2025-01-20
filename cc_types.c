@@ -295,18 +295,36 @@ void create_enum(void)
 	maybe_bootstrap_error("enum statement");
 	struct type* head = calloc(1, sizeof(struct type));
 	require(NULL != head, "Exhausted memory while creating an enum\n");
+	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhausted memory while creating a enum indirection\n");
+	struct type* ii = calloc(1, sizeof(struct type));
+	require(NULL != ii, "Exhausted memory while creating a enum double indirection\n");
 
-	head->name = global_token->s;
-	head->type = head;
-	head->indirect = NULL;
-	head->next = global_types;
+	/* Anonymous enums */
+	if(!match("{", global_token->s)) {
+		head->name = global_token->s;
+		head->type = head;
+		head->indirect = i;
+		head->next = global_types;
 
-	head->size = register_size; /* We treat enums as always being ints. */
-	head->is_signed = TRUE;
+		head->size = register_size; /* We treat enums as always being ints. */
+		head->is_signed = TRUE;
 
-	global_types = head;
+		i->name = global_token->s;
+		i->type = head;
+		i->indirect = ii;
+		i->size = register_size;
 
-	global_token = global_token->next;
+		ii->name = global_token->s;
+		ii->type = i;
+		ii->indirect = ii;
+		ii->size = register_size;
+
+		global_types = head;
+
+		global_token = global_token->next;
+	}
+
 	require_match("ERROR in create_enum\n Missing {\n", "{");
 	require(NULL != global_token, "Incomplete enum definition at end of file\n");
 

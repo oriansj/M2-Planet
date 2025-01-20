@@ -46,6 +46,68 @@ enum specific_and_automatic_trailing_comma {
 	SAATC_TWO,
 };
 
+enum {
+	ANONYMOUS_ZERO,
+	ANONYMOUS_ONE,
+};
+
+typedef enum specific_trailing_comma SpecificTrailingComma;
+
+struct contains_enum {
+	enum specific_trailing_comma specificTrailingComma;
+	SpecificTrailingComma specificTrailingComma1;
+};
+
+struct contains_enum_pointer {
+	enum specific_trailing_comma* specificTrailingComma;
+	SpecificTrailingComma* specificTrailingComma1;
+};
+
+struct contains_enum_pointer_pointer {
+	enum specific_trailing_comma** specificTrailingComma;
+	SpecificTrailingComma** specificTrailingComma1;
+};
+
+int tests_enum(enum specific_trailing_comma specificTrailingComma, SpecificTrailingComma specificTrailingComma1) {
+	if (specificTrailingComma != 0) {
+		return 1;
+	}
+
+	if (specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int tests_enum_pointer_pointers(enum specific_trailing_comma** specificTrailingComma, SpecificTrailingComma** specificTrailingComma1) {
+	if (**specificTrailingComma != 0) {
+		return 1;
+	}
+
+	if (**specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int tests_enum_pointers(enum specific_trailing_comma* specificTrailingComma, SpecificTrailingComma* specificTrailingComma1) {
+	if (*specificTrailingComma != 0) {
+		return 1;
+	}
+
+	if (*specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	if(tests_enum_pointer_pointers(&specificTrailingComma, &specificTrailingComma1)) {
+		return 1;
+	}
+
+	return 0;
+}
+
 int main() {
 	if(SNTC_ZERO != 0) {
 		return 1;
@@ -115,7 +177,89 @@ int main() {
 		return 1;
 	}
 
+	if (sizeof(SpecificTrailingComma) != sizeof(enum specific_trailing_comma))  {
+		return 1;
+	}
+
+	SpecificTrailingComma typedefVariable = STC_ZERO;
+
 	int return_value = STC_ZERO;
+
+	if(typedefVariable != return_value) {
+		return 1;
+	}
+
+	enum specific_trailing_comma specificTrailingComma1 = STC_ZERO;
+
+	if (specificTrailingComma1 != return_value) {
+		return 1;
+	}
+
+	struct contains_enum containsEnum;
+	containsEnum.specificTrailingComma1 = STC_ZERO;
+	containsEnum.specificTrailingComma = STC_ZERO;
+
+	if (containsEnum.specificTrailingComma != 0) {
+		return 1;
+	}
+
+	if (containsEnum.specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	enum specific_trailing_comma* specificTrailingCommaPointer = &specificTrailingComma1;
+	if(*specificTrailingCommaPointer != 0) {
+		return 1;
+	}
+	if(sizeof(enum specific_trailing_comma*) != sizeof(int*)) {
+		return 1;
+	}
+
+	struct contains_enum_pointer containsEnumPointer;
+	containsEnumPointer.specificTrailingComma = &containsEnum.specificTrailingComma;
+	containsEnumPointer.specificTrailingComma1 = &containsEnum.specificTrailingComma1;
+
+	if(*containsEnumPointer.specificTrailingComma != 0) {
+		return 1;
+	}
+	if(*containsEnumPointer.specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	enum specific_trailing_comma** specificTrailingCommaPointerPointer = &specificTrailingCommaPointer;
+	if(**specificTrailingCommaPointerPointer != 0) {
+		return 1;
+	}
+	if(sizeof(enum specific_trailing_comma**) != sizeof(int**)) {
+		return 1;
+	}
+
+	struct contains_enum_pointer_pointer containsEnumPointerPointer;
+	containsEnumPointerPointer.specificTrailingComma = &containsEnumPointer.specificTrailingComma;
+	containsEnumPointerPointer.specificTrailingComma1 = &containsEnumPointer.specificTrailingComma1;
+
+	if(**containsEnumPointerPointer.specificTrailingComma != 0) {
+		return 1;
+	}
+	if(**containsEnumPointerPointer.specificTrailingComma1 != 0) {
+		return 1;
+	}
+
+	if(tests_enum(specificTrailingComma1, typedefVariable)) {
+		return 1;
+	}
+
+	if(tests_enum_pointers(&specificTrailingComma1, &typedefVariable)) {
+		return 1;
+	}
+
+	if(ANONYMOUS_ZERO != 0){
+		return 0;
+	}
+
+	if(ANONYMOUS_ONE != 1){
+		return 0;
+	}
 
 	return return_value;
 }
