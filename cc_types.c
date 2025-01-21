@@ -301,7 +301,8 @@ void create_enum(void)
 	require(NULL != ii, "Exhausted memory while creating a enum double indirection\n");
 
 	/* Anonymous enums */
-	if(!match("{", global_token->s)) {
+	if(!match("{", global_token->s))
+	{
 		head->name = global_token->s;
 		head->type = head;
 		head->indirect = i;
