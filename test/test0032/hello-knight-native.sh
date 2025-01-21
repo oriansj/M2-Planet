@@ -17,7 +17,7 @@
 
 set -x
 
-TMPDIR="test/test0028/tmp-knight-native"
+TMPDIR="test/test0032/tmp-knight-native"
 mkdir -p ${TMPDIR}
 
 # Build the test

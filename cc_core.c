@@ -3010,11 +3010,30 @@ void global_assignment(void)
 	}
 	else
 	{
-		line_error();
-		fputs("Received ", stderr);
-		fputs(global_token->s, stderr);
-		fputs(" in program\n", stderr);
-		exit(EXIT_FAILURE);
+		struct token_list* symbol = sym_lookup(global_token->s, global_constant_list);
+		if(NULL != symbol)
+		{
+			globals_list = emit("%", globals_list);
+			globals_list = emit(symbol->arguments->s, globals_list);
+
+			/* broken for big endian architectures */
+			padding_zeroes = (register_size / 4) - 1;
+			while(padding_zeroes > 0)
+			{
+				/* Assume positive Int */
+				globals_list = emit(" %0", globals_list);
+				padding_zeroes = padding_zeroes - 1;
+			}
+			globals_list = emit("\n", globals_list);
+		}
+		else
+		{
+			line_error();
+			fputs("Received ", stderr);
+			fputs(global_token->s, stderr);
+			fputs(" in program\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	global_token = global_token->next;
