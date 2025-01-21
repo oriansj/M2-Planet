@@ -244,26 +244,65 @@ void create_struct(void)
 {
 	int offset = 0;
 	member_size = 0;
-	struct type* head = calloc(1, sizeof(struct type));
-	require(NULL != head, "Exhausted memory while creating a struct\n");
-	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
-	struct type* ii = calloc(1, sizeof(struct type));
-	require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
-	head->name = global_token->s;
-	head->type = head;
-	head->indirect = i;
-	head->next = global_types;
-	i->name = global_token->s;
-	i->type = head;
-	i->indirect = ii;
-	i->size = register_size;
-	ii->name = global_token->s;
-	ii->type = i;
-	ii->indirect = ii;
-	ii->size = register_size;
-	global_types = head;
+
+	struct type* head = lookup_type(global_token->s, global_types);
+	struct type* i;
+	if(NULL == head)
+	{
+		head = calloc(1, sizeof(struct type));
+		require(NULL != head, "Exhausted memory while creating a struct\n");
+		i = calloc(1, sizeof(struct type));
+		require(NULL != i, "Exhausted memory while creating a struct indirection\n");
+		struct type* ii = calloc(1, sizeof(struct type));
+		require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
+
+		head->name = global_token->s;
+		head->type = head;
+		head->indirect = i;
+		head->next = global_types;
+		head->size = NO_STRUCT_DEFINITION;
+		head->members = NULL;
+
+		i->name = global_token->s;
+		i->type = head;
+		i->indirect = ii;
+		i->size = register_size;
+		i->members = NULL;
+
+		ii->name = global_token->s;
+		ii->type = i;
+		ii->indirect = ii;
+		ii->size = register_size;
+
+		global_types = head;
+	}
+	else
+	{
+		if(head->size != NO_STRUCT_DEFINITION)
+		{
+			line_error();
+			fputs("struct '", stderr);
+			fputs(head->name, stderr);
+			fputs("' already has definition.", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		i = head->indirect;
+	}
+
 	global_token = global_token->next;
+	require(NULL != global_token, "Incomplete struct declaration/definition at end of file\n");
+
+	if(match(global_token->s, ";"))
+	{
+		/*
+		 * When forward declaring the struct will have size == 0 and be an error to use.
+		 * Zero-sized types are not allowed in C so this will never happen naturally.
+		 */
+		global_token = global_token->next;
+		return;
+	}
+
 	require_match("ERROR in create_struct\n Missing {\n", "{");
 	struct type* last = NULL;
 	require(NULL != global_token, "Incomplete struct definition at end of file\n");
@@ -397,7 +436,7 @@ struct type* type_name(void)
 		global_token = global_token->next;
 		require(NULL != global_token, "structs can not have a EOF type name\n");
 		ret = lookup_type(global_token->s, global_types);
-		if(NULL == ret)
+		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			create_struct();
 			return NULL;
@@ -450,10 +489,22 @@ struct type* type_name(void)
 
 struct type* mirror_type(struct type* source, char* name)
 {
-	struct type* head = calloc(1, sizeof(struct type));
-	require(NULL != head, "Exhausted memory while creating a struct\n");
-	struct type* i = calloc(1, sizeof(struct type));
-	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
+	struct type* head = lookup_type(name, global_types);
+	struct type* i;
+	if(NULL == head)
+	{
+		head = calloc(1, sizeof(struct type));
+		require(NULL != head, "Exhausted memory while creating a struct\n");
+
+		add_primitive(head);
+
+		i = calloc(1, sizeof(struct type));
+		require(NULL != i, "Exhausted memory while creating a struct indirection\n");
+	}
+	else
+	{
+		i = head->indirect;
+	}
 
 	head->name = name;
 	i->name = name;

@@ -1971,6 +1971,15 @@ void collect_local(void)
 		exit(EXIT_FAILURE);
 	}
 	struct type* type_size = type_name();
+	if(type_size->size == NO_STRUCT_DEFINITION)
+	{
+		line_error();
+		fputs("Usage of struct '", stderr);
+		fputs(type_size->name, stderr);
+		fputs("' without definition (forward declaration only).\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	require(NULL != global_token, "Received EOF while collecting locals\n");
 	require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
 	require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
@@ -2908,7 +2917,6 @@ struct type* global_typedef(void)
 	type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
 	type_size = mirror_type(type_size, global_token->s);
-	add_primitive(type_size);
 	global_token = global_token->next;
 	require_match("ERROR in typedef statement\nMissing ;\n", ";");
 	return type_size;

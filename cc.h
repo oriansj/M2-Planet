@@ -42,6 +42,8 @@
 // CONSTANT RISCV64 8
 #define RISCV64 8
 
+// CONSTANT NO_STRUCT_DEFINITION 0
+#define NO_STRUCT_DEFINITION 0
 
 void copy_string(char* target, char* source, int max);
 int in_set(int c, char* s);
