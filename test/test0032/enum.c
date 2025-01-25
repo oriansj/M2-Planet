@@ -108,6 +108,12 @@ int tests_enum_pointers(enum specific_trailing_comma* specificTrailingComma, Spe
 	return 0;
 }
 
+/* Works for some architectures
+ * https://github.com/oriansj/M2-Planet/issues/63
+ * int ten = SAATC_TEN;
+ * enum specific_and_automatic_no_trailing_comma ten_enum = SAANTC_TEN;
+ */
+
 int main() {
 	if(SNTC_ZERO != 0) {
 		return 1;
@@ -254,12 +260,22 @@ int main() {
 	}
 
 	if(ANONYMOUS_ZERO != 0){
-		return 0;
+		return 1;
 	}
 
 	if(ANONYMOUS_ONE != 1){
-		return 0;
+		return 1;
 	}
+
+	/* See comment near ten and ten_enum
+	if(ten != 10) {
+		return 1;
+	}
+
+	if(ten_enum != 10) {
+		return 1;
+	}
+	 */
 
 	return return_value;
 }
