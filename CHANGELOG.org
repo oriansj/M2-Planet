@@ -19,6 +19,7 @@
 Added support for `enum`s
 Added support for `const` on the left side of the type ("west const")
 Added support for forward declaration of `struct`s
+Added support for multi line macros with `\`s before newlines
 
 * 1.11 - 2023-11-01
 ** Added
