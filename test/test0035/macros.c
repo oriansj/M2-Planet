@@ -28,6 +28,14 @@
 		a += 1; \
     } while(0)
 
+int internal_line1() {
+	return __LINE__;
+}
+
+int internal_line2() {
+	return __LINE__;
+}
+
 int main()
 {
 	A
@@ -48,6 +56,18 @@ int main()
 
 	if (b != 1)
 	{
+		return 1;
+	}
+
+	if (internal_line1() != 32) {
+		return 1;
+	}
+
+	if (internal_line2() != 36) {
+		return 1;
+	}
+
+	if(__LINE__ != 70) {
 		return 1;
 	}
 

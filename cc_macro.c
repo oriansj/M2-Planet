@@ -134,6 +134,22 @@ struct macro_list* lookup_macro(struct token_list* token)
 		exit(EXIT_FAILURE);
 	}
 
+	if(match(token->s, "__LINE__"))
+	{
+		struct macro_list* hold = malloc(sizeof(struct macro_list));
+
+		hold->next = NULL;
+		hold->symbol = "__LINE__";
+		hold->expansion = malloc(sizeof(struct token_list));
+
+		hold->expansion->s = int2str(token->linenumber, 10, TRUE);
+		hold->expansion->linenumber = token->linenumber;
+		hold->expansion->prev = NULL;
+		hold->expansion->next = NULL;
+
+		return hold;
+	}
+
 	struct macro_list* hold = macro_env;
 
 	while (NULL != hold)
