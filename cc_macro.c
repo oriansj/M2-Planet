@@ -125,6 +125,25 @@ struct token_list* insert_tokens(struct token_list* point, struct token_list* to
 	return first;
 }
 
+struct macro_list* create_replacement_token(char* symbol, struct token_list* token)
+{
+	struct macro_list* hold = calloc(1, sizeof(struct macro_list));
+
+	hold->next = NULL;
+	hold->symbol = symbol;
+	hold->expansion = calloc(1, sizeof(struct token_list));
+
+	hold->expansion->prev = NULL;
+	hold->expansion->next = NULL;
+	hold->expansion->linenumber = token->linenumber;
+
+	/* Make sure this is cleaned up along with the real ones */
+	hold->next = macro_env;
+	macro_env = hold;
+
+	return hold;
+}
+
 struct macro_list* lookup_macro(struct token_list* token)
 {
 	if(NULL == token)
@@ -136,16 +155,33 @@ struct macro_list* lookup_macro(struct token_list* token)
 
 	if(match(token->s, "__LINE__"))
 	{
-		struct macro_list* hold = malloc(sizeof(struct macro_list));
-
-		hold->next = NULL;
-		hold->symbol = "__LINE__";
-		hold->expansion = malloc(sizeof(struct token_list));
+		struct macro_list* hold = create_replacement_token("__LINE__", token);
 
 		hold->expansion->s = int2str(token->linenumber, 10, TRUE);
-		hold->expansion->linenumber = token->linenumber;
-		hold->expansion->prev = NULL;
-		hold->expansion->next = NULL;
+
+		return hold;
+	}
+	else if(match(token->s, "__FILE__"))
+	{
+		struct macro_list* hold = create_replacement_token("__FILE__", token);
+
+		int string_length = 0;
+		/* strlen */
+		while(token->filename[string_length] != 0) {
+			string_length = string_length + 1;
+		}
+
+		hold->expansion->s = calloc(string_length + 3, sizeof(char));
+		hold->expansion->s[0] = '"';
+		hold->expansion->s[string_length] = '"';
+		hold->expansion->s[string_length + 1] = 0; /* We don't have '\0' */
+
+		/* memcpy */
+		int i;
+		for(i = 0; i < string_length; i = i + 1)
+		{
+			hold->expansion->s[i + 1] = token->filename[i];
+		}
 
 		return hold;
 	}

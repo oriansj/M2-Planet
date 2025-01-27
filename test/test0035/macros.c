@@ -71,5 +71,17 @@ int main()
 		return 1;
 	}
 
+	char* filename = __FILE__;
+	char* expected = "test/test0035/macros.c";
+
+	int i = 0;
+	while(filename[i] != 0 && expected[i] != 0) {
+		if(filename[i] != expected[i]) {
+			return 1;
+		}
+
+		i += 1;
+	}
+
 	return 0;
 }
