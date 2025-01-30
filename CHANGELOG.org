@@ -22,6 +22,7 @@ Added support for forward declaration of `struct`s
 Added support for multi line macros with `\`s before newlines
 Added support for `__LINE__` macro
 Added support for `__FILE__` macro
+Added support for `__DATE__` macro which will always be `Jan  1 1970` and `__TIME__` which will always be `00:00:00`
 
 * 1.11 - 2023-11-01
 ** Added

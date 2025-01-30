@@ -36,6 +36,19 @@ int internal_line2() {
 	return __LINE__;
 }
 
+int compare_string(char* a, char* b) {
+	int i = 0;
+	while (a[i] != 0) {
+		if(a[i] != b[i]) {
+			return 1;
+		}
+
+		i += 1;
+	}
+
+	return 0;
+}
+
 int main()
 {
 	A
@@ -67,20 +80,27 @@ int main()
 		return 1;
 	}
 
-	if(__LINE__ != 70) {
+	if(__LINE__ != 83) {
 		return 1;
 	}
 
 	char* filename = __FILE__;
 	char* expected = "test/test0035/macros.c";
 
-	int i = 0;
-	while(filename[i] != 0 && expected[i] != 0) {
-		if(filename[i] != expected[i]) {
-			return 1;
-		}
+	if(compare_string(filename, expected) != 0) {
+		return 2;
+	}
 
-		i += 1;
+	char* date = __DATE__;
+	char* expected_date = "Jan  1 1970";
+	if(compare_string(date, expected_date) != 0) {
+		return 3;
+	}
+
+	char* time = __TIME__;
+	char* expected_time = "00:00:00";
+	if(compare_string(time, expected_time) != 0) {
+		return 4;
 	}
 
 	return 0;
