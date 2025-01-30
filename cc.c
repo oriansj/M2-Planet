@@ -54,6 +54,12 @@ int main(int argc, char** argv)
 	init_macro_env("__DATE__", "\"Jan  1 1970", "__C_STANDARD__", 0);
 	init_macro_env("__TIME__", "\"00:00:00", "__C_STANDARD__", 0);
 
+	init_macro_env("__STDC__", "1", "__C_STANDARD__", 0);
+	init_macro_env("__STDC_HOSTED__", "1", "__C_STANDARD__", 0);
+	/* Claim support for C89 despite us supporting some newer features.
+	 * We are not close to fully supporting any standard so claim the one with least features. */
+	init_macro_env("__STDC_VERSION__", "199409", "__C_STANDARD__", 0);
+
 	char* arch;
 	char* name;
 	char* hold;

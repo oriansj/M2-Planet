@@ -103,5 +103,17 @@ int main()
 		return 4;
 	}
 
+#ifndef __STDC__
+	return 5;
+#endif
+
+#ifndef __STDC_HOSTED__
+	return 6;
+#endif
+
+#ifndef __STDC_VERSION__
+	return 7;
+#endif
+
 	return 0;
 }
