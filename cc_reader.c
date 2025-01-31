@@ -26,6 +26,17 @@ struct token_list* token;
 int line;
 char* file;
 
+#define DEFINE_STATE_NONE 0
+//CONSTANT DEFINE_STATE_NONE 0
+#define DEFINE_STATE_DEFINE 1
+//CONSTANT DEFINE_STATE_DEFINE 1
+/* Defines require knowing about whitespace to differentiate a function-like macro
+ * #define FUNCTION_LIKE_MACRO(x)
+ * and a regular macro that starts with an open parens
+ * #define REGULAR_MACRO (x)
+ * */
+int define_state;
+
 int grab_byte(void)
 {
 	int c = fgetc(input);
@@ -247,6 +258,11 @@ reset:
 	{
 		c = consume_byte(c);
 		c = preserve_keyword(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
+
+		if(match(hold_string, "#define"))
+		{
+			define_state = DEFINE_STATE_DEFINE;
+		}
 	}
 	else if(in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
 	{
@@ -256,6 +272,19 @@ reset:
 			fixup_label();
 			c = ' ';
 		}
+		else if(define_state == DEFINE_STATE_DEFINE)
+		{
+			if(c != '(')
+			{
+				define_state = DEFINE_STATE_NONE;
+
+				new_token(hold_string, string_index + 2);
+				new_token(" ", 2);
+				return c;
+			}
+		}
+
+		define_state = DEFINE_STATE_NONE;
 	}
 	else if(in_set(c, "<=>|&!^%"))
 	{
@@ -399,6 +428,7 @@ int change_filename(int ch)
 	require(EOF != ch, "#FILENAME failed to receive filename\n");
 
 	/* Get new line number */
+	define_state = DEFINE_STATE_NONE;
 	ch = get_token(ch);
 	line = strtoint(token->s);
 	if(0 == line)
@@ -438,6 +468,7 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 	file = filename;
 	token = current;
 	int ch = grab_byte();
+	define_state = DEFINE_STATE_NONE;
 	while(EOF != ch)
 	{
 		ch = get_token(ch);

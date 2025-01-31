@@ -28,6 +28,21 @@
 		a += 1; \
     } while(0)
 
+#define INCREMENT_NO_ARGS() do { \
+		a += 1; \
+    } while(0)
+
+#define INCREMENT(variable) do { \
+		variable += 1; \
+    } while(0)
+
+#define INCREMENT_BY(variable, amount) do { \
+		variable += amount; \
+    } while(0)
+
+/* Not a function-like macro */
+#define NEGATIVE_ONE (-1)
+
 int internal_line1() {
 	return __LINE__;
 }
@@ -67,20 +82,44 @@ int main()
 		return 1;
 	}
 
+	INCREMENT(a);
+
+	if(a != 3) {
+		return 1;
+	}
+
+	INCREMENT_BY(a, 2);
+
+	if(a != 5) {
+		return 1;
+	}
+
+	INCREMENT_NO_ARGS();
+
+	if(a != 6) {
+		return 1;
+	}
+
+	a += NEGATIVE_ONE;
+
+	if(a != 5) {
+		return 1;
+	}
+
 	if (b != 1)
 	{
 		return 1;
 	}
 
-	if (internal_line1() != 32) {
+	if (internal_line1() != 47) {
 		return 1;
 	}
 
-	if (internal_line2() != 36) {
+	if (internal_line2() != 51) {
 		return 1;
 	}
 
-	if(__LINE__ != 83) {
+	if(__LINE__ != 122) {
 		return 1;
 	}
 
