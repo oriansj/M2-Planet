@@ -35,8 +35,10 @@ int main()
 	return 0;
 }
 
-* Pointer arithmetic wrong
+* Pointer arithmetic wrong for non-compound-operators
 It isn't uncommon for complex C programs to iterate over an array using a pointer.
+
+Pointer arithmetic only works for compound operators (+=, -=) but is broken for regular operators (+, -).
 
 ** example of failing code
 #include <stdio.h>
@@ -87,7 +89,7 @@ void walk_array(char** array, char** array_end)
 	{
 		fputs(i[0], stdout);
 		fputc('\n', stdout);
-		i = i + pointer_size;
+		i += 1; /* compound operators correctly support pointer arithmetic */
 	}
 }
 

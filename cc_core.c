@@ -992,6 +992,88 @@ void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
 	}
 }
 
+void multiply_by_object_size(int object_size)
+{
+	if(object_size == 1)
+	{
+		/* No reason to multiply by one */
+		return;
+	}
+
+	emit_out("# pointer arithmetic start\n");
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("PUSHR R1 R15\n");
+
+		emit_out("LOADI R1 ");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out("\n");
+
+		emit_out("MULU R0 R1 R0\n");
+		emit_out("POPR R1 R15\n");
+	}
+	else if(X86 == Architecture)
+	{
+		emit_out("push_ebx\n");
+
+		emit_out("mov_ebx, %");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out("\n");
+
+		emit_out("mul_ebx\n");
+		emit_out("pop_ebx\n");
+	}
+	else if(AMD64 == Architecture)
+	{
+		emit_out("push_rbx\n");
+
+		emit_out("mov_rbx, %");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out("\n");
+
+		emit_out("mul_rbx\n");
+		emit_out("pop_rbx\n");
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("{R1} PUSH_ALWAYS\n");
+
+		emit_out("!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out("\n");
+
+		emit_out("'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n");
+		emit_out("{R1} POP_ALWAYS\n");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("PUSH_X1\n");
+
+		emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out("\n");
+
+		emit_out("MUL_X0_X1_X0\n");
+		emit_out("POP_X1\n");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		if(RISCV32 == Architecture) emit_out("rs1_sp rs2_a1 @-4 sw\n");
+		else if(RISCV64 == Architecture) emit_out("rs1_sp rs2_a1 @-8 sd\n");
+
+		emit_out("rd_a0 !");
+		emit_out(int2str(current_target->type->size, 10, FALSE));
+		emit_out(" addi\n");
+
+		emit_out("rd_a0 rs1_a1 rs2_a0 mul\n");
+
+		if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp !-4 lw\n");
+		else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp !-8 ld\n");
+	}
+
+	emit_out("# pointer arithmetic end\n");
+}
+
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
 {
 	require(NULL != global_token, "Received EOF in arithmetic_recursion\n");
@@ -1855,6 +1937,7 @@ void expression(void)
 		char* pop = "";
 		char* store = "";
 		struct type* last_type = current_target;
+		int is_array_indexed = match("]", global_token->prev->s);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) push = "PUSHR R1 R15\n";
 		else if(X86 == Architecture) push = "push_ebx\n";
@@ -1864,7 +1947,7 @@ void expression(void)
 		else if(RISCV32 == Architecture) push = "rs1_sp rs2_a1 @-4 sw\n";
 		else if(RISCV64 == Architecture) push = "rs1_sp rs2_a1 @-8 sd\n";
 
-		if(!match("]", global_token->prev->s) || !match("char*", current_target->name))
+		if(!is_array_indexed || !match("char*", current_target->name))
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD R1 R1 0\n";
 			else if(X86 == Architecture) load = "mov_ebx,[ebx]\n";
@@ -1894,7 +1977,7 @@ void expression(void)
 		else if(RISCV32 == Architecture) pop = "rd_a1 rs1_sp !-4 lw\n";
 		else if(RISCV64 == Architecture) pop = "rd_a1 rs1_sp !-8 ld\n";
 
-		if(match("]", global_token->prev->s))
+		if(is_array_indexed)
 		{
 			store = store_value(current_target->type->size);
 		}
@@ -1903,10 +1986,19 @@ void expression(void)
 			store = store_value(current_target->size);
 		}
 
+		int should_apply_pointer_arithmetic = current_target->type != current_target && !is_array_indexed;
+		/* We need this before it's changed by the following expression  */
+		int object_size = current_target->type->size;
+
 		common_recursion(expression);
 		current_target = promote_type(current_target, last_type);
 		emit_out(push);
 		emit_out(load);
+
+		if(should_apply_pointer_arithmetic) {
+			multiply_by_object_size(object_size);
+		}
+
 		operation = compound_operation(operator, current_target->is_signed);
 		emit_out(operation);
 		emit_out(pop);
