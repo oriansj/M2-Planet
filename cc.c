@@ -47,6 +47,19 @@ int main(int argc, char** argv)
 	FILE* destination_file = stdout;
 	Architecture = 0; /* catch unset */
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
+
+	/* The standard allows an implementation defined valid value
+	 * if time and date are not available. */
+	/* Since we're modifying the tokens directly we don't need closing quotes */
+	init_macro_env("__DATE__", "\"Jan  1 1970", "__C_STANDARD__", 0);
+	init_macro_env("__TIME__", "\"00:00:00", "__C_STANDARD__", 0);
+
+	init_macro_env("__STDC__", "1", "__C_STANDARD__", 0);
+	init_macro_env("__STDC_HOSTED__", "1", "__C_STANDARD__", 0);
+	/* Claim support for C89 despite us supporting some newer features.
+	 * We are not close to fully supporting any standard so claim the one with least features. */
+	init_macro_env("__STDC_VERSION__", "199409", "__C_STANDARD__", 0);
+
 	char* arch;
 	char* name;
 	char* hold;

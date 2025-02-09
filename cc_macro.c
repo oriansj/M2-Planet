@@ -31,11 +31,18 @@ struct conditional_inclusion
 	int previous_condition_matched; /* 1 == all subsequent conditions treated as FALSE */
 };
 
+struct macro_argument
+{
+	char* name;
+	struct macro_argument* next;
+};
+
 struct macro_list
 {
 	struct macro_list* next;
 	char* symbol;
 	struct token_list* expansion;
+	struct macro_argument* arguments;
 };
 
 struct macro_list* macro_env;
@@ -54,6 +61,7 @@ void init_macro_env(char* sym, char* value, char* source, int num)
 	macro_env->expansion->s = value;
 	macro_env->expansion->filename = source;
 	macro_env->expansion->linenumber = num;
+	macro_env->arguments = NULL;
 }
 
 void eat_current_token(void)
@@ -125,6 +133,25 @@ struct token_list* insert_tokens(struct token_list* point, struct token_list* to
 	return first;
 }
 
+struct macro_list* create_replacement_token(char* symbol, struct token_list* token)
+{
+	struct macro_list* hold = calloc(1, sizeof(struct macro_list));
+
+	hold->next = NULL;
+	hold->symbol = symbol;
+	hold->expansion = calloc(1, sizeof(struct token_list));
+
+	hold->expansion->prev = NULL;
+	hold->expansion->next = NULL;
+	hold->expansion->linenumber = token->linenumber;
+
+	/* Make sure this is cleaned up along with the real ones */
+	hold->next = macro_env;
+	macro_env = hold;
+
+	return hold;
+}
+
 struct macro_list* lookup_macro(struct token_list* token)
 {
 	if(NULL == token)
@@ -132,6 +159,40 @@ struct macro_list* lookup_macro(struct token_list* token)
 		line_error_token(macro_token);
 		fputs("null token received in lookup_macro\n", stderr);
 		exit(EXIT_FAILURE);
+	}
+
+	if(match(token->s, "__LINE__"))
+	{
+		struct macro_list* hold = create_replacement_token("__LINE__", token);
+
+		hold->expansion->s = int2str(token->linenumber, 10, TRUE);
+
+		return hold;
+	}
+	else if(match(token->s, "__FILE__"))
+	{
+		struct macro_list* hold = create_replacement_token("__FILE__", token);
+
+		int string_length = 0;
+		/* strlen */
+		while(token->filename[string_length] != 0)
+		{
+			string_length = string_length + 1;
+		}
+
+		hold->expansion->s = calloc(string_length + 3, sizeof(char));
+		hold->expansion->s[0] = '"';
+		hold->expansion->s[string_length] = '"';
+		hold->expansion->s[string_length + 1] = 0; /* We don't have '\0' */
+
+		/* memcpy */
+		int i;
+		for(i = 0; i < string_length; i = i + 1)
+		{
+			hold->expansion->s[i + 1] = token->filename[i];
+		}
+
+		return hold;
 	}
 
 	struct macro_list* hold = macro_env;
@@ -424,6 +485,49 @@ int macro_expression(void)
 	return macro_bitwise_expr();
 }
 
+void handle_function_like_macro(struct macro_list* hold)
+{
+
+	eat_current_token(); /* Skip '(' */
+	struct macro_argument* argument = calloc(1, sizeof(struct macro_argument));
+	hold->arguments = argument;
+
+	argument->next = NULL;
+	/* A NULL name in the first argument means a function macro without any arguments */
+	argument->name = NULL;
+
+	while(macro_token->s[0] != ')')
+	{
+		/* ... is not tokenized as a single token here */
+		if(macro_token->s[0] == '.')
+		{
+			/* Periods can only be in the macro argument list as a variadic parameter
+			 * so if there is a period it's part of a variadic parameter */
+			require(macro_token->next != NULL, "EOF in variadic parameter");
+			require(macro_token->next->s[0] == '.', "Invalid token '.' in macro parameter list");
+			require(macro_token->next->next != NULL, "EOF in second variadic parameter");
+			require(macro_token->next->next->s[0] == '.', "Invalid tokens '..' in macro parameter list");
+
+			line_error_token(macro_token);
+			fputs("Variadic function-like macros not supported.", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		argument->name = macro_token->s;
+		eat_current_token(); /* skip past name to comma */
+
+		if(macro_token->s[0] == ',')
+		{
+			argument->next = calloc(1, sizeof(struct macro_argument));
+			argument = argument->next;
+
+			eat_current_token(); /* skip comma */
+		}
+	}
+
+	eat_current_token(); /* skip past ')' */
+}
+
 void handle_define(void)
 {
 	struct macro_list* hold;
@@ -448,11 +552,27 @@ void handle_define(void)
 	hold = calloc(1, sizeof(struct macro_list));
 	hold->symbol = macro_token->s;
 	hold->next = macro_env;
+	hold->arguments = NULL;
 	/* provided it isn't in a non-included block */
 	if(conditional_define) macro_env = hold;
 
 	/* discard the macro name */
 	eat_current_token();
+
+	/* This is the only place in which a token can be whitespace
+	 * We need this to distinguish between function-like macros
+	 * and normal macros with an opening parens as the first token.
+	 * #define FUNCTION_MACRO(x)
+	 * #define NOT_FUNCTION_MACRO (x)
+	 * */
+	if(macro_token->s[0] == ' ')
+	{
+		eat_current_token();
+	}
+	else if(macro_token->s[0] == '(')
+	{
+		handle_function_like_macro(hold);
+	}
 
 	while (TRUE)
 	{
@@ -747,6 +867,27 @@ void eat_block(void)
 	if(match("\n", macro_token->prev->s)) macro_token = macro_token->prev;
 }
 
+struct token_list* deep_copy_token_list(struct token_list* from)
+{
+	if(from == NULL)
+	{
+		return NULL;
+	}
+
+	struct token_list* to = calloc(1, sizeof(struct token_list));
+
+	to->next = deep_copy_token_list(from->next);
+	to->locals = from->locals;
+	to->prev = from->prev;
+	to->s = from->s;
+	to->type = from->type;
+	to->filename = from->filename;
+	to->arguments = from->arguments;
+	to->depth = from->depth;
+	to->linenumber = from->linenumber;
+
+	return to;
+}
 
 struct token_list* maybe_expand(struct token_list* token)
 {
@@ -758,7 +899,6 @@ struct token_list* maybe_expand(struct token_list* token)
 	}
 
 	struct macro_list* hold = lookup_macro(token);
-	struct token_list* hold2;
 	if(NULL == token->next)
 	{
 		line_error_token(macro_token);
@@ -779,7 +919,94 @@ struct token_list* maybe_expand(struct token_list* token)
 	{
 		return token->next;
 	}
-	hold2 = insert_tokens(token, hold->expansion);
+
+	struct token_list* expansion = hold->expansion;
+
+	if(token->s[0] == '(')
+	{
+		if(hold->arguments == NULL)
+		{
+			line_error_token(macro_token);
+			fputs("Non-function-like macro '", stderr);
+			fputs(hold->symbol, stderr);
+			fputs("' was called as function-like\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		token = eat_token(token); /* skip '(' */
+
+		expansion = deep_copy_token_list(hold->expansion);
+
+		struct token_list* token_before_macro = token->prev;
+
+		struct token_list* start_token = token;
+		int parens = 1;
+		struct macro_argument* argument = hold->arguments;
+		struct token_list* expand_list;
+		while (parens != 0)
+		{
+			if(argument == NULL)
+			{
+				line_error_token(macro_token);
+				fputs("Invalid amount of parameters for function-like macro\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			if(token->s[0] == '(')
+			{
+				parens = parens + 1;
+			}
+			else if (token->s[0] == ')')
+			{
+				parens = parens - 1;
+			}
+
+			if ((token->s[0] == ',' && parens == 1) || (token->s[0] == ')' && parens == 0))
+			{
+				token->prev->next = NULL;
+				if(start_token->next != NULL && argument->name != NULL)
+				{
+					line_error_token(start_token);
+					fputs("Function-like macro with arguments of more than one token are not supported.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+
+				expand_list = expansion;
+
+				while(expand_list != NULL)
+				{
+					if(match(expand_list->s, argument->name))
+					{
+						expand_list->s = start_token->s;
+					}
+					expand_list = expand_list->next;
+				}
+
+				token->prev->next = token;
+				start_token = token->next;
+				argument = argument->next;
+			}
+
+			require(token->next != NULL, "NULL token found in function-like macro arguments\n");
+			token = token->next;
+		}
+
+		token_before_macro->next = token;
+		token->prev = token_before_macro;
+	}
+	else
+	{
+		if(hold->arguments != NULL)
+		{
+			line_error_token(macro_token);
+			fputs("Function-like macro '", stderr);
+			fputs(hold->symbol, stderr);
+			fputs("' was called like normal macro\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	struct token_list* hold2 = insert_tokens(token, expansion);
 
 	return hold2->next;
 }
