@@ -489,7 +489,7 @@ struct type* type_name(void)
 
 struct type* mirror_type(struct type* source, char* name)
 {
-	struct type* head = lookup_type(name, global_types);
+	struct type* head = lookup_type(name, prim_types);
 	struct type* i;
 	if(NULL == head)
 	{
