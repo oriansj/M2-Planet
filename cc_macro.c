@@ -917,11 +917,6 @@ struct token_list* maybe_expand(struct token_list* token)
 
 	token = eat_token(token);
 
-	if (NULL == hold->expansion)
-	{
-		return token->next;
-	}
-
 	struct token_list* expansion = hold->expansion;
 
 	if(token->s[0] == '(')
@@ -1006,6 +1001,11 @@ struct token_list* maybe_expand(struct token_list* token)
 			fputs("' was called like normal macro\n", stderr);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	if (NULL == hold->expansion)
+	{
+		return token->next;
 	}
 
 	struct token_list* hold2 = insert_tokens(token, expansion);
