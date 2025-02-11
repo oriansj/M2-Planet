@@ -309,6 +309,7 @@ b694996d144578bc386281fbc84f84f0e3a8626bd1547361bee8e015646a41b0  test/results/t
 30ad0c9826d0ded2fa01e577c6b6b4599c9098725fd89c22e52a416d0823804a  test/results/test0105-x86-binary
 c39ebae7013d9096215862241a4d919a871b790b9054e454b6a7b0ff36037f61  test/results/test0106-aarch64-binary
 d4f64948ebfa14e446a321a481c2992eb44ba3302795355353b20533a1b4eb06  test/results/test0106-amd64-binary
+<<<<<<< HEAD
 bc0fb770d0f2e27f5dc0e52c4db245ccc9960adedf5d503f3e3db3f84c965b20  test/results/test0106-armv7l-binary
 86fb8cf3182420e3d3e0cc900494f50c57b759e5f0248d2b8df3b518a8adc429  test/results/test0106-knight-native-binary
 23f22064167730ad327c244fc36a18dbccc29f6f58f2b7f5b6ffef25f4555e35  test/results/test0106-knight-posix-binary
@@ -322,3 +323,7 @@ f0a5a7cbf9814a992ace707716fda3b0c5bc60bcc0c5be30608eb97467de1baf  test/results/t
 0bd1b3b479ac39454cabc70591e7c9bd35b3e896e3dc1e6cc38f5fb97a09163f  test/results/test1000-riscv32-binary
 8186efff6da34ca43107ebd4a7c4fe1ba553b8b94583d798754563e3da96f782  test/results/test1000-riscv64-binary
 5ffc188c6848a48e62079129e46aa8330cc4a75c05a6bbd2dc9b065b74bed130  test/results/test1000-x86-binary
+=======
+b08175a30b1f60539df789dcab79673be583cc189e4f3af2d9d5ae061c1208e8  test/results/test1000-aarch64-binary
+6ee8945c6a63650936b1852f9ce98b34b1b6ee2a58a187eb26ad4f57d5455de4  test/results/test1000-amd64-binary
+>>>>>>> e2077f63acfa42302b023902c2669da172a5cb88
