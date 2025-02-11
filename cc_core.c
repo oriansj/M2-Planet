@@ -994,6 +994,9 @@ void general_recursion(FUNCTION f, char* s, char* name, FUNCTION iterate)
 
 void multiply_by_object_size(int object_size)
 {
+	/* bootstrap mode can't depend upon on pointer arithmetic */
+	if(BOOTSTRAP_MODE) return;
+
 	if(object_size == 1)
 	{
 		/* No reason to multiply by one */
@@ -2225,16 +2228,19 @@ void process_if(void)
 void process_case(void)
 {
 process_case_iter:
+	require(NULL != global_token, "incomplete case statement\n");
 	if(match("case", global_token->s)) return;
 	if(match(":default", global_token->s)) return;
 
 	if(match("break", global_token->s))
 	{
 		statement();
+		require(NULL != global_token, "incomplete case statement\n");
 	}
 	else
 	{
 		statement();
+		require(NULL != global_token, "incomplete case statement\n");
 		goto process_case_iter;
 	}
 }
@@ -2291,9 +2297,11 @@ void process_switch(void)
 	require_match("ERROR in process_switch\nMISSING {\n", "{");
 	struct case_list* backtrack = NULL;
 process_switch_iter:
+	require(NULL != global_token, "incomplete switch statement\n");
 	if(match("case", global_token->s))
 	{
 		global_token = global_token->next;
+		require(NULL != global_token, "incomplete case statement\n");
 		if(':' == global_token->s[0])
 		{
 			struct case_list* c = calloc(1, sizeof(struct case_list));
@@ -2306,6 +2314,7 @@ process_switch_iter:
 			uniqueID_out(function->s, number_string);
 			global_token = global_token->next;
 			process_case();
+			require(NULL != global_token, "Incomplete case statement\n");
 		}
 		else line_error();
 		goto process_switch_iter;
@@ -2316,10 +2325,12 @@ process_switch_iter:
 		emit_out(":_SWITCH_DEFAULT_");
 		uniqueID_out(function->s, number_string);
 
+		require(NULL != global_token, "recieved EOF before switch closing }\n");
 		/* collect statements until } */
 		while(!match("}", global_token->s))
 		{
 			statement();
+			require(NULL != global_token, "recieved EOF before switch closing }\n");
 		}
 
 		/* jump over the switch table */

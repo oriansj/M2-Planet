@@ -744,6 +744,7 @@ void macro_directive(void)
 	}
 	else if(match("#elif", macro_token->s))
 	{
+		require(NULL != macro_token->next, "#elif without leading #if\n");
 		eat_current_token();
 		result = macro_expression();
 		require(NULL != conditional_inclusion_top, "#elif without leading #if\n");
@@ -757,6 +758,7 @@ void macro_directive(void)
 	}
 	else if(match("#else", macro_token->s))
 	{
+		require(NULL != macro_token->next, "#else without leading #if\n");
 		eat_current_token();
 		require(NULL != conditional_inclusion_top, "#else without leading #if\n");
 		conditional_inclusion_top->include = !conditional_inclusion_top->previous_condition_matched;

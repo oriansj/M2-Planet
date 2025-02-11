@@ -50,4 +50,4 @@ extern int BOOTSTRAP_MODE;
 extern int PREPROCESSOR_MODE;
 
 /* feature unsupported by cc_* */
-void maybe_bootstrap_error(char* feature);
+extern void maybe_bootstrap_error(char* feature);
