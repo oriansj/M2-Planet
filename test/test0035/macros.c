@@ -24,6 +24,8 @@
         } \
     } while(0)
 
+#define EMPTY_FUNCTION_LIKE(a, b, c, d, e)
+
 #define INCREMENT_A do { \
 		a += 1; \
     } while(0)
@@ -70,6 +72,7 @@ int main()
 	B
 	C
 	D;
+	EMPTY_FUNCTION_LIKE(int, 1, 2, invalid_identifier, -)
 
 	if (a != 1)
 	{
@@ -111,15 +114,15 @@ int main()
 		return 1;
 	}
 
-	if (internal_line1() != 47) {
+	if (internal_line1() != 49) {
 		return 1;
 	}
 
-	if (internal_line2() != 51) {
+	if (internal_line2() != 53) {
 		return 1;
 	}
 
-	if(__LINE__ != 122) {
+	if(__LINE__ != 125) {
 		return 1;
 	}
 
