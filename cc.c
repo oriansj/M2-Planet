@@ -73,33 +73,6 @@ int main(int argc, char** argv)
 		{
 			i = i + 1;
 		}
-		else if(match(argv[i], "-f") || match(argv[i], "--file"))
-		{
-			if(NULL == hold_string)
-			{
-				hold_string = calloc(MAX_STRING + 4, sizeof(char));
-				require(NULL != hold_string, "Impossible Exhaustion has occurred\n");
-			}
-
-			name = argv[i + 1];
-			if(NULL == name)
-			{
-				fputs("did not receive a file name\n", stderr);
-				exit(EXIT_FAILURE);
-			}
-
-			in = fopen(name, "r");
-			if(NULL == in)
-			{
-				fputs("Unable to open for reading file: ", stderr);
-				fputs(name, stderr);
-				fputs("\n Aborting to avoid problems\n", stderr);
-				exit(EXIT_FAILURE);
-			}
-			global_token = read_all_tokens(in, global_token, name);
-			fclose(in);
-			i = i + 2;
-		}
 		else if(match(argv[i], "-o") || match(argv[i], "--output"))
 		{
 			destination_file = fopen(argv[i + 1], "w");
@@ -196,7 +169,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			fputs("Usage: M2-Planet [options]\n", stdout);
+			fputs("Usage: M2-Planet [options] file...\n", stdout);
 			fputs("Options:\n", stdout);
 			fputs(" --file,-f                      input file\n", stdout);
 			fputs(" --output,-o                    output file\n", stdout);
@@ -244,8 +217,36 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			fputs("UNKNOWN ARGUMENT\n", stdout);
-			exit(EXIT_FAILURE);
+			if(match(argv[i], "-f") || match(argv[i], "--file"))
+			{
+				i = i + 1;
+			}
+
+			name = argv[i];
+			if(NULL == hold_string)
+			{
+				hold_string = calloc(MAX_STRING + 4, sizeof(char));
+				require(NULL != hold_string, "Impossible Exhaustion has occurred\n");
+			}
+
+			if(NULL == name)
+			{
+				fputs("did not receive a filename\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			in = fopen(name, "r");
+			if(NULL == in)
+			{
+				fputs("Unable to open for reading file: ", stderr);
+				fputs(name, stderr);
+				fputs("\n Aborting to avoid problems\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			global_token = read_all_tokens(in, global_token, name);
+			fclose(in);
+
+			i = i + 1;
 		}
 	}
 
