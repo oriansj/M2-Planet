@@ -196,7 +196,7 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-h") || match(argv[i], "--help"))
 		{
-			fputs(" -f input file\n -o output file\n --help for this message\n --version for file version\n", stdout);
+			fputs("Usage: M2-Planet [options]\nOptions:\n --file,-f                      input file\n --output,-o                    output file\n --architecture,-A ARCHITECTURE Target architecture. Call without argument to list available\n -D                             Add define\n -E                             Preprocess only\n --debug,-g                     Debug mode\n --bootstrap-mode               Emulate less powerful cc_* compilers\n --max-string N                 Size of maximum string value (default 4096)\n --help,-h                      Display this message\n --version,-V                   Display compiler version\n\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
 		else if(match(argv[i], "-E"))
