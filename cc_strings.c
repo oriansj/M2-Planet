@@ -141,6 +141,7 @@ int escape_lookup(char* c)
 	else if(c[1] == '"') return 34;
 	else if(c[1] == '\'') return 39;
 	else if(c[1] == '\\') return 92;
+	else if(c[1] == '?') return 63;
 	else if(digit_is_octal(c[1])) return parse_octal_escape_code(c + 1);
 
 	fputs("Unknown escape received: ", stderr);
