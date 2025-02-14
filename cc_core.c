@@ -1061,17 +1061,9 @@ void multiply_by_object_size(int object_size)
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		if(RISCV32 == Architecture) emit_out("rs1_sp rs2_a1 @-4 sw\n");
-		else if(RISCV64 == Architecture) emit_out("rs1_sp rs2_a1 @-8 sd\n");
-
-		emit_out("rd_a0 !");
+		emit_out("rd_a4 !");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
-		emit_out(" addi\n");
-
-		emit_out("rd_a0 rs1_a1 rs2_a0 mul\n");
-
-		if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp !-4 lw\n");
-		else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp !-8 ld\n");
+		emit_out(" addi\nrd_a0 rs1_a0 rs2_a4 mul\n");
 	}
 
 	emit_out("# pointer arithmetic end\n");
