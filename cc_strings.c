@@ -58,6 +58,47 @@ int hexify(int c, int high)
 	return i;
 }
 
+int digit_is_octal(char digit)
+{
+	return digit >= '0' && digit <= '7';
+}
+
+int parse_octal_escape_code(char* digits)
+{
+	int result = 0;
+	int i = 0;
+	while(digit_is_octal(digits[i]) && i < 3)
+	{
+		result = result * 8;
+		result = result + (digits[i] - '0');
+
+		i = i + 1;
+	}
+	/* implementation defined behavior: Octals above 0177 (127) wrap around in 2s complement. Same as GCC. */
+	while(result > 127)
+	{
+		result = result - 256;
+	}
+
+	return result;
+}
+
+int amount_of_escaped_chars_to_skip(char* string)
+{
+	if (string[1] == 'x') return 3;
+	else if (digit_is_octal(string[1]))
+	{
+		int i = 2;
+		while(digit_is_octal(string[i]) && i < 4)
+		{
+			i = i + 1;
+		}
+		return i - 1;
+	}
+
+	return 1;
+}
+
 int escape_lookup(char* c);
 int weird(char* string)
 {
@@ -69,8 +110,7 @@ weird_reset:
 	if('\\' == c)
 	{
 		c = escape_lookup(string);
-		if('x' == string[1]) string = string + 2;
-		string = string + 1;
+		string = string + amount_of_escaped_chars_to_skip(string);
 	}
 
 	if(!in_set(c, "\t\n !#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~")) return TRUE;
@@ -90,7 +130,6 @@ int escape_lookup(char* c)
 		int t2 = hexify(c[3], FALSE);
 		return t1 + t2;
 	}
-	else if(c[1] == '0') return 0;
 	else if(c[1] == 'a') return 7;
 	else if(c[1] == 'b') return 8;
 	else if(c[1] == 't') return 9;
@@ -102,6 +141,7 @@ int escape_lookup(char* c)
 	else if(c[1] == '"') return 34;
 	else if(c[1] == '\'') return 39;
 	else if(c[1] == '\\') return 92;
+	else if(digit_is_octal(c[1])) return parse_octal_escape_code(c + 1);
 
 	fputs("Unknown escape received: ", stderr);
 	fputs(c, stderr);
@@ -119,8 +159,7 @@ collect_regular_string_reset:
 	if(string[0] == '\\')
 	{
 		hold_string[string_index] = escape_lookup(string);
-		if (string[1] == 'x') string = string + 2;
-		string = string + 2;
+		string = string + amount_of_escaped_chars_to_skip(string) + 1;
 	}
 	else
 	{
@@ -158,8 +197,7 @@ collect_weird_string_reset:
 
 	if(string[0] == '\\')
 	{
-		if(string[1] == 'x') string = string + 2;
-		string = string + 1;
+		string = string + amount_of_escaped_chars_to_skip(string);
 	}
 
 	string_index = string_index + 3;
