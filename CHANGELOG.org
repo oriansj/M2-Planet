@@ -26,6 +26,7 @@ Added support for `__DATE__` macro which will always be `Jan  1 1970` and `__TIM
 Added support for `__STDC__`, `__STDC_HOSTED__`, and `__STDC_VERSION__` macros. `__STDC_VERSION__` claims support for C89.
 Added initial support for function-like macros
 Added support for octal escape codes in strings and characters
+Added support for \? escape code in strings and characters
 
 * 1.11 - 2023-11-01
 ** Added
