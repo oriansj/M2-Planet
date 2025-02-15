@@ -849,7 +849,7 @@ void primary_expr_number(char* s)
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		int size = strtoint(s);
-		if((2047 >= size) && (size > -2048))
+		if((2047 >= size) && (size >= -2048))
 		{
 			emit_out("rd_a0 !");
 			emit_out(s);
@@ -1065,6 +1065,12 @@ void multiply_by_object_size(int object_size)
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
+		if(current_target->type->size > 2047)
+		{
+			emit_out("rd_a4 !");
+			emit_out(int2str(current_target->type->size, 10, FALSE));
+			emit_out(" lui\n");
+		}
 		emit_out("rd_a4 !");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out(" addi\nrd_a0 rs1_a0 rs2_a4 mul\n");
