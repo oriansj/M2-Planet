@@ -849,7 +849,7 @@ void primary_expr_number(char* s)
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		int size = strtoint(s);
-		if((2047 > size) && (size > -2048))
+		if((2047 >= size) && (size > -2048))
 		{
 			emit_out("rd_a0 !");
 			emit_out(s);
@@ -1151,6 +1151,12 @@ void postfix_expr_arrow(void)
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
+			if(i->offset > 2047)
+			{
+				emit_out("rd_a1 ~");
+				emit_out(int2str(i->offset, 10, TRUE));
+				emit_out(" lui\n");
+			}
 			emit_out("rd_a1 !");
 			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out(" addi\n");
@@ -1212,6 +1218,12 @@ void postfix_expr_dot(void)
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
+			if(i->offset > 2047)
+			{
+				emit_out("rd_a1 ~");
+				emit_out(int2str(i->offset, 10, TRUE));
+				emit_out(" lui\n");
+			}
 			emit_out("rd_a1 !");
 			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out(" addi\n");
