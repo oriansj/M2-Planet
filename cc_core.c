@@ -1052,7 +1052,7 @@ void multiply_by_object_size(int object_size)
 	{
 		emit_out("PUSH_X1\n");
 
-		emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
+		emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
