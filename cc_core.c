@@ -733,9 +733,12 @@ void primary_expr_string(void)
 		s[0] = '"';
 		int i = 1;
 
+		int used_string_concatenation = FALSE;
 		int j;
 		while('"' == global_token->s[0])
 		{
+			if(used_string_concatenation) maybe_bootstrap_error("string literal concatenation");
+
 			/* Step past the leading '"' */
 			j = 1;
 
@@ -751,6 +754,7 @@ void primary_expr_string(void)
 			/* Move on to the next token */
 			global_token = global_token->next;
 			require(NULL != global_token, "multi-string null is not valid C\n");
+			used_string_concatenation = TRUE;
 		}
 
 		/* Now use it */
