@@ -27,6 +27,7 @@ Added support for `__STDC__`, `__STDC_HOSTED__`, and `__STDC_VERSION__` macros. 
 Added initial support for function-like macros
 Added support for octal escape codes in strings and characters
 Added support for \? escape code in strings and characters
+Added support for multiple variable declarations per statement
 
 * 1.11 - 2023-11-01
 ** Added

@@ -2079,97 +2079,128 @@ void collect_local(void)
 		exit(EXIT_FAILURE);
 	}
 
+	/* Declarations do not have the same pointer level so we'll need to find the actual type */
+	struct type* base_type = type_size->type->type;
+	struct type* current_type = type_size;
+
 	require(NULL != global_token, "Received EOF while collecting locals\n");
 	require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
 	require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
 	require(NULL != type_size, "Must have non-null type\n");
-	struct token_list* a = sym_declare(global_token->s, type_size, function->locals);
-	if(match("main", function->s) && (NULL == function->locals))
-	{
-		if(KNIGHT_NATIVE == Architecture) a->depth = register_size;
-		else if(KNIGHT_POSIX == Architecture) a->depth = 20;
-		else if(X86 == Architecture) a->depth = -20;
-		else if(AMD64 == Architecture) a->depth = -40;
-		else if(ARMV7L == Architecture) a->depth = 16;
-		else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
-		else if(RISCV32 == Architecture) a->depth = -16;
-		else if(RISCV64 == Architecture) a->depth = -32;
-	}
-	else if((NULL == function->arguments) && (NULL == function->locals))
-	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = register_size;
-		else if(X86 == Architecture) a->depth = -8;
-		else if(AMD64 == Architecture) a->depth = -16;
-		else if(ARMV7L == Architecture) a->depth = 8;
-		else if(AARCH64 == Architecture) a->depth = register_size;
-		else if(RISCV32 == Architecture) a->depth = -4;
-		else if(RISCV64 == Architecture) a->depth = -8;
-	}
-	else if(NULL == function->locals)
-	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->arguments->depth + 8;
-		else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
-		else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
-		else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
-		else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
-		else if(RISCV32 == Architecture) a->depth = function->arguments->depth - 4;
-		else if(RISCV64 == Architecture) a->depth = function->arguments->depth - 8;
-	}
-	else
-	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->locals->depth + register_size;
-		else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
-		else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
-		else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
-		else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
-		else if(RISCV32 == Architecture) a->depth = function->locals->depth - register_size;
-		else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
-	}
 
-	/* Adjust the depth of local structs. When stack grows downwards, we want them to
-	   start at the bottom of allocated space. */
-	unsigned struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
-	if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
-	else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
-	else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-	else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-	else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
-	else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
-	else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-	else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+	struct token_list* list_to_append_to = function->locals;
+	struct token_list* a;
+	unsigned struct_depth_adjustment;
+	unsigned i;
 
-	function->locals = a;
-
-	emit_out("# Defining local ");
-	emit_out(global_token->s);
-	emit_out("\n");
-
-	global_token = global_token->next;
-	require(NULL != global_token, "incomplete local missing name\n");
-
-	if(match("=", global_token->s))
+	do
 	{
+		a = sym_declare(global_token->s, current_type, list_to_append_to);
+		list_to_append_to = a;
+
+		if(match("main", function->s) && (NULL == function->locals))
+		{
+			if(KNIGHT_NATIVE == Architecture) a->depth = register_size;
+			else if(KNIGHT_POSIX == Architecture) a->depth = 20;
+			else if(X86 == Architecture) a->depth = -20;
+			else if(AMD64 == Architecture) a->depth = -40;
+			else if(ARMV7L == Architecture) a->depth = 16;
+			else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
+			else if(RISCV32 == Architecture) a->depth = -16;
+			else if(RISCV64 == Architecture) a->depth = -32;
+		}
+		else if((NULL == function->arguments) && (NULL == function->locals))
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = register_size;
+			else if(X86 == Architecture) a->depth = -8;
+			else if(AMD64 == Architecture) a->depth = -16;
+			else if(ARMV7L == Architecture) a->depth = 8;
+			else if(AARCH64 == Architecture) a->depth = register_size;
+			else if(RISCV32 == Architecture) a->depth = -4;
+			else if(RISCV64 == Architecture) a->depth = -8;
+		}
+		else if(NULL == function->locals)
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->arguments->depth + 8;
+			else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
+			else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
+			else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
+			else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
+			else if(RISCV32 == Architecture) a->depth = function->arguments->depth - 4;
+			else if(RISCV64 == Architecture) a->depth = function->arguments->depth - 8;
+		}
+		else
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->locals->depth + register_size;
+			else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
+			else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
+			else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
+			else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
+			else if(RISCV32 == Architecture) a->depth = function->locals->depth - register_size;
+			else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
+		}
+
+		/* Adjust the depth of local structs. When stack grows downwards, we want them to
+		   start at the bottom of allocated space. */
+		struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
+		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+
+		function->locals = a;
+
+		emit_out("# Defining local ");
+		emit_out(global_token->s);
+		emit_out("\n");
+
 		global_token = global_token->next;
-		require(NULL != global_token, "incomplete local assignment\n");
-		expression();
+		require(NULL != global_token, "incomplete local missing name\n");
+
+		if(match("=", global_token->s))
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "incomplete local assignment\n");
+			expression();
+		}
+
+		i = ceil_div(a->type->size, register_size);
+		while(i != 0)
+		{
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
+			else if(X86 == Architecture) emit_out("push_eax\t#");
+			else if(AMD64 == Architecture) emit_out("push_rax\t#");
+			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
+			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
+			else if(RISCV32 == Architecture) emit_out("rd_sp rs1_sp !-4 addi\nrs1_sp rs2_a0 sw\t#");
+			else if(RISCV64 == Architecture) emit_out("rd_sp rs1_sp !-8 addi\nrs1_sp rs2_a0 sd\t#");
+			emit_out(a->s);
+			emit_out("\n");
+			i = i - 1;
+		}
+
+		if(global_token->s[0] == ',')
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "NULL token after comma in local assignment\n");
+
+			current_type = base_type;
+			while(global_token->s[0] == '*')
+			{
+				current_type = current_type->indirect;
+
+				global_token = global_token->next;
+				require(NULL != global_token, "Received EOF while collecting pointers in local\n");
+			}
+		}
 	}
+	while(global_token->s[0] != ';');
 
 	require_match("ERROR in collect_local\nMissing ;\n", ";");
-
-	unsigned i = ceil_div(a->type->size, register_size);
-	while(i != 0)
-	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
-		else if(X86 == Architecture) emit_out("push_eax\t#");
-		else if(AMD64 == Architecture) emit_out("push_rax\t#");
-		else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#");
-		else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#");
-		else if(RISCV32 == Architecture) emit_out("rd_sp rs1_sp !-4 addi\nrs1_sp rs2_a0 sw\t#");
-		else if(RISCV64 == Architecture) emit_out("rd_sp rs1_sp !-8 addi\nrs1_sp rs2_a0 sd\t#");
-		emit_out(a->s);
-		emit_out("\n");
-		i = i - 1;
-	}
 }
 
 void statement(void);
