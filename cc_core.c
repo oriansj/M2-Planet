@@ -1257,12 +1257,23 @@ void postfix_expr_array(void)
 	}
 	else
 	{
+		if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		{
+			emit_out("rd_a2 rs1_a1 addi\n");
+			if(current_target->type->size > 2047)
+			{
+				emit_out("rd_a1 ~");
+				emit_out(int2str(current_target->type->size, 10, TRUE));
+				emit_out(" lui");
+			}
+		}
+
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R1 R15\nLOADI R1 ");
 		else if(X86 == Architecture) emit_out("push_ebx\nmov_ebx, %");
 		else if(AMD64 == Architecture) emit_out("push_rbx\nmov_rbx, %");
 		else if(ARMV7L == Architecture) emit_out("{R1} PUSH_ALWAYS\n!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 		else if(AARCH64 == Architecture) emit_out("PUSH_X1\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a2 rs1_a1 addi\nrd_a1 !");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a1 !");
 		emit_out(int2str(current_target->type->size, 10, TRUE));
 		if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
 
