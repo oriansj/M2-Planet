@@ -516,8 +516,7 @@ char* store_value(unsigned size)
 		else if(AMD64 == Architecture) return "mov_[rbx],al\n";
 		else if(ARMV7L == Architecture) return "!0 R0 STORE8 R1 MEMORY\n";
 		else if(AARCH64 == Architecture) return "STR_BYTE_W0_[X1]\n";
-		else if(RISCV32 == Architecture) return "rs1_a1 rs2_a0 sb\n";
-		else if(RISCV64 == Architecture) return "rs1_a1 rs2_a0 sb\n";
+		else if(RISCV32 == Architecture || RISCV64 == Architecture) return "rs1_a1 rs2_a0 sb\n";
 	}
 	else if(size == 2)
 	{
@@ -1067,7 +1066,7 @@ void multiply_by_object_size(int object_size)
 	{
 		if(current_target->type->size > 2047)
 		{
-			emit_out("rd_a4 !");
+			emit_out("rd_a4 ~");
 			emit_out(int2str(current_target->type->size, 10, FALSE));
 			emit_out(" lui\n");
 		}
