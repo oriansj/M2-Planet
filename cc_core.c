@@ -3244,6 +3244,15 @@ new_type:
 		goto new_type;
 	}
 
+	/* declaration-specifiers can come in any order */
+	while(match("inline", global_token->s)
+			|| match("static", global_token->s)
+			|| match("_Noreturn", global_token->s))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Unterminated global\n");
+	}
+
 	type_size = type_name();
 	/* Deal with case of struct definitions */
 	if(NULL == type_size) goto new_type;

@@ -62,6 +62,7 @@ aarch64-tests: \
 	test0035-aarch64-binary \
 	test0036-aarch64-binary \
 	test0037-aarch64-binary \
+	test0038-aarch64-binary \
 	test0100-aarch64-binary \
 	test0101-aarch64-binary \
 	test0102-aarch64-binary \
@@ -110,6 +111,7 @@ amd64-tests: \
 	test0035-amd64-binary \
 	test0036-amd64-binary \
 	test0037-amd64-binary \
+	test0038-amd64-binary \
 	test0100-amd64-binary \
 	test0101-amd64-binary \
 	test0102-amd64-binary \
@@ -155,6 +157,7 @@ knight-posix-tests: \
 	test0035-knight-posix-binary \
 	test0036-knight-posix-binary \
 	test0037-knight-posix-binary \
+	test0038-knight-posix-binary \
 	test0100-knight-posix-binary \
 	test0101-knight-posix-binary \
 	test0102-knight-posix-binary \
@@ -224,6 +227,7 @@ armv7l-tests: \
 	test0035-armv7l-binary \
 	test0036-armv7l-binary \
 	test0037-armv7l-binary \
+	test0038-armv7l-binary \
 	test0100-armv7l-binary \
 	test0101-armv7l-binary \
 	test0102-armv7l-binary \
@@ -272,6 +276,7 @@ x86-tests: \
 	test0035-x86-binary \
 	test0036-x86-binary \
 	test0037-x86-binary \
+	test0038-x86-binary \
 	test0100-x86-binary \
 	test0101-x86-binary \
 	test0102-x86-binary \
@@ -320,6 +325,7 @@ riscv32-tests: \
 	test0035-riscv32-binary \
 	test0036-riscv32-binary \
 	test0037-riscv32-binary \
+	test0038-riscv32-binary \
 	test0100-riscv32-binary \
 	test0101-riscv32-binary \
 	test0102-riscv32-binary \
@@ -368,6 +374,7 @@ riscv64-tests: \
 	test0035-riscv64-binary \
 	test0036-riscv64-binary \
 	test0037-riscv64-binary \
+	test0038-riscv64-binary \
 	test0100-riscv64-binary \
 	test0101-riscv64-binary \
 	test0102-riscv64-binary \
@@ -490,6 +497,9 @@ test0036-riscv32-binary: M2-Planet | results
 
 test0037-riscv32-binary: M2-Planet | results
 	test/test0037/run_test.sh riscv32
+
+test0038-riscv32-binary: M2-Planet | results
+	test/test0038/run_test.sh riscv32
 
 test0100-riscv32-binary: M2-Planet | results
 	test/test0100/run_test.sh riscv32
@@ -629,6 +639,9 @@ test0036-riscv64-binary: M2-Planet | results
 test0037-riscv64-binary: M2-Planet | results
 	test/test0037/run_test.sh riscv64
 
+test0038-riscv64-binary: M2-Planet | results
+	test/test0038/run_test.sh riscv64
+
 test0100-riscv64-binary: M2-Planet | results
 	test/test0100/run_test.sh riscv64
 
@@ -766,6 +779,9 @@ test0036-aarch64-binary: M2-Planet | results
 
 test0037-aarch64-binary: M2-Planet | results
 	test/test0037/run_test.sh aarch64
+
+test0038-aarch64-binary: M2-Planet | results
+	test/test0038/run_test.sh aarch64
 
 test0100-aarch64-binary: M2-Planet | results
 	test/test0100/run_test.sh aarch64
@@ -905,6 +921,9 @@ test0036-amd64-binary: M2-Planet | results
 test0037-amd64-binary: M2-Planet | results
 	test/test0037/run_test.sh amd64
 
+test0038-amd64-binary: M2-Planet | results
+	test/test0038/run_test.sh amd64
+
 test0100-amd64-binary: M2-Planet | results
 	test/test0100/run_test.sh amd64
 
@@ -1033,6 +1052,9 @@ test0036-knight-posix-binary: M2-Planet | results
 
 test0037-knight-posix-binary: M2-Planet | results
 	test/test0037/hello-knight-posix.sh
+
+test0038-knight-posix-binary: M2-Planet | results
+	test/test0038/hello-knight-posix.sh
 
 test0100-knight-posix-binary: M2-Planet | results
 	test/test0100/hello-knight-posix.sh
@@ -1229,6 +1251,9 @@ test0036-armv7l-binary: M2-Planet | results
 test0037-armv7l-binary: M2-Planet | results
 	test/test0037/run_test.sh armv7l
 
+test0038-armv7l-binary: M2-Planet | results
+	test/test0038/run_test.sh armv7l
+
 test0100-armv7l-binary: M2-Planet | results
 	test/test0100/run_test.sh armv7l
 
@@ -1366,6 +1391,9 @@ test0036-x86-binary: M2-Planet | results
 
 test0037-x86-binary: M2-Planet | results
 	test/test0037/run_test.sh x86
+
+test0038-x86-binary: M2-Planet | results
+	test/test0038/run_test.sh x86
 
 test0100-x86-binary: M2-Planet | results
 	test/test0100/run_test.sh x86
