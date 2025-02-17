@@ -2196,6 +2196,8 @@ void collect_local(void)
 
 		if(global_token->s[0] == ',')
 		{
+			maybe_bootstrap_error("multiple variables per statement");
+
 			global_token = global_token->next;
 			require(NULL != global_token, "NULL token after comma in local assignment\n");
 
