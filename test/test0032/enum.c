@@ -51,6 +51,13 @@ enum {
 	ANONYMOUS_ONE,
 };
 
+enum complex_assignments {
+	CA_TEN = SAATC_TEN,
+	CA_ELEVEN,
+	CA_ELEVEN2 = CA_ELEVEN,
+	CA_ELEVEN3 = CA_ELEVEN2,
+};
+
 typedef enum specific_trailing_comma SpecificTrailingComma;
 
 struct contains_enum {
@@ -266,6 +273,11 @@ int main() {
 	if(ANONYMOUS_ONE != 1){
 		return 1;
 	}
+
+	if(CA_TEN != 10) return 2;
+	if(CA_ELEVEN != 11) return 3;
+	if(CA_ELEVEN2 != 11) return 4;
+	if(CA_ELEVEN3 != 11) return 5;
 
 	/* See comment near ten and ten_enum
 	if(ten != 10) {

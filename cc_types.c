@@ -21,6 +21,7 @@
 int strtoint(char *a);
 void line_error(void);
 void require(int bool, char* error);
+struct token_list* sym_lookup(char*, struct token_list*);
 
 /* enable easy primitive extension */
 struct type* add_primitive(struct type* a)
@@ -369,6 +370,7 @@ void create_enum(void)
 	require(NULL != global_token, "Incomplete enum definition at end of file\n");
 
 	int next_enum_value = 0;
+	struct token_list* lookup;
 	while('}' != global_token->s[0])
 	{
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
@@ -379,6 +381,12 @@ void create_enum(void)
 		{
 			global_token = global_token->next;
 			require(NULL != global_token, "Incomplete enumerator value at end of file\n");
+
+			lookup = sym_lookup(global_token->s, global_constant_list);
+			if(lookup != NULL)
+			{
+				global_token->s = lookup->arguments->s;
+			}
 
 			next_enum_value = strtoint(global_token->s) + 1;
 		}
