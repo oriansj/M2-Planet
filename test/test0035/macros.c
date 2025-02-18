@@ -45,6 +45,8 @@
 /* Not a function-like macro */
 #define NEGATIVE_ONE (-1)
 
+#define macro_line internal_line1
+
 int internal_line1() {
 	return __LINE__;
 }
@@ -114,15 +116,19 @@ int main()
 		return 1;
 	}
 
-	if (internal_line1() != 49) {
+	if (internal_line1() != 51) {
 		return 1;
 	}
 
-	if (internal_line2() != 53) {
+	if (internal_line2() != 55) {
 		return 1;
 	}
 
-	if(__LINE__ != 125) {
+	if(macro_line() != 51) {
+		return 1;
+	}
+
+	if(__LINE__ != 131) {
 		return 1;
 	}
 

@@ -919,17 +919,14 @@ struct token_list* maybe_expand(struct token_list* token)
 
 	struct token_list* expansion = hold->expansion;
 
-	if(token->s[0] == '(')
+	if(hold->arguments != NULL)
 	{
-		if(hold->arguments == NULL)
+		if(token->s[0] != '(')
 		{
 			line_error_token(macro_token);
-			fputs("Non-function-like macro '", stderr);
-			fputs(hold->symbol, stderr);
-			fputs("' was called as function-like\n", stderr);
+			fputs("Function-like-macro called without parameter list\n", stderr);
 			exit(EXIT_FAILURE);
 		}
-
 		token = eat_token(token); /* skip '(' */
 
 		expansion = deep_copy_token_list(hold->expansion);
