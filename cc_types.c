@@ -161,6 +161,16 @@ struct type* lookup_type(char* s, struct type* start)
 	return NULL;
 }
 
+struct type* lookup_primitive_type(char* s)
+{
+	return lookup_type(s, prim_types);
+}
+
+struct type* lookup_global_type(char* s)
+{
+	return lookup_type(s, global_types);
+}
+
 struct type* lookup_member(struct type* parent, char* name)
 {
 	struct type* i;
@@ -246,7 +256,7 @@ void create_struct(void)
 	int offset = 0;
 	member_size = 0;
 
-	struct type* head = lookup_type(global_token->s, global_types);
+	struct type* head = lookup_global_type(global_token->s);
 	struct type* i;
 	if(NULL == head)
 	{
@@ -443,7 +453,7 @@ struct type* type_name(void)
 	{
 		global_token = global_token->next;
 		require(NULL != global_token, "structs can not have a EOF type name\n");
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type(global_token->s);
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			create_struct();
@@ -455,7 +465,7 @@ struct type* type_name(void)
 		maybe_bootstrap_error("enum statements");
 		global_token = global_token->next;
 		require(NULL != global_token, "enums can not have a EOF type name\n");
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type(global_token->s);
 		if(NULL == ret)
 		{
 			create_enum();
@@ -464,7 +474,7 @@ struct type* type_name(void)
 	}
 	else
 	{
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type(global_token->s);
 		if(NULL == ret)
 		{
 			fputs("Unknown type ", stderr);
@@ -497,7 +507,7 @@ struct type* type_name(void)
 
 struct type* mirror_type(struct type* source, char* name)
 {
-	struct type* head = lookup_type(name, prim_types);
+	struct type* head = lookup_primitive_type(name);
 	struct type* i;
 	if(NULL == head)
 	{

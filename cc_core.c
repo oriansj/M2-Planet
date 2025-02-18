@@ -2908,7 +2908,7 @@ void process_static_variable(void)
  *     expr ;
  */
 
-struct type* lookup_type(char* s, struct type* start);
+struct type* lookup_primitive_type(char* s);
 void statement(void)
 {
 	require(NULL != global_token, "expected a C statement but received EOF\n");
@@ -2925,7 +2925,7 @@ void statement(void)
 		emit_out("\t#C goto label\n");
 		global_token = global_token->next;
 	}
-	else if((NULL != lookup_type(global_token->s, prim_types)) ||
+	else if((NULL != lookup_primitive_type(global_token->s)) ||
 	          match("enum", global_token->s) ||
 	          match("struct", global_token->s) ||
 	          match("const", global_token->s))
