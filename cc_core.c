@@ -3129,6 +3129,24 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	globals_list = emit("'\n", globals_list);
 }
 
+void global_variable_definition(struct type* type_size)
+{
+	/* Ensure enough bytes are allocated to store global variable.
+		 In some cases it allocates too much but that is harmless. */
+	globals_list = emit(":GLOBAL_", globals_list);
+	globals_list = emit(global_token->prev->s, globals_list);
+
+	/* round up division */
+	unsigned i = ceil_div(type_size->size, register_size);
+	globals_list = emit("\n", globals_list);
+	while(i != 0)
+	{
+		globals_list = emit("NULL\n", globals_list);
+		i = i - 1;
+	}
+	global_token = global_token->next;
+}
+
 void global_assignment(void)
 {
 	/* Store the global's value*/
@@ -3219,7 +3237,6 @@ void global_assignment(void)
  */
 void program(void)
 {
-	unsigned i;
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
@@ -3266,20 +3283,7 @@ new_type:
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
-		/* Ensure enough bytes are allocated to store global variable.
-		   In some cases it allocates too much but that is harmless. */
-		globals_list = emit(":GLOBAL_", globals_list);
-		globals_list = emit(global_token->prev->s, globals_list);
-
-		/* round up division */
-		i = ceil_div(type_size->size, register_size);
-		globals_list = emit("\n", globals_list);
-		while(i != 0)
-		{
-			globals_list = emit("NULL\n", globals_list);
-			i = i - 1;
-		}
-		global_token = global_token->next;
+		global_variable_definition(type_size);
 		goto new_type;
 	}
 
