@@ -49,6 +49,10 @@ struct token_list* reverse_list(struct token_list* head);
 struct type* mirror_type(struct type* source, char* name);
 struct type* add_primitive(struct type* a);
 
+void global_variable_definition(struct type*);
+void global_assignment(void);
+void global_static_array(struct type*, struct token_list*);
+
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
@@ -2839,6 +2843,45 @@ void recursive_statement(void)
 	function->locals = frame;
 }
 
+void process_static_variable(void)
+{
+	maybe_bootstrap_error("static local variable");
+	global_token = global_token->next;
+	require(global_token != NULL, "NULL token typename in process_static_variable");
+
+	struct type* type_size = type_name();
+
+	if(sym_lookup(global_token->s, global_symbol_list))
+	{
+		line_error();
+		fputs("Multiple global or local static variables with the same name are not supported.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
+	global_token = global_token->next;
+	require(global_token != NULL, "NULL token identifier in process_static_variable");
+
+	if(match(";", global_token->s))
+	{
+		global_variable_definition(type_size);
+		return;
+	}
+
+	/* Deal with assignment to a global variable */
+	if(match("=", global_token->s))
+	{
+		global_assignment();
+		return;
+	}
+
+	/* Deal with global static arrays */
+	if(match("[", global_token->s))
+	{
+		global_static_array(type_size, global_token->prev);
+	}
+}
+
 /*
  * statement:
  *     { statement-list-opt }
@@ -2935,6 +2978,10 @@ void statement(void)
 	{
 		process_continue();
 	}
+	else if(match("static", global_token->s))
+	{
+		process_static_variable();
+	}
 	else
 	{
 		expression();
@@ -3029,7 +3076,10 @@ void declare_function(void)
 		emit_out(":FUNCTION_");
 		emit_out(function->s);
 		emit_out("\n");
+		/* If we add any statics we don't want them globally available */
+		struct token_list* old_globals = global_symbol_list;
 		statement();
+		global_symbol_list = old_globals;
 
 		/* Prevent duplicate RETURNS */
 		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) emit_out("RET R15\n");
