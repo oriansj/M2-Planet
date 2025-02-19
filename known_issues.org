@@ -35,6 +35,27 @@ int main()
 	return 0;
 }
 
+* `static` variables inside functions share a namespace with global variables and all other `static` variables
+
+Currently `static` locals and globals share a namespace across all files and functions.
+This means that you can't have multiple functions refer to `static`s of the same name, or with the same name as other global variables.
+
+** Example of failing code
+
+void f(void)
+{
+	static int my_int; /* Clashes with my_int in g */
+}
+
+void g(void)
+{
+	static int my_int; /* Clashes with my_int in f */
+}
+
+** Workaround
+
+Have distinct names for globals and `static` locals.
+
 * Pointer arithmetic wrong for non-compound-operators
 It isn't uncommon for complex C programs to iterate over an array using a pointer.
 
