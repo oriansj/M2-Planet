@@ -2183,6 +2183,14 @@ void collect_local(void)
 			expression();
 		}
 
+		if(match("[", global_token->s))
+		{
+			maybe_bootstrap_error("array on the stack");
+			line_error();
+			fputs("Arrays on the stack are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		i = ceil_div(a->type->size, register_size);
 		while(i != 0)
 		{
