@@ -46,7 +46,7 @@ char* parse_string(char* string);
 int escape_lookup(char* c);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
-struct type* mirror_type(struct type* source, char* name);
+struct type *mirror_type(struct type *source);
 struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*);
@@ -2908,7 +2908,7 @@ void process_static_variable(void)
  *     expr ;
  */
 
-struct type* lookup_primitive_type(char* s);
+struct type* lookup_primitive_type(void);
 void statement(void)
 {
 	require(NULL != global_token, "expected a C statement but received EOF\n");
@@ -2925,7 +2925,7 @@ void statement(void)
 		emit_out("\t#C goto label\n");
 		global_token = global_token->next;
 	}
-	else if((NULL != lookup_primitive_type(global_token->s)) ||
+	else if((NULL != lookup_primitive_type()) ||
 	          match("enum", global_token->s) ||
 	          match("struct", global_token->s) ||
 	          match("const", global_token->s))
@@ -3130,7 +3130,7 @@ struct type* global_typedef(void)
 	global_token = global_token->next;
 	type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
-	type_size = mirror_type(type_size, global_token->s);
+	type_size = mirror_type(type_size);
 	global_token = global_token->next;
 	require_match("ERROR in typedef statement\nMissing ;\n", ";");
 	return type_size;
