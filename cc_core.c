@@ -602,12 +602,19 @@ void variable_load(struct token_list* a, int num_dereference)
 	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
+		while (num_dereference > 0)
+		{
+			current_target = current_target->type;
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			num_dereference = num_dereference - 1;
+		}
+		return;
 	}
 
 	while (num_dereference > 0)
 	{
-		current_target = current_target->type;
 		emit_out(load_value(current_target->size, current_target->is_signed));
+		current_target = current_target->type;
 		num_dereference = num_dereference - 1;
 	}
 }
