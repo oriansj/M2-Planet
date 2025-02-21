@@ -1,0 +1,19 @@
+diff a/test/test.answers b/test/test.answers	(rejected hunks)
+@@ -343,10 +350,10 @@ abf349aaf23111dcf813ca4c11d725e154d2367bf5ab91b62e022fd34da72f7d  test/results/t
+ af4dd167d0ea436831ad24b3c337a4255b09e4628ff00979e7787735de927186  test/results/test0106-riscv32-binary
+ 818e8e8de251909fac6002b7b6d66a70f5e8ed7eeec5ddf5b8b3588cbc436a53  test/results/test0106-riscv64-binary
+ 934581c994dd81c4bbd7b501084f9734c8cd0b9a78fffb08adba75b17083503a  test/results/test0106-x86-binary
+-1c4e54b165a7ae593dce4058f208acc5ed67f3823535eeb96ffc36eecf616e40  test/results/test1000-aarch64-binary
+-eeae346c6621b4668bda7d1ccbff01f80c1198f1634e3effffd1e04702d78f88  test/results/test1000-amd64-binary
+-84ab7a7bbf2ea71e3379094a78caebf56b38c6362324a5dbd3fbf76270e2eaa7  test/results/test1000-armv7l-binary
+-f0f2d9f824aabfbedb2cca7ceb67f73928aec0eafd302baf0cf4015d527d8c7a  test/results/test1000-knight-posix-binary
+-38098269d0cc8e341e944516d569877d7b72ca769c2113396b32115484108b62  test/results/test1000-riscv32-binary
+-19c06a9fd4c17b6b876453065e3a6c27bb3840caee50b840ca631f5fbf99f435  test/results/test1000-riscv64-binary
+-9901de868dba500deda143ca330a4980986c71f354c3ec0eeb0d8c3042e6981b  test/results/test1000-x86-binary
++7060f6be7a3fde4b134b78a622026215197429b46fe81cad24cdf8830f8344cf  test/results/test1000-aarch64-binary
++a51c3e7b7b1ea9743b5a34f97420d8930ad8848a5d22feffdf043841603ef392  test/results/test1000-amd64-binary
++d1cfb3a6b17cd248e1da5c664dddf1cb3a8d64df10725edcc2eb9c9113613747  test/results/test1000-armv7l-binary
++db89352391c68b141820f205c9b30394d57830e4ddc7c67fc98348e5085f9cf1  test/results/test1000-knight-posix-binary
++66250fc99365810e8ab0a7066c85ae97c749ac7529856a3f4a092fdddb701c56  test/results/test1000-riscv32-binary
++10438bdef31b990d4828b045e018464d63a6cf19d2d7125345d537326eebc538  test/results/test1000-riscv64-binary
++28d3683a5c124bc4fcee001f1f20c08b9980057e47c184e0e25278ceb5b5b3c8  test/results/test1000-x86-binary

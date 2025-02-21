@@ -3089,14 +3089,42 @@ void declare_function(void)
 		statement();
 		global_symbol_list = old_globals;
 
+		/* C99 5.1.2.2.3 Program termination
+		 * [..] reaching the } that terminates the main function returns a value of 0.
+		 * */
+		int is_main = match(function->s, "main");
+
 		/* Prevent duplicate RETURNS */
-		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) emit_out("RET R15\n");
-		else if((X86 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((AMD64 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
-		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
-		else if((RISCV32 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((RISCV64 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
+		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s))
+		{
+			if(is_main) emit_out("LOADI R0 0\n");
+			emit_out("RET R15\n");
+		}
+		else if((X86 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("mov_eax, %0\n");
+			emit_out("ret\n");
+		}
+		else if((AMD64 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("mov_rax, %0\n");
+			emit_out("ret\n");
+		}
+		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s))
+		{
+			if(is_main) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%0\n");
+			emit_out("'1' LR RETURN\n");
+		}
+		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s))
+		{
+			if(is_main) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%0\n");
+			emit_out("RETURN\n");
+		}
+		else if((RISCV32 == Architecture || RISCV64 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("rd_a0 !0 addi\n");
+			emit_out("ret\n");
+		}
 	}
 }
 

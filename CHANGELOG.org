@@ -30,6 +30,7 @@ Added support for \? escape code in strings and characters
 Added support for multiple variable declarations per statement
 Added support for `static`, `_Noreturn`, and `inline` qualifiers for globals
 Added support for `static` variables in functions
+Added support for implicit return with value 0 from main
 
 * 1.11 - 2023-11-01
 ** Added
