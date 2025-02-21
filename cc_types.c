@@ -161,6 +161,16 @@ struct type* lookup_type(char* s, struct type* start)
 	return NULL;
 }
 
+struct type* lookup_primitive_type(void)
+{
+	return lookup_type(global_token->s, prim_types);
+}
+
+struct type* lookup_global_type(void)
+{
+	return lookup_type(global_token->s, global_types);
+}
+
 struct type* lookup_member(struct type* parent, char* name)
 {
 	struct type* i;
@@ -246,7 +256,7 @@ void create_struct(void)
 	int offset = 0;
 	member_size = 0;
 
-	struct type* head = lookup_type(global_token->s, global_types);
+	struct type* head = lookup_global_type();
 	struct type* i;
 	if(NULL == head)
 	{
@@ -443,7 +453,7 @@ struct type* type_name(void)
 	{
 		global_token = global_token->next;
 		require(NULL != global_token, "structs can not have a EOF type name\n");
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type();
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			create_struct();
@@ -455,7 +465,7 @@ struct type* type_name(void)
 		maybe_bootstrap_error("enum statements");
 		global_token = global_token->next;
 		require(NULL != global_token, "enums can not have a EOF type name\n");
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type();
 		if(NULL == ret)
 		{
 			create_enum();
@@ -464,7 +474,7 @@ struct type* type_name(void)
 	}
 	else
 	{
-		ret = lookup_type(global_token->s, global_types);
+		ret = lookup_global_type();
 		if(NULL == ret)
 		{
 			fputs("Unknown type ", stderr);
@@ -495,9 +505,9 @@ struct type* type_name(void)
 	return ret;
 }
 
-struct type* mirror_type(struct type* source, char* name)
+struct type *mirror_type(struct type *source)
 {
-	struct type* head = lookup_type(name, prim_types);
+	struct type* head = lookup_primitive_type();
 	struct type* i;
 	if(NULL == head)
 	{
@@ -514,8 +524,8 @@ struct type* mirror_type(struct type* source, char* name)
 		i = head->indirect;
 	}
 
-	head->name = name;
-	i->name = name;
+	head->name = global_token->s;
+	i->name = global_token->s;
 	head->size = source->size;
 	i->size = source->indirect->size;
 	head->offset = source->offset;

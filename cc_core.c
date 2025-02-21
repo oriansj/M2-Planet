@@ -46,7 +46,7 @@ char* parse_string(char* string);
 int escape_lookup(char* c);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
-struct type* mirror_type(struct type* source, char* name);
+struct type *mirror_type(struct type *source);
 struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*);
@@ -2183,6 +2183,14 @@ void collect_local(void)
 			expression();
 		}
 
+		if(match("[", global_token->s))
+		{
+			maybe_bootstrap_error("array on the stack");
+			line_error();
+			fputs("Arrays on the stack are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		i = ceil_div(a->type->size, register_size);
 		while(i != 0)
 		{
@@ -2900,7 +2908,7 @@ void process_static_variable(void)
  *     expr ;
  */
 
-struct type* lookup_type(char* s, struct type* start);
+struct type* lookup_primitive_type(void);
 void statement(void)
 {
 	require(NULL != global_token, "expected a C statement but received EOF\n");
@@ -2917,7 +2925,7 @@ void statement(void)
 		emit_out("\t#C goto label\n");
 		global_token = global_token->next;
 	}
-	else if((NULL != lookup_type(global_token->s, prim_types)) ||
+	else if((NULL != lookup_primitive_type()) ||
 	          match("enum", global_token->s) ||
 	          match("struct", global_token->s) ||
 	          match("const", global_token->s))
@@ -3081,14 +3089,42 @@ void declare_function(void)
 		statement();
 		global_symbol_list = old_globals;
 
+		/* C99 5.1.2.2.3 Program termination
+		 * [..] reaching the } that terminates the main function returns a value of 0.
+		 * */
+		int is_main = match(function->s, "main");
+
 		/* Prevent duplicate RETURNS */
-		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) emit_out("RET R15\n");
-		else if((X86 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((AMD64 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) emit_out("'1' LR RETURN\n");
-		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) emit_out("RETURN\n");
-		else if((RISCV32 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
-		else if((RISCV64 == Architecture) && !match("ret\n", output_list->s)) emit_out("ret\n");
+		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s))
+		{
+			if(is_main) emit_out("LOADI R0 0\n");
+			emit_out("RET R15\n");
+		}
+		else if((X86 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("mov_eax, %0\n");
+			emit_out("ret\n");
+		}
+		else if((AMD64 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("mov_rax, %0\n");
+			emit_out("ret\n");
+		}
+		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s))
+		{
+			if(is_main) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%0\n");
+			emit_out("'1' LR RETURN\n");
+		}
+		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s))
+		{
+			if(is_main) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%0\n");
+			emit_out("RETURN\n");
+		}
+		else if((RISCV32 == Architecture || RISCV64 == Architecture) && !match("ret\n", output_list->s))
+		{
+			if(is_main) emit_out("rd_a0 !0 addi\n");
+			emit_out("ret\n");
+		}
 	}
 }
 
@@ -3122,7 +3158,7 @@ struct type* global_typedef(void)
 	global_token = global_token->next;
 	type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
-	type_size = mirror_type(type_size, global_token->s);
+	type_size = mirror_type(type_size);
 	global_token = global_token->next;
 	require_match("ERROR in typedef statement\nMissing ;\n", ";");
 	return type_size;
