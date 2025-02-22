@@ -21,7 +21,21 @@ int main(int argc, char** argv)
 	if(*d != 't') {
 		return 1;
 	}
-	int i = 2;
+
+	char c = 0;
+	char* e = &c;
+	*e = 1;
+	if(*e != 1) {
+		return 2;
+	}
+
+	char **f = &e;
+	**f = *e + 1;
+	if (**f != 2) {
+		return 3;
+	}
+
+	int i = 8;
 	int *j = &i;
 	*j = 0;
 	return *j;
