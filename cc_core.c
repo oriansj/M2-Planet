@@ -3018,6 +3018,22 @@ void collect_arguments(void)
 
 	while(!match(")", global_token->s))
 	{
+		if(global_token->s[0] == '.')
+		{
+			/* Periods can only be in the argument list as a variadic parameter
+			 * so if there is a period it's part of a variadic parameter */
+			require(global_token->next != NULL, "EOF in variadic parameter");
+			require(global_token->next->s[0] == '.', "Invalid token '.' in macro parameter list");
+			require(global_token->next->next != NULL, "EOF in second variadic parameter");
+			require(global_token->next->next->s[0] == '.', "Invalid tokens '..' in macro parameter list");
+
+			maybe_bootstrap_error("variadic functions");
+
+			line_error();
+			fputs("Variadic functions are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		type_size = type_name();
 		require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
 		require(NULL != type_size, "Must have non-null type\n");
