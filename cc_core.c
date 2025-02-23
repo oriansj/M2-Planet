@@ -2922,6 +2922,8 @@ void statement(void)
 	/* Always an integer until told otherwise */
 	current_target = integer;
 
+	struct token_list* current_token = global_token;
+
 	if(global_token->s[0] == '{')
 	{
 		recursive_statement();
@@ -2937,6 +2939,8 @@ void statement(void)
 	          match("struct", global_token->s) ||
 	          match("const", global_token->s))
 	{
+		/* Multi token lookup may move the global_token, but collect_local does a lookup of its own. */
+		global_token = current_token;
 		collect_local();
 	}
 	else if(match("if", global_token->s))

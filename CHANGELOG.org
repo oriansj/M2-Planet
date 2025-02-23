@@ -31,6 +31,7 @@ Added support for multiple variable declarations per statement
 Added support for `static`, `_Noreturn`, and `inline` qualifiers for globals
 Added support for `static` variables in functions
 Added support for implicit return with value 0 from main
+Added support for multi token integer types (`unsigned int`, `long long`, `long long int`, etc.)
 
 * 1.11 - 2023-11-01
 ** Added

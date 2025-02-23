@@ -83,17 +83,45 @@ void initialize_types(void)
 	hold = new_primitive("SCM","SCM*", "SCM**", register_size, FALSE);
 	prim_types = add_primitive(hold);
 
+	/* Define unsigned long long */
+	unsigned_long_long = new_primitive("unsigned long long", "unsigned long long*", "unsigned long long**", register_size, FALSE);
+	prim_types = add_primitive(unsigned_long_long);
+
+	/* Define signed long long */
+	signed_long_long = new_primitive("long long", "long long*", "long long**", register_size, TRUE);
+	prim_types = add_primitive(signed_long_long);
+
 	/* Define LONG */
-	hold = new_primitive("long", "long*", "long**", register_size, TRUE);
-	prim_types = add_primitive(hold);
+	signed_long = new_primitive("long", "long*", "long**", register_size, TRUE);
+	prim_types = add_primitive(signed_long);
+
+	/* Define unsigned long */
+	unsigned_long = new_primitive("unsigned long", "unsigned long*", "unsigned long**", register_size, FALSE);
+	prim_types = add_primitive(unsigned_long);
 
 	/* Define UNSIGNED */
-	hold = new_primitive("unsigned", "unsigned*", "unsigned**", register_size, FALSE);
-	prim_types = add_primitive(hold);
+	unsigned_integer = new_primitive("unsigned", "unsigned*", "unsigned**", register_size, FALSE);
+	prim_types = add_primitive(unsigned_integer);
 
 	/* Define int */
 	integer = new_primitive("int", "int*", "int**", register_size, TRUE);
 	prim_types = add_primitive(integer);
+
+	/* Define signed short */
+	signed_short = new_primitive("short", "short*", "short**", 2, TRUE);
+	prim_types = add_primitive(signed_short);
+
+	/* Define unsigned short */
+	unsigned_short = new_primitive("unsigned short", "unsigned short*", "unsigned short**", 2, FALSE);
+	prim_types = add_primitive(unsigned_short);
+
+	/* Define uint64_t */
+	hold = new_primitive("uint64_t", "uint64_t*", "uint64_t**", 8, FALSE);
+	prim_types = add_primitive(hold);
+
+	/* Define int64_t */
+	hold = new_primitive("int64_t", "int64_t*", "int64_t**", 8, TRUE);
+	prim_types = add_primitive(hold);
 
 	/* Define uint32_t */
 	hold = new_primitive("uint32_t", "uint32_t*", "uint32_t**", 4, FALSE);
@@ -122,6 +150,14 @@ void initialize_types(void)
 	/* Define char */
 	hold = new_primitive("char", "char*", "char**", 1, TRUE);
 	prim_types = add_primitive(hold);
+
+	/* Define signed char */
+	signed_char = new_primitive("signed char", "signed char*", "signed char**", 1, TRUE);
+	prim_types = add_primitive(signed_char);
+
+	/* Define unsigned char */
+	unsigned_char = new_primitive("unsigned char", "unsigned char*", "unsigned char**", 1, FALSE);
+	prim_types = add_primitive(unsigned_char);
 
 	/* Define _Bool */
 	hold = new_primitive("_Bool", "_Bool*", "_Bool**", 1, TRUE);
@@ -163,11 +199,204 @@ struct type* lookup_type(char* s, struct type* start)
 
 struct type* lookup_primitive_type(void)
 {
+	if(BOOTSTRAP_MODE)
+	{
+		return lookup_type(global_token->s, prim_types);
+	}
+
+	/* Lookup order for multi token types
+
+	 * unsigned
+     *	 char
+     *	 short
+     *	 short int
+     *	 long
+     *	 long int
+     *	 long long
+     *	 long long int
+     *	 int
+     *	 - (unsigned int)
+
+	 * signed
+     *	 char
+     *	 short
+     *	 short int
+     *	 long
+     *	 long int
+     *	 long long
+     *	 long long int
+     *	 int
+	 *	 - (int)
+
+	 * short
+     *	 int
+     *	 - (short)
+
+	 * long
+     *	 int
+     *	 long
+     *	 long long int
+     *	 - (long)
+	 */
+
+	if(match("unsigned", global_token->s))
+	{
+		require(global_token->next != NULL, "NULL token received in multi token type lookup");
+
+		if(match("char", global_token->next->s))
+		{
+			global_token = global_token->next;
+			return unsigned_char;
+		}
+		else if(match("short", global_token->next->s))
+		{
+			global_token = global_token->next;
+			require(global_token->next != NULL, "NULL token received in multi token type lookup 'unsigned short'");
+
+			if(match("int", global_token->next->s))
+			{
+				global_token = global_token->next;
+				/* fallthrough to unsigned_short */
+			}
+
+			return unsigned_short;
+		}
+		else if(match("long", global_token->next->s))
+		{
+			global_token = global_token->next;
+			require(global_token->next != NULL, "NULL token received in multi token type lookup 'unsigned long'");
+
+			if(match("long", global_token->next->s))
+			{
+				global_token = global_token->next;
+				require(global_token->next != NULL, "NULL token received in multi token type lookup 'unsigned long long'");
+
+				if(match("int", global_token->next->s))
+				{
+					global_token = global_token->next;
+					/* fallthrough to unsigned_long_long */
+				}
+
+				return unsigned_long_long;
+			}
+			else if(match("int", global_token->next->s))
+			{
+				global_token = global_token->next;
+				/* fallthrough to unsigned_long */
+			}
+
+			return unsigned_long;
+		}
+		else if(match("int", global_token->next->s))
+		{
+			global_token = global_token->next;
+			/* fallthrough to unsigned_integer */
+		}
+
+		return unsigned_integer;
+	}
+	else if(match("signed", global_token->s))
+	{
+		require(global_token->next != NULL, "NULL token received in multi token type lookup");
+
+		if(match("char", global_token->next->s))
+		{
+			global_token = global_token->next;
+			return signed_char;
+		}
+		else if(match("short", global_token->next->s))
+		{
+			global_token = global_token->next;
+			require(global_token->next != NULL, "NULL token received in multi token type lookup 'signed short'");
+
+			if(match("int", global_token->next->s))
+			{
+				global_token = global_token->next;
+				/* fallthrough to signed_short */
+			}
+
+			return signed_short;
+		}
+		else if(match("long", global_token->next->s))
+		{
+			global_token = global_token->next;
+			require(global_token->next != NULL, "NULL token received in multi token type lookup 'signed long'");
+
+			if(match("long", global_token->next->s))
+			{
+				global_token = global_token->next;
+				require(global_token->next != NULL, "NULL token received in multi token type lookup 'signed long long'");
+
+				if(match("int", global_token->next->s))
+				{
+					global_token = global_token->next;
+					/* fallthrough to signed_long_long */
+				}
+
+				return signed_long_long;
+			}
+			else if(match("int", global_token->next->s))
+			{
+				global_token = global_token->next;
+				/* fallthrough to signed_long */
+			}
+
+			return signed_long;
+		}
+		else if(match("int", global_token->next->s))
+		{
+			global_token = global_token->next;
+			/* fallthrough to integer */
+		}
+
+		return integer;
+	}
+	else if(match("short", global_token->s))
+	{
+		require(global_token->next != NULL, "NULL token received in multi token type lookup 'short'");
+
+		if(match("int", global_token->next->s))
+		{
+			global_token = global_token->next;
+			/* fallthrough to signed_short */
+		}
+
+		return signed_short;
+	}
+	else if(match("long", global_token->s))
+	{
+		require(global_token->next != NULL, "NULL token received in multi token type lookup 'long'");
+
+		if(match("long", global_token->next->s))
+		{
+			global_token = global_token->next;
+			require(global_token->next != NULL, "NULL token received in multi token type lookup 'long long'");
+
+			if(match("int", global_token->next->s))
+			{
+				global_token = global_token->next;
+				/* fallthrough to signed_long_long */
+			}
+
+			return signed_long_long;
+		}
+		else if(match("int", global_token->next->s))
+		{
+			global_token = global_token->next;
+			/* fallthrough to signed_long */
+		}
+
+		return signed_long;
+	}
+
 	return lookup_type(global_token->s, prim_types);
 }
 
 struct type* lookup_global_type(void)
 {
+	struct type* a = lookup_primitive_type();
+	if(NULL != a) return a;
+
 	return lookup_type(global_token->s, global_types);
 }
 
