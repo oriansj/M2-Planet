@@ -39,6 +39,15 @@ int register_size;
 
 int MAX_STRING;
 struct type* integer;
+struct type* unsigned_integer;
+struct type* signed_char;
+struct type* unsigned_char;
+struct type* signed_short;
+struct type* unsigned_short;
+struct type* signed_long;
+struct type* unsigned_long;
+struct type* signed_long_long;
+struct type* unsigned_long_long;
 
 /* enable bootstrap-mode */
 int BOOTSTRAP_MODE;

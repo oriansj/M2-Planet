@@ -40,8 +40,17 @@ extern int register_size;
 /* Allow us to have a single settable max string */
 extern int MAX_STRING;
 
-/* make default type integer */
+/* Primitive types required for multi token types */
 extern struct type* integer;
+extern struct type* unsigned_integer;
+extern struct type* signed_char;
+extern struct type* unsigned_char;
+extern struct type* signed_short;
+extern struct type* unsigned_short;
+extern struct type* signed_long;
+extern struct type* unsigned_long;
+extern struct type* signed_long_long;
+extern struct type* unsigned_long_long;
 
 /* enable bootstrap-mode */
 extern int BOOTSTRAP_MODE;
