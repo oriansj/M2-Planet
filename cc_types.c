@@ -480,7 +480,7 @@ struct type* build_union(struct type* last, int offset)
 	return last;
 }
 
-void create_struct(void)
+struct type* create_struct(void)
 {
 	int offset = 0;
 	member_size = 0;
@@ -539,7 +539,7 @@ void create_struct(void)
 		 * When forward declaring the struct will have size == 0 and be an error to use.
 		 * Zero-sized types are not allowed in C so this will never happen naturally.
 		 */
-		return;
+		return head;
 	}
 
 	require_match("ERROR in create_struct\n Missing {\n", "{");
@@ -566,9 +566,11 @@ void create_struct(void)
 	head->size = offset;
 	head->members = last;
 	i->members = last;
+
+	return head;
 }
 
-void create_enum(void)
+struct type* create_enum(void)
 {
 	maybe_bootstrap_error("enum statement");
 	struct type* head = calloc(1, sizeof(struct type));
@@ -578,30 +580,35 @@ void create_enum(void)
 	struct type* ii = calloc(1, sizeof(struct type));
 	require(NULL != ii, "Exhausted memory while creating a enum double indirection\n");
 
-	/* Anonymous enums */
-	if(!match("{", global_token->s))
+	head->type = head;
+	head->indirect = i;
+	head->next = global_types;
+
+	head->size = register_size; /* We treat enums as always being ints. */
+	head->is_signed = TRUE;
+
+	i->name = head->name;
+	i->type = head;
+	i->indirect = ii;
+	i->size = register_size;
+
+	ii->name = head->name;
+	ii->type = i;
+	ii->indirect = ii;
+	ii->size = register_size;
+
+	if(match("{", global_token->s))
+	{
+		head->name = "anonymous enum";
+	}
+	else
 	{
 		head->name = global_token->s;
-		head->type = head;
-		head->indirect = i;
-		head->next = global_types;
-
-		head->size = register_size; /* We treat enums as always being ints. */
-		head->is_signed = TRUE;
-
-		i->name = global_token->s;
-		i->type = head;
-		i->indirect = ii;
-		i->size = register_size;
-
-		ii->name = global_token->s;
-		ii->type = i;
-		ii->indirect = ii;
-		ii->size = register_size;
-
-		global_types = head;
-
 		global_token = global_token->next;
+
+		/* Anonymous enums should not be able to be looked up
+		 * so we only add named enums. */
+		global_types = head;
 	}
 
 	require_match("ERROR in create_enum\n Missing {\n", "{");
@@ -652,6 +659,8 @@ void create_enum(void)
 	}
 
 	global_token = global_token->next;
+
+	return head;
 }
 
 struct type* type_name(void)
@@ -679,8 +688,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
-			create_struct();
-			return NULL;
+			return create_struct();
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -691,8 +699,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret)
 		{
-			create_enum();
-			return NULL;
+			return create_enum();
 		}
 	}
 	else
