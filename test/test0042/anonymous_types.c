@@ -15,7 +15,7 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-struct T {
+struct {
     int a;
     int b;
     int c;
@@ -42,7 +42,7 @@ int main(void) {
     if(GE_B != 1) return 5;
     if(GE_C != 2) return 6;
 
-    struct L {
+    struct {
         int d;
         int e;
         int f;

@@ -485,8 +485,17 @@ struct type* create_struct(void)
 	int offset = 0;
 	member_size = 0;
 
-	struct type* head = lookup_global_type();
-	struct type* i;
+	struct type* head = NULL;
+	struct type* i = NULL;
+	char* name = "anonymous struct";
+	int has_name = global_token->s[0] != '{';
+	if(has_name)
+	{
+		name = global_token->s;
+		head = lookup_global_type();
+		global_token = global_token->next;
+	}
+
 	if(NULL == head)
 	{
 		head = calloc(1, sizeof(struct type));
@@ -496,25 +505,29 @@ struct type* create_struct(void)
 		struct type* ii = calloc(1, sizeof(struct type));
 		require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
 
-		head->name = global_token->s;
+		head->name = name;
 		head->type = head;
 		head->indirect = i;
 		head->next = global_types;
 		head->size = NO_STRUCT_DEFINITION;
 		head->members = NULL;
 
-		i->name = global_token->s;
+		i->name = head->name;
 		i->type = head;
 		i->indirect = ii;
 		i->size = register_size;
 		i->members = NULL;
 
-		ii->name = global_token->s;
+		ii->name = head->name;
 		ii->type = i;
 		ii->indirect = ii;
 		ii->size = register_size;
 
-		global_types = head;
+		if(has_name)
+		{
+			/* Anonymous types shouldn't be looked up by name. */
+			global_types = head;
+		}
 	}
 	else
 	{
@@ -530,7 +543,6 @@ struct type* create_struct(void)
 		i = head->indirect;
 	}
 
-	global_token = global_token->next;
 	require(NULL != global_token, "Incomplete struct declaration/definition at end of file\n");
 
 	if(global_token->s[0] != '{')
