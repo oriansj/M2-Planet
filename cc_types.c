@@ -480,13 +480,22 @@ struct type* build_union(struct type* last, int offset)
 	return last;
 }
 
-void create_struct(void)
+struct type* create_struct(void)
 {
 	int offset = 0;
 	member_size = 0;
 
-	struct type* head = lookup_global_type();
-	struct type* i;
+	struct type* head = NULL;
+	struct type* i = NULL;
+	char* name = "anonymous struct";
+	int has_name = global_token->s[0] != '{';
+	if(has_name)
+	{
+		name = global_token->s;
+		head = lookup_global_type();
+		global_token = global_token->next;
+	}
+
 	if(NULL == head)
 	{
 		head = calloc(1, sizeof(struct type));
@@ -496,25 +505,29 @@ void create_struct(void)
 		struct type* ii = calloc(1, sizeof(struct type));
 		require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
 
-		head->name = global_token->s;
+		head->name = name;
 		head->type = head;
 		head->indirect = i;
 		head->next = global_types;
 		head->size = NO_STRUCT_DEFINITION;
 		head->members = NULL;
 
-		i->name = global_token->s;
+		i->name = head->name;
 		i->type = head;
 		i->indirect = ii;
 		i->size = register_size;
 		i->members = NULL;
 
-		ii->name = global_token->s;
+		ii->name = head->name;
 		ii->type = i;
 		ii->indirect = ii;
 		ii->size = register_size;
 
-		global_types = head;
+		if(has_name)
+		{
+			/* Anonymous types shouldn't be looked up by name. */
+			global_types = head;
+		}
 	}
 	else
 	{
@@ -530,17 +543,15 @@ void create_struct(void)
 		i = head->indirect;
 	}
 
-	global_token = global_token->next;
 	require(NULL != global_token, "Incomplete struct declaration/definition at end of file\n");
 
-	if(match(global_token->s, ";"))
+	if(global_token->s[0] != '{')
 	{
 		/*
 		 * When forward declaring the struct will have size == 0 and be an error to use.
 		 * Zero-sized types are not allowed in C so this will never happen naturally.
 		 */
-		global_token = global_token->next;
-		return;
+		return head;
 	}
 
 	require_match("ERROR in create_struct\n Missing {\n", "{");
@@ -562,14 +573,16 @@ void create_struct(void)
 	}
 
 	global_token = global_token->next;
-	require_match("ERROR in create_struct\n Missing ;\n", ";");
+	require(global_token != NULL, "NULL token late in create_struct");
 
 	head->size = offset;
 	head->members = last;
 	i->members = last;
+
+	return head;
 }
 
-void create_enum(void)
+struct type* create_enum(void)
 {
 	maybe_bootstrap_error("enum statement");
 	struct type* head = calloc(1, sizeof(struct type));
@@ -579,30 +592,35 @@ void create_enum(void)
 	struct type* ii = calloc(1, sizeof(struct type));
 	require(NULL != ii, "Exhausted memory while creating a enum double indirection\n");
 
-	/* Anonymous enums */
-	if(!match("{", global_token->s))
+	head->type = head;
+	head->indirect = i;
+	head->next = global_types;
+
+	head->size = register_size; /* We treat enums as always being ints. */
+	head->is_signed = TRUE;
+
+	i->name = head->name;
+	i->type = head;
+	i->indirect = ii;
+	i->size = register_size;
+
+	ii->name = head->name;
+	ii->type = i;
+	ii->indirect = ii;
+	ii->size = register_size;
+
+	if(match("{", global_token->s))
+	{
+		head->name = "anonymous enum";
+	}
+	else
 	{
 		head->name = global_token->s;
-		head->type = head;
-		head->indirect = i;
-		head->next = global_types;
-
-		head->size = register_size; /* We treat enums as always being ints. */
-		head->is_signed = TRUE;
-
-		i->name = global_token->s;
-		i->type = head;
-		i->indirect = ii;
-		i->size = register_size;
-
-		ii->name = global_token->s;
-		ii->type = i;
-		ii->indirect = ii;
-		ii->size = register_size;
-
-		global_types = head;
-
 		global_token = global_token->next;
+
+		/* Anonymous enums should not be able to be looked up
+		 * so we only add named enums. */
+		global_types = head;
 	}
 
 	require_match("ERROR in create_enum\n Missing {\n", "{");
@@ -616,6 +634,8 @@ void create_enum(void)
 
 		global_token = global_token->next;
 		require(NULL != global_token, "Incomplete enumerator definition at end of file\n");
+
+		global_constant_list->arguments = calloc(1, sizeof(struct token_list));
 		if(match("=", global_token->s))
 		{
 			global_token = global_token->next;
@@ -624,40 +644,35 @@ void create_enum(void)
 			lookup = sym_lookup(global_token->s, global_constant_list);
 			if(lookup != NULL)
 			{
-				global_token->s = lookup->arguments->s;
+				global_constant_list->arguments->s = lookup->arguments->s;
+			}
+			else
+			{
+				global_constant_list->arguments->s = global_token->s;
 			}
 
-			next_enum_value = strtoint(global_token->s) + 1;
+			next_enum_value = strtoint(global_constant_list->arguments->s) + 1;
+
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete enumerator at end of file");
 		}
 		else
 		{
-			global_token->s = int2str(next_enum_value, 10, TRUE);
+			global_constant_list->arguments->s = int2str(next_enum_value, 10, TRUE);
 			next_enum_value = next_enum_value + 1;
 		}
 
-		global_constant_list->arguments = global_token;
-
-		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete enumerator termination at end of file\n");
-
-		if(match(";", global_token->s))
-		{
-			/* The last enumerator did not have an enumerator-expression nor a closing comma
-			 * so we overwrote the closing curly brace with the int2str value. */
-			global_token = global_token->next;
-			return;
-		}
-		else if(match(",", global_token->s))
+		if(match(",", global_token->s))
 		{
 			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete enumerator comma at end of file\n");
 		}
 
 		require(NULL != global_token, "Unterminated enum\n");
 	}
 
 	global_token = global_token->next;
-	require_match("ERROR in create_enum\n Missing ;\n", ";");
+
+	return head;
 }
 
 struct type* type_name(void)
@@ -685,8 +700,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
-			create_struct();
-			return NULL;
+			return create_struct();
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -697,8 +711,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret)
 		{
-			create_enum();
-			return NULL;
+			return create_enum();
 		}
 	}
 	else
