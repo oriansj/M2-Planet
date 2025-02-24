@@ -533,13 +533,12 @@ void create_struct(void)
 	global_token = global_token->next;
 	require(NULL != global_token, "Incomplete struct declaration/definition at end of file\n");
 
-	if(match(global_token->s, ";"))
+	if(global_token->s[0] != '{')
 	{
 		/*
 		 * When forward declaring the struct will have size == 0 and be an error to use.
 		 * Zero-sized types are not allowed in C so this will never happen naturally.
 		 */
-		global_token = global_token->next;
 		return;
 	}
 
@@ -562,7 +561,7 @@ void create_struct(void)
 	}
 
 	global_token = global_token->next;
-	require_match("ERROR in create_struct\n Missing ;\n", ";");
+	require(global_token != NULL, "NULL token late in create_struct");
 
 	head->size = offset;
 	head->members = last;
@@ -679,6 +678,7 @@ struct type* type_name(void)
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			create_struct();
+			require_match("ERROR after create_struct\n Missing ;\n", ";");
 			return NULL;
 		}
 	}
