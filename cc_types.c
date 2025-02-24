@@ -616,6 +616,8 @@ void create_enum(void)
 
 		global_token = global_token->next;
 		require(NULL != global_token, "Incomplete enumerator definition at end of file\n");
+
+		global_constant_list->arguments = calloc(1, sizeof(struct token_list));
 		if(match("=", global_token->s))
 		{
 			global_token = global_token->next;
@@ -624,33 +626,27 @@ void create_enum(void)
 			lookup = sym_lookup(global_token->s, global_constant_list);
 			if(lookup != NULL)
 			{
-				global_token->s = lookup->arguments->s;
+				global_constant_list->arguments->s = lookup->arguments->s;
+			}
+			else
+			{
+				global_constant_list->arguments->s = global_token->s;
 			}
 
-			next_enum_value = strtoint(global_token->s) + 1;
+			next_enum_value = strtoint(global_constant_list->arguments->s) + 1;
+
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete enumerator at end of file");
 		}
 		else
 		{
-			global_token->s = int2str(next_enum_value, 10, TRUE);
+			global_constant_list->arguments->s = int2str(next_enum_value, 10, TRUE);
 			next_enum_value = next_enum_value + 1;
 		}
 
-		global_constant_list->arguments = global_token;
-
-		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete enumerator termination at end of file\n");
-
-		if(match(";", global_token->s))
-		{
-			/* The last enumerator did not have an enumerator-expression nor a closing comma
-			 * so we overwrote the closing curly brace with the int2str value. */
-			global_token = global_token->next;
-			return;
-		}
-		else if(match(",", global_token->s))
+		if(match(",", global_token->s))
 		{
 			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete enumerator comma at end of file\n");
 		}
 
 		require(NULL != global_token, "Unterminated enum\n");
