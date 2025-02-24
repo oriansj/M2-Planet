@@ -650,6 +650,8 @@ void create_enum(void)
 
 		require(NULL != global_token, "Unterminated enum\n");
 	}
+
+	global_token = global_token->next;
 }
 
 struct type* type_name(void)
@@ -678,7 +680,6 @@ struct type* type_name(void)
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			create_struct();
-			require_match("ERROR after create_struct\n Missing ;\n", ";");
 			return NULL;
 		}
 	}
@@ -691,8 +692,6 @@ struct type* type_name(void)
 		if(NULL == ret)
 		{
 			create_enum();
-			global_token = global_token->next;
-			require_match("ERROR after create_enum\n Missing ;\n", ";");
 			return NULL;
 		}
 	}

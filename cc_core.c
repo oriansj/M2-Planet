@@ -3385,7 +3385,11 @@ new_type:
 
 	type_size = type_name();
 	/* Deal with case of struct definitions */
-	if(NULL == type_size) goto new_type;
+	if(global_token->s[0] == ';')
+	{
+		global_token = global_token->next;
+		goto new_type;
+	}
 
 	require(NULL != global_token->next, "Unterminated global\n");
 
