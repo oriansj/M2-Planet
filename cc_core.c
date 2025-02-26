@@ -147,6 +147,49 @@ void maybe_bootstrap_error(char* feature)
 	}
 }
 
+/* global_token should start on the first part of the expression
+ * and it will end one token past the end of the expression. */
+int constant_expression(void)
+{
+	if('-' == global_token->s[0])
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "NULL received in constant_expression\n");
+		return -constant_expression();
+	}
+	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
+	{
+		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
+		if(lookup != NULL)
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete constant expression");
+			return strtoint(lookup->arguments->s);
+		}
+		else
+		{
+			line_error();
+			fputs("Unable to find symbol '", stderr);
+			fputs(global_token->s, stderr);
+			fputs("' for use in constant expression.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if(in_set(global_token->s[0], "0123456789"))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete constant expression");
+		return strtoint(global_token->prev->s);
+	}
+	else {
+		line_error();
+		fputs("Invalid token '", stderr);
+		fputs(global_token->s, stderr);
+		fputs("' used in constant expression.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
 void expression(void);
 void function_call(char* s, int bool)
 {
@@ -599,7 +642,9 @@ void variable_load(struct token_list* a, int num_dereference)
 		postfix_expr_stub();
 		return;
 	}
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
+
+	int is_local_array = match("[", global_token->s) && a->array_modifier > 1;
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -2162,18 +2207,6 @@ void collect_local(void)
 			else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
 		}
 
-		/* Adjust the depth of local structs. When stack grows downwards, we want them to
-		   start at the bottom of allocated space. */
-		struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
-		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-
 		function->locals = a;
 
 		emit_out("# Defining local ");
@@ -2183,6 +2216,43 @@ void collect_local(void)
 		global_token = global_token->next;
 		require(NULL != global_token, "incomplete local missing name\n");
 
+		a->array_modifier = 1;
+		if(match("[", global_token->s))
+		{
+			maybe_bootstrap_error("array on the stack");
+
+			global_token = global_token->next;
+			require(NULL != global_token, "incomplete local array\n");
+
+			a->array_modifier = constant_expression();
+			if(a->array_modifier < 0)
+			{
+				line_error();
+				fputs("Negative values are not supported for arrays on the stack\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			else if(a->array_modifier > 0x100000)
+			{
+				line_error();
+				fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB onto the stack\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
+		}
+
+		/* Adjust the depth of local structs. When stack grows downwards, we want them to
+		   start at the bottom of allocated space. */
+		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
+		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
+		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+
 		if(match("=", global_token->s))
 		{
 			global_token = global_token->next;
@@ -2190,15 +2260,7 @@ void collect_local(void)
 			expression();
 		}
 
-		if(match("[", global_token->s))
-		{
-			maybe_bootstrap_error("array on the stack");
-			line_error();
-			fputs("Arrays on the stack are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
-		}
-
-		i = ceil_div(a->type->size, register_size);
+		i = ceil_div(a->type->size * a->array_modifier, register_size);
 		while(i != 0)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
@@ -2725,7 +2787,7 @@ void return_result(void)
 	unsigned size_local_var;
 	for(i = function->locals; NULL != i; i = i->next)
 	{
-		size_local_var = ceil_div(i->type->size, register_size);
+		size_local_var = ceil_div(i->type->size * i->array_modifier, register_size);
 		while(size_local_var != 0)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _return_result_locals\n");
@@ -2842,7 +2904,7 @@ void recursive_statement(void)
 		int j;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			j = ceil_div(i->type->size, register_size);
+			j = ceil_div(i->type->size * i->array_modifier, register_size);
 			while (j != 0) {
 				if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
 				else if(X86 == Architecture) emit_out( "pop_ebx\t# _recursive_statement_locals\n");
@@ -3209,8 +3271,9 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
+	size = constant_expression();
 	/* Make sure not negative */
-	if(match("-", global_token->s))
+	if(size < 0)
 	{
 		line_error();
 		fputs("Negative values are not supported for allocated arrays\n", stderr);
@@ -3218,7 +3281,7 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* length */
-	size = strtoint(global_token->s) * type_size->size;
+	size = size * type_size->size;
 
 	/* Stop bad states */
 	if((size < 0) || (size > 0x100000))
@@ -3229,7 +3292,6 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* Ensure properly closed */
-	global_token = global_token->next;
 	require_match("missing close bracket\n", "]");
 	require_match("missing ;\n", ";");
 

@@ -15,6 +15,19 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+typedef struct {
+	int one;
+	int two;
+} Inline;
+
+Inline inline_global;
+
+typedef struct {
+	Inline inner;
+} Outer;
+
+Outer outer_global;
+
 struct {
     int a;
     int b;
@@ -64,4 +77,22 @@ int main(void) {
     if(local_enum != 1) return 10;
     if(LE_D != 0) return 11;
     if(LE_E != 1) return 12;
+
+		if(sizeof(Inline) != 2 * sizeof(int)) return 13;
+		if(sizeof(Outer) != sizeof(Inline)) return 14;
+
+		inline_global.one = 1;
+		inline_global.two = 2;
+
+		if(inline_global.one != 1) return 15;
+		if(inline_global.two != 2) return 16;
+
+		Inline inline_local;
+		inline_local.one = 1;
+		inline_local.two = 2;
+
+		if(inline_local.one != 1) return 15;
+		if(inline_local.two != 2) return 16;
+
+		Outer outer_local;
 }
