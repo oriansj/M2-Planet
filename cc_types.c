@@ -22,6 +22,7 @@ int strtoint(char *a);
 void line_error(void);
 void require(int bool, char* error);
 struct token_list* sym_lookup(char*, struct token_list*);
+int constant_expression(void);
 
 /* enable easy primitive extension */
 struct type* add_primitive(struct type* a)
@@ -442,13 +443,12 @@ struct type* build_member(struct type* last, int offset)
 	{
 		global_token = global_token->next;
 		require(NULL != global_token, "struct member arrays can not be EOF sized\n");
-		i->size = member_type->type->size * strtoint(global_token->s);
+		i->size = constant_expression() * member_type->type->size;
 		if(0 == i->size)
 		{
 			fputs("Struct only supports [num] form\n", stderr);
 			exit(EXIT_FAILURE);
 		}
-		global_token = global_token->next;
 		require_match("Struct only supports [num] form\n", "]");
 	}
 	else
@@ -627,7 +627,7 @@ struct type* create_enum(void)
 	require(NULL != global_token, "Incomplete enum definition at end of file\n");
 
 	int next_enum_value = 0;
-	struct token_list* lookup;
+	int expr = 0;
 	while('}' != global_token->s[0])
 	{
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
@@ -641,26 +641,12 @@ struct type* create_enum(void)
 			global_token = global_token->next;
 			require(NULL != global_token, "Incomplete enumerator value at end of file\n");
 
-			lookup = sym_lookup(global_token->s, global_constant_list);
-			if(lookup != NULL)
-			{
-				global_constant_list->arguments->s = lookup->arguments->s;
-			}
-			else
-			{
-				global_constant_list->arguments->s = global_token->s;
-			}
-
-			next_enum_value = strtoint(global_constant_list->arguments->s) + 1;
-
-			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete enumerator at end of file");
+			expr = constant_expression();
 		}
-		else
-		{
-			global_constant_list->arguments->s = int2str(next_enum_value, 10, TRUE);
-			next_enum_value = next_enum_value + 1;
-		}
+
+		global_constant_list->arguments->s = int2str(expr, 10, TRUE);
+		next_enum_value = expr + 1;
+		expr = next_enum_value;
 
 		if(match(",", global_token->s))
 		{

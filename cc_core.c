@@ -147,6 +147,25 @@ void maybe_bootstrap_error(char* feature)
 	}
 }
 
+/* global_token should start on the first part of the expression
+ * and it will end one token past the end of the expression. */
+int constant_expression(void)
+{
+	struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
+	if(lookup != NULL)
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete constant expression");
+		return strtoint(lookup->arguments->s);
+	}
+	else
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete constant expression");
+		return strtoint(global_token->prev->s);
+	}
+}
+
 void expression(void);
 void function_call(char* s, int bool)
 {
@@ -2181,9 +2200,8 @@ void collect_local(void)
 			global_token = global_token->next;
 			require(NULL != global_token, "incomplete local array\n");
 
-			a->array_modifier = strtoint(global_token->s);
+			a->array_modifier = constant_expression();
 
-			global_token = global_token->next;
 			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
 
@@ -3226,7 +3244,7 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* length */
-	size = strtoint(global_token->s) * type_size->size;
+	size = constant_expression() * type_size->size;
 
 	/* Stop bad states */
 	if((size < 0) || (size > 0x100000))
@@ -3237,7 +3255,6 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* Ensure properly closed */
-	global_token = global_token->next;
 	require_match("missing close bracket\n", "]");
 	require_match("missing ;\n", ";");
 
