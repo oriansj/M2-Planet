@@ -157,7 +157,7 @@ int constant_expression(void)
 		require(NULL != global_token, "NULL received in constant_expression\n");
 		return -constant_expression();
 	}
-	else
+	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
 		if(lookup != NULL)
@@ -168,10 +168,25 @@ int constant_expression(void)
 		}
 		else
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete constant expression");
-			return strtoint(global_token->prev->s);
+			line_error();
+			fputs("Unable to find symbol '", stderr);
+			fputs(global_token->s, stderr);
+			fputs("' for use in constant expression.\n", stderr);
+			exit(EXIT_FAILURE);
 		}
+	}
+	else if(in_set(global_token->s[0], "0123456789"))
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Incomplete constant expression");
+		return strtoint(global_token->prev->s);
+	}
+	else {
+		line_error();
+		fputs("Invalid token '", stderr);
+		fputs(global_token->s, stderr);
+		fputs("' used in constant expression.\n", stderr);
+		exit(EXIT_FAILURE);
 	}
 }
 
