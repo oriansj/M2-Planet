@@ -2850,7 +2850,7 @@ void recursive_statement(void)
 		int j;
 		for(i = function->locals; frame != i; i = i->next)
 		{
-			j = ceil_div(i->type->size, register_size);
+			j = ceil_div(i->type->size * i->array_modifier, register_size);
 			while (j != 0) {
 				if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _recursive_statement_locals\n");
 				else if(X86 == Architecture) emit_out( "pop_ebx\t# _recursive_statement_locals\n");
