@@ -599,7 +599,9 @@ void variable_load(struct token_list* a, int num_dereference)
 		postfix_expr_stub();
 		return;
 	}
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
+
+	int is_local_array = match("[", global_token->s) && a->array_modifier > 1;
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -2171,17 +2173,23 @@ void collect_local(void)
 		global_token = global_token->next;
 		require(NULL != global_token, "incomplete local missing name\n");
 
+		a->array_modifier = 1;
 		if(match("[", global_token->s))
 		{
 			maybe_bootstrap_error("array on the stack");
-			line_error();
-			fputs("Arrays on the stack are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
+
+			global_token = global_token->next;
+			require(NULL != global_token, "incomplete local array\n");
+
+			a->array_modifier = strtoint(global_token->s);
+
+			global_token = global_token->next;
+			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
 
 		/* Adjust the depth of local structs. When stack grows downwards, we want them to
 		   start at the bottom of allocated space. */
-		struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
+		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
 		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
 		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
 		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
@@ -2198,7 +2206,7 @@ void collect_local(void)
 			expression();
 		}
 
-		i = ceil_div(a->type->size, register_size);
+		i = ceil_div(a->type->size * a->array_modifier, register_size);
 		while(i != 0)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#");
@@ -2725,7 +2733,7 @@ void return_result(void)
 	unsigned size_local_var;
 	for(i = function->locals; NULL != i; i = i->next)
 	{
-		size_local_var = ceil_div(i->type->size, register_size);
+		size_local_var = ceil_div(i->type->size * i->array_modifier, register_size);
 		while(size_local_var != 0)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# _return_result_locals\n");

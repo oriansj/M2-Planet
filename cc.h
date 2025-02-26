@@ -75,6 +75,7 @@ struct token_list
 	struct token_list* arguments;
 	int depth;
 	int linenumber;
+	int array_modifier;
 };
 
 struct case_list

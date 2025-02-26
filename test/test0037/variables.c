@@ -21,7 +21,7 @@ struct T {
 };
 
 int main() {
-	int a = 0, b = 1, c = 2, d;
+	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
 
 	if (a != 0) return 1;
@@ -66,6 +66,28 @@ int main() {
 	if(h != 1) return 16;
 	if(*g != 1) return 17;
 	if(*i != 1) return 18;
+
+	arr[0] = 10;
+	arr[1] = 9;
+	arr[2] = 8;
+	arr[3] = 7;
+	arr[4] = 6;
+	arr[5] = 5;
+	arr[6] = 4;
+	arr[7] = 3;
+	arr[8] = 2;
+	arr[9] = 1;
+
+	if(arr[0] != 10) return 19;
+	if(arr[1] != 9) return 20;
+	if(arr[2] != 8) return 21;
+	if(arr[3] != 7) return 22;
+	if(arr[4] != 6) return 23;
+	if(arr[5] != 5) return 24;
+	if(arr[6] != 4) return 25;
+	if(arr[7] != 3) return 26;
+	if(arr[8] != 2) return 27;
+	if(arr[9] != 1) return 28;
 
 	return 0;
 }
