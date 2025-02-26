@@ -151,18 +151,27 @@ void maybe_bootstrap_error(char* feature)
  * and it will end one token past the end of the expression. */
 int constant_expression(void)
 {
-	struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
-	if(lookup != NULL)
+	if('-' == global_token->s[0])
 	{
 		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete constant expression");
-		return strtoint(lookup->arguments->s);
+		require(NULL != global_token, "NULL received in constant_expression\n");
+		return -constant_expression();
 	}
 	else
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete constant expression");
-		return strtoint(global_token->prev->s);
+		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
+		if(lookup != NULL)
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete constant expression");
+			return strtoint(lookup->arguments->s);
+		}
+		else
+		{
+			global_token = global_token->next;
+			require(NULL != global_token, "Incomplete constant expression");
+			return strtoint(global_token->prev->s);
+		}
 	}
 }
 
@@ -2201,6 +2210,18 @@ void collect_local(void)
 			require(NULL != global_token, "incomplete local array\n");
 
 			a->array_modifier = constant_expression();
+			if(a->array_modifier < 0)
+			{
+				line_error();
+				fputs("Negative values are not supported for arrays on the stack\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			else if(a->array_modifier > 0x100000)
+			{
+				line_error();
+				fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB onto the stack\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 
 			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
@@ -3235,8 +3256,9 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
+	size = constant_expression();
 	/* Make sure not negative */
-	if(match("-", global_token->s))
+	if(size < 0)
 	{
 		line_error();
 		fputs("Negative values are not supported for allocated arrays\n", stderr);
@@ -3244,7 +3266,7 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	}
 
 	/* length */
-	size = constant_expression() * type_size->size;
+	size = size * type_size->size;
 
 	/* Stop bad states */
 	if((size < 0) || (size > 0x100000))
