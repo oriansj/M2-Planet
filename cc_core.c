@@ -2162,6 +2162,23 @@ void collect_local(void)
 			else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
 		}
 
+		function->locals = a;
+
+		emit_out("# Defining local ");
+		emit_out(global_token->s);
+		emit_out("\n");
+
+		global_token = global_token->next;
+		require(NULL != global_token, "incomplete local missing name\n");
+
+		if(match("[", global_token->s))
+		{
+			maybe_bootstrap_error("array on the stack");
+			line_error();
+			fputs("Arrays on the stack are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		/* Adjust the depth of local structs. When stack grows downwards, we want them to
 		   start at the bottom of allocated space. */
 		struct_depth_adjustment = (ceil_div(a->type->size, register_size) - 1) * register_size;
@@ -2174,28 +2191,11 @@ void collect_local(void)
 		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
 		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
 
-		function->locals = a;
-
-		emit_out("# Defining local ");
-		emit_out(global_token->s);
-		emit_out("\n");
-
-		global_token = global_token->next;
-		require(NULL != global_token, "incomplete local missing name\n");
-
 		if(match("=", global_token->s))
 		{
 			global_token = global_token->next;
 			require(NULL != global_token, "incomplete local assignment\n");
 			expression();
-		}
-
-		if(match("[", global_token->s))
-		{
-			maybe_bootstrap_error("array on the stack");
-			line_error();
-			fputs("Arrays on the stack are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
 		}
 
 		i = ceil_div(a->type->size, register_size);
