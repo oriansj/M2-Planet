@@ -2300,6 +2300,13 @@ void collect_local(void)
 
 		if(match("=", global_token->s))
 		{
+			if(a->array_modifier != 1)
+			{
+				line_error();
+				fputs("Stack arrays can not be initialized.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
 			global_token = global_token->next;
 			require(NULL != global_token, "incomplete local assignment\n");
 			expression();
