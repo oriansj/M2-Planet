@@ -2225,7 +2225,13 @@ void collect_local(void)
 			require(NULL != global_token, "incomplete local array\n");
 
 			a->array_modifier = constant_expression();
-			if(a->array_modifier < 0)
+			if(a->array_modifier == 0)
+			{
+				line_error();
+				fputs("Size zero is not supported for arrays on the stack\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			else if(a->array_modifier < 0)
 			{
 				line_error();
 				fputs("Negative values are not supported for arrays on the stack\n", stderr);
@@ -3282,6 +3288,13 @@ void global_static_array(struct type* type_size, struct token_list* name)
 
 	/* length */
 	size = size * type_size->size;
+
+	if(size == 0)
+	{
+		line_error();
+		fputs("Arrays with size of zero are not allowed.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
 
 	/* Stop bad states */
 	if((size < 0) || (size > 0x100000))
