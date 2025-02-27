@@ -1435,21 +1435,27 @@ int unary_expr_sizeof(void)
 		}
 	}
 
-	struct type* a = NULL;
+	int size = 0;
 	if(t != NULL)
 	{
-		a = t->type;
-
 		global_token = global_token->next;
 		require(NULL != global_token, "NULL token received in unary_expr_sizeof");
+
+		if(t->array_modifier != 0)
+		{
+			size = t->type->size * t->array_modifier;
+		}
+		else size = t->type->size;
 	}
 	else
 	{
-		a = type_name();
+		struct type* a = type_name();
+		size = a->size;
 	}
 
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
-	return a->size;
+
+	return size;
 }
 
 void postfix_expr_stub(void)
