@@ -1415,7 +1415,39 @@ int unary_expr_sizeof(void)
 	global_token = global_token->next;
 	require(NULL != global_token, "Received EOF when starting sizeof\n");
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
-	struct type* a = type_name();
+	struct token_list* t = NULL;
+
+	if(!BOOTSTRAP_MODE)
+	{
+		t = sym_lookup(global_token->s, global_constant_list);
+		if(NULL == t && NULL != function)
+		{
+			t = sym_lookup(global_token->s, function->locals);
+			if(NULL == t)
+			{
+				t = sym_lookup(global_token->s, function->arguments);
+			}
+		}
+
+		if(NULL == t)
+		{
+			t = sym_lookup(global_token->s, global_symbol_list);
+		}
+	}
+
+	struct type* a = NULL;
+	if(t != NULL)
+	{
+		a = t->type;
+
+		global_token = global_token->next;
+		require(NULL != global_token, "NULL token received in unary_expr_sizeof");
+	}
+	else
+	{
+		a = type_name();
+	}
+
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
 	return a->size;
 }

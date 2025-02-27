@@ -15,6 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int global_int;
+
 enum {
 	ZERO,
 	ONE,
@@ -23,6 +25,8 @@ enum {
 	ALSO_THREE = THREE,
 	SIX = THREE + 3,
 	SIZEOF_INT = sizeof(int),
+	SIZEOF_GLOBAL = sizeof(global_int),
+	TEN = SIX + 1 + 1 + 2,
 };
 
 struct SizeTwelve {
@@ -39,6 +43,19 @@ int main() {
 
 	if(SIX != 6) return 2;
 	if(sizeof(int) != SIZEOF_INT) return 3;
+
+	if(sizeof(THREE) != sizeof(int)) return 4;
+
+	if(SIZEOF_GLOBAL != sizeof(int)) return 5;
+	if(SIZEOF_GLOBAL != sizeof(global_int)) return 6;
+
+	static int static_int;
+	if(sizeof(static_int) != sizeof(int)) return 7;
+
+	int local_int;
+	if(sizeof(local_int) != sizeof(int)) return 8;
+
+	if(TEN != 10) return 9;
 }
 
 
