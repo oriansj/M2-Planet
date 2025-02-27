@@ -49,7 +49,7 @@ struct token_list* reverse_list(struct token_list* head);
 struct type *mirror_type(struct type *source);
 struct type* add_primitive(struct type* a);
 
-void global_variable_definition(struct type*);
+void global_variable_definition(struct type*, char*);
 void global_assignment(void);
 void global_static_array(struct type*, struct token_list*);
 
@@ -3053,7 +3053,7 @@ void process_static_variable(void)
 
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size);
+		global_variable_definition(type_size, global_token->prev->s);
 		return;
 	}
 
@@ -3423,12 +3423,12 @@ void global_static_array(struct type* type_size, struct token_list* name)
 	globals_list = emit("'\n", globals_list);
 }
 
-void global_variable_definition(struct type* type_size)
+void global_variable_definition(struct type* type_size, char* variable_name)
 {
 	/* Ensure enough bytes are allocated to store global variable.
 		 In some cases it allocates too much but that is harmless. */
 	globals_list = emit(":GLOBAL_", globals_list);
-	globals_list = emit(global_token->prev->s, globals_list);
+	globals_list = emit(variable_name, globals_list);
 
 	/* round up division */
 	unsigned i = ceil_div(type_size->size, register_size);
@@ -3581,7 +3581,7 @@ new_type:
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size);
+		global_variable_definition(type_size, global_token->prev->s);
 		goto new_type;
 	}
 
