@@ -1417,8 +1417,16 @@ int unary_expr_sizeof(void)
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct token_list* t = NULL;
 
+	int amount_of_dereferences = 0;
 	if(!BOOTSTRAP_MODE)
 	{
+		while(global_token->s[0] == '*')
+		{
+			amount_of_dereferences = amount_of_dereferences + 1;
+			global_token = global_token->next;
+			require(NULL != global_token, "NULL token received in sizeof pointer dereferences\n");
+		}
+
 		t = sym_lookup(global_token->s, global_constant_list);
 		if(NULL == t && NULL != function)
 		{
@@ -1441,14 +1449,28 @@ int unary_expr_sizeof(void)
 		global_token = global_token->next;
 		require(NULL != global_token, "NULL token received in unary_expr_sizeof");
 
+		struct type* a = t->type;
+		while(amount_of_dereferences > 0)
+		{
+			a = a->type;
+			amount_of_dereferences = amount_of_dereferences - 1;
+		}
+
 		if(t->array_modifier != 0)
 		{
-			size = t->type->size * t->array_modifier;
+			size = a->size * t->array_modifier;
 		}
-		else size = t->type->size;
+		else size = a->size;
 	}
 	else
 	{
+		if(amount_of_dereferences != 0)
+		{
+			line_error();
+			fputs("Unable to dereference type for sizeof.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		struct type* a = type_name();
 		size = a->size;
 	}

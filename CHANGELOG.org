@@ -33,6 +33,7 @@ Added support for `static` variables in functions
 Added support for implicit return with value 0 from main
 Added support for multi token integer types (`unsigned int`, `long long`, `long long int`, etc.)
 Added support arrays on the stack
+Added support for using variables in `sizeof`, including dereferencing
 
 * 1.11 - 2023-11-01
 ** Added

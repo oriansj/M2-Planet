@@ -61,6 +61,12 @@ int main() {
 	/* Does not work correctly for global arrays.
 	if(sizeof(static_local) != sizeof(int) * 3) return 11;
 	if(sizeof(global) != sizeof(int) * 5) return 12;*/
+
+	char* local_pointer;
+
+	if(sizeof(local_pointer) != sizeof(void*)) return 13;
+
+	if(sizeof(*local_pointer) != 1) return 14;
 }
 
 
