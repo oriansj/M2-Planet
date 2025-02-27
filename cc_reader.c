@@ -73,7 +73,7 @@ int preserve_string(int c)
 }
 
 
-void copy_string(char* target, char* source, int max)
+int copy_string(char* target, char* source, int max)
 {
 	int i = 0;
 	while(0 != source[i])
@@ -82,6 +82,7 @@ void copy_string(char* target, char* source, int max)
 		i = i + 1;
 		if(i == max) break;
 	}
+	return i;
 }
 
 
