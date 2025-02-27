@@ -20,20 +20,25 @@ enum {
 	ONE,
 	TWO,
 	THREE,
-	ALSO_THREE = THREE
+	ALSO_THREE = THREE,
+	SIX = THREE + 3,
+	SIZEOF_INT = sizeof(int),
 };
 
 struct SizeTwelve {
 	int z[THREE];
 };
 
-int global[THREE];
+int global[THREE + 2];
 
 int main() {
 	int local[THREE];
 	static int static_local[THREE];
 
 	if(sizeof(struct SizeTwelve) != 3 * sizeof(int)) return 1;
+
+	if(SIX != 6) return 2;
+	if(sizeof(int) != SIZEOF_INT) return 3;
 }
 
 

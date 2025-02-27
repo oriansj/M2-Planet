@@ -147,15 +147,24 @@ void maybe_bootstrap_error(char* feature)
 	}
 }
 
-/* global_token should start on the first part of the expression
- * and it will end one token past the end of the expression. */
-int constant_expression(void)
+int unary_expr_sizeof(void);
+int constant_unary_expression(void)
 {
 	if('-' == global_token->s[0])
 	{
 		global_token = global_token->next;
-		require(NULL != global_token, "NULL received in constant_expression\n");
-		return -constant_expression();
+		require(NULL != global_token, "NULL received in constant_unary_expression\n");
+		return -constant_unary_expression();
+	}
+	else if('+' == global_token->s[0])
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "NULL received in constant_unary_expression\n");
+		return constant_unary_expression();
+	}
+	else if(match("sizeof", global_token->s))
+	{
+		return unary_expr_sizeof();
 	}
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
@@ -181,13 +190,43 @@ int constant_expression(void)
 		require(NULL != global_token, "Incomplete constant expression");
 		return strtoint(global_token->prev->s);
 	}
-	else {
-		line_error();
-		fputs("Invalid token '", stderr);
-		fputs(global_token->s, stderr);
-		fputs("' used in constant expression.\n", stderr);
-		exit(EXIT_FAILURE);
+
+	line_error();
+	fputs("Invalid token '", stderr);
+	fputs(global_token->s, stderr);
+	fputs("' used in constant_expression_term.\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+/* global_token should start on the first part of the expression
+ * and it will end one token past the end of the expression. */
+int constant_expression(void)
+{
+	/* We go from the highest precedence operators down to the lowest */
+	int lhs = constant_unary_expression();
+
+	if(global_token->s[0] == '+')
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Received NULL in constant_expression\n");
+		return lhs + constant_expression();
 	}
+	else if(global_token->s[0] == '-')
+	{
+		global_token = global_token->next;
+		require(NULL != global_token, "Received NULL in constant_expression\n");
+		return lhs - constant_expression();
+	}
+	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}')
+	{
+		return lhs;
+	}
+
+	line_error();
+	fputs("Invalid token '", stderr);
+	fputs(global_token->s, stderr);
+	fputs("' used in constant expression.\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 void expression(void);
@@ -1371,14 +1410,14 @@ void postfix_expr_array(void)
  *         sizeof ( type )
  */
 struct type* type_name(void);
-void unary_expr_sizeof(void)
+int unary_expr_sizeof(void)
 {
 	global_token = global_token->next;
 	require(NULL != global_token, "Received EOF when starting sizeof\n");
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct type* a = type_name();
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
-	constant_load(int2str(a->size, 10, TRUE));
+	return a->size;
 }
 
 void postfix_expr_stub(void)
@@ -1711,7 +1750,7 @@ void primary_expr(void)
 		Address_of = FALSE;
 	}
 
-	if(match("sizeof", global_token->s)) unary_expr_sizeof();
+	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
 	else if('-' == global_token->s[0])
 	{
 		if(X86 == Architecture) emit_out("mov_eax, %0\n");
