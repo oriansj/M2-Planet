@@ -36,9 +36,12 @@ char* buffer() {
 	return buf;
 }
 
+/* Global variable with same name as statics */
+int a = 0xFF;
+
 int same_value() {
-	static int same_value_inner /* = 0 */;
-	return same_value_inner;
+	static int a /* = 0 */;
+	return a;
 }
 
 int increment_static() {
@@ -87,6 +90,12 @@ int main() {
 	if(b[5] != 5) return 19;
 	if(b[6] != 6) return 20;
 	if(b[7] != 7) return 21;
+
+	if(a != 0xFF) return 22;
+	if(same_value() != 0) return 23;
+	if(same_value() != 0) return 24;
+	if(increment_static() != 4) return 25;
+	if(a != 0xFF) return 26;
 
 	return 0;
 }

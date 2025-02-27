@@ -45,7 +45,7 @@
 // CONSTANT NO_STRUCT_DEFINITION 0
 #define NO_STRUCT_DEFINITION 0
 
-void copy_string(char* target, char* source, int max);
+int copy_string(char* target, char* source, int max);
 int in_set(int c, char* s);
 int match(char* a, char* b);
 void require(int bool, char* error);
@@ -82,6 +82,13 @@ struct case_list
 {
 	struct case_list* next;
 	char* value;
+};
+
+struct static_variable_list
+{
+	struct static_variable_list* next;
+	char* local_variable_name;
+	struct token_list* global_variable;
 };
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list);

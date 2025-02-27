@@ -631,6 +631,7 @@ struct type* create_enum(void)
 	while('}' != global_token->s[0])
 	{
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+		global_constant_list->type = integer;
 
 		global_token = global_token->next;
 		require(NULL != global_token, "Incomplete enumerator definition at end of file\n");
