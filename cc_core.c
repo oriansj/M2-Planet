@@ -90,11 +90,6 @@ struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 
 struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 {
-	if(symbol_list == NULL)
-	{
-		return NULL;
-	}
-
 	struct token_list* i;
 	for(i = symbol_list; NULL != i; i = i->next)
 	{
