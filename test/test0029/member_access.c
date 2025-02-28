@@ -17,11 +17,17 @@
 
 #include <stdlib.h>
 
+struct t
+{
+    int a;
+};
+
 struct s
 {
 	char x;
 	int y;
 	int z[3];
+	struct t t;
 };
 
 struct s a;
@@ -51,6 +57,9 @@ int main() {
 	p[1].y = 4;
 	if(p[0].x != 3) return 7;
 	if(p[1].y != 4) return 8;
+
+	b.t.a = 1;
+	if(b.t.a != 1) return 9;
 
 	return 0;
 }

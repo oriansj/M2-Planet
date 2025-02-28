@@ -1354,7 +1354,7 @@ void postfix_expr_dot(void)
 		}
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
-	if(match("[", global_token->s)) return;
+	if(match("[", global_token->s) || match(".", global_token->s)) return;
 
 	emit_out(load_value(current_target->size, current_target->is_signed));
 }

@@ -37,6 +37,9 @@ Added support for using variables in `sizeof`, including dereferencing
 Added support for string literals in `sizeof`
 Added support for variables in loop bodies
 
+** Fixed
+Fixed recursive dot operators segfaulting.
+
 * 1.11 - 2023-11-01
 ** Added
 Added support for #warning.
