@@ -53,6 +53,14 @@ void require(int bool, char* error);
 void reset_hold_string(void);
 char* int2str(int x, int base, int signed_p);
 
+#define REGISTER_ZERO 0
+// CONSTANT REGISTER_ZERO 0
+#define REGISTER_ONE 1
+// CONSTANT REGISTER_ONE 1
+
+void emit_push(int, char*);
+void emit_pop(int, char*);
+
 struct type
 {
 	struct type* next;
