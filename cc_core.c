@@ -1443,6 +1443,20 @@ int unary_expr_sizeof(void)
 	int num_dereferences = 0;
 	if(!BOOTSTRAP_MODE)
 	{
+		if(global_token->s[0] == '\"')
+		{
+			/* string_length (strlen) doesn't include the null terminator but the
+			 * token starts with a quotation mark so the count will be correct. */
+			int length = string_length(global_token->s);
+
+			global_token = global_token->next;
+			require(NULL != global_token, "NULL token received in sizeof string literal\n");
+
+			require_match("ERROR in unary_expr\nMissing )\n", ")");
+
+			return length;
+		}
+
 		while(global_token->s[0] == '*')
 		{
 			num_dereferences = num_dereferences + 1;
