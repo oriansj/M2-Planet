@@ -3089,12 +3089,41 @@ void process_static_variable(int is_loop_variable)
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		global_assignment(new_name);
 		if(is_loop_variable)
 		{
-			line_error();
-			fputs("Initializing variables inside loops is not supported.\n", stderr);
-			exit(EXIT_FAILURE);
+			global_variable_definition(type_size, new_name);
+			require(NULL != global_token, "NULL token received in loop variable assignment");
+
+			/* global_load requires the global_token to see the current token as =
+			 * in order to prevent loading the value rather than the address. */
+			global_token = global_token->prev;
+			global_load(variable->global_variable);
+			global_token = global_token->next;
+
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression1\n");
+			else if(X86 == Architecture) emit_out("push_eax\t#_process_expression1\n");
+			else if(AMD64 == Architecture) emit_out("push_rax\t#_process_expression1\n");
+			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
+			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression1\n");
+			else if(RISCV32 == Architecture) emit_out("rd_sp rs1_sp !-4 addi\nrs1_sp rs2_a0 sw\t#_process_expression1\n");
+			else if(RISCV64 == Architecture) emit_out("rd_sp rs1_sp !-8 addi\nrs1_sp rs2_a0 sd\t#_process_expression1\n");
+
+			expression();
+
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# static_loop_variable\n");
+			else if(X86 == Architecture) emit_out("pop_ebx\t# static_loop_variable\n");
+			else if(AMD64 == Architecture) emit_out("pop_rbx\t# static_loop_variable\n");
+			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# static_loop_variable\n");
+			else if(AARCH64 == Architecture) emit_out("POP_X1\t# static_loop_variable\n");
+			else if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp lw\t# static_loop_variable\nrd_sp rs1_sp !4 addi\n");
+			else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp ld\t# static_loop_variable\nrd_sp rs1_sp !8 addi\n");
+
+			emit_out(store_value(type_size->size));
+			require_match("Missing ; from loop variable.\n", ";");
+		}
+		else
+		{
+			global_assignment(new_name);
 		}
 		return;
 	}

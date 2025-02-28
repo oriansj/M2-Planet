@@ -16,10 +16,10 @@
  */
 
 int loop_variables() {
+	int a = 0;
 	int i = 0;
 	do {
-		int j;
-		j = 0;
+		int j = a + a;
 
 		/* Ensure that loop variables are initialized correctly. */
 		if(j > 2) return 1;
@@ -27,6 +27,27 @@ int loop_variables() {
 		j += 1;
 		i += 1;
 	} while(i < 5);
+
+	i = 0;
+	while(i < 5) {
+		int j = a + a;
+
+		/* Ensure that loop variables are initialized correctly. */
+		if(j > 2) return 1;
+
+		j += 1;
+		i += 1;
+	}
+
+	for(i = 0; i < 5; i += 1) {
+		int j = a + a;
+
+		/* Ensure that loop variables are initialized correctly. */
+		if(j > 2) return 1;
+
+		j += 1;
+		i += 1;
+	}
 
 	return 0;
 }
