@@ -1287,6 +1287,8 @@ void postfix_expr_arrow(void)
 		}
 	}
 
+	if(global_token->s[0] == '.') return;
+
 	/* We don't yet support assigning structs to structs */
 	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
 	{

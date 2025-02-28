@@ -61,5 +61,8 @@ int main() {
 	b.t.a = 1;
 	if(b.t.a != 1) return 9;
 
+	p->t.a = 1;
+	if(p->t.a != 1) return 10;
+
 	return 0;
 }
