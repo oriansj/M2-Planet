@@ -2251,13 +2251,13 @@ unsigned ceil_div(unsigned a, unsigned b)
 	return (a + b - 1) / b;
 }
 
-void process_static_variable(void);
+void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
-		process_static_variable();
+		process_static_variable(TRUE);
 		return;
 	}
 	struct type* type_size = type_name();
@@ -3059,7 +3059,8 @@ void recursive_statement(void)
 	function->locals = frame;
 }
 
-void process_static_variable(void)
+/* Variables inside loops are currently just global variables */
+void process_static_variable(int is_loop_variable)
 {
 	maybe_bootstrap_error("static local variable");
 
@@ -3089,6 +3090,12 @@ void process_static_variable(void)
 	if(match("=", global_token->s))
 	{
 		global_assignment(new_name);
+		if(is_loop_variable)
+		{
+			line_error();
+			fputs("Initializing variables inside loops is not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 		return;
 	}
 
@@ -3204,7 +3211,7 @@ void statement(void)
 		global_token = global_token->next;
 		require(global_token != NULL, "NULL token in local static.\n");
 
-		process_static_variable();
+		process_static_variable(FALSE);
 	}
 	else
 	{
