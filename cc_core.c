@@ -3479,13 +3479,9 @@ void global_assignment(char* name)
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
 	unsigned padding_zeroes;
-	int should_prefix_with_percentage = Architecture != KNIGHT_NATIVE && Architecture != KNIGHT_POSIX;
 	if(in_set(global_token->s[0], "0123456789"))
 	{ /* Assume Int */
-		if(should_prefix_with_percentage)
-		{
-			globals_list = emit("%", globals_list);
-		}
+		globals_list = emit("%", globals_list);
 		globals_list = emit(global_token->s, globals_list);
 
 		/* broken for big endian architectures */
@@ -3493,14 +3489,7 @@ void global_assignment(char* name)
 		while(padding_zeroes > 0)
 		{
 			/* Assume positive Int */
-			if(should_prefix_with_percentage)
-			{
-				globals_list = emit(" %0", globals_list);
-			}
-			else
-			{
-				globals_list = emit(" 0", globals_list);
-			}
+			globals_list = emit(" %0", globals_list);
 			padding_zeroes = padding_zeroes - 1;
 		}
 		globals_list = emit("\n", globals_list);
