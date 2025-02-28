@@ -51,7 +51,7 @@ struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*, char*);
 void global_assignment(char*);
-void global_static_array(struct type*, char*);
+int global_static_array(struct type*, char*);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -85,6 +85,7 @@ struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 	a->next = list;
 	a->s = s;
 	a->type = t;
+	a->array_modifier = 1;
 	return a;
 }
 
@@ -697,7 +698,7 @@ void variable_load(struct token_list* a, int num_dereference)
 		return;
 	}
 
-	int is_local_array = match("[", global_token->s) && a->array_modifier > 1;
+	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
 	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
@@ -2344,6 +2345,8 @@ void collect_local(void)
 		{
 			maybe_bootstrap_error("array on the stack");
 
+			a->options = a->options | TLO_LOCAL_ARRAY;
+
 			global_token = global_token->next;
 			require(NULL != global_token, "incomplete local array\n");
 
@@ -3092,7 +3095,7 @@ void process_static_variable(void)
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_static_array(type_size, new_name);
+		variable->global_variable->array_modifier = global_static_array(type_size, new_name);
 	}
 }
 
@@ -3401,7 +3404,7 @@ void global_variable_header(char* name)
 	globals_list = emit("\n", globals_list);
 }
 
-void global_static_array(struct type* type_size, char* name)
+int global_static_array(struct type* type_size, char* name)
 {
 	maybe_bootstrap_error("global array definitions");
 
@@ -3419,9 +3422,9 @@ void global_static_array(struct type* type_size, char* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
-	int size = constant_expression();
+	int array_modifier = constant_expression();
 	/* Make sure not negative */
-	if(size < 0)
+	if(array_modifier < 0)
 	{
 		line_error();
 		fputs("Negative values are not supported for allocated arrays\n", stderr);
@@ -3429,7 +3432,7 @@ void global_static_array(struct type* type_size, char* name)
 	}
 
 	/* length */
-	size = size * type_size->size;
+	int size = array_modifier * type_size->size;
 
 	if(size == 0)
 	{
@@ -3457,6 +3460,8 @@ void global_static_array(struct type* type_size, char* name)
 		size = size - 1;
 	}
 	globals_list = emit("'\n", globals_list);
+
+	return array_modifier;
 }
 
 void global_variable_definition(struct type* type_size, char* variable_name)
@@ -3634,7 +3639,7 @@ new_type:
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_static_array(type_size, global_token->prev->s);
+		global_symbol_list->array_modifier = global_static_array(type_size, global_token->prev->s);
 		goto new_type;
 	}
 

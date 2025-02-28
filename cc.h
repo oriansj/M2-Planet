@@ -64,6 +64,10 @@ struct type
 	char* name;
 };
 
+/* TLO = Token List Option */
+// CONSTANT TLO_LOCAL_ARRAY 1
+#define TLO_LOCAL_ARRAY 1
+
 struct token_list
 {
 	struct token_list* next;
@@ -76,6 +80,7 @@ struct token_list
 	int depth;
 	int linenumber;
 	int array_modifier;
+	int options;
 };
 
 struct case_list

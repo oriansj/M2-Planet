@@ -58,9 +58,8 @@ int main() {
 	if(TEN != 10) return 9;
 
 	if(sizeof(local) != sizeof(int) * 3) return 10;
-	/* Does not work correctly for global arrays.
 	if(sizeof(static_local) != sizeof(int) * 3) return 11;
-	if(sizeof(global) != sizeof(int) * 5) return 12;*/
+	if(sizeof(global) != sizeof(int) * 5) return 12;
 
 	char* local_pointer;
 
