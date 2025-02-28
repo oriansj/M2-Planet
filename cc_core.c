@@ -3394,13 +3394,20 @@ struct type* global_typedef(void)
 	return type_size;
 }
 
-void global_static_array(struct type* type_size, char* name)
+void global_variable_header(char* name)
 {
-	int size;
-	maybe_bootstrap_error("global array definitions");
 	globals_list = emit(":GLOBAL_", globals_list);
 	globals_list = emit(name, globals_list);
-	globals_list = emit("\n&GLOBAL_STORAGE_", globals_list);
+	globals_list = emit("\n", globals_list);
+}
+
+void global_static_array(struct type* type_size, char* name)
+{
+	maybe_bootstrap_error("global array definitions");
+
+	global_variable_header(name);
+
+	globals_list = emit("&GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
 	if (AARCH64 == Architecture || AMD64 == Architecture || RISCV64 == Architecture)
 	{
@@ -3412,7 +3419,7 @@ void global_static_array(struct type* type_size, char* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
-	size = constant_expression();
+	int size = constant_expression();
 	/* Make sure not negative */
 	if(size < 0)
 	{
@@ -3454,14 +3461,12 @@ void global_static_array(struct type* type_size, char* name)
 
 void global_variable_definition(struct type* type_size, char* variable_name)
 {
+	global_variable_header(variable_name);
+
 	/* Ensure enough bytes are allocated to store global variable.
 		 In some cases it allocates too much but that is harmless. */
-	globals_list = emit(":GLOBAL_", globals_list);
-	globals_list = emit(variable_name, globals_list);
-
 	/* round up division */
 	unsigned i = ceil_div(type_size->size, register_size);
-	globals_list = emit("\n", globals_list);
 	while(i != 0)
 	{
 		globals_list = emit("NULL\n", globals_list);
@@ -3472,10 +3477,8 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 
 void global_assignment(char* name)
 {
-	/* Store the global's value*/
-	globals_list = emit(":GLOBAL_", globals_list);
-	globals_list = emit(name, globals_list);
-	globals_list = emit("\n", globals_list);
+	global_variable_header(name);
+
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
 	unsigned padding_zeroes;
