@@ -46,7 +46,17 @@ int main(int argc, char** argv)
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
 	Architecture = 0; /* catch unset */
+
+	/* These need to be here instead of defines
+	 * since cc_* can't handle string constants. */
+	char* m2_major = "1";
+	char* m2_minor = "11";
+	char* m2_patch = "0";
+
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
+	init_macro_env("__M2C__", m2_major, "__INTERNAL_M2__", 0);
+	init_macro_env("__M2C_MINOR__", m2_minor, "__INTERNAL_M2__", 0);
+	init_macro_env("__M2C_PATCHLEVEL__", m2_patch, "__INTERNAL_M2__", 0);
 
 	/* The standard allows an implementation defined valid value
 	 * if time and date are not available. */
@@ -212,7 +222,13 @@ int main(int argc, char** argv)
 		}
 		else if(match(argv[i], "-V") || match(argv[i], "--version"))
 		{
-			fputs("M2-Planet v1.11.0\n", stderr);
+			fputs("M2-Planet v", stderr);
+			fputs(m2_major, stderr);
+			fputs(".", stderr);
+			fputs(m2_minor, stderr);
+			fputs(".", stderr);
+			fputs(m2_patch, stderr);
+			fputs("\n", stderr);
 			exit(EXIT_SUCCESS);
 		}
 		else

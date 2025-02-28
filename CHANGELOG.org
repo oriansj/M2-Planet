@@ -36,6 +36,7 @@ Added support arrays on the stack
 Added support for using variables in `sizeof`, including dereferencing
 Added support for string literals in `sizeof`
 Added support for variables in loop bodies
+Added `__M2C__`, `__M2C_MINOR__`, and `__M2C_PATCHLEVEL__` defines. These will contain the major, minor, and patch version as integers.
 
 ** Fixed
 Fixed recursive dot operators segfaulting.
