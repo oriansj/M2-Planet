@@ -15,6 +15,22 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int loop_variables() {
+	int i = 0;
+	do {
+		int j;
+		j = 0;
+
+		/* Ensure that loop variables are initialized correctly. */
+		if(j > 2) return 1;
+
+		j += 1;
+		i += 1;
+	} while(i < 5);
+
+	return 0;
+}
+
 struct T {
 	int a;
 	int b;
@@ -88,6 +104,8 @@ int main() {
 	if(arr[7] != 3) return 26;
 	if(arr[8] != 2) return 27;
 	if(arr[9] != 1) return 28;
+
+	if(loop_variables() != 0) return 29;
 
 	return 0;
 }

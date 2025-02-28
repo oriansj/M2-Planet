@@ -2250,16 +2250,14 @@ unsigned ceil_div(unsigned a, unsigned b)
 	return (a + b - 1) / b;
 }
 
+void process_static_variable(void);
 /* Process local variable */
 void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
-		fputs("Local variable initialized inside of loop in file: ", stderr);
-		line_error();
-		fputs("\nMove the variable outside of the loop to resolve\n", stderr);
-		fputs("Otherwise the binary will segfault while running\n", stderr);
-		exit(EXIT_FAILURE);
+		process_static_variable();
+		return;
 	}
 	struct type* type_size = type_name();
 	if(type_size->size == NO_STRUCT_DEFINITION)
@@ -3061,8 +3059,6 @@ void recursive_statement(void)
 void process_static_variable(void)
 {
 	maybe_bootstrap_error("static local variable");
-	global_token = global_token->next;
-	require(global_token != NULL, "NULL token typename in process_static_variable");
 
 	struct type* type_size = type_name();
 
@@ -3202,6 +3198,9 @@ void statement(void)
 	}
 	else if(match("static", global_token->s))
 	{
+		global_token = global_token->next;
+		require(global_token != NULL, "NULL token in local static.\n");
+
 		process_static_variable();
 	}
 	else
