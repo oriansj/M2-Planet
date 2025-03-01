@@ -51,7 +51,7 @@ struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*, char*);
 void global_assignment(char*);
-void global_static_array(struct type*, char*);
+int global_static_array(struct type*, char*);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -85,16 +85,12 @@ struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 	a->next = list;
 	a->s = s;
 	a->type = t;
+	a->array_modifier = 1;
 	return a;
 }
 
 struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 {
-	if(symbol_list == NULL)
-	{
-		return NULL;
-	}
-
 	struct token_list* i;
 	for(i = symbol_list; NULL != i; i = i->next)
 	{
@@ -702,7 +698,7 @@ void variable_load(struct token_list* a, int num_dereference)
 		return;
 	}
 
-	int is_local_array = match("[", global_token->s) && a->array_modifier > 1;
+	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
 	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
@@ -1291,6 +1287,8 @@ void postfix_expr_arrow(void)
 		}
 	}
 
+	if(global_token->s[0] == '.') return;
+
 	/* We don't yet support assigning structs to structs */
 	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
 	{
@@ -1358,7 +1356,7 @@ void postfix_expr_dot(void)
 		}
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
-	if(match("[", global_token->s)) return;
+	if(match("[", global_token->s) || match(".", global_token->s)) return;
 
 	emit_out(load_value(current_target->size, current_target->is_signed));
 }
@@ -1444,12 +1442,26 @@ int unary_expr_sizeof(void)
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct token_list* t = NULL;
 
-	int amount_of_dereferences = 0;
+	int num_dereferences = 0;
 	if(!BOOTSTRAP_MODE)
 	{
+		if(global_token->s[0] == '\"')
+		{
+			/* string_length (strlen) doesn't include the null terminator but the
+			 * token starts with a quotation mark so the count will be correct. */
+			int length = string_length(global_token->s);
+
+			global_token = global_token->next;
+			require(NULL != global_token, "NULL token received in sizeof string literal\n");
+
+			require_match("ERROR in unary_expr\nMissing )\n", ")");
+
+			return length;
+		}
+
 		while(global_token->s[0] == '*')
 		{
-			amount_of_dereferences = amount_of_dereferences + 1;
+			num_dereferences = num_dereferences + 1;
 			global_token = global_token->next;
 			require(NULL != global_token, "NULL token received in sizeof pointer dereferences\n");
 		}
@@ -1481,10 +1493,10 @@ int unary_expr_sizeof(void)
 		require(NULL != global_token, "NULL token received in unary_expr_sizeof");
 
 		struct type* a = t->type;
-		while(amount_of_dereferences > 0)
+		while(num_dereferences > 0)
 		{
 			a = a->type;
-			amount_of_dereferences = amount_of_dereferences - 1;
+			num_dereferences = num_dereferences - 1;
 		}
 
 		if(t->array_modifier != 0)
@@ -1495,7 +1507,7 @@ int unary_expr_sizeof(void)
 	}
 	else
 	{
-		if(amount_of_dereferences != 0)
+		if(num_dereferences != 0)
 		{
 			line_error();
 			fputs("Unable to dereference type for sizeof.\n", stderr);
@@ -2255,16 +2267,14 @@ unsigned ceil_div(unsigned a, unsigned b)
 	return (a + b - 1) / b;
 }
 
+void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
-		fputs("Local variable initialized inside of loop in file: ", stderr);
-		line_error();
-		fputs("\nMove the variable outside of the loop to resolve\n", stderr);
-		fputs("Otherwise the binary will segfault while running\n", stderr);
-		exit(EXIT_FAILURE);
+		process_static_variable(TRUE);
+		return;
 	}
 	struct type* type_size = type_name();
 	if(type_size->size == NO_STRUCT_DEFINITION)
@@ -2350,6 +2360,8 @@ void collect_local(void)
 		if(match("[", global_token->s))
 		{
 			maybe_bootstrap_error("array on the stack");
+
+			a->options = a->options | TLO_LOCAL_ARRAY;
 
 			global_token = global_token->next;
 			require(NULL != global_token, "incomplete local array\n");
@@ -3063,11 +3075,10 @@ void recursive_statement(void)
 	function->locals = frame;
 }
 
-void process_static_variable(void)
+/* Variables inside loops are currently just global variables */
+void process_static_variable(int is_loop_variable)
 {
 	maybe_bootstrap_error("static local variable");
-	global_token = global_token->next;
-	require(global_token != NULL, "NULL token typename in process_static_variable");
 
 	struct type* type_size = type_name();
 
@@ -3094,14 +3105,49 @@ void process_static_variable(void)
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		global_assignment(new_name);
+		if(is_loop_variable)
+		{
+			global_variable_definition(type_size, new_name);
+			require(NULL != global_token, "NULL token received in loop variable assignment");
+
+			/* global_load requires the global_token to see the current token as =
+			 * in order to prevent loading the value rather than the address. */
+			global_token = global_token->prev;
+			global_load(variable->global_variable);
+			global_token = global_token->next;
+
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R0 R15\t#_process_expression1\n");
+			else if(X86 == Architecture) emit_out("push_eax\t#_process_expression1\n");
+			else if(AMD64 == Architecture) emit_out("push_rax\t#_process_expression1\n");
+			else if(ARMV7L == Architecture) emit_out("{R0} PUSH_ALWAYS\t#_process_expression1\n");
+			else if(AARCH64 == Architecture) emit_out("PUSH_X0\t#_process_expression1\n");
+			else if(RISCV32 == Architecture) emit_out("rd_sp rs1_sp !-4 addi\nrs1_sp rs2_a0 sw\t#_process_expression1\n");
+			else if(RISCV64 == Architecture) emit_out("rd_sp rs1_sp !-8 addi\nrs1_sp rs2_a0 sd\t#_process_expression1\n");
+
+			expression();
+
+			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("POPR R1 R15\t# static_loop_variable\n");
+			else if(X86 == Architecture) emit_out("pop_ebx\t# static_loop_variable\n");
+			else if(AMD64 == Architecture) emit_out("pop_rbx\t# static_loop_variable\n");
+			else if(ARMV7L == Architecture) emit_out("{R1} POP_ALWAYS\t# static_loop_variable\n");
+			else if(AARCH64 == Architecture) emit_out("POP_X1\t# static_loop_variable\n");
+			else if(RISCV32 == Architecture) emit_out("rd_a1 rs1_sp lw\t# static_loop_variable\nrd_sp rs1_sp !4 addi\n");
+			else if(RISCV64 == Architecture) emit_out("rd_a1 rs1_sp ld\t# static_loop_variable\nrd_sp rs1_sp !8 addi\n");
+
+			emit_out(store_value(type_size->size));
+			require_match("Missing ; from loop variable.\n", ";");
+		}
+		else
+		{
+			global_assignment(new_name);
+		}
 		return;
 	}
 
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_static_array(type_size, new_name);
+		variable->global_variable->array_modifier = global_static_array(type_size, new_name);
 	}
 }
 
@@ -3207,7 +3253,10 @@ void statement(void)
 	}
 	else if(match("static", global_token->s))
 	{
-		process_static_variable();
+		global_token = global_token->next;
+		require(global_token != NULL, "NULL token in local static.\n");
+
+		process_static_variable(FALSE);
 	}
 	else
 	{
@@ -3400,13 +3449,20 @@ struct type* global_typedef(void)
 	return type_size;
 }
 
-void global_static_array(struct type* type_size, char* name)
+void global_variable_header(char* name)
 {
-	int size;
-	maybe_bootstrap_error("global array definitions");
 	globals_list = emit(":GLOBAL_", globals_list);
 	globals_list = emit(name, globals_list);
-	globals_list = emit("\n&GLOBAL_STORAGE_", globals_list);
+	globals_list = emit("\n", globals_list);
+}
+
+int global_static_array(struct type* type_size, char* name)
+{
+	maybe_bootstrap_error("global array definitions");
+
+	global_variable_header(name);
+
+	globals_list = emit("&GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
 	if (AARCH64 == Architecture || AMD64 == Architecture || RISCV64 == Architecture)
 	{
@@ -3418,9 +3474,9 @@ void global_static_array(struct type* type_size, char* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
-	size = constant_expression();
+	int array_modifier = constant_expression();
 	/* Make sure not negative */
-	if(size < 0)
+	if(array_modifier < 0)
 	{
 		line_error();
 		fputs("Negative values are not supported for allocated arrays\n", stderr);
@@ -3428,7 +3484,7 @@ void global_static_array(struct type* type_size, char* name)
 	}
 
 	/* length */
-	size = size * type_size->size;
+	int size = array_modifier * type_size->size;
 
 	if(size == 0)
 	{
@@ -3456,18 +3512,18 @@ void global_static_array(struct type* type_size, char* name)
 		size = size - 1;
 	}
 	globals_list = emit("'\n", globals_list);
+
+	return array_modifier;
 }
 
 void global_variable_definition(struct type* type_size, char* variable_name)
 {
+	global_variable_header(variable_name);
+
 	/* Ensure enough bytes are allocated to store global variable.
 		 In some cases it allocates too much but that is harmless. */
-	globals_list = emit(":GLOBAL_", globals_list);
-	globals_list = emit(variable_name, globals_list);
-
 	/* round up division */
 	unsigned i = ceil_div(type_size->size, register_size);
-	globals_list = emit("\n", globals_list);
 	while(i != 0)
 	{
 		globals_list = emit("NULL\n", globals_list);
@@ -3478,20 +3534,14 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 
 void global_assignment(char* name)
 {
-	/* Store the global's value*/
-	globals_list = emit(":GLOBAL_", globals_list);
-	globals_list = emit(name, globals_list);
-	globals_list = emit("\n", globals_list);
+	global_variable_header(name);
+
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
 	unsigned padding_zeroes;
-	int should_prefix_with_percentage = Architecture != KNIGHT_NATIVE && Architecture != KNIGHT_POSIX;
 	if(in_set(global_token->s[0], "0123456789"))
 	{ /* Assume Int */
-		if(should_prefix_with_percentage)
-		{
-			globals_list = emit("%", globals_list);
-		}
+		globals_list = emit("%", globals_list);
 		globals_list = emit(global_token->s, globals_list);
 
 		/* broken for big endian architectures */
@@ -3499,14 +3549,7 @@ void global_assignment(char* name)
 		while(padding_zeroes > 0)
 		{
 			/* Assume positive Int */
-			if(should_prefix_with_percentage)
-			{
-				globals_list = emit(" %0", globals_list);
-			}
-			else
-			{
-				globals_list = emit(" 0", globals_list);
-			}
+			globals_list = emit(" %0", globals_list);
 			padding_zeroes = padding_zeroes - 1;
 		}
 		globals_list = emit("\n", globals_list);
@@ -3648,7 +3691,7 @@ new_type:
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_static_array(type_size, global_token->prev->s);
+		global_symbol_list->array_modifier = global_static_array(type_size, global_token->prev->s);
 		goto new_type;
 	}
 

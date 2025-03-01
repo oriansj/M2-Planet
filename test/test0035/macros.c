@@ -163,5 +163,17 @@ int main()
 	return 7;
 #endif
 
+#ifndef __M2C__
+	return 8;
+#endif
+
+#ifndef __M2C_MINOR__
+	return 9;
+#endif
+
+#ifndef __M2C_PATCHLEVEL__
+	return 10;
+#endif
+
 	return 0;
 }

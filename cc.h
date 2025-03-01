@@ -46,6 +46,7 @@
 #define NO_STRUCT_DEFINITION 0
 
 int copy_string(char* target, char* source, int max);
+int string_length(char* a);
 int in_set(int c, char* s);
 int match(char* a, char* b);
 void require(int bool, char* error);
@@ -64,6 +65,10 @@ struct type
 	char* name;
 };
 
+/* TLO = Token List Option */
+// CONSTANT TLO_LOCAL_ARRAY 1
+#define TLO_LOCAL_ARRAY 1
+
 struct token_list
 {
 	struct token_list* next;
@@ -76,6 +81,7 @@ struct token_list
 	int depth;
 	int linenumber;
 	int array_modifier;
+	int options;
 };
 
 struct case_list

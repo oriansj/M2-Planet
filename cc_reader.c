@@ -85,6 +85,12 @@ int copy_string(char* target, char* source, int max)
 	return i;
 }
 
+int string_length(char* a)
+{
+	int i = 0;
+	while(0 != a[i]) i = i + 1;
+	return i;
+}
 
 void fixup_label(void)
 {

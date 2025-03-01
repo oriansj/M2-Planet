@@ -27,6 +27,7 @@ enum {
 	SIZEOF_INT = sizeof(int),
 	SIZEOF_GLOBAL = sizeof(global_int),
 	TEN = SIX + 1 + 1 + 2,
+	STRING_LENGTH = sizeof("1234567"),
 };
 
 struct SizeTwelve {
@@ -58,15 +59,17 @@ int main() {
 	if(TEN != 10) return 9;
 
 	if(sizeof(local) != sizeof(int) * 3) return 10;
-	/* Does not work correctly for global arrays.
 	if(sizeof(static_local) != sizeof(int) * 3) return 11;
-	if(sizeof(global) != sizeof(int) * 5) return 12;*/
+	if(sizeof(global) != sizeof(int) * 5) return 12;
 
 	char* local_pointer;
 
 	if(sizeof(local_pointer) != sizeof(void*)) return 13;
 
 	if(sizeof(*local_pointer) != 1) return 14;
+
+	if(STRING_LENGTH != 8) return 15;
+	if(sizeof("12345") != 6) return 16;
 }
 
 
