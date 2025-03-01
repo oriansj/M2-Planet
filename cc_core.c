@@ -591,42 +591,14 @@ void function_call(char* s, int bool)
 		emit_pop(REGISTER_ONE, "_process_expression_locals");
 	}
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	emit_pop(REGISTER_BASE, "Restore old base pointer");
+	if(AARCH64 == Architecture)
 	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
-	}
-	else if(X86 == Architecture)
-	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
-	}
-	else if(AMD64 == Architecture)
-	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
-	}
-	else if(ARMV7L == Architecture)
-	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
-	}
-	else if(AARCH64 == Architecture)
-	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
-	}
-	else if(RISCV32 == Architecture)
-	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
 		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
-	else if(RISCV64 == Architecture)
+	emit_pop(REGISTER_TEMP, "Restore temp register");
+	if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
-		emit_pop(REGISTER_BASE, "Restore old base pointer");
-		emit_pop(REGISTER_TEMP, "Restore temp register");
 		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 }
