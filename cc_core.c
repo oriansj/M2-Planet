@@ -467,23 +467,13 @@ void function_call(char* s, int bool)
 	require(NULL != global_token, "Improper function call\n");
 	int passed = 0;
 
-	if(RISCV32 == Architecture || RISCV64 == Architecture)
+	emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
+	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
 	{
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
-	else
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		if (AARCH64 == Architecture)
-		{
-			emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
-		}
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
+	emit_push(REGISTER_BASE, "Protect the old base pointer");
+	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
 	if(global_token->s[0] != ')')
 	{
@@ -625,15 +615,11 @@ void function_call(char* s, int bool)
 	}
 
 	emit_pop(REGISTER_BASE, "Restore old base pointer");
-	if(AARCH64 == Architecture)
+	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
 	{
 		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 	emit_pop(REGISTER_TEMP, "Restore temp register");
-	if(RISCV32 == Architecture || RISCV64 == Architecture)
-	{
-		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
-	}
 }
 
 void constant_load(char* s)
