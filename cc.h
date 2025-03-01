@@ -61,6 +61,9 @@ char* int2str(int x, int base, int signed_p);
 // CONSTANT REGISTER_TEMP 2
 #define REGISTER_BASE 3
 // CONSTANT REGISTER_BASE 3
+/* AARCH64 and RISCV32/RISCV64 have return pointers. */
+#define REGISTER_RETURN 4
+// CONSTANT REGISTER_RETURN 4
 
 void emit_push(int, char*);
 void emit_pop(int, char*);
