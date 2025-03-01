@@ -75,6 +75,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "1";
 		else if(reg == REGISTER_TEMP) return "13";
 		else if(reg == REGISTER_BASE) return "14";
+		else if(reg == REGISTER_STACK) return "15";
 	}
 	else if(X86 == Architecture)
 	{
@@ -82,6 +83,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "ebx";
 		else if(reg == REGISTER_TEMP) return "edi";
 		else if(reg == REGISTER_BASE) return "ebp";
+		else if(reg == REGISTER_STACK) return "esp";
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -89,6 +91,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "rbx";
 		else if(reg == REGISTER_TEMP) return "rdi";
 		else if(reg == REGISTER_BASE) return "rbp";
+		else if(reg == REGISTER_STACK) return "rsp";
 	}
 	else if(ARMV7L == Architecture)
 	{
@@ -96,6 +99,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "R1";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
+		else if(reg == REGISTER_STACK) return "SP";
 	}
 	else if(AARCH64 == Architecture)
 	{
@@ -104,6 +108,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
+		else if(reg == REGISTER_STACK) return "SP";
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
@@ -112,6 +117,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
+		else if(reg == REGISTER_STACK) return "sp";
 	}
 
 	fputs("PROGRAMMING ERROR: Invalid register passed to register_from_string: '", stderr);
@@ -120,6 +126,61 @@ char* register_from_string(int reg)
 	fputs(int2str(Architecture, 10, FALSE), stderr);
 	fputs("'\n.", stderr);
 	exit(EXIT_FAILURE);
+}
+
+void emit_move(int destination_reg, int source_reg, char* note)
+{
+	char* destination_name = register_from_string(destination_reg);
+	char* source_name = register_from_string(source_reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("COPY R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(source_name);
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(destination_name);
+		emit_out(",");
+		emit_out(source_name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'0' ");
+		emit_out(source_name);
+		emit_out(" ");
+		emit_out(destination_name);
+		emit_out(" NO_SHIFT MOVE_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("SET_");
+		emit_out(destination_name);
+		emit_out("_FROM_");
+		emit_out(source_name);
+	}
+	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	{
+		emit_out("rd_");
+		emit_out(destination_name);
+		emit_out(" rs1_");
+		emit_out(source_name);
+		emit_out(" mv");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
 }
 
 void emit_push(int reg, char* note)
@@ -410,46 +471,46 @@ void function_call(char* s, int bool)
 	{
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_out("COPY R13 R15\t# Copy new base pointer\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(X86 == Architecture)
 	{
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_out("mov_edi,esp\t# Copy new base pointer\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(AMD64 == Architecture)
 	{
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_out("mov_rdi,rsp\t# Copy new base pointer\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(ARMV7L == Architecture)
 	{
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_out("'0' SP R11 NO_SHIFT MOVE_ALWAYS\t# Copy new base pointer\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(AARCH64 == Architecture)
 	{
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_out("SET_X16_FROM_SP\t# The base pointer to-be\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(RISCV32 == Architecture)
 	{
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
-		emit_out("rd_tp rs1_sp mv\t# The base pointer to-be\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 	else if(RISCV64 == Architecture)
 	{
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
-		emit_out("rd_tp rs1_sp mv\t# The base pointer to-be\n");
+		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 
 	if(global_token->s[0] != ')')
