@@ -73,32 +73,43 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
+		else if(reg == REGISTER_TEMP) return "13";
+		else if(reg == REGISTER_BASE) return "14";
 	}
 	else if(X86 == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "eax";
 		else if(reg == REGISTER_ONE) return "ebx";
+		else if(reg == REGISTER_TEMP) return "edi";
+		else if(reg == REGISTER_BASE) return "ebp";
 	}
 	else if(AMD64 == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "rax";
 		else if(reg == REGISTER_ONE) return "rbx";
+		else if(reg == REGISTER_TEMP) return "rdi";
+		else if(reg == REGISTER_BASE) return "rbp";
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
+		else if(reg == REGISTER_TEMP) return "R11";
+		else if(reg == REGISTER_BASE) return "BP";
 	}
 	else if(AARCH64 == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
+		else if(reg == REGISTER_TEMP) return "X16";
+		else if(reg == REGISTER_BASE) return "BP";
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
-		else if(reg == REGISTER_ONE) return "fp";
+		else if(reg == REGISTER_TEMP) return "tp";
+		else if(reg == REGISTER_BASE) return "fp";
 	}
 
 	fputs("PROGRAMMING ERROR: Invalid register passed to register_from_string: '", stderr);
@@ -394,32 +405,32 @@ void function_call(char* s, int bool)
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
 		emit_out("PUSHR R13 R15\t# Prevent overwriting in recursion\n");
-		emit_out("PUSHR R14 R15\t# Protect the old base pointer\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_out("COPY R13 R15\t# Copy new base pointer\n");
 	}
 	else if(X86 == Architecture)
 	{
 		emit_out("push_edi\t# Prevent overwriting in recursion\n");
-		emit_out("push_ebp\t# Protect the old base pointer\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_out("mov_edi,esp\t# Copy new base pointer\n");
 	}
 	else if(AMD64 == Architecture)
 	{
 		emit_out("push_rdi\t# Prevent overwriting in recursion\n");
-		emit_out("push_rbp\t# Protect the old base pointer\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_out("mov_rdi,rsp\t# Copy new base pointer\n");
 	}
 	else if(ARMV7L == Architecture)
 	{
 		emit_out("{R11} PUSH_ALWAYS\t# Prevent overwriting in recursion\n");
-		emit_out("{BP} PUSH_ALWAYS\t# Protect the old base pointer\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_out("'0' SP R11 NO_SHIFT MOVE_ALWAYS\t# Copy new base pointer\n");
 	}
 	else if(AARCH64 == Architecture)
 	{
 		emit_out("PUSH_X16\t# Protect a tmp register we're going to use\n");
 		emit_out("PUSH_LR\t# Protect the old return pointer (link)\n");
-		emit_out("PUSH_BP\t# Protect the old base pointer\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_out("SET_X16_FROM_SP\t# The base pointer to-be\n");
 	}
 	else if(RISCV32 == Architecture)
@@ -580,27 +591,27 @@ void function_call(char* s, int bool)
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("POPR R14 R15\t# Restore old base pointer\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
 		emit_out("POPR R13 R15\t# Prevent overwrite\n");
 	}
 	else if(X86 == Architecture)
 	{
-		emit_out("pop_ebp\t# Restore old base pointer\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
 		emit_out("pop_edi\t# Prevent overwrite\n");
 	}
 	else if(AMD64 == Architecture)
 	{
-		emit_out("pop_rbp\t# Restore old base pointer\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
 		emit_out("pop_rdi\t# Prevent overwrite\n");
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("{BP} POP_ALWAYS\t# Restore old base pointer\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
 		emit_out("{R11} POP_ALWAYS\t# Prevent overwrite\n");
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("POP_BP\t# Restore the old base pointer\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
 		emit_out("POP_LR\t# Restore the old return pointer (link)\n");
 		emit_out("POP_X16\t# Restore a register we used as tmp\n");
 	}

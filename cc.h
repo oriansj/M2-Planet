@@ -57,6 +57,10 @@ char* int2str(int x, int base, int signed_p);
 // CONSTANT REGISTER_ZERO 0
 #define REGISTER_ONE 1
 // CONSTANT REGISTER_ONE 1
+#define REGISTER_TEMP 2
+// CONSTANT REGISTER_TEMP 2
+#define REGISTER_BASE 3
+// CONSTANT REGISTER_BASE 3
 
 void emit_push(int, char*);
 void emit_pop(int, char*);
