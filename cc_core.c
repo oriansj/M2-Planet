@@ -1236,58 +1236,58 @@ void multiply_by_object_size(int object_size)
 	emit_out("# pointer arithmetic start\n");
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("PUSHR R1 R15\n");
+		emit_push(REGISTER_ONE, NULL);
 
 		emit_out("LOADI R1 ");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
 		emit_out("MULU R0 R1 R0\n");
-		emit_out("POPR R1 R15\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(X86 == Architecture)
 	{
-		emit_out("push_ebx\n");
+		emit_push(REGISTER_ONE, NULL);
 
 		emit_out("mov_ebx, %");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
 		emit_out("mul_ebx\n");
-		emit_out("pop_ebx\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(AMD64 == Architecture)
 	{
-		emit_out("push_rbx\n");
+		emit_push(REGISTER_ONE, NULL);
 
 		emit_out("mov_rbx, %");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
 		emit_out("mul_rbx\n");
-		emit_out("pop_rbx\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("{R1} PUSH_ALWAYS\n");
+		emit_push(REGISTER_ONE, NULL);
 
 		emit_out("!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
 		emit_out("'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n");
-		emit_out("{R1} POP_ALWAYS\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("PUSH_X1\n");
+		emit_push(REGISTER_ONE, NULL);
 
 		emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
 		emit_out(int2str(current_target->type->size, 10, FALSE));
 		emit_out("\n");
 
 		emit_out("MUL_X0_X1_X0\n");
-		emit_out("POP_X1\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
