@@ -467,49 +467,21 @@ void function_call(char* s, int bool)
 	require(NULL != global_token, "Improper function call\n");
 	int passed = 0;
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
-	else if(X86 == Architecture)
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
-	else if(AMD64 == Architecture)
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
-	else if(ARMV7L == Architecture)
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
-	else if(AARCH64 == Architecture)
-	{
-		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
-		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-	}
-	else if(RISCV32 == Architecture)
+	if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
 		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
-	else if(RISCV64 == Architecture)
+	else
 	{
-		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
-		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
+		if (AARCH64 == Architecture)
+		{
+			emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
+		}
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
 		emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 	}
 
