@@ -2656,12 +2656,7 @@ void process_switch(void)
 	require_match("ERROR in process_switch\nMISSING )\n", ")");
 
 	/* Put the value in R1 as it is currently in R0 */
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("MOVE R1 R0\n");
-	else if(X86 == Architecture) emit_out("mov_ebx,eax\n");
-	else if(AMD64 == Architecture) emit_out("mov_rbx,rax\n");
-	else if(ARMV7L == Architecture) emit_out("'0' R1 R0 NO_SHIFT MOVE_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("SET_X1_FROM_X0\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a1 rs1_a0 mv\n");
+	emit_move(REGISTER_ONE, REGISTER_ZERO, NULL);
 
 	/* Jump to the switch table */
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_TABLE_");
