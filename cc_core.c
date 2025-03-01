@@ -439,18 +439,16 @@ void function_call(char* s, int bool)
 	}
 	else if(RISCV32 == Architecture)
 	{
-		emit_out("rd_sp rs1_sp !-12 addi\t# Allocate stack\n");
-		emit_out("rs1_sp rs2_ra @4 sw\t# Protect the old return pointer\n");
-		emit_out("rs1_sp rs2_fp sw\t# Protect the old frame pointer\n");
-		emit_out("rs1_sp rs2_tp @8 sw\t# Protect temp register we are going to use\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
+		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
+		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 		emit_out("rd_tp rs1_sp mv\t# The base pointer to-be\n");
 	}
 	else if(RISCV64 == Architecture)
 	{
-		emit_out("rd_sp rs1_sp !-24 addi\t# Allocate stack\n");
-		emit_out("rs1_sp rs2_ra @8 sd\t# Protect the old return pointer\n");
-		emit_out("rs1_sp rs2_fp sd\t# Protect the old frame pointer\n");
-		emit_out("rs1_sp rs2_tp @16 sd\t# Protect temp register we are going to use\n");
+		emit_push(REGISTER_BASE, "Protect the old base pointer");
+		emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
+		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 		emit_out("rd_tp rs1_sp mv\t# The base pointer to-be\n");
 	}
 
@@ -621,17 +619,15 @@ void function_call(char* s, int bool)
 	}
 	else if(RISCV32 == Architecture)
 	{
-		emit_out("rd_fp rs1_sp lw\t# Restore old frame pointer\n");
-		emit_out("rd_tp rs1_sp !8 lw\t# Restore temp register\n");
-		emit_out("rd_ra rs1_sp !4 lw\t# Restore return address\n");
-		emit_out("rd_sp rs1_sp !12 addi\t# Deallocate stack\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
+		emit_pop(REGISTER_TEMP, "Restore temp register");
+		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 	else if(RISCV64 == Architecture)
 	{
-		emit_out("rd_fp rs1_sp ld\t# Restore old frame pointer\n");
-		emit_out("rd_tp rs1_sp !16 ld\t# Restore temp register\n");
-		emit_out("rd_ra rs1_sp !8 ld\t# Restore return address\n");
-		emit_out("rd_sp rs1_sp !24 addi\t# Deallocate stack\n");
+		emit_pop(REGISTER_BASE, "Restore old base pointer");
+		emit_pop(REGISTER_TEMP, "Restore temp register");
+		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 }
 
