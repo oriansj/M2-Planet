@@ -53,6 +53,23 @@ void require(int bool, char* error);
 void reset_hold_string(void);
 char* int2str(int x, int base, int signed_p);
 
+#define REGISTER_ZERO 0
+// CONSTANT REGISTER_ZERO 0
+#define REGISTER_ONE 1
+// CONSTANT REGISTER_ONE 1
+#define REGISTER_TEMP 2
+// CONSTANT REGISTER_TEMP 2
+#define REGISTER_BASE 3
+// CONSTANT REGISTER_BASE 3
+/* AARCH64 and RISCV32/RISCV64 have return pointers. */
+#define REGISTER_RETURN 4
+// CONSTANT REGISTER_RETURN 4
+#define REGISTER_STACK 5
+// CONSTANT REGISTER_STACK 5
+
+void emit_push(int, char*);
+void emit_pop(int, char*);
+
 struct type
 {
 	struct type* next;
