@@ -15,12 +15,6 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* In order to work around https://github.com/oriansj/M2-Planet/issues/63
- * this files uses HIGHLY ILLEGAL undefined behavior by not initializing the statics
- * using the knowledge that M2-Planet automatically zero initializes them.
- * These should be zero initialized explicitly when the issue is fixed.
- */
-
 int main(void) {
 	/* Put something in the register to make sure 0 is deliberately loaded in. */
 	if((1 + 1 + 2) != 4) {
