@@ -15,12 +15,6 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* In order to work around https://github.com/oriansj/M2-Planet/issues/63
- * this files uses HIGHLY ILLEGAL undefined behavior by not initializing the statics
- * using the knowledge that M2-Planet automatically zero initializes them.
- * These should be zero initialized explicitly when the issue is fixed.
- */
-
 char* buffer() {
 	static char buf[8];
 
@@ -37,15 +31,15 @@ char* buffer() {
 }
 
 /* Global variable with same name as statics */
-int a /* = 0xFF */;
+int a = 0xFF;
 
 int same_value() {
-	static int a /* = 0 */;
+	static int a = 0;
 	return a;
 }
 
 int increment_static() {
-	static int a /* = 0 */;
+	static int a = 0;
 
 	a = a + 1;
 
