@@ -128,6 +128,145 @@ char* register_from_string(int reg)
 	exit(EXIT_FAILURE);
 }
 
+void emit_load_immediate(int reg, int value, char* note)
+{
+	char* reg_name = register_from_string(reg);
+	char* value_string = int2str(value, 10, TRUE);
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		if((32767 >= value) && (value >= -32768))
+		{
+			emit_out("LOADI R");
+			emit_out(reg_name);
+			emit_out(" ");
+			emit_out(value_string);
+		}
+		else
+		{
+			emit_out("LOADR R");
+			emit_out(reg_name);
+			emit_out(" 4\nJUMP 4\n'");
+			emit_out(value_string);
+			emit_out("'");
+		}
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(reg_name);
+		emit_out(", %");
+		emit_out(value_string);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		if((127 >= value) && (value >= -128))
+		{
+			emit_out("!");
+			emit_out(value_string);
+			emit_out(" ");
+			emit_out(reg_name);
+			emit_out(" LOADI8_ALWAYS");
+		}
+		else
+		{
+			emit_out("!0 ");
+			emit_out(reg_name);
+			emit_out(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+			emit_out(value_string);
+		}
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("LOAD_W");
+		/* Normal register starts with X for 64bit wide
+		 * but we need W. */
+		emit_out(reg_name + 1);
+		/* TODO W/X register */
+		emit_out("_AHEAD\nSKIP_32_DATA\n%");
+		emit_out(value_string);
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		if((2047 >= value) && (value >= -2048))
+		{
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
+		else if (0 == (value >> 30))
+		{
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" ~");
+			emit_out(value_string);
+			emit_out(" lui\n");
+
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" rs1_");
+			emit_out(reg_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
+		else
+		{
+			int high = value >> 30;
+			char* high_string = int2str(high, 10, TRUE);
+			int low = ((value >> 30) << 30) ^ value;
+			char* low_string = int2str(low, 10, TRUE);
+
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" ~");
+			emit_out(high_string);
+			emit_out(" lui\n");
+
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" rs1_");
+			emit_out(reg_name);
+			emit_out(" !");
+			emit_out(high_string);
+			emit_out(" addi\n");
+
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" rs1_");
+			emit_out(reg_name);
+			emit_out(" rs2_x30 slli\n");
+
+			emit_out("rd_t1 ~");
+			emit_out(low_string);
+			emit_out(" lui\n");
+
+			emit_out("rd_t1 rs1_t1 !");
+			emit_out(low_string);
+			emit_out(" addi\n");
+
+			emit_out("rd_");
+			emit_out(reg_name);
+			emit_out(" rs1_");
+			emit_out(reg_name);
+			emit_out(" rs2_t1 or");
+		}
+	}
+
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_move(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
