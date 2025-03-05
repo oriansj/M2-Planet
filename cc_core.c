@@ -209,7 +209,7 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if(value == 0)
+		if((value == 0) || (value == 1 && reg == 0))
 		{
 			emit_out("SET_");
 			emit_out(reg_name);
