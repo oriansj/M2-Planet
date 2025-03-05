@@ -500,7 +500,8 @@ void function_call(char* s, int bool)
 		{
 			emit_out("LOAD R0 R14 ");
 			emit_out(s);
-			emit_out("\nMOVE R14 R13\n");
+			emit_out("\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
@@ -508,7 +509,7 @@ void function_call(char* s, int bool)
 			emit_out("lea_eax,[ebp+DWORD] %");
 			emit_out(s);
 			emit_out("\nmov_eax,[eax]\n");
-			emit_out("mov_ebp,edi\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("call_eax\n");
 		}
 		else if(AMD64 == Architecture)
@@ -516,7 +517,7 @@ void function_call(char* s, int bool)
 			emit_out("lea_rax,[rbp+DWORD] %");
 			emit_out(s);
 			emit_out("\nmov_rax,[rax]\n");
-			emit_out("mov_rbp,rdi\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("call_rax\n");
 		}
 		else if(ARMV7L == Architecture)
@@ -526,7 +527,7 @@ void function_call(char* s, int bool)
 			emit_out(" R0 SUB BP ARITH_ALWAYS\n");
 			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
 			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
-			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
 		}
@@ -537,7 +538,7 @@ void function_call(char* s, int bool)
 			emit_out(s);
 			emit_out("\nSUB_X0_X0_X1\n");
 			emit_out("DEREF_X0\n");
-			emit_out("SET_BP_FROM_X16\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("SET_X16_FROM_X0\n");
 			emit_out("BLR_X16\n");
 		}
@@ -547,7 +548,7 @@ void function_call(char* s, int bool)
 			emit_out(s);
 			emit_out(" addi\n");
 			emit_out("rd_a0 rs1_a0 lw\n");
-			emit_out("rd_fp rs1_tp mv\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 		else if(RISCV64 == Architecture)
@@ -556,7 +557,7 @@ void function_call(char* s, int bool)
 			emit_out(s);
 			emit_out(" addi\n");
 			emit_out("rd_a0 rs1_a0 ld\n");
-			emit_out("rd_fp rs1_tp mv\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 	}
@@ -564,21 +565,21 @@ void function_call(char* s, int bool)
 	{
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
-			emit_out("MOVE R14 R13\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
 			emit_out(s);
 			emit_out("\nCALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("mov_ebp,edi\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("call %FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
 		}
 		else if(AMD64 == Architecture)
 		{
-			emit_out("mov_rbp,rdi\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("call %FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
@@ -586,7 +587,7 @@ void function_call(char* s, int bool)
 		else if(ARMV7L == Architecture)
 		{
 			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
-			emit_out("'0' R11 BP NO_SHIFT MOVE_ALWAYS\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
@@ -594,7 +595,7 @@ void function_call(char* s, int bool)
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_out("SET_BP_FROM_X16\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
@@ -602,7 +603,7 @@ void function_call(char* s, int bool)
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
-			emit_out("rd_fp rs1_tp mv\n");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("rd_ra $FUNCTION_");
 			emit_out(s);
 			emit_out(" jal\n");
