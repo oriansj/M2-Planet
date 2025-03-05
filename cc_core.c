@@ -191,7 +191,6 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		/*
 		if((127 >= value) && (value >= -128))
 		{
 			emit_out("!");
@@ -201,7 +200,6 @@ void emit_load_immediate(int reg, int value, char* note)
 			emit_out(" LOADI8_ALWAYS");
 		}
 		else
-		 */
 		{
 			emit_out("!0 ");
 			emit_out(reg_name);
