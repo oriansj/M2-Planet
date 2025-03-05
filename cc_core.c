@@ -1289,59 +1289,36 @@ void multiply_by_object_size(int object_size)
 	}
 
 	emit_out("# pointer arithmetic start\n");
+	emit_push(REGISTER_ONE, NULL);
+
+	emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
+
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
 		emit_out("MULU R0 R1 R0\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(X86 == Architecture)
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
 		emit_out("mul_ebx\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(AMD64 == Architecture)
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
 		emit_out("mul_rbx\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
 		emit_out("'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
 		emit_out("MUL_X0_X1_X0\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		emit_push(REGISTER_ONE, NULL);
-
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
 		emit_out("rd_a0 rs1_a0 rs2_a1 mul\n");
-		emit_pop(REGISTER_ONE, NULL);
 	}
+
+	emit_pop(REGISTER_ONE, NULL);
 
 	emit_out("# pointer arithmetic end\n");
 }
