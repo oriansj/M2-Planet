@@ -1986,11 +1986,10 @@ void primary_expr(void)
 	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
 	else if('-' == global_token->s[0])
 	{
-		if(X86 == Architecture) emit_out("mov_eax, %0\n");
-		else if(AMD64 == Architecture) emit_out("mov_rax, %0\n");
-		else if(ARMV7L == Architecture) emit_out("!0 R0 LOADI8_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_0\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 mv\n");
+		if((KNIGHT_POSIX != Architecture) && (KNIGHT_NATIVE != Architecture))
+		{
+			emit_load_immediate(REGISTER_ZERO, 0, NULL);
+		}
 
 		common_recursion(primary_expr);
 
@@ -2003,11 +2002,10 @@ void primary_expr(void)
 	}
 	else if('!' == global_token->s[0])
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))  emit_out("LOADI R0 1\n");
-		else if(X86 == Architecture) emit_out("mov_eax, %1\n");
-		else if(AMD64 == Architecture) emit_out("mov_rax, %1\n");
-		else if(ARMV7L == Architecture) emit_out("!1 R0 LOADI8_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("SET_X0_TO_1\n");
+		if((RISCV32 != Architecture) && (RISCV64 != Architecture))
+		{
+			emit_load_immediate(REGISTER_ZERO, 1, NULL);
+		}
 
 		common_recursion(postfix_expr);
 
