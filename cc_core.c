@@ -209,13 +209,22 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("LOAD_W");
-		/* Normal register starts with X for 64bit wide
-		 * but we need W. */
-		emit_out(reg_name + 1);
-		/* TODO W/X register */
-		emit_out("_AHEAD\nSKIP_32_DATA\n%");
-		emit_out(value_string);
+		if(value == 0)
+		{
+			emit_out("SET_");
+			emit_out(reg_name);
+			emit_out("_TO_");
+			emit_out(value_string);
+		}
+		else
+		{
+			emit_out("LOAD_W");
+			/* Normal register starts with X for 64bit wide
+			 * but we need W. */
+			emit_out(reg_name + 1);
+			emit_out("_AHEAD\nSKIP_32_DATA\n%");
+			emit_out(value_string);
+		}
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
