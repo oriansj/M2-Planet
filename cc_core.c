@@ -1336,15 +1336,11 @@ void multiply_by_object_size(int object_size)
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		if(current_target->type->size > 2047)
-		{
-			emit_out("rd_a4 ~");
-			emit_out(int2str(current_target->type->size, 10, FALSE));
-			emit_out(" lui\n");
-		}
-		emit_out("rd_a4 !");
-		emit_out(int2str(current_target->type->size, 10, FALSE));
-		emit_out(" addi\nrd_a0 rs1_a0 rs2_a4 mul\n");
+		emit_push(REGISTER_ONE, NULL);
+
+		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
+		emit_out("rd_a0 rs1_a0 rs2_a1 mul\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 
 	emit_out("# pointer arithmetic end\n");
