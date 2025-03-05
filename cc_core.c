@@ -1507,32 +1507,17 @@ void postfix_expr_array(void)
 	}
 	else
 	{
-		if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-		{
-			emit_out("rd_a2 rs1_a1 addi\n");
-			if(current_target->type->size > 2047)
-			{
-				emit_out("rd_a1 ~");
-				emit_out(int2str(current_target->type->size, 10, TRUE));
-				emit_out(" lui");
-			}
-		}
+		emit_push(REGISTER_ONE, NULL);
+		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
 
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("PUSHR R1 R15\nLOADI R1 ");
-		else if(X86 == Architecture) emit_out("push_ebx\nmov_ebx, %");
-		else if(AMD64 == Architecture) emit_out("push_rbx\nmov_rbx, %");
-		else if(ARMV7L == Architecture) emit_out("{R1} PUSH_ALWAYS\n!0 R1 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-		else if(AARCH64 == Architecture) emit_out("PUSH_X1\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a1 !");
-		emit_out(int2str(current_target->type->size, 10, TRUE));
-		if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("MULU R0 R1 R0\n");
+		else if(X86 == Architecture) emit_out("mul_ebx\n");
+		else if(AMD64 == Architecture) emit_out("mul_rbx\n");
+		else if(ARMV7L == Architecture) emit_out("'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n");
+		else if(AARCH64 == Architecture) emit_out("MUL_X0_X1_X0\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a1 rs2_a0 mul\n");
 
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("\nMULU R0 R1 R0\nPOPR R1 R15\n");
-		else if(X86 == Architecture) emit_out("\nmul_ebx\npop_ebx\n");
-		else if(AMD64 == Architecture) emit_out("\nmul_rbx\npop_rbx\n");
-		else if(ARMV7L == Architecture) emit_out("\n'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n{R1} POP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nMUL_X0_X1_X0\nPOP_X1\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("\nrd_a0 rs1_a1 rs2_a0 mul\nrd_a1 rs1_a2 addi\n");
+		emit_pop(REGISTER_ONE, NULL);
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");
