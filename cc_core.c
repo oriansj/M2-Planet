@@ -128,13 +128,45 @@ char* register_from_string(int reg)
 	exit(EXIT_FAILURE);
 }
 
+int hex2char(int c)
+{
+	if((c >= 0) && (c <= 9)) return (c + 48);
+	else if((c >= 10) && (c <= 15)) return (c + 55);
+	else return -1;
+}
+
+char* number_to_hex(int a, int bytes)
+{
+	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
+	char* result = calloc(1 + (bytes << 1), sizeof(char));
+	if(NULL == result)
+	{
+		fputs("calloc failed in number_to_hex\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	int i = 0;
+
+	int divisor = (bytes << 3);
+	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
+
+	/* Simply collect numbers until divisor is gone */
+	while(0 != divisor)
+	{
+		divisor = divisor - 4;
+		result[i] = hex2char((a >> divisor) & 0xF);
+		i = i + 1;
+	}
+
+	return result;
+}
+
 void emit_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
 	char* value_string = int2str(value, 10, TRUE);
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		if((32767 >= value) && (value >= -32768))
+		if((32767 > value) && (value > -32768))
 		{
 			emit_out("LOADI R");
 			emit_out(reg_name);
@@ -146,7 +178,7 @@ void emit_load_immediate(int reg, int value, char* note)
 			emit_out("LOADR R");
 			emit_out(reg_name);
 			emit_out(" 4\nJUMP 4\n'");
-			emit_out(value_string);
+			emit_out(number_to_hex(value, register_size));
 			emit_out("'");
 		}
 	}
@@ -159,6 +191,7 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 	else if(ARMV7L == Architecture)
 	{
+		/*
 		if((127 >= value) && (value >= -128))
 		{
 			emit_out("!");
@@ -168,6 +201,7 @@ void emit_load_immediate(int reg, int value, char* note)
 			emit_out(" LOADI8_ALWAYS");
 		}
 		else
+		 */
 		{
 			emit_out("!0 ");
 			emit_out(reg_name);
@@ -1150,114 +1184,9 @@ void primary_expr_char(void)
 	global_token = global_token->next;
 }
 
-int hex2char(int c)
-{
-	if((c >= 0) && (c <= 9)) return (c + 48);
-	else if((c >= 10) && (c <= 15)) return (c + 55);
-	else return -1;
-}
-
-char* number_to_hex(int a, int bytes)
-{
-	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
-	char* result = calloc(1 + (bytes << 1), sizeof(char));
-	if(NULL == result)
-	{
-		fputs("calloc failed in number_to_hex\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	int i = 0;
-
-	int divisor = (bytes << 3);
-	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
-
-	/* Simply collect numbers until divisor is gone */
-	while(0 != divisor)
-	{
-		divisor = divisor - 4;
-		result[i] = hex2char((a >> divisor) & 0xF);
-		i = i + 1;
-	}
-
-	return result;
-}
-
 void primary_expr_number(char* s)
 {
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-	{
-		int size = strtoint(s);
-		if((32767 > size) && (size > -32768))
-		{
-			emit_out("LOADI R0 ");
-			emit_out(s);
-		}
-		else
-		{
-			emit_out("LOADR R0 4\nJUMP 4\n'");
-			emit_out(number_to_hex(size, register_size));
-			emit_out("'");
-		}
-	}
-	else if(X86 == Architecture)
-	{
-		emit_out("mov_eax, %");
-		emit_out(s);
-	}
-	else if(AMD64 == Architecture)
-	{
-		emit_out("mov_rax, %");
-		emit_out(s);
-	}
-	else if(ARMV7L == Architecture)
-	{
-		emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-		emit_out(s);
-	}
-	else if(AARCH64 == Architecture)
-	{
-		emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-		emit_out(s);
-	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		int size = strtoint(s);
-		if((2047 >= size) && (size >= -2048))
-		{
-			emit_out("rd_a0 !");
-			emit_out(s);
-			emit_out(" addi");
-		}
-		else if (0 == (size >> 30))
-		{
-			emit_out("rd_a0 ~");
-			emit_out(s);
-			emit_out(" lui\n");
-			emit_out("rd_a0 rs1_a0 !");
-			emit_out(s);
-			emit_out(" addi");
-		}
-		else
-		{
-			int high = size >> 30;
-			int low = ((size >> 30) << 30) ^ size;
-			emit_out("rd_a0 ~");
-			emit_out(int2str(high, 10, TRUE));
-			emit_out(" lui\n");
-			emit_out("rd_a0 rs1_a0 !");
-			emit_out(int2str(high, 10, TRUE));
-			emit_out(" addi\n");
-			emit_out("rd_a0 rs1_a0 rs2_x30 slli\n");
-			emit_out("rd_t1 ~");
-			emit_out(int2str(low, 10, TRUE));
-			emit_out(" lui\n");
-			emit_out("rd_t1 rs1_t1 !");
-			emit_out(int2str(low, 10, TRUE));
-			emit_out(" addi\n");
-			emit_out("rd_a0 rs1_a0 rs2_t1 or\n");
-		}
-	}
-	emit_out("\n");
+	emit_load_immediate(REGISTER_ZERO, strtoint(s), NULL);
 }
 
 void primary_expr_variable(void)
