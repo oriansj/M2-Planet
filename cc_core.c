@@ -3452,7 +3452,8 @@ void declare_function(void)
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, NULL);
 			emit_out("RET R15\n");
 		}
-		else if((X86 == Architecture || AMD64 == Architecture) && !match("ret\n", output_list->s))
+		else if((X86 == Architecture || AMD64 == Architecture || RISCV32 == Architecture || RISCV64 == Architecture)
+				&& !match("ret\n", output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, NULL);
 			emit_out("ret\n");
@@ -3466,11 +3467,6 @@ void declare_function(void)
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, NULL);
 			emit_out("RETURN\n");
-		}
-		else if((RISCV32 == Architecture || RISCV64 == Architecture) && !match("ret\n", output_list->s))
-		{
-			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, NULL);
-			emit_out("ret\n");
 		}
 	}
 }
