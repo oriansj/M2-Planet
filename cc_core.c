@@ -184,10 +184,24 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
 	{
-		emit_out("mov_");
-		emit_out(reg_name);
-		emit_out(", %");
-		emit_out(value_string);
+		if(value == 0)
+		{
+			/* This is the recommended way of zeroing a register on x86/amd64.
+			 * xor eax, eax (32 bit registers) for both x86 and amd64 since it
+			 * takes up a byte less and still zeros the register. */
+			emit_out("xor_e");
+			/* amd64 register starts with r but we need it to start with e */
+			emit_out(reg_name + 1);
+			emit_out(",e");
+			emit_out(reg_name + 1);
+		}
+		else
+		{
+			emit_out("mov_");
+			emit_out(reg_name);
+			emit_out(", %");
+			emit_out(value_string);
+		}
 	}
 	else if(ARMV7L == Architecture)
 	{
