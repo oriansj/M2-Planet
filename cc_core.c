@@ -796,21 +796,7 @@ void function_call(char* s, int bool)
 
 void constant_load(char* s)
 {
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("LOADI R0 ");
-	else if(X86 == Architecture) emit_out("mov_eax, %");
-	else if(AMD64 == Architecture) emit_out("mov_rax, %");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n%");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out("rd_a0 ~");
-		emit_out(s);
-		emit_out(" lui\nrd_a0 rs1_a0 !");
-	}
-	emit_out(s);
-	if(RISCV32 == Architecture) emit_out(" addi\n");
-	else if(RISCV64 == Architecture) emit_out(" addiw\n");
-	emit_out("\n");
+	emit_load_immediate(REGISTER_ZERO, strtoint(s), NULL);
 }
 
 char* load_value_signed(unsigned size)
