@@ -160,6 +160,83 @@ char* number_to_hex(int a, int bytes)
 	return result;
 }
 
+void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
+{
+	char* reg_name = register_from_string(reg);
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("LOADR R");
+		emit_out(reg_name);
+		emit_out(" 4\nJUMP 4\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(X86 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(reg_name);
+		emit_out(", &");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(AMD64 == Architecture)
+	{
+		emit_out("lea_");
+		emit_out(reg_name);
+		emit_out(",[rip+DWORD] %");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!0 ");
+		emit_out(reg_name);
+		emit_out(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("LOAD_W");
+		/* Normal register starts with X for 64bit wide
+		 * but we need W. */
+		emit_out(reg_name + 1);
+		emit_out("_AHEAD\nSKIP_32_DATA\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" ~");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" auipc\n");
+
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" rs1_");
+		emit_out(reg_name);
+		emit_out(" !");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" addi");
+	}
+
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -1059,21 +1136,7 @@ void function_load(struct token_list* a)
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
-	else if(X86 == Architecture) emit_out("mov_eax, &GLOBAL_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %GLOBAL_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&GLOBAL_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~GLOBAL_");
-	emit_out(a->s);
-	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !GLOBAL_");
-		emit_out(a->s);
-		emit_out(" addi");
-	}
-	emit_out("\n");
+	emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", a->s, NULL);
 
 	require(NULL != global_token, "unterminated global load\n");
 	if(TRUE == Address_of) return;
