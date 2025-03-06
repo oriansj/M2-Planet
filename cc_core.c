@@ -564,6 +564,17 @@ void uniqueID_out(char* s, char* num)
 	output_list = uniqueID(s, output_list, num);
 }
 
+char* create_unique_id(char* prefix, char* s, char* num)
+{
+	char* buf = calloc(MAX_STRING, sizeof(char));
+	int written = copy_string(buf, prefix, MAX_STRING);
+	written = copy_string(buf + written, s, MAX_STRING - written) + written;
+	written = copy_string(buf + written, "_", MAX_STRING - written) + written;
+	copy_string(buf + written, num, MAX_STRING - written);
+
+	return buf;
+}
+
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
@@ -1174,24 +1185,12 @@ void primary_expr_string(void)
 {
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
-	else if(X86 == Architecture) emit_out("mov_eax, &STRING_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %STRING_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&STRING_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~STRING_");
-	uniqueID_out(function->s, number_string);
-	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out("auipc\n");
-		emit_out("rd_a0 rs1_a0 !STRING_");
-		uniqueID_out(function->s, number_string);
-		emit_out("addi\n");
-	}
+	char* unique_id = create_unique_id("STRING_", function->s, number_string);
+
+	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, NULL);
 
 	/* The target */
-	strings_list = emit(":STRING_", strings_list);
-	strings_list = uniqueID(function->s, strings_list, number_string);
+	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
 
 	/* catch case of just "foo" from segfaulting */
 	require(NULL != global_token->next, "a string by itself is not valid C\n");
