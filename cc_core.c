@@ -160,6 +160,83 @@ char* number_to_hex(int a, int bytes)
 	return result;
 }
 
+void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
+{
+	char* reg_name = register_from_string(reg);
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("LOADR R");
+		emit_out(reg_name);
+		emit_out(" 4\nJUMP 4\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(X86 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(reg_name);
+		emit_out(", &");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(AMD64 == Architecture)
+	{
+		emit_out("lea_");
+		emit_out(reg_name);
+		emit_out(",[rip+DWORD] %");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!0 ");
+		emit_out(reg_name);
+		emit_out(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("LOAD_W");
+		/* Normal register starts with X for 64bit wide
+		 * but we need W. */
+		emit_out(reg_name + 1);
+		emit_out("_AHEAD\nSKIP_32_DATA\n&");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" ~");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" auipc\n");
+
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" rs1_");
+		emit_out(reg_name);
+		emit_out(" !");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" addi");
+	}
+
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -485,6 +562,17 @@ struct token_list* uniqueID(char* s, struct token_list* l, char* num)
 void uniqueID_out(char* s, char* num)
 {
 	output_list = uniqueID(s, output_list, num);
+}
+
+char* create_unique_id(char* prefix, char* s, char* num)
+{
+	char* buf = calloc(MAX_STRING, sizeof(char));
+	int written = copy_string(buf, prefix, MAX_STRING);
+	written = copy_string(buf + written, s, MAX_STRING - written) + written;
+	written = copy_string(buf + written, "_", MAX_STRING - written) + written;
+	copy_string(buf + written, num, MAX_STRING - written);
+
+	return buf;
 }
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
@@ -1032,48 +1120,13 @@ void function_load(struct token_list* a)
 		return;
 	}
 
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
-	else if(X86 == Architecture) emit_out("mov_eax, &FUNCTION_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %FUNCTION_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~FUNCTION_");
-	emit_out(a->s);
-	if(RISCV32 == Architecture)
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !FUNCTION_");
-		emit_out(a->s);
-		emit_out(" addi");
-	}
-	else if(RISCV64 == Architecture)
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !FUNCTION_");
-		emit_out(a->s);
-		emit_out(" addiw");
-	}
-	emit_out("\n");
+	emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", a->s, NULL);
 }
 
 void global_load(struct token_list* a)
 {
 	current_target = a->type;
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&GLOBAL_");
-	else if(X86 == Architecture) emit_out("mov_eax, &GLOBAL_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %GLOBAL_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&GLOBAL_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&GLOBAL_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~GLOBAL_");
-	emit_out(a->s);
-	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !GLOBAL_");
-		emit_out(a->s);
-		emit_out(" addi");
-	}
-	emit_out("\n");
+	emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", a->s, NULL);
 
 	require(NULL != global_token, "unterminated global load\n");
 	if(TRUE == Address_of) return;
@@ -1111,24 +1164,12 @@ void primary_expr_string(void)
 {
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&STRING_");
-	else if(X86 == Architecture) emit_out("mov_eax, &STRING_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %STRING_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&STRING_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&STRING_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~STRING_");
-	uniqueID_out(function->s, number_string);
-	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out("auipc\n");
-		emit_out("rd_a0 rs1_a0 !STRING_");
-		uniqueID_out(function->s, number_string);
-		emit_out("addi\n");
-	}
+	char* unique_id = create_unique_id("STRING_", function->s, number_string);
+
+	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, NULL);
 
 	/* The target */
-	strings_list = emit(":STRING_", strings_list);
-	strings_list = uniqueID(function->s, strings_list, number_string);
+	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
 
 	/* catch case of just "foo" from segfaulting */
 	require(NULL != global_token->next, "a string by itself is not valid C\n");
@@ -1675,14 +1716,14 @@ void additive_expr_stub_a(void)
 	else if(X86 == Architecture)
 	{
 		arithmetic_recursion(postfix_expr, "imul_ebx\n", "mul_ebx\n", "*", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n", "/", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n", "%", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\n", "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\n", "/", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n", "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\nmov_eax,edx\n", "%", additive_expr_stub_a);
 	}
 	else if(AMD64 == Architecture)
 	{
 		arithmetic_recursion(postfix_expr, "imul_rbx\n", "mul_rbx\n", "*", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\n", "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\n", "/", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n", "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\nmov_rax,rdx\n", "%", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\n", "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\n", "/", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n", "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\nmov_rax,rdx\n", "%", additive_expr_stub_a);
 	}
 	else if(ARMV7L == Architecture)
 	{
@@ -2077,12 +2118,12 @@ char* compound_operation(char* operator, int is_signed)
 		else if(X86 == Architecture)
 		{
 			if (is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\n";
-			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n";
+			else operation = "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
 			if(is_signed) operation = "xchg_rbx,rax\ncqo\nidiv_rbx\n";
-			else operation = "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\n";
+			else operation = "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\n";
 		}
 		else if(ARMV7L == Architecture)
 		{
@@ -2110,12 +2151,12 @@ char* compound_operation(char* operator, int is_signed)
 		else if(X86 == Architecture)
 		{
 			if(is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n";
-			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n";
+			else operation = "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\nmov_eax,edx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
 			if(is_signed) operation = "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n";
-			else operation = "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\nmov_rax,rdx\n";
+			else operation = "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\nmov_rax,rdx\n";
 		}
 		else if(ARMV7L == Architecture)
 		{
