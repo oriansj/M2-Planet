@@ -1120,28 +1120,7 @@ void function_load(struct token_list* a)
 		return;
 	}
 
-	if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture)) emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
-	else if(X86 == Architecture) emit_out("mov_eax, &FUNCTION_");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rip+DWORD] %FUNCTION_");
-	else if(ARMV7L == Architecture) emit_out("!0 R0 LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n&FUNCTION_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W0_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 ~FUNCTION_");
-	emit_out(a->s);
-	if(RISCV32 == Architecture)
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !FUNCTION_");
-		emit_out(a->s);
-		emit_out(" addi");
-	}
-	else if(RISCV64 == Architecture)
-	{
-		emit_out(" auipc\n");
-		emit_out("rd_a0 rs1_a0 !FUNCTION_");
-		emit_out(a->s);
-		emit_out(" addiw");
-	}
-	emit_out("\n");
+	emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", a->s, NULL);
 }
 
 void global_load(struct token_list* a)
