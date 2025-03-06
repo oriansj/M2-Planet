@@ -1675,14 +1675,14 @@ void additive_expr_stub_a(void)
 	else if(X86 == Architecture)
 	{
 		arithmetic_recursion(postfix_expr, "imul_ebx\n", "mul_ebx\n", "*", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n", "/", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n", "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n", "%", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\n", "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\n", "/", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n", "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\nmov_eax,edx\n", "%", additive_expr_stub_a);
 	}
 	else if(AMD64 == Architecture)
 	{
 		arithmetic_recursion(postfix_expr, "imul_rbx\n", "mul_rbx\n", "*", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\n", "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\n", "/", additive_expr_stub_a);
-		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n", "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\nmov_rax,rdx\n", "%", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\n", "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\n", "/", additive_expr_stub_a);
+		arithmetic_recursion(postfix_expr, "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n", "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\nmov_rax,rdx\n", "%", additive_expr_stub_a);
 	}
 	else if(ARMV7L == Architecture)
 	{
@@ -2077,12 +2077,12 @@ char* compound_operation(char* operator, int is_signed)
 		else if(X86 == Architecture)
 		{
 			if (is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\n";
-			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\n";
+			else operation = "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
 			if(is_signed) operation = "xchg_rbx,rax\ncqo\nidiv_rbx\n";
-			else operation = "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\n";
+			else operation = "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\n";
 		}
 		else if(ARMV7L == Architecture)
 		{
@@ -2110,12 +2110,12 @@ char* compound_operation(char* operator, int is_signed)
 		else if(X86 == Architecture)
 		{
 			if(is_signed) operation = "xchg_ebx,eax\ncdq\nidiv_ebx\nmov_eax,edx\n";
-			else operation = "xchg_ebx,eax\nmov_edx, %0\ndiv_ebx\nmov_eax,edx\n";
+			else operation = "xchg_ebx,eax\nxor_edx,edx\ndiv_ebx\nmov_eax,edx\n";
 		}
 		else if(AMD64 == Architecture)
 		{
 			if(is_signed) operation = "xchg_rbx,rax\ncqo\nidiv_rbx\nmov_rax,rdx\n";
-			else operation = "xchg_rbx,rax\nmov_rdx, %0\ndiv_rbx\nmov_rax,rdx\n";
+			else operation = "xchg_rbx,rax\nxor_edx,edx\ndiv_rbx\nmov_rax,rdx\n";
 		}
 		else if(ARMV7L == Architecture)
 		{
