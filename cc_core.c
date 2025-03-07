@@ -1487,18 +1487,8 @@ void postfix_expr_arrow(void)
 
 	if(0 != i->offset)
 	{
-		emit_out("# -> offset calculation\n");
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-		{
-			emit_out("ADDUI R0 R0 ");
-			emit_out(int2str(i->offset, 10, TRUE));
-			emit_out("\n");
-		}
-		else
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
-		}
+		emit_load_immediate(REGISTER_ONE, i->offset, "-> offset calculation");
+		emit_add(REGISTER_ZERO, REGISTER_ONE, "-> offset calculation");
 	}
 
 	if(global_token->s[0] == '.') return;
@@ -1524,18 +1514,8 @@ void postfix_expr_dot(void)
 
 	if(0 != i->offset)
 	{
-		emit_out("# . offset calculation\n");
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-		{
-			emit_out("ADDUI R0 R0 ");
-			emit_out(int2str(i->offset, 10, TRUE));
-			emit_out("\n");
-		}
-		else
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
-		}
+		emit_load_immediate(REGISTER_ONE, i->offset, ". offset calculation");
+		emit_add(REGISTER_ZERO, REGISTER_ONE, ". offset calculation");
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 	if(match("[", global_token->s) || match(".", global_token->s)) return;
