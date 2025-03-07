@@ -510,6 +510,12 @@ void emit_mul_into_register_zero(int reg, char* note)
 	}
 }
 
+void emit_mul_register_zero_with_immediate(int value, char* note)
+{
+	emit_load_immediate(REGISTER_ONE, value, note);
+	emit_mul_into_register_zero(REGISTER_ONE, note);
+}
+
 void emit_move(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
@@ -1454,9 +1460,7 @@ void multiply_by_object_size(int object_size)
 	emit_out("# pointer arithmetic start\n");
 	emit_push(REGISTER_ONE, NULL);
 
-	emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
-
-	emit_mul_into_register_zero(REGISTER_ONE, NULL);
+	emit_mul_register_zero_with_immediate(current_target->type->size, NULL);
 
 	emit_pop(REGISTER_ONE, NULL);
 
