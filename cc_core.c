@@ -1531,30 +1531,10 @@ void postfix_expr_dot(void)
 			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\n");
 		}
-		else if(X86 == Architecture)
+		else
 		{
 			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("add_eax,ebx\n");
-		}
-		else if(AMD64 == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("add_rax,rbx\n");
-		}
-		else if(ARMV7L == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
-		}
-		else if(AARCH64 == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("ADD_X0_X1_X0\n");
-		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("rd_a0 rs1_a1 rs2_a0 add\n");
+			emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
 		}
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
