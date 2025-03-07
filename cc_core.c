@@ -2087,11 +2087,7 @@ char* compound_operation(char* operator, int is_signed)
 			if(is_signed) operation = "ADD R0 R1 R0\n";
 			else operation = "ADDU R0 R1 R0\n";
 		}
-		else if(X86 == Architecture) operation = "add_eax,ebx\n";
-		else if(AMD64 == Architecture) operation = "add_rax,rbx\n";
-		else if(ARMV7L == Architecture) operation = "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n";
-		else if(AARCH64 == Architecture) operation = "ADD_X0_X1_X0\n";
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "rd_a0 rs1_a1 rs2_a0 add\n";
+		else emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
 	}
 	else if(match("-=", operator))
 	{
