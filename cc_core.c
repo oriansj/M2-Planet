@@ -399,6 +399,70 @@ void emit_load_immediate(int reg, int value, char* note)
 	}
 }
 
+/* Adds destination and source and places result in destination */
+void emit_add(int destination_reg, int source_reg, char* note)
+{
+	char* destination_name = register_from_string(destination_reg);
+	char* source_name = register_from_string(source_reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("ADD R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(source_name);
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("add_");
+		emit_out(destination_name);
+		emit_out(",");
+		emit_out(source_name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'0' ");
+		emit_out(destination_name);
+		emit_out(" ");
+		emit_out(destination_name);
+		emit_out(" ADD ");
+		emit_out(source_name);
+		emit_out(" ARITH2_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("ADD_");
+		emit_out(destination_name);
+		emit_out("_");
+		emit_out(source_name);
+		emit_out("_");
+		emit_out(destination_name);
+	}
+	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	{
+		emit_out("rd_");
+		emit_out(destination_name);
+		emit_out(" rs1_");
+		emit_out(source_name);
+		emit_out(" rs2_");
+		emit_out(destination_name);
+		emit_out(" add");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_move(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
@@ -1430,30 +1494,10 @@ void postfix_expr_arrow(void)
 			emit_out(int2str(i->offset, 10, TRUE));
 			emit_out("\n");
 		}
-		else if(X86 == Architecture)
+		else
 		{
 			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("add_eax,ebx\n");
-		}
-		else if(AMD64 == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("add_rax,rbx\n");
-		}
-		else if(ARMV7L == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
-		}
-		else if(AARCH64 == Architecture)
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("ADD_X0_X1_X0\n");
-		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-		{
-			emit_load_immediate(REGISTER_ONE, i->offset, NULL);
-			emit_out("rd_a0 rs1_a1 rs2_a0 add\n");
+			emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
 		}
 	}
 
