@@ -1572,12 +1572,7 @@ void postfix_expr_array(void)
 		emit_pop(REGISTER_ONE, NULL);
 	}
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADD R0 R0 R1\n");
-	else if(X86 == Architecture) emit_out("add_eax,ebx\n");
-	else if(AMD64 == Architecture) emit_out("add_rax,rbx\n");
-	else if(ARMV7L == Architecture) emit_out("'0' R0 R0 ADD R1 ARITH2_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("ADD_X0_X1_X0\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a1 rs2_a0 add\n");
+	emit_add(REGISTER_ZERO, REGISTER_ONE, NULL);
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
