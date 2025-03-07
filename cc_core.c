@@ -913,9 +913,8 @@ void function_call(char* s, int bool)
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
 			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
-			emit_out("LOADR R0 4\nJUMP 4\n&FUNCTION_");
-			emit_out(s);
-			emit_out("\nCALL R0 R15\n");
+			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s, NULL);
+			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
@@ -943,9 +942,7 @@ void function_call(char* s, int bool)
 		else if(AARCH64 == Architecture)
 		{
 			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
-			emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FUNCTION_");
-			emit_out(s);
-			emit_out("\n");
+			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s, NULL);
 			emit_out("BLR_X16\n");
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
