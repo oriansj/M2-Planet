@@ -99,6 +99,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "R1";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
+		else if(reg == REGISTER_RETURN) return "LR";
 		else if(reg == REGISTER_STACK) return "SP";
 	}
 	else if(AARCH64 == Architecture)
@@ -872,10 +873,10 @@ void function_call(char* s, int bool)
 			emit_out(s);
 			emit_out(" R0 SUB BP ARITH_ALWAYS\n");
 			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
+			emit_push(REGISTER_RETURN, "Protect the old link register");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
-			emit_out("{LR} POP_ALWAYS\t# Prevent overwrite\n");
+			emit_pop(REGISTER_RETURN, "Prevent overwrite");
 		}
 		else if(AARCH64 == Architecture)
 		{
@@ -932,12 +933,12 @@ void function_call(char* s, int bool)
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_out("{LR} PUSH_ALWAYS\t# Protect the old link register\n");
+			emit_push(REGISTER_RETURN, "Protect the old link register");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, NULL);
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
-			emit_out("{LR} POP_ALWAYS\t# Restore the old link register\n");
+			emit_pop(REGISTER_RETURN, "Restore the old link register");
 		}
 		else if(AARCH64 == Architecture)
 		{
