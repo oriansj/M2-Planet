@@ -464,6 +464,52 @@ void emit_add(int destination_reg, int source_reg, char* note)
 	}
 }
 
+void emit_mul_into_register_zero(int reg, char* note)
+{
+	char* reg_name = register_from_string(reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("MULU R0 R");
+		emit_out(reg_name);
+		emit_out(" R0");
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("mul_");
+		emit_out(reg_name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'9' R0 '0' ");
+		emit_out(reg_name);
+		emit_out(" MUL R0 ARITH2_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("MUL_X0_");
+		emit_out(reg_name);
+		emit_out("_X0");
+	}
+	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	{
+		emit_out("rd_a0 rs1_");
+		emit_out(reg_name);
+		emit_out(" rs2_a0 mul");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_move(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
@@ -1540,12 +1586,7 @@ void postfix_expr_array(void)
 		emit_push(REGISTER_ONE, NULL);
 		emit_load_immediate(REGISTER_ONE, current_target->type->size, NULL);
 
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("MULU R0 R1 R0\n");
-		else if(X86 == Architecture) emit_out("mul_ebx\n");
-		else if(AMD64 == Architecture) emit_out("mul_rbx\n");
-		else if(ARMV7L == Architecture) emit_out("'9' R0 '0' R1 MUL R0 ARITH2_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("MUL_X0_X1_X0\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a1 rs2_a0 mul\n");
+		emit_mul_into_register_zero(REGISTER_ONE, NULL);
 
 		emit_pop(REGISTER_ONE, NULL);
 	}
