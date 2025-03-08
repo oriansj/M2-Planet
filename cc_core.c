@@ -1026,30 +1026,26 @@ void function_call(char* s, int is_function_pointer)
 	}
 	else
 	{
+		if(ARMV7L == Architecture)
+		{
+			emit_push(REGISTER_RETURN, "Protect the old link register");
+		}
+
+		emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
-		else if(X86 == Architecture)
+		else if((X86 == Architecture) || (AMD64 == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_out("call %FUNCTION_");
-			emit_out(s);
-			emit_out("\n");
-		}
-		else if(AMD64 == Architecture)
-		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call %FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
@@ -1057,13 +1053,11 @@ void function_call(char* s, int is_function_pointer)
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s, "function call");
 			emit_out("BLR_X16\n");
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("rd_ra $FUNCTION_");
 			emit_out(s);
 			emit_out(" jal\n");
