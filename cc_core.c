@@ -564,13 +564,22 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("!");
-		emit_out(value_string);
-		emit_out(" ");
-		emit_out(destination_name);
-		emit_out(" SUB ");
-		emit_out(offset_name);
-		emit_out(" ARITH_ALWAYS\n");
+		if((127 >= value) && (value >= -128))
+		{
+			emit_out("!");
+			emit_out(value_string);
+			emit_out(" ");
+			emit_out(destination_name);
+			emit_out(" SUB ");
+			emit_out(offset_name);
+			emit_out(" ARITH_ALWAYS\n");
+		}
+		else
+		{
+			/* TODO: We use register one as a temporary which might be surprising. */
+			emit_load_immediate(REGISTER_ONE, value, note);
+			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS");
+		}
 	}
 	else if(AARCH64 == Architecture)
 	{
@@ -585,13 +594,32 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		emit_out("rd_");
-		emit_out(destination_name);
-		emit_out(" rs1_");
-		emit_out(offset_name);
-		emit_out(" !");
-		emit_out(value_string);
-		emit_out(" addi");
+		if((2047 >= value) && (value >= -2048))
+		{
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" rs1_");
+			emit_out(offset_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
+		else
+		{
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" ~");
+			emit_out(value_string);
+			emit_out(" lui\n");
+
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" rs1_");
+			emit_out(offset_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
 	}
 
 
