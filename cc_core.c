@@ -129,38 +129,6 @@ char* register_from_string(int reg)
 	exit(EXIT_FAILURE);
 }
 
-int hex2char(int c)
-{
-	if((c >= 0) && (c <= 9)) return (c + 48);
-	else if((c >= 10) && (c <= 15)) return (c + 55);
-	else return -1;
-}
-
-char* number_to_hex(int a, int bytes)
-{
-	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
-	char* result = calloc(1 + (bytes << 1), sizeof(char));
-	if(NULL == result)
-	{
-		fputs("calloc failed in number_to_hex\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	int i = 0;
-
-	int divisor = (bytes << 3);
-	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
-
-	/* Simply collect numbers until divisor is gone */
-	while(0 != divisor)
-	{
-		divisor = divisor - 4;
-		result[i] = hex2char((a >> divisor) & 0xF);
-		i = i + 1;
-	}
-
-	return result;
-}
-
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -255,9 +223,8 @@ void emit_load_immediate(int reg, int value, char* note)
 		{
 			emit_out("LOADR R");
 			emit_out(reg_name);
-			emit_out(" 4\nJUMP 4\n'");
-			emit_out(number_to_hex(value, register_size));
-			emit_out("'");
+			emit_out(" 4\nJUMP 4\n%");
+			emit_out(int2str(value, 10, TRUE));
 		}
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
