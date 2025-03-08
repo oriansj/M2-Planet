@@ -968,7 +968,7 @@ void function_call(char* s, int bool)
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
 			emit_out("DEREF_X0\n");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_out("SET_X16_FROM_X0\n");
+			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function call");
 			emit_out("BLR_X16\n");
 		}
 		else if(RISCV32 == Architecture)
