@@ -896,7 +896,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(char* s, int bool)
+void function_call(char* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -929,7 +929,7 @@ void function_call(char* s, int bool)
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
 
-	if(TRUE == bool)
+	if(TRUE == is_function_pointer)
 	{
 		int value = strtoint(s);
 
