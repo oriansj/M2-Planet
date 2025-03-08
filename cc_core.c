@@ -538,6 +538,75 @@ void emit_move(int destination_reg, int source_reg, char* note)
 	}
 }
 
+void emit_load_relative_to_register(int destination, int offset_register, int value, char* note)
+{
+	char* destination_name = register_from_string(destination);
+	char* offset_name = register_from_string(offset_register);
+	char* value_string = int2str(value, 10, TRUE);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("ADDI R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(offset_name);
+		emit_out(" ");
+		emit_out(value_string);
+	}
+	else if((X86 == Architecture) || (AMD64 == Architecture))
+	{
+		emit_out("lea_");
+		emit_out(destination_name);
+		emit_out(",[");
+		emit_out(offset_name);
+		emit_out("+DWORD] %");
+		emit_out(value_string);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!");
+		emit_out(value_string);
+		emit_out(" ");
+		emit_out(destination_name);
+		emit_out(" SUB ");
+		emit_out(offset_name);
+		emit_out(" ARITH_ALWAYS\n");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		/* TODO: We use register one as a temporary which might be surprising. */
+		emit_move(destination, offset_register, note);
+		emit_load_immediate(REGISTER_ONE, value, note);
+		emit_out("SUB_");
+		emit_out(destination_name);
+		emit_out("_");
+		emit_out(destination_name);
+		emit_out("_X1");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(destination_name);
+		emit_out(" rs1_");
+		emit_out(offset_name);
+		emit_out(" !");
+		emit_out(value_string);
+		emit_out(" addi");
+	}
+
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_push(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -1151,18 +1220,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	}
 	current_target = a->type;
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADDI R0 R14 ");
-	else if(X86 == Architecture) emit_out("lea_eax,[ebp+DWORD] %");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rbp+DWORD] %");
-	else if(ARMV7L == Architecture) emit_out("!");
-	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_fp !");
-
-	emit_out(int2str(a->depth, 10, TRUE));
-	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
-	else if(AARCH64 == Architecture) emit_out("\nSUB_X0_X0_X1\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
-	emit_out("\n");
+	emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, a->depth, "variable load");
 
 	if(TRUE == Address_of) return;
 	if(match(".", global_token->s))
