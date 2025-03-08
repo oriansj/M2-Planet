@@ -989,54 +989,54 @@ void function_call(char* s, int is_function_pointer)
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("call_eax\n");
 		}
 		else if(AMD64 == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("call_rax\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
 			emit_push(REGISTER_RETURN, "Protect the old link register");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_pop(REGISTER_RETURN, "Prevent overwrite");
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
+			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function pointer call");
 			emit_out("BLR_X16\n");
 		}
 		else if(RISCV32 == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 		else if(RISCV64 == Architecture)
 		{
-			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_dereference(REGISTER_ZERO, "function call");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+			emit_dereference(REGISTER_ZERO, "function pointer call");
+			emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 	}
