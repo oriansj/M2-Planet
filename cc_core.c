@@ -607,6 +607,60 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 }
 
+void emit_dereference(int reg, char* note)
+{
+	char* reg_name = register_from_string(reg);
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("LOAD R");
+		emit_out(reg_name);
+		emit_out(" R");
+		emit_out(reg_name);
+		emit_out(" 0");
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(reg_name);
+		emit_out(",[");
+		emit_out(reg_name);
+		emit_out("]");
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!0 ");
+		emit_out(reg_name);
+		emit_out(" LOAD32 ");
+		emit_out(reg_name);
+		emit_out(" MEMORY");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("DEREF_");
+		emit_out(reg_name);
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" rs1_");
+		emit_out(reg_name);
+		if(RISCV32 == Architecture) emit_out(" lw");
+		else emit_out(" ld");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_push(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -936,28 +990,28 @@ void function_call(char* s, int is_function_pointer)
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("LOAD R0 R0 0\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("mov_eax,[eax]\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call_eax\n");
 		}
 		else if(AMD64 == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("mov_rax,[rax]\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call_rax\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_push(REGISTER_RETURN, "Protect the old link register");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
@@ -966,7 +1020,7 @@ void function_call(char* s, int is_function_pointer)
 		else if(AARCH64 == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("DEREF_X0\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function call");
 			emit_out("BLR_X16\n");
@@ -974,14 +1028,14 @@ void function_call(char* s, int is_function_pointer)
 		else if(RISCV32 == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("rd_a0 rs1_a0 lw\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 		else if(RISCV64 == Architecture)
 		{
 			emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function call");
-			emit_out("rd_a0 rs1_a0 ld\n");
+			emit_dereference(REGISTER_ZERO, "function call");
 			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
