@@ -129,38 +129,6 @@ char* register_from_string(int reg)
 	exit(EXIT_FAILURE);
 }
 
-int hex2char(int c)
-{
-	if((c >= 0) && (c <= 9)) return (c + 48);
-	else if((c >= 10) && (c <= 15)) return (c + 55);
-	else return -1;
-}
-
-char* number_to_hex(int a, int bytes)
-{
-	require(bytes > 0, "number to hex must have a positive number of bytes greater than zero\n");
-	char* result = calloc(1 + (bytes << 1), sizeof(char));
-	if(NULL == result)
-	{
-		fputs("calloc failed in number_to_hex\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	int i = 0;
-
-	int divisor = (bytes << 3);
-	require(divisor > 0, "unexpected wrap around in number_to_hex\n");
-
-	/* Simply collect numbers until divisor is gone */
-	while(0 != divisor)
-	{
-		divisor = divisor - 4;
-		result[i] = hex2char((a >> divisor) & 0xF);
-		i = i + 1;
-	}
-
-	return result;
-}
-
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -255,9 +223,8 @@ void emit_load_immediate(int reg, int value, char* note)
 		{
 			emit_out("LOADR R");
 			emit_out(reg_name);
-			emit_out(" 4\nJUMP 4\n'");
-			emit_out(number_to_hex(value, register_size));
-			emit_out("'");
+			emit_out(" 4\nJUMP 4\n%");
+			emit_out(int2str(value, 10, TRUE));
 		}
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
@@ -571,6 +538,157 @@ void emit_move(int destination_reg, int source_reg, char* note)
 	}
 }
 
+void emit_load_relative_to_register(int destination, int offset_register, int value, char* note)
+{
+	char* destination_name = register_from_string(destination);
+	char* offset_name = register_from_string(offset_register);
+	char* value_string = int2str(value, 10, TRUE);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("ADDI R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(offset_name);
+		emit_out(" ");
+		emit_out(value_string);
+	}
+	else if((X86 == Architecture) || (AMD64 == Architecture))
+	{
+		emit_out("lea_");
+		emit_out(destination_name);
+		emit_out(",[");
+		emit_out(offset_name);
+		emit_out("+DWORD] %");
+		emit_out(value_string);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		if((127 >= value) && (value >= -128))
+		{
+			emit_out("!");
+			emit_out(value_string);
+			emit_out(" ");
+			emit_out(destination_name);
+			emit_out(" SUB ");
+			emit_out(offset_name);
+			emit_out(" ARITH_ALWAYS\n");
+		}
+		else
+		{
+			/* TODO: We use register one as a temporary which might be surprising. */
+			emit_load_immediate(REGISTER_ONE, value, note);
+			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS");
+		}
+	}
+	else if(AARCH64 == Architecture)
+	{
+		/* TODO: We use register one as a temporary which might be surprising. */
+		emit_move(destination, offset_register, note);
+		emit_load_immediate(REGISTER_ONE, value, note);
+		emit_out("SUB_");
+		emit_out(destination_name);
+		emit_out("_");
+		emit_out(destination_name);
+		emit_out("_X1");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		if((2047 >= value) && (value >= -2048))
+		{
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" rs1_");
+			emit_out(offset_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
+		else
+		{
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" ~");
+			emit_out(value_string);
+			emit_out(" lui\n");
+
+			emit_out("rd_");
+			emit_out(destination_name);
+			emit_out(" rs1_");
+			emit_out(offset_name);
+			emit_out(" !");
+			emit_out(value_string);
+			emit_out(" addi");
+		}
+	}
+
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
+void emit_dereference(int reg, char* note)
+{
+	char* reg_name = register_from_string(reg);
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("LOAD R");
+		emit_out(reg_name);
+		emit_out(" R");
+		emit_out(reg_name);
+		emit_out(" 0");
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("mov_");
+		emit_out(reg_name);
+		emit_out(",[");
+		emit_out(reg_name);
+		emit_out("]");
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!0 ");
+		emit_out(reg_name);
+		emit_out(" LOAD32 ");
+		emit_out(reg_name);
+		emit_out(" MEMORY");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("DEREF_");
+		emit_out(reg_name);
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(reg_name);
+		emit_out(" rs1_");
+		emit_out(reg_name);
+		if(RISCV32 == Architecture) emit_out(" lw");
+		else emit_out(" ld");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_push(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -860,7 +978,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(char* s, int bool)
+void function_call(char* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -893,99 +1011,69 @@ void function_call(char* s, int bool)
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
 
-	if(TRUE == bool)
+	if(TRUE == is_function_pointer)
 	{
+		int value = strtoint(s);
+
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+		emit_dereference(REGISTER_ZERO, "function pointer call");
+
+		if(ARMV7L == Architecture)
+		{
+			emit_push(REGISTER_RETURN, "Protect the old link register");
+		}
+
+		emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
+
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 		{
-			emit_out("LOAD R0 R14 ");
-			emit_out(s);
-			emit_out("\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("CALL R0 R15\n");
 		}
 		else if(X86 == Architecture)
 		{
-			emit_out("lea_eax,[ebp+DWORD] %");
-			emit_out(s);
-			emit_out("\nmov_eax,[eax]\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call_eax\n");
 		}
 		else if(AMD64 == Architecture)
 		{
-			emit_out("lea_rax,[rbp+DWORD] %");
-			emit_out(s);
-			emit_out("\nmov_rax,[rax]\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call_rax\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_out("!");
-			emit_out(s);
-			emit_out(" R0 SUB BP ARITH_ALWAYS\n");
-			emit_out("!0 R0 LOAD32 R0 MEMORY\n");
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("'3' R0 CALL_REG_ALWAYS\n");
 			emit_pop(REGISTER_RETURN, "Prevent overwrite");
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_out("SET_X0_FROM_BP\n");
-			emit_out("LOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-			emit_out(s);
-			emit_out("\nSUB_X0_X0_X1\n");
-			emit_out("DEREF_X0\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_out("SET_X16_FROM_X0\n");
+			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function pointer call");
 			emit_out("BLR_X16\n");
 		}
-		else if(RISCV32 == Architecture)
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
-			emit_out("rd_a0 rs1_fp !");
-			emit_out(s);
-			emit_out(" addi\n");
-			emit_out("rd_a0 rs1_a0 lw\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_out("rd_ra rs1_a0 jalr\n");
-		}
-		else if(RISCV64 == Architecture)
-		{
-			emit_out("rd_a0 rs1_fp !");
-			emit_out(s);
-			emit_out(" addi\n");
-			emit_out("rd_a0 rs1_a0 ld\n");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 	}
 	else
 	{
+		if(ARMV7L == Architecture)
+		{
+			emit_push(REGISTER_RETURN, "Protect the old link register");
+		}
+
+		emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
+
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
-		else if(X86 == Architecture)
+		else if((X86 == Architecture) || (AMD64 == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-			emit_out("call %FUNCTION_");
-			emit_out(s);
-			emit_out("\n");
-		}
-		else if(AMD64 == Architecture)
-		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("call %FUNCTION_");
 			emit_out(s);
 			emit_out("\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("^~FUNCTION_");
 			emit_out(s);
 			emit_out(" CALL_ALWAYS\n");
@@ -993,13 +1081,11 @@ void function_call(char* s, int bool)
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s, "function call");
 			emit_out("BLR_X16\n");
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
-			emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 			emit_out("rd_ra $FUNCTION_");
 			emit_out(s);
 			emit_out(" jal\n");
@@ -1184,18 +1270,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	}
 	current_target = a->type;
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("ADDI R0 R14 ");
-	else if(X86 == Architecture) emit_out("lea_eax,[ebp+DWORD] %");
-	else if(AMD64 == Architecture) emit_out("lea_rax,[rbp+DWORD] %");
-	else if(ARMV7L == Architecture) emit_out("!");
-	else if(AARCH64 == Architecture) emit_out("SET_X0_FROM_BP\nLOAD_W1_AHEAD\nSKIP_32_DATA\n%");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_fp !");
-
-	emit_out(int2str(a->depth, 10, TRUE));
-	if(ARMV7L == Architecture) emit_out(" R0 SUB BP ARITH_ALWAYS");
-	else if(AARCH64 == Architecture) emit_out("\nSUB_X0_X0_X1\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" addi");
-	emit_out("\n");
+	emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, a->depth, "variable load");
 
 	if(TRUE == Address_of) return;
 	if(match(".", global_token->s))
