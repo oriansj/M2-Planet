@@ -15,6 +15,11 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int* initialized_no_size() {
+	static int buf[] = {40, 50, 60};
+	return buf;
+}
+
 int* initialized() {
 	static int buf[3] = {10, 20, 30};
 
@@ -104,6 +109,10 @@ int main() {
 	if(initialized()[0] != 10) return 28;
 	if(initialized()[1] != 20) return 29;
 	if(initialized()[2] != 30) return 30;
+
+	if(initialized_no_size()[0] != 40) return 31;
+	if(initialized_no_size()[1] != 50) return 32;
+	if(initialized_no_size()[2] != 60) return 33;
 
 	return 0;
 }

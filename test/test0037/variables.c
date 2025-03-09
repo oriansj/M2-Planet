@@ -62,6 +62,7 @@ int global_initialized = 1 + 2 + 3 + 4;
 
 int global_array_initialized[3] = {10, 20, 30};
 int global_array_partially_initialized[5] = {10 };
+int global_array_no_size[] = {40, 50, 60};
 
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
@@ -146,6 +147,10 @@ int main() {
 	if(global_array_partially_initialized[2] != 0) return 37;
 	if(global_array_partially_initialized[3] != 0) return 38;
 	if(global_array_partially_initialized[4] != 0) return 39;
+
+	if(global_array_no_size[0] != 40) return 40;
+	if(global_array_no_size[1] != 50) return 41;
+	if(global_array_no_size[2] != 60) return 42;
 
 	return 0;
 }

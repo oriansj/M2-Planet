@@ -3648,31 +3648,36 @@ int global_static_array(struct type* type_size, char* name)
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
-	int array_modifier = constant_expression();
-	/* Make sure not negative */
-	if(array_modifier < 0)
+	int array_modifier = 0;
+	int size = 0;
+	if(global_token->s[0] != ']')
 	{
-		line_error();
-		fputs("Negative values are not supported for allocated arrays\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+		array_modifier = constant_expression();
+		/* Make sure not negative */
+		if(array_modifier < 0)
+		{
+			line_error();
+			fputs("Negative values are not supported for allocated arrays\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 
-	/* length */
-	int size = array_modifier * type_size->size;
+		/* length */
+		size = array_modifier * type_size->size;
 
-	if(size == 0)
-	{
-		line_error();
-		fputs("Arrays with size of zero are not allowed.\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+		if(size == 0)
+		{
+			line_error();
+			fputs("Arrays with size of zero are not allowed.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 
-	/* Stop bad states */
-	if((size < 0) || (size > 0x100000))
-	{
-		line_error();
-		fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n", stderr);
-		exit(EXIT_FAILURE);
+		/* Stop bad states */
+		if((size < 0) || (size > 0x100000))
+		{
+			line_error();
+			fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* Ensure properly closed */
@@ -3699,7 +3704,7 @@ int global_static_array(struct type* type_size, char* name)
 
 		do
 		{
-			if(amount_of_elements >= array_modifier)
+			if(amount_of_elements >= array_modifier && array_modifier != 0)
 			{
 				line_error();
 				fputs("Too many elements in initializer list.", stderr);
@@ -3733,6 +3738,19 @@ int global_static_array(struct type* type_size, char* name)
 		}
 		while(global_token->s[0] != '}');
 
+		if(array_modifier == 0)
+		{
+			if(amount_of_elements == 0)
+			{
+				line_error();
+				fputs("Array with initializer list can not have size zero.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			array_modifier = amount_of_elements;
+			size = array_modifier * type_size->size;
+		}
+
 		while (array_modifier > amount_of_elements)
 		{
 			globals_list = emit(prefix, globals_list);
@@ -3752,6 +3770,13 @@ int global_static_array(struct type* type_size, char* name)
 	}
 	else
 	{
+		if(size == 0)
+		{
+			line_error();
+			fputs("Array without size must have initializer list.", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		global_variable_zero_initialize(size);
 	}
 
