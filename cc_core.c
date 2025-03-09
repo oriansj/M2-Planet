@@ -2,6 +2,7 @@
  * Copyright (C) 2018 Jan (janneke) Nieuwenhuizen <janneke@gnu.org>
  * Copyright (C) 2020 deesix <deesix@tuta.io>
  * Copyright (C) 2021 Andrius Štikonas <andrius@stikonas.eu>
+ * Copyright (C) 2025 Gtker
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
