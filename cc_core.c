@@ -3826,17 +3826,17 @@ new_type:
 	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
 	global_token = global_token->next;
 
-	/* Deal with global variables */
-	if(match(";", global_token->s))
-	{
-		global_variable_definition(type_size, global_token->prev->s);
-		goto new_type;
-	}
-
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
 		declare_function();
+		goto new_type;
+	}
+
+	/* Deal with global variables */
+	if(match(";", global_token->s))
+	{
+		global_variable_definition(type_size, global_token->prev->s);
 		goto new_type;
 	}
 
