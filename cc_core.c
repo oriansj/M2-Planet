@@ -3615,6 +3615,20 @@ void global_variable_header(char* name)
 	globals_list = emit("\n", globals_list);
 }
 
+void global_variable_zero_initialize(int size)
+{
+	unsigned i = ceil_div(size, register_size);
+	while(i != 0)
+	{
+		/* NULLs are defined in the *_defs.M1 files to be register_size.
+		 * This will round objects up to a multiple of register_size, but
+		 * it will not have a negative effect.
+		 * */
+		globals_list = emit("NULL\n", globals_list);
+		i = i - 1;
+	}
+}
+
 int global_static_array(struct type* type_size, char* name)
 {
 	maybe_bootstrap_error("global array definitions");
@@ -3665,12 +3679,7 @@ int global_static_array(struct type* type_size, char* name)
 	require_match("missing close bracket\n", "]");
 	require_match("missing ;\n", ";");
 
-	unsigned i = ceil_div(size, register_size);
-	while(i != 0)
-	{
-		globals_list = emit("NULL\n", globals_list);
-		i = i - 1;
-	}
+	global_variable_zero_initialize(size);
 
 	return array_modifier;
 }
@@ -3679,15 +3688,8 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 {
 	global_variable_header(variable_name);
 
-	/* Ensure enough bytes are allocated to store global variable.
-		 In some cases it allocates too much but that is harmless. */
-	/* round up division */
-	unsigned i = ceil_div(type_size->size, register_size);
-	while(i != 0)
-	{
-		globals_list = emit("NULL\n", globals_list);
-		i = i - 1;
-	}
+	global_variable_zero_initialize(type_size->size);
+
 	global_token = global_token->next;
 }
 
