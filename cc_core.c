@@ -3677,9 +3677,85 @@ int global_static_array(struct type* type_size, char* name)
 
 	/* Ensure properly closed */
 	require_match("missing close bracket\n", "]");
-	require_match("missing ;\n", ";");
 
-	global_variable_zero_initialize(size);
+	if(global_token->s[0] == '=')
+	{
+		global_token = global_token->next;
+		require(global_token != NULL, "NULL token received in global list initializer");
+
+		/* Default to size == 4 */
+		char* prefix = "%";
+		if(type_size->size == 2)
+		{
+			prefix = "@";
+		}
+		else if(type_size->size == 1)
+		{
+			prefix = "!";
+		}
+
+		int value;
+		int amount_of_elements = 0;
+
+		do
+		{
+			if(amount_of_elements >= array_modifier)
+			{
+				line_error();
+				fputs("Too many elements in initializer list.", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			global_token = global_token->next;
+			require(global_token != NULL, "NULL token received in global list initializer 2");
+
+			value = constant_expression();
+
+			globals_list = emit(prefix, globals_list);
+			globals_list = emit(int2str(value, 10, FALSE), globals_list);
+			globals_list = emit(" ", globals_list);
+
+			if(type_size->size == 8)
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
+
+			if(global_token->s[0] != '}' && global_token->s[0] != ',')
+			{
+				line_error();
+				fputs("Invalid token received in global variable list initializer: '", stderr);
+				fputs(global_token->s, stderr);
+				fputs("'\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			amount_of_elements = amount_of_elements + 1;
+		}
+		while(global_token->s[0] != '}');
+
+		while (array_modifier > amount_of_elements)
+		{
+			globals_list = emit(prefix, globals_list);
+			globals_list = emit("0 ", globals_list);
+
+			if(type_size->size == 8)
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
+
+			amount_of_elements = amount_of_elements + 1;
+		}
+
+		globals_list = emit("\n", globals_list);
+
+		global_token = global_token->next;
+	}
+	else
+	{
+		global_variable_zero_initialize(size);
+	}
+
+	require_match("missing ;\n", ";");
 
 	return array_modifier;
 }

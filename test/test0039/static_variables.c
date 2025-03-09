@@ -15,6 +15,12 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int* initialized() {
+	static int buf[3] = {10, 20, 30};
+
+	return buf;
+}
+
 char* buffer() {
 	static char buf[8];
 
@@ -94,6 +100,10 @@ int main() {
 	static int constant_expression = 1 + 2 + 3 + 4;
 
 	if(constant_expression != 10) return 27;
+
+	if(initialized()[0] != 10) return 28;
+	if(initialized()[1] != 20) return 29;
+	if(initialized()[2] != 30) return 30;
 
 	return 0;
 }
