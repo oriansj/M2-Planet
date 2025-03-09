@@ -57,6 +57,9 @@ struct T {
 	int b;
 };
 
+int global_uninitialized;
+int global_initialized = 1 + 2 + 3 + 4;
+
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
@@ -127,6 +130,9 @@ int main() {
 	if(arr[9] != 1) return 28;
 
 	if(loop_variables() != 0) return 29;
+
+	if(global_uninitialized != 0) return 30;
+	if(global_initialized != 10) return 31;
 
 	return 0;
 }

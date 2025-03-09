@@ -3699,23 +3699,8 @@ void global_assignment(char* name)
 
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
-	unsigned padding_zeroes;
-	if(in_set(global_token->s[0], "0123456789"))
-	{ /* Assume Int */
-		globals_list = emit("%", globals_list);
-		globals_list = emit(global_token->s, globals_list);
 
-		/* broken for big endian architectures */
-		padding_zeroes = (register_size / 4) - 1;
-		while(padding_zeroes > 0)
-		{
-			/* Assume positive Int */
-			globals_list = emit(" %0", globals_list);
-			padding_zeroes = padding_zeroes - 1;
-		}
-		globals_list = emit("\n", globals_list);
-	}
-	else if(('"' == global_token->s[0]))
+	if(('"' == global_token->s[0]))
 	{ /* Assume a string*/
 		globals_list = emit("&GLOBAL_", globals_list);
 		globals_list = emit(name, globals_list);
@@ -3725,36 +3710,38 @@ void global_assignment(char* name)
 		globals_list = emit(name, globals_list);
 		globals_list = emit("_contents\n", globals_list);
 		globals_list = emit(parse_string(global_token->s), globals_list);
+
+		global_token = global_token->next;
 	}
 	else
 	{
-		struct token_list* symbol = sym_lookup(global_token->s, global_constant_list);
-		if(NULL != symbol)
+		int value = constant_expression();
+		if(value == 0)
 		{
-			globals_list = emit("%", globals_list);
-			globals_list = emit(symbol->arguments->s, globals_list);
-
-			/* broken for big endian architectures */
-			padding_zeroes = (register_size / 4) - 1;
-			while(padding_zeroes > 0)
-			{
-				/* Assume positive Int */
-				globals_list = emit(" %0", globals_list);
-				padding_zeroes = padding_zeroes - 1;
-			}
-			globals_list = emit("\n", globals_list);
+			global_variable_zero_initialize(register_size);
+		}
+		else if(value < 0)
+		{
+			line_error();
+			fputs("Negative values in global variable assignment are not supported.", stdout);
+			exit(EXIT_FAILURE);
 		}
 		else
 		{
-			line_error();
-			fputs("Received ", stderr);
-			fputs(global_token->s, stderr);
-			fputs(" in program\n", stderr);
-			exit(EXIT_FAILURE);
+			char* value_string = int2str(value, 10, FALSE);
+
+			globals_list = emit("%", globals_list);
+			globals_list = emit(value_string, globals_list);
+
+			if(register_size == 8)
+			{
+				globals_list = emit(" %0", globals_list);
+			}
+			globals_list = emit("\n", globals_list);
 		}
+
 	}
 
-	global_token = global_token->next;
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
 
