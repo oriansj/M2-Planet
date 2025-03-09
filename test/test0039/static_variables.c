@@ -85,11 +85,15 @@ int main() {
 	if(b[6] != 6) return 20;
 	if(b[7] != 7) return 21;
 
-	/*if(a != 0xFF) return 22;*/
+	if(a != 0xFF) return 22;
 	if(same_value() != 0) return 23;
 	if(same_value() != 0) return 24;
 	if(increment_static() != 4) return 25;
-	/*if(a != 0xFF) return 26;*/
+	if(a != 0xFF) return 26;
+
+	static int constant_expression = 1 + 2 + 3 + 4;
+
+	if(constant_expression != 10) return 27;
 
 	return 0;
 }
