@@ -3629,6 +3629,7 @@ int global_static_array(struct type* type_size, char* name)
 	}
 	globals_list = emit("\n:GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
+	globals_list = emit("\n", globals_list);
 
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
@@ -3664,13 +3665,12 @@ int global_static_array(struct type* type_size, char* name)
 	require_match("missing close bracket\n", "]");
 	require_match("missing ;\n", ";");
 
-	globals_list = emit("\n'", globals_list);
-	while (0 != size)
+	unsigned i = ceil_div(size, register_size);
+	while(i != 0)
 	{
-		globals_list = emit(" 00", globals_list);
-		size = size - 1;
+		globals_list = emit("NULL\n", globals_list);
+		i = i - 1;
 	}
-	globals_list = emit("'\n", globals_list);
 
 	return array_modifier;
 }
