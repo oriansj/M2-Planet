@@ -57,6 +57,13 @@ struct T {
 	int b;
 };
 
+int global_uninitialized;
+int global_initialized = 1 + 2 + 3 + 4;
+
+int global_array_initialized[3] = {10, 20, 30};
+int global_array_partially_initialized[5] = {10 };
+int global_array_no_size[] = {40, 50, 60};
+
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
@@ -127,6 +134,23 @@ int main() {
 	if(arr[9] != 1) return 28;
 
 	if(loop_variables() != 0) return 29;
+
+	if(global_uninitialized != 0) return 30;
+	if(global_initialized != 10) return 31;
+
+	if(global_array_initialized[0] != 10) return 32;
+	if(global_array_initialized[1] != 20) return 33;
+	if(global_array_initialized[2] != 30) return 34;
+
+	if(global_array_partially_initialized[0] != 10) return 35;
+	if(global_array_partially_initialized[1] != 0) return 36;
+	if(global_array_partially_initialized[2] != 0) return 37;
+	if(global_array_partially_initialized[3] != 0) return 38;
+	if(global_array_partially_initialized[4] != 0) return 39;
+
+	if(global_array_no_size[0] != 40) return 40;
+	if(global_array_no_size[1] != 50) return 41;
+	if(global_array_no_size[2] != 60) return 42;
 
 	return 0;
 }

@@ -15,6 +15,17 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int* initialized_no_size() {
+	static int buf[] = {40, 50, 60};
+	return buf;
+}
+
+int* initialized() {
+	static int buf[3] = {10, 20, 30};
+
+	return buf;
+}
+
 char* buffer() {
 	static char buf[8];
 
@@ -85,11 +96,23 @@ int main() {
 	if(b[6] != 6) return 20;
 	if(b[7] != 7) return 21;
 
-	/*if(a != 0xFF) return 22;*/
+	if(a != 0xFF) return 22;
 	if(same_value() != 0) return 23;
 	if(same_value() != 0) return 24;
 	if(increment_static() != 4) return 25;
-	/*if(a != 0xFF) return 26;*/
+	if(a != 0xFF) return 26;
+
+	static int constant_expression = 1 + 2 + 3 + 4;
+
+	if(constant_expression != 10) return 27;
+
+	if(initialized()[0] != 10) return 28;
+	if(initialized()[1] != 20) return 29;
+	if(initialized()[2] != 30) return 30;
+
+	if(initialized_no_size()[0] != 40) return 31;
+	if(initialized_no_size()[1] != 50) return 32;
+	if(initialized_no_size()[2] != 60) return 33;
 
 	return 0;
 }
