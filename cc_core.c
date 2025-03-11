@@ -2478,6 +2478,100 @@ unsigned ceil_div(unsigned a, unsigned b)
 	return (a + b - 1) / b;
 }
 
+char* initializer_list_values;
+int initializer_list_amount_of_elements;
+int initializer_list_amount_of_bytes;
+void parse_initializer_list(struct type* type_size, int array_modifier)
+{
+	if(initializer_list_values == NULL)
+	{
+		initializer_list_values = calloc(MAX_STRING, sizeof(char));
+	}
+	if(initializer_list_amount_of_elements != 0)
+	{
+		initializer_list_amount_of_elements = 0;
+	}
+	if(initializer_list_amount_of_bytes != 0)
+	{
+		initializer_list_amount_of_bytes = 0;
+	}
+
+	int value;
+
+	do
+	{
+		if(initializer_list_amount_of_elements >= array_modifier && array_modifier != 0)
+		{
+			line_error();
+			fputs("Too many elements in initializer list.", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		global_token = global_token->next;
+		require(global_token != NULL, "NULL token received in global list initializer 2");
+
+		value = constant_expression();
+
+		if(type_size->size == 1)
+		{
+			initializer_list_values[initializer_list_amount_of_bytes] = value & 0xff;
+		}
+		else if (type_size->size == 2)
+		{
+			initializer_list_values[initializer_list_amount_of_bytes] = value & 0xff;
+			initializer_list_values[initializer_list_amount_of_bytes + 1] = (value >> 8) & 0xff;
+		}
+		else if(type_size->size == 4 || type_size->size == 8)
+		{
+			initializer_list_values[initializer_list_amount_of_bytes] = value & 0xff;
+			initializer_list_values[initializer_list_amount_of_bytes + 1] = (value >> 8) & 0xff;
+			initializer_list_values[initializer_list_amount_of_bytes + 2] = (value >> 16) & 0xff;
+			initializer_list_values[initializer_list_amount_of_bytes + 3] = (value >> 24) & 0xff;
+
+			if(type_size->size == 8)
+			{
+				/* We don't support literals greater than 32 bits. */
+				initializer_list_values[initializer_list_amount_of_bytes + 4] = 0;
+				initializer_list_values[initializer_list_amount_of_bytes + 5] = 0;
+				initializer_list_values[initializer_list_amount_of_bytes + 6] = 0;
+				initializer_list_values[initializer_list_amount_of_bytes + 7] = 0;
+			}
+		}
+
+		initializer_list_amount_of_bytes = initializer_list_amount_of_bytes + type_size->size;
+
+		initializer_list_amount_of_elements = initializer_list_amount_of_elements + 1;
+	}
+	while(global_token->s[0] != '}');
+
+	if(array_modifier == 0)
+	{
+		if(initializer_list_amount_of_elements == 0)
+		{
+			line_error();
+			fputs("Array with initializer list can not have size zero.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		array_modifier = initializer_list_amount_of_elements;
+	}
+
+	int i;
+	while (initializer_list_amount_of_elements < array_modifier)
+	{
+		for(i = 0; i < type_size->size; i = i + 1)
+		{
+			initializer_list_values[initializer_list_amount_of_bytes] = 0;
+			initializer_list_amount_of_bytes = initializer_list_amount_of_bytes + 1;
+		}
+
+		initializer_list_amount_of_elements = initializer_list_amount_of_elements + 1;
+	}
+
+	global_token = global_token->next;
+
+}
+
 void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
@@ -3615,6 +3709,20 @@ void global_variable_header(char* name)
 	globals_list = emit("\n", globals_list);
 }
 
+void global_variable_zero_initialize(int size)
+{
+	unsigned i = ceil_div(size, register_size);
+	while(i != 0)
+	{
+		/* NULLs are defined in the *_defs.M1 files to be register_size.
+		 * This will round objects up to a multiple of register_size, but
+		 * it will not have a negative effect.
+		 * */
+		globals_list = emit("NULL\n", globals_list);
+		i = i - 1;
+	}
+}
+
 int global_static_array(struct type* type_size, char* name)
 {
 	maybe_bootstrap_error("global array definitions");
@@ -3629,48 +3737,95 @@ int global_static_array(struct type* type_size, char* name)
 	}
 	globals_list = emit("\n:GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
+	globals_list = emit("\n", globals_list);
 
 	require(NULL != global_token->next, "Unterminated global\n");
 	global_token = global_token->next;
 
-	int array_modifier = constant_expression();
-	/* Make sure not negative */
-	if(array_modifier < 0)
+	int array_modifier = 0;
+	int size = 0;
+	if(global_token->s[0] != ']')
 	{
-		line_error();
-		fputs("Negative values are not supported for allocated arrays\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+		array_modifier = constant_expression();
+		/* Make sure not negative */
+		if(array_modifier < 0)
+		{
+			line_error();
+			fputs("Negative values are not supported for allocated arrays\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 
-	/* length */
-	int size = array_modifier * type_size->size;
+		/* length */
+		size = array_modifier * type_size->size;
 
-	if(size == 0)
-	{
-		line_error();
-		fputs("Arrays with size of zero are not allowed.\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+		if(size == 0)
+		{
+			line_error();
+			fputs("Arrays with size of zero are not allowed.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 
-	/* Stop bad states */
-	if((size < 0) || (size > 0x100000))
-	{
-		line_error();
-		fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n", stderr);
-		exit(EXIT_FAILURE);
+		/* Stop bad states */
+		if((size < 0) || (size > 0x100000))
+		{
+			line_error();
+			fputs("M2-Planet is very inefficient so you probably don't want to allocate over 1MB into your binary for NULLs\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* Ensure properly closed */
 	require_match("missing close bracket\n", "]");
-	require_match("missing ;\n", ";");
 
-	globals_list = emit("\n'", globals_list);
-	while (0 != size)
+	if(global_token->s[0] == '=')
 	{
-		globals_list = emit(" 00", globals_list);
-		size = size - 1;
+		global_token = global_token->next;
+		require(global_token != NULL, "NULL token received in global list initializer");
+
+		parse_initializer_list(type_size, array_modifier);
+
+		int value = 0;
+		int bytes_collected = 0;
+		int i = 0;
+		for(; i < initializer_list_amount_of_bytes; i = i + 1)
+		{
+			value = value | (initializer_list_values[i] << (bytes_collected * 8));
+
+			bytes_collected = bytes_collected + 1;
+
+			if(bytes_collected == 4)
+			{
+				globals_list = emit("%", globals_list);
+				globals_list = emit(int2str(value, 10, FALSE), globals_list);
+				globals_list = emit(" ", globals_list);
+
+				bytes_collected = 0;
+				value = 0;
+			}
+		}
+
+		if(bytes_collected != 0)
+		{
+			globals_list = emit("%", globals_list);
+			globals_list = emit(int2str(value, 10, FALSE), globals_list);
+			globals_list = emit(" ", globals_list);
+		}
+
+		globals_list = emit("\n", globals_list);
 	}
-	globals_list = emit("'\n", globals_list);
+	else
+	{
+		if(size == 0)
+		{
+			line_error();
+			fputs("Array without size must have initializer list.", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		global_variable_zero_initialize(size);
+	}
+
+	require_match("missing ;\n", ";");
 
 	return array_modifier;
 }
@@ -3679,15 +3834,8 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 {
 	global_variable_header(variable_name);
 
-	/* Ensure enough bytes are allocated to store global variable.
-		 In some cases it allocates too much but that is harmless. */
-	/* round up division */
-	unsigned i = ceil_div(type_size->size, register_size);
-	while(i != 0)
-	{
-		globals_list = emit("NULL\n", globals_list);
-		i = i - 1;
-	}
+	global_variable_zero_initialize(type_size->size);
+
 	global_token = global_token->next;
 }
 
@@ -3697,23 +3845,8 @@ void global_assignment(char* name)
 
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
-	unsigned padding_zeroes;
-	if(in_set(global_token->s[0], "0123456789"))
-	{ /* Assume Int */
-		globals_list = emit("%", globals_list);
-		globals_list = emit(global_token->s, globals_list);
 
-		/* broken for big endian architectures */
-		padding_zeroes = (register_size / 4) - 1;
-		while(padding_zeroes > 0)
-		{
-			/* Assume positive Int */
-			globals_list = emit(" %0", globals_list);
-			padding_zeroes = padding_zeroes - 1;
-		}
-		globals_list = emit("\n", globals_list);
-	}
-	else if(('"' == global_token->s[0]))
+	if(('"' == global_token->s[0]))
 	{ /* Assume a string*/
 		globals_list = emit("&GLOBAL_", globals_list);
 		globals_list = emit(name, globals_list);
@@ -3723,36 +3856,38 @@ void global_assignment(char* name)
 		globals_list = emit(name, globals_list);
 		globals_list = emit("_contents\n", globals_list);
 		globals_list = emit(parse_string(global_token->s), globals_list);
+
+		global_token = global_token->next;
 	}
 	else
 	{
-		struct token_list* symbol = sym_lookup(global_token->s, global_constant_list);
-		if(NULL != symbol)
+		int value = constant_expression();
+		if(value == 0)
 		{
-			globals_list = emit("%", globals_list);
-			globals_list = emit(symbol->arguments->s, globals_list);
-
-			/* broken for big endian architectures */
-			padding_zeroes = (register_size / 4) - 1;
-			while(padding_zeroes > 0)
-			{
-				/* Assume positive Int */
-				globals_list = emit(" %0", globals_list);
-				padding_zeroes = padding_zeroes - 1;
-			}
-			globals_list = emit("\n", globals_list);
+			global_variable_zero_initialize(register_size);
+		}
+		else if(value < 0)
+		{
+			line_error();
+			fputs("Negative values in global variable assignment are not supported.", stdout);
+			exit(EXIT_FAILURE);
 		}
 		else
 		{
-			line_error();
-			fputs("Received ", stderr);
-			fputs(global_token->s, stderr);
-			fputs(" in program\n", stderr);
-			exit(EXIT_FAILURE);
+			char* value_string = int2str(value, 10, FALSE);
+
+			globals_list = emit("%", globals_list);
+			globals_list = emit(value_string, globals_list);
+
+			if(register_size == 8)
+			{
+				globals_list = emit(" %0", globals_list);
+			}
+			globals_list = emit("\n", globals_list);
 		}
+
 	}
 
-	global_token = global_token->next;
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
 
@@ -3826,17 +3961,17 @@ new_type:
 	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
 	global_token = global_token->next;
 
-	/* Deal with global variables */
-	if(match(";", global_token->s))
-	{
-		global_variable_definition(type_size, global_token->prev->s);
-		goto new_type;
-	}
-
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
 		declare_function();
+		goto new_type;
+	}
+
+	/* Deal with global variables */
+	if(match(";", global_token->s))
+	{
+		global_variable_definition(type_size, global_token->prev->s);
 		goto new_type;
 	}
 
