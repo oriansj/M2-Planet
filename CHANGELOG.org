@@ -16,6 +16,7 @@
 
 * Current
 ** Added
+Added support for switch statements
 Added support for `enum`s
 Added support for `const` on the left side of the type ("west const")
 Added support for forward declaration of `struct`s
