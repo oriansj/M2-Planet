@@ -17,6 +17,12 @@
 
 int match(char* a, char* b);
 
+enum {
+	ELEVEN = 11,
+	SIX = 6,
+	SEVEN,
+};
+
 int main(int argc, char** argv)
 {
 	char* a = argv[1];
@@ -74,6 +80,18 @@ int main(int argc, char** argv)
 			i = i + 7;
 			break;
 		default: return 155;
+	}
+
+	switch(10)
+	{
+		case 1 + 8: return 100;
+		case 'A' /* 0x41 */: return 101;
+		case 'A' + 16 /* 0x51 */: return 102;
+		case 'a': return 103;
+		case SEVEN: return 104;
+		case ELEVEN: return 105;
+		case SIX: return 106;
+		default: break;
 	}
 
 	return i;
