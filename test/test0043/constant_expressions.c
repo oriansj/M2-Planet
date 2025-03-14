@@ -28,6 +28,8 @@ enum {
 	SIZEOF_GLOBAL = sizeof(global_int),
 	TEN = SIX + 1 + 1 + 2,
 	STRING_LENGTH = sizeof("1234567"),
+	CHARACTER = 'A', /* 0x41 */
+	CHARACTER_PLUS = 'A' + 10, /* 0x41 */
 };
 
 struct SizeTwelve {
@@ -70,6 +72,9 @@ int main() {
 
 	if(STRING_LENGTH != 8) return 15;
 	if(sizeof("12345") != 6) return 16;
+
+	if(CHARACTER != 0x41) return 17;
+	if(CHARACTER_PLUS != 0x4B) return 18;
 }
 
 
