@@ -923,6 +923,8 @@ int constant_unary_expression(void)
 	}
 	else if(global_token->s[0] == ':')
 	{
+		/* Switch labels have the : prepended to the front like labels.
+		 * This is just a normal integer.*/
 		return strtoint(global_token->s + 1);
 	}
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
