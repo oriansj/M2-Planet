@@ -915,6 +915,16 @@ int constant_unary_expression(void)
 	{
 		return unary_expr_sizeof();
 	}
+	else if(global_token->s[0] == '\'')
+	{
+		int val = escape_lookup(global_token->s + 1);
+		global_token = global_token->next;
+		return val;
+	}
+	else if(global_token->s[0] == ':')
+	{
+		return strtoint(global_token->s + 1);
+	}
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
@@ -966,7 +976,7 @@ int constant_expression(void)
 		require(NULL != global_token, "Received NULL in constant_expression\n");
 		return lhs - constant_expression();
 	}
-	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}')
+	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
 	{
 		return lhs;
 	}
@@ -2783,12 +2793,13 @@ process_switch_iter:
 	if(match("case", global_token->s))
 	{
 		global_token = global_token->next;
+		int value = constant_expression();
 		require(NULL != global_token, "incomplete case statement\n");
 		if(':' == global_token->s[0])
 		{
 			struct case_list* c = calloc(1, sizeof(struct case_list));
 			c->next = backtrack;
-			c->value = global_token->s + 1;
+			c->value = int2str(value, 10, FALSE);
 			backtrack = c;
 			emit_out(":_SWITCH_CASE_");
 			emit_out(c->value);
