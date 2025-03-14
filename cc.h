@@ -76,8 +76,10 @@ struct type
 	int size;
 	int offset;
 	int is_signed;
+	/* Dereferenced type */
 	struct type* indirect;
 	struct type* members;
+	/* Pointer indirection of type */
 	struct type* type;
 	char* name;
 };
