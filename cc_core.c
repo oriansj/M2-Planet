@@ -51,7 +51,7 @@ struct type *mirror_type(struct type *source);
 struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*, char*);
-void global_assignment(char*);
+void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
 
 struct token_list* emit(char *s, struct token_list* head)
@@ -793,6 +793,11 @@ void emit_pop(int reg, char* note)
 int type_is_pointer(struct type* type_size)
 {
 	return type_size->type != type_size;
+}
+
+int type_is_struct_or_union(struct type* type_size)
+{
+	return type_size->members != NULL;
 }
 
 struct token_list* uniqueID(char* s, struct token_list* l, char* num)
@@ -3326,7 +3331,7 @@ void process_static_variable(int is_loop_variable)
 		}
 		else
 		{
-			global_assignment(new_name);
+			global_assignment(new_name, type_size);
 		}
 		return;
 	}
@@ -3840,14 +3845,23 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 	global_token = global_token->next;
 }
 
-void global_assignment(char* name)
+void global_assignment(char* name, struct type* type_size)
 {
 	global_variable_header(name);
 
 	global_token = global_token->next;
 	require(NULL != global_token, "Global locals value in assignment\n");
 
-	if(('"' == global_token->s[0]))
+	if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
+	{
+		require_match("Struct assignment initialization is invalid for globals.", "{");
+		require(NULL != global_token, "EOF in global struct initialization");
+
+		line_error();
+		fputs("Global initialization for structs is not supported.", stderr);
+		exit(EXIT_FAILURE);
+	}
+	else if(('"' == global_token->s[0]))
 	{ /* Assume a string*/
 		globals_list = emit("&GLOBAL_", globals_list);
 		globals_list = emit(name, globals_list);
@@ -3979,7 +3993,7 @@ new_type:
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		global_assignment(global_token->prev->s);
+		global_assignment(global_token->prev->s, type_size);
 		goto new_type;
 	}
 
