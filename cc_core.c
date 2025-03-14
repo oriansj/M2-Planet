@@ -877,6 +877,23 @@ void line_error(void)
 	line_error_token(global_token);
 }
 
+/* Checks if current global_token is NULL and exits if it is. */
+void require_token(void)
+{
+	if(NULL == global_token)
+	{
+		line_error_token(global_token);
+		exit(EXIT_FAILURE);
+	}
+}
+
+/* Advances token and checks for NULL. */
+void require_extra_token(void)
+{
+	global_token = global_token->next;
+	require_token();
+}
+
 void require_match(char* message, char* required)
 {
 	if(NULL == global_token)
@@ -912,14 +929,12 @@ int constant_unary_expression(void)
 {
 	if('-' == global_token->s[0])
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "NULL received in constant_unary_expression\n");
+		require_extra_token();
 		return -constant_unary_expression();
 	}
 	else if('+' == global_token->s[0])
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "NULL received in constant_unary_expression\n");
+		require_extra_token();
 		return constant_unary_expression();
 	}
 	else if(match("sizeof", global_token->s))
@@ -943,8 +958,7 @@ int constant_unary_expression(void)
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
 		if(lookup != NULL)
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete constant expression");
+			require_extra_token();
 			return strtoint(lookup->arguments->s);
 		}
 		else
@@ -958,8 +972,7 @@ int constant_unary_expression(void)
 	}
 	else if(in_set(global_token->s[0], "0123456789"))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete constant expression");
+		require_extra_token();
 		return strtoint(global_token->prev->s);
 	}
 
@@ -979,14 +992,12 @@ int constant_expression(void)
 
 	if(global_token->s[0] == '+')
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Received NULL in constant_expression\n");
+		require_extra_token();
 		return lhs + constant_expression();
 	}
 	else if(global_token->s[0] == '-')
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Received NULL in constant_expression\n");
+		require_extra_token();
 		return lhs - constant_expression();
 	}
 	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
@@ -1025,8 +1036,7 @@ void function_call(char* s, int is_function_pointer)
 
 		while(global_token->s[0] == ',')
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "incomplete function call, received EOF instead of argument\n");
+			require_extra_token();
 			expression();
 			emit_push(REGISTER_ZERO, "_process_expression2");
 			passed = passed + 1;
@@ -1391,7 +1401,7 @@ void primary_expr_string(void)
 	if('"' != global_token->next->s[0])
 	{
 		strings_list = emit(parse_string(global_token->s), strings_list);
-		global_token = global_token->next;
+		require_extra_token();
 	}
 	else
 	{
@@ -1420,8 +1430,7 @@ void primary_expr_string(void)
 			}
 
 			/* Move on to the next token */
-			global_token = global_token->next;
-			require(NULL != global_token, "multi-string null is not valid C\n");
+			require_extra_token();
 			used_string_concatenation = TRUE;
 		}
 
@@ -1433,7 +1442,7 @@ void primary_expr_string(void)
 void primary_expr_char(void)
 {
 	emit_load_immediate(REGISTER_ZERO, escape_lookup(global_token->s + 1), "primary expr char");
-	global_token = global_token->next;
+	require_extra_token();
 }
 
 void primary_expr_number(char* s)
@@ -1445,12 +1454,11 @@ void primary_expr_variable(void)
 {
 	int num_dereference = 0;
 	while(global_token->s[0] == '*') {
-		global_token = global_token->next;
-		require(NULL != global_token, "Walked off the end of a variable dereference\n");
+		require_extra_token();
 		num_dereference = num_dereference + 1;
 	}
 	char* s = global_token->s;
-	global_token = global_token->next;
+	require_extra_token();
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
@@ -1526,8 +1534,7 @@ void common_recursion(FUNCTION f)
 	emit_push(REGISTER_ZERO, "_common_recursion");
 
 	struct type* last_type = current_target;
-	global_token = global_token->next;
-	require(NULL != global_token, "Received EOF in common_recursion\n");
+	require_extra_token();
 	f();
 	current_target = promote_type(current_target, last_type);
 
@@ -1598,13 +1605,11 @@ struct type* lookup_member(struct type* parent, char* name);
 void postfix_expr_arrow(void)
 {
 	emit_out("# looking up offset\n");
-	global_token = global_token->next;
-	require(NULL != global_token, "naked -> not allowed\n");
+	require_extra_token();
 
 	struct type* i = lookup_member(current_target, global_token->s);
 	current_target = i->type;
-	global_token = global_token->next;
-	require(NULL != global_token, "Unterminated -> expression not allowed\n");
+	require_extra_token();
 
 	if(0 != i->offset)
 	{
@@ -1625,13 +1630,11 @@ void postfix_expr_dot(void)
 {
 	maybe_bootstrap_error("Member access using .");
 	emit_out("# looking up offset\n");
-	global_token = global_token->next;
-	require(NULL != global_token, "naked . not allowed\n");
+	require_extra_token();
 
 	struct type* i = lookup_member(current_target, global_token->s);
 	current_target = i->type;
-	global_token = global_token->next;
-	require(NULL != global_token, "Unterminated . expression not allowed\n");
+	require_extra_token();
 
 	if(0 != i->offset)
 	{
@@ -1695,8 +1698,7 @@ void postfix_expr_array(void)
 struct type* type_name(void);
 int unary_expr_sizeof(void)
 {
-	global_token = global_token->next;
-	require(NULL != global_token, "Received EOF when starting sizeof\n");
+	require_extra_token();
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
 	struct token_list* t = NULL;
 
@@ -1709,8 +1711,7 @@ int unary_expr_sizeof(void)
 			 * token starts with a quotation mark so the count will be correct. */
 			int length = string_length(global_token->s);
 
-			global_token = global_token->next;
-			require(NULL != global_token, "NULL token received in sizeof string literal\n");
+			require_extra_token();
 
 			require_match("ERROR in unary_expr\nMissing )\n", ")");
 
@@ -1720,8 +1721,7 @@ int unary_expr_sizeof(void)
 		while(global_token->s[0] == '*')
 		{
 			num_dereferences = num_dereferences + 1;
-			global_token = global_token->next;
-			require(NULL != global_token, "NULL token received in sizeof pointer dereferences\n");
+			require_extra_token();
 		}
 
 		t = static_variable_lookup(global_token->s);
@@ -1747,8 +1747,7 @@ int unary_expr_sizeof(void)
 	int size = 0;
 	if(t != NULL)
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "NULL token received in unary_expr_sizeof");
+		require_extra_token();
 
 		struct type* a = t->type;
 		while(num_dereferences > 0)
@@ -2103,8 +2102,7 @@ void primary_expr(void)
 	if(match("&", global_token->s))
 	{
 		Address_of = TRUE;
-		global_token = global_token->next;
-		require(NULL != global_token, "Received EOF after & where primary expression expected\n");
+		require_extra_token();
 	}
 	else
 	{
@@ -2157,7 +2155,7 @@ void primary_expr(void)
 	}
 	else if(global_token->s[0] == '(')
 	{
-		global_token = global_token->next;
+		require_extra_token();
 		expression();
 		require_match("Error in Primary expression\nDidn't get )\n", ")");
 	}
@@ -2168,7 +2166,7 @@ void primary_expr(void)
 	else if(in_set(global_token->s[0], "0123456789"))
 	{
 		primary_expr_number(global_token->s);
-		global_token = global_token->next;
+		require_extra_token();
 	}
 	else primary_expr_failure();
 }
@@ -2587,8 +2585,7 @@ void collect_local(void)
 		emit_out(global_token->s);
 		emit_out("\n");
 
-		global_token = global_token->next;
-		require(NULL != global_token, "incomplete local missing name\n");
+		require_extra_token();
 
 		a->array_modifier = 1;
 		if(match("[", global_token->s))
@@ -2597,8 +2594,7 @@ void collect_local(void)
 
 			a->options = a->options | TLO_LOCAL_ARRAY;
 
-			global_token = global_token->next;
-			require(NULL != global_token, "incomplete local array\n");
+			require_extra_token();
 
 			a->array_modifier = constant_expression();
 			if(a->array_modifier == 0)
@@ -2644,8 +2640,7 @@ void collect_local(void)
 				exit(EXIT_FAILURE);
 			}
 
-			global_token = global_token->next;
-			require(NULL != global_token, "incomplete local assignment\n");
+			require_extra_token();
 			expression();
 		}
 
@@ -2660,16 +2655,14 @@ void collect_local(void)
 		{
 			maybe_bootstrap_error("multiple variables per statement");
 
-			global_token = global_token->next;
-			require(NULL != global_token, "NULL token after comma in local assignment\n");
+			require_extra_token();
 
 			current_type = base_type;
 			while(global_token->s[0] == '*')
 			{
 				current_type = current_type->indirect;
 
-				global_token = global_token->next;
-				require(NULL != global_token, "Received EOF while collecting pointers in local\n");
+				require_extra_token();
 			}
 		}
 	}
@@ -2726,10 +2719,9 @@ void process_if(void)
 
 	if(match("else", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Received EOF where an else statement expected\n");
+		require_extra_token();
 		statement();
-		require(NULL != global_token, "Reached EOF inside of function\n");
+		require_token();
 	}
 	emit_out(":_END_IF_");
 	uniqueID_out(function->s, number_string);
@@ -2805,9 +2797,9 @@ process_switch_iter:
 	require(NULL != global_token, "incomplete switch statement\n");
 	if(match("case", global_token->s))
 	{
-		global_token = global_token->next;
+		require_extra_token();
 		int value = constant_expression();
-		require(NULL != global_token, "incomplete case statement\n");
+		require_token();
 		if(':' == global_token->s[0])
 		{
 			struct case_list* c = calloc(1, sizeof(struct case_list));
@@ -2818,16 +2810,16 @@ process_switch_iter:
 			emit_out(c->value);
 			emit_out("_");
 			uniqueID_out(function->s, number_string);
-			global_token = global_token->next;
+			require_extra_token();
 			process_case();
-			require(NULL != global_token, "Incomplete case statement\n");
+			require_token();
 		}
 		else line_error();
 		goto process_switch_iter;
 	}
 	else if(match(":default", global_token->s))
 	{ /* because of how M2-Planet treats labels */
-		global_token = global_token->next;
+		require_extra_token();
 		emit_out(":_SWITCH_DEFAULT_");
 		uniqueID_out(function->s, number_string);
 
@@ -2930,7 +2922,7 @@ void process_for(void)
 	emit_out("# FOR_initialization_");
 	uniqueID_out(function->s, number_string);
 
-	global_token = global_token->next;
+	require_extra_token();
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
 	if(!match(";",global_token->s))
@@ -3020,8 +3012,7 @@ void process_asm(void)
 	{
 		emit_out((global_token->s + 1));
 		emit_out("\n");
-		global_token = global_token->next;
-		require(NULL != global_token, "Received EOF inside asm statement\n");
+		require_extra_token();
 	}
 	require_match("ERROR in process_asm\nMISSING )\n", ")");
 	require_match("ERROR in process_asm\nMISSING ;\n", ";");
@@ -3048,10 +3039,9 @@ void process_do(void)
 	emit_out(":DO_");
 	uniqueID_out(function->s, number_string);
 
-	global_token = global_token->next;
-	require(NULL != global_token, "Received EOF where do statement is expected\n");
+	require_extra_token();
 	statement();
-	require(NULL != global_token, "Reached EOF inside of function\n");
+	require_token();
 
 	emit_out(":DO_TEST_");
 	uniqueID_out(function->s, number_string);
@@ -3154,8 +3144,7 @@ void process_while(void)
 /* Ensure that functions return */
 void return_result(void)
 {
-	global_token = global_token->next;
-	require(NULL != global_token, "Incomplete return statement received\n");
+	require_extra_token();
 	if(global_token->s[0] != ';') expression();
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
@@ -3195,7 +3184,7 @@ void process_break(void)
 		emit_pop(REGISTER_ONE, "break_cleanup_locals");
 		i = i->next;
 	}
-	global_token = global_token->next;
+	require_extra_token();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
 	else if(X86 == Architecture) emit_out("jmp %");
@@ -3223,7 +3212,7 @@ void process_continue(void)
 		fputs("Not inside of a loop\n", stderr);
 		exit(EXIT_FAILURE);
 	}
-	global_token = global_token->next;
+	require_extra_token();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
 	else if(X86 == Architecture) emit_out("jmp %");
@@ -3245,8 +3234,7 @@ void process_continue(void)
 
 void recursive_statement(void)
 {
-	global_token = global_token->next;
-	require(NULL != global_token, "Received EOF in recursive statement\n");
+	require_extra_token();
 	struct token_list* frame = function->locals;
 
 	while(!match("}", global_token->s))
@@ -3297,8 +3285,7 @@ void process_static_variable(int is_loop_variable)
 	copy_string(new_name + offset, variable->local_variable_name, MAX_STRING - offset);
 
 	variable->global_variable = sym_declare(new_name, type_size, NULL);
-	global_token = global_token->next;
-	require(global_token != NULL, "NULL token identifier in process_static_variable");
+	require_extra_token();
 
 	if(match(";", global_token->s))
 	{
@@ -3318,7 +3305,7 @@ void process_static_variable(int is_loop_variable)
 			 * in order to prevent loading the value rather than the address. */
 			global_token = global_token->prev;
 			global_load(variable->global_variable);
-			global_token = global_token->next;
+			require_extra_token();
 
 			emit_push(REGISTER_ZERO, "_process_expression1");
 
@@ -3378,7 +3365,7 @@ void statement(void)
 	{
 		emit_out(global_token->s);
 		emit_out("\t#C goto label\n");
-		global_token = global_token->next;
+		require_extra_token();
 	}
 	else if((NULL != lookup_primitive_type()) ||
 	          match("enum", global_token->s) ||
@@ -3415,8 +3402,7 @@ void statement(void)
 	}
 	else if(match("goto", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "naked goto is not supported\n");
+		require_extra_token();
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
 		else if(X86 == Architecture) emit_out("jmp %");
 		else if(AMD64 == Architecture) emit_out("jmp %");
@@ -3445,8 +3431,7 @@ void statement(void)
 	}
 	else if(match("static", global_token->s))
 	{
-		global_token = global_token->next;
-		require(global_token != NULL, "NULL token in local static.\n");
+		require_extra_token();
 
 		process_static_variable(FALSE);
 	}
@@ -3460,8 +3445,7 @@ void statement(void)
 /* Collect function arguments */
 void collect_arguments(void)
 {
-	global_token = global_token->next;
-	require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
+	require_extra_token();
 	struct type* type_size;
 	struct token_list* a;
 
@@ -3518,21 +3502,19 @@ void collect_arguments(void)
 				else if(RISCV64 == Architecture) a->depth = function->arguments->depth - register_size;
 			}
 
-			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete argument list\n");
+			require_extra_token();
 			function->arguments = a;
 		}
 
 		/* ignore trailing comma (needed for foo(bar(), 1); expressions*/
 		if(global_token->s[0] == ',')
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "naked comma in collect arguments\n");
+			require_extra_token();
 		}
 
 		require(NULL != global_token, "Argument list never completed\n");
 	}
-	global_token = global_token->next;
+	require_extra_token();
 }
 
 void declare_function(void)
@@ -3551,7 +3533,7 @@ void declare_function(void)
 
 	require(NULL != global_token, "Function definitions either need to be prototypes or full\n");
 	/* If just a prototype don't waste time */
-	if(global_token->s[0] == ';') global_token = global_token->next;
+	if(global_token->s[0] == ';') require_extra_token();
 	else
 	{
 		emit_out("# Defining function ");
@@ -3598,8 +3580,7 @@ void declare_function(void)
 
 void global_constant(void)
 {
-	global_token = global_token->next;
-	require(NULL != global_token, "CONSTANT lacks a name\n");
+	require_extra_token();
 	global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
 
 	require(NULL != global_token->next, "CONSTANT lacks a value\n");
@@ -3615,7 +3596,8 @@ void global_constant(void)
 	else
 	{
 		global_constant_list->arguments = global_token->next;
-		global_token = global_token->next->next;
+		require_extra_token();
+		require_extra_token();
 	}
 }
 
@@ -3623,7 +3605,7 @@ struct type* global_typedef(void)
 {
 	struct type* type_size;
 	/* typedef $TYPE $NAME; */
-	global_token = global_token->next;
+	require_extra_token();
 	type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
 	type_size = mirror_type(type_size);
@@ -3708,14 +3690,12 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 		if(global_token->s[0] == ',')
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "Received NULL token in global array initializer list");
+			require_extra_token();
 		}
 	}
 	while (global_token->s[0] != '}');
 
-	global_token = global_token->next;
-	require(NULL != global_token, "Received NULL token after } in global array initializer list");
+	require_extra_token();
 
 	if(type_size->size == 1)
 	{
@@ -3772,8 +3752,7 @@ int global_static_array(struct type* type_size, char* name)
 	globals_list = emit(name, globals_list);
 	globals_list = emit("\n", globals_list);
 
-	require(NULL != global_token->next, "Unterminated global\n");
-	global_token = global_token->next;
+	require_extra_token();
 
 	int array_modifier = 0;
 	int size = 0;
@@ -3812,8 +3791,7 @@ int global_static_array(struct type* type_size, char* name)
 
 	if(global_token->s[0] == '=')
 	{
-		global_token = global_token->next;
-		require(global_token != NULL, "NULL token received in global list initializer");
+		require_extra_token();
 
 		require_match("Missing { after = in global array", "{");
 
@@ -3842,15 +3820,14 @@ void global_variable_definition(struct type* type_size, char* variable_name)
 
 	global_variable_zero_initialize(type_size->size);
 
-	global_token = global_token->next;
+	require_extra_token();
 }
 
 void global_assignment(char* name, struct type* type_size)
 {
 	global_variable_header(name);
 
-	global_token = global_token->next;
-	require(NULL != global_token, "Global locals value in assignment\n");
+	require_extra_token();
 
 	if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
 	{
@@ -3872,7 +3849,7 @@ void global_assignment(char* name, struct type* type_size)
 		globals_list = emit("_contents\n", globals_list);
 		globals_list = emit(parse_string(global_token->s), globals_list);
 
-		global_token = global_token->next;
+		require_extra_token();
 	}
 	else
 	{
@@ -3958,8 +3935,7 @@ new_type:
 			|| match("static", global_token->s)
 			|| match("_Noreturn", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "Unterminated global\n");
+		require_extra_token();
 	}
 
 	type_size = type_name();
@@ -3974,7 +3950,7 @@ new_type:
 
 	/* Add to global symbol table */
 	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
-	global_token = global_token->next;
+	require_extra_token();
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
