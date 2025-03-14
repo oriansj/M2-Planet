@@ -789,6 +789,12 @@ void emit_pop(int reg, char* note)
 		emit_out("\n");
 	}
 }
+
+int type_is_pointer(struct type* type_size)
+{
+	return type_size->type != type_size;
+}
+
 struct token_list* uniqueID(char* s, struct token_list* l, char* num)
 {
 	l = emit("\n", emit(num, emit("_", emit(s, l))));
@@ -2425,7 +2431,7 @@ void expression(void)
 			store = store_value(current_target->size);
 		}
 
-		int should_apply_pointer_arithmetic = current_target->type != current_target && !is_array_indexed;
+		int should_apply_pointer_arithmetic = type_is_pointer(current_target) && !is_array_indexed;
 		/* We need this before it's changed by the following expression  */
 		int object_size = current_target->type->size;
 
