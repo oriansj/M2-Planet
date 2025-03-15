@@ -2793,12 +2793,13 @@ void process_switch(void)
 	/* must be switch (exp) {$STATEMENTS}; form */
 	require_match("ERROR in process_switch\nMISSING {\n", "{");
 	struct case_list* backtrack = NULL;
+	int value;
 process_switch_iter:
 	require(NULL != global_token, "incomplete switch statement\n");
 	if(match("case", global_token->s))
 	{
 		require_extra_token();
-		int value = constant_expression();
+		value = constant_expression();
 		require_token();
 		if(':' == global_token->s[0])
 		{
