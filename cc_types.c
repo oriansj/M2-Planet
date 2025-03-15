@@ -435,14 +435,12 @@ struct type* build_member(struct type* last, int offset)
 	require(NULL != member_type, "struct member type can not be invalid\n");
 	i->type = member_type;
 	i->name = global_token->s;
-	global_token = global_token->next;
-	require(NULL != global_token, "struct member can not be EOF terminated\n");
+	require_extra_token();
 
 	/* Check to see if array */
 	if(match( "[", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "struct member arrays can not be EOF sized\n");
+		require_extra_token();
 		i->size = constant_expression() * member_type->type->size;
 		if(0 == i->size)
 		{
@@ -476,7 +474,7 @@ struct type* build_union(struct type* last, int offset)
 		require(NULL != global_token, "Unterminated union\n");
 	}
 	member_size = size;
-	global_token = global_token->next;
+	require_extra_token();
 	return last;
 }
 
@@ -493,7 +491,7 @@ struct type* create_struct(void)
 	{
 		name = global_token->s;
 		head = lookup_global_type();
-		global_token = global_token->next;
+		require_extra_token();
 	}
 
 	if(NULL == head)
@@ -572,8 +570,7 @@ struct type* create_struct(void)
 		require(NULL != global_token, "Unterminated struct\n");
 	}
 
-	global_token = global_token->next;
-	require(global_token != NULL, "NULL token late in create_struct");
+	require_extra_token();
 
 	head->size = offset;
 	head->members = last;
@@ -616,7 +613,7 @@ struct type* create_enum(void)
 	else
 	{
 		head->name = global_token->s;
-		global_token = global_token->next;
+		require_extra_token();
 
 		/* Anonymous enums should not be able to be looked up
 		 * so we only add named enums. */
@@ -633,14 +630,12 @@ struct type* create_enum(void)
 		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
 		global_constant_list->type = integer;
 
-		global_token = global_token->next;
-		require(NULL != global_token, "Incomplete enumerator definition at end of file\n");
+		require_extra_token();
 
 		global_constant_list->arguments = calloc(1, sizeof(struct token_list));
 		if(match("=", global_token->s))
 		{
-			global_token = global_token->next;
-			require(NULL != global_token, "Incomplete enumerator value at end of file\n");
+			require_extra_token();
 
 			expr = constant_expression();
 		}
@@ -651,13 +646,13 @@ struct type* create_enum(void)
 
 		if(match(",", global_token->s))
 		{
-			global_token = global_token->next;
+			require_extra_token();
 		}
 
 		require(NULL != global_token, "Unterminated enum\n");
 	}
 
-	global_token = global_token->next;
+	require_extra_token();
 
 	return head;
 }
@@ -670,20 +665,17 @@ struct type* type_name(void)
 
 	if(match("extern", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "unfinished type definition in extern\n");
+		require_extra_token();
 	}
 
 	if(match("const", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "unfinished type definition in const\n");
+		require_extra_token();
 	}
 
 	if(match("struct", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "structs can not have a EOF type name\n");
+		require_extra_token();
 		ret = lookup_global_type();
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
@@ -693,8 +685,7 @@ struct type* type_name(void)
 	else if(match("enum", global_token->s))
 	{
 		maybe_bootstrap_error("enum statements");
-		global_token = global_token->next;
-		require(NULL != global_token, "enums can not have a EOF type name\n");
+		require_extra_token();
 		ret = lookup_global_type();
 		if(NULL == ret)
 		{
@@ -715,20 +706,17 @@ struct type* type_name(void)
 		}
 	}
 
-	global_token = global_token->next;
-	require(NULL != global_token, "unfinished type definition\n");
+	require_extra_token();
 
 	if(match("const", global_token->s))
 	{
-		global_token = global_token->next;
-		require(NULL != global_token, "unfinished type definition in const\n");
+		require_extra_token();
 	}
 
 	while(global_token->s[0] == '*')
 	{
 		ret = ret->indirect;
-		global_token = global_token->next;
-		require(NULL != global_token, "unfinished type definition in indirection\n");
+		require_extra_token();
 	}
 
 	return ret;

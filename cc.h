@@ -53,6 +53,9 @@ void require(int bool, char* error);
 void reset_hold_string(void);
 char* int2str(int x, int base, int signed_p);
 
+void require_extra_token(void);
+void require_token(void);
+
 #define REGISTER_ZERO 0
 // CONSTANT REGISTER_ZERO 0
 #define REGISTER_ONE 1
@@ -76,8 +79,10 @@ struct type
 	int size;
 	int offset;
 	int is_signed;
+	/* Dereferenced type */
 	struct type* indirect;
 	struct type* members;
+	/* Pointer indirection of type */
 	struct type* type;
 	char* name;
 };
