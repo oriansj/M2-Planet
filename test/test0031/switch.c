@@ -23,6 +23,73 @@ enum {
 	SEVEN,
 };
 
+int test_should_choose_expression_character() {
+	int a = 0x4B;
+
+	switch (a) {
+		case 'A' + 10: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+int test_should_choose_character() {
+	int a = 0x41;
+
+	switch (a) {
+		case 'A': return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+
+int test_should_choose_expression_ending_with_integer() {
+	int a = 10;
+
+	switch (a) {
+		case SIX + 4: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+int test_should_choose_expression() {
+	int a = 10;
+
+	switch (a) {
+		case 4 + SIX: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+int test_should_choose_integer() {
+	int a = 10;
+
+	switch (a) {
+		case 10: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+int test_should_choose_enum() {
+	int a = 6;
+
+	switch (a) {
+		case SIX: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
 int main(int argc, char** argv)
 {
 	char* a = argv[1];
@@ -93,6 +160,13 @@ int main(int argc, char** argv)
 		case SIX: return 106;
 		default: break;
 	}
+
+	if(test_should_choose_enum() != 0) return 107;
+	if(test_should_choose_integer() != 0) return 108;
+	if(test_should_choose_expression() != 0) return 109;
+	if(test_should_choose_expression_ending_with_integer() != 0) return 110;
+	if(test_should_choose_character() != 0) return 111;
+	if(test_should_choose_expression_character() != 0) return 112;
 
 	return i;
 }
