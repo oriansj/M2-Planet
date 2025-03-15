@@ -950,8 +950,17 @@ int constant_unary_expression(void)
 	else if(global_token->s[0] == ':')
 	{
 		/* Switch labels have the : prepended to the front like labels.
-		 * This is just a normal integer.*/
-		return strtoint(global_token->s + 1);
+		 * This is just a normal integer or constant.*/
+
+		struct token_list* lookup = sym_lookup(global_token->s + 1, global_constant_list);
+		if(lookup != NULL)
+		{
+			return strtoint(lookup->arguments->s);
+		}
+		else
+		{
+			return strtoint(global_token->s + 1);
+		}
 	}
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
