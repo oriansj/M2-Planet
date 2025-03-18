@@ -3645,24 +3645,46 @@ void global_variable_zero_initialize(int size)
 	}
 }
 
-int global_array_initializer_list(struct type* type_size, int array_modifier)
+void global_value_output(int value, int size)
 {
-	char* hex_table = "0123456789ABCDEF";
-	char* string;
-
-	int amount_of_elements = 0;
-	int value;
-	if(type_size->size == 1)
+	if(size == 1)
 	{
-		globals_list = emit("'", globals_list);
-	}
+		char* hex_table = "0123456789ABCDEF";
+		char* string;
 
-	if(type_size->size == 2)
+		string = calloc(6, sizeof(char));
+		string[0] = '\'';
+		string[1] = hex_table[value >> 4];
+		string[2] = hex_table[value & 15];
+		string[3] = '\'';
+		string[4] = ' ';
+
+		globals_list = emit(string, globals_list);
+	}
+	else if(size == 2)
 	{
 		line_error();
 		fputs("Initializer list for elements of size 2 is not supported.", stderr);
 		exit(EXIT_FAILURE);
 	}
+	else if(size >= 4)
+	{
+		globals_list = emit("%", globals_list);
+		globals_list = emit(int2str(value, 10, FALSE), globals_list);
+		globals_list = emit(" ", globals_list);
+
+		if(size == 8)
+		{
+			globals_list = emit("%0 ", globals_list);
+		}
+	}
+
+}
+
+int global_array_initializer_list(struct type* type_size, int array_modifier)
+{
+	int amount_of_elements = 0;
+	int value;
 
 	do
 	{
@@ -3675,26 +3697,7 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 		value = constant_expression();
 
-		if(type_size->size == 1)
-		{
-			string = calloc(4, sizeof(char));
-			string[0] = hex_table[value >> 4];
-			string[1] = hex_table[value & 15];
-			string[2] = ' ';
-
-			globals_list = emit(string, globals_list);
-		}
-		else if(type_size->size >= 4)
-		{
-			globals_list = emit("%", globals_list);
-			globals_list = emit(int2str(value, 10, FALSE), globals_list);
-			globals_list = emit(" ", globals_list);
-
-			if(type_size->size == 8)
-			{
-				globals_list = emit("%0 ", globals_list);
-			}
-		}
+		global_value_output(value, type_size->size);
 
 		amount_of_elements = amount_of_elements + 1;
 
@@ -3707,10 +3710,6 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 	require_extra_token();
 
-	if(type_size->size == 1)
-	{
-		globals_list = emit("'", globals_list);
-	}
 	globals_list = emit("\n", globals_list);
 
 	if(array_modifier == 0)
