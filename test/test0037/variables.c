@@ -57,12 +57,49 @@ struct T {
 	int b;
 };
 
+struct T global_struct_initialized = {16, 32};
+
+struct {
+	int a;
+	int b;
+	char c;
+	char d;
+} global_struct_partially_initialized = {8, 16};
+
 int global_uninitialized;
 int global_initialized = 1 + 2 + 3 + 4;
 
 int global_array_initialized[3] = {10, 20, 30};
 int global_array_partially_initialized[5] = {10 };
 int global_array_no_size[] = {40, 50, 60};
+char global_char_array[] = { 1, 2, 3, 4 };
+
+struct {
+	int a;
+	int b;
+	char c;
+	char d;
+} struct_array_initialized[] = {{12, 14, 10, 11}, {1, 2, 3, 4}};
+
+struct {
+	int a;
+	int b;
+	int c;
+	int d;
+} struct_array_partially_initialized[3] = {{12, 14}, {1}};
+
+int function_called = 0;
+
+void some_function() {
+	function_called = 1;
+}
+
+struct {
+	int* zero;
+	int* global;
+	void* func;
+	char* str;
+} struct_pointers = {0, &function_called, &some_function, "str"};
 
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
@@ -151,6 +188,54 @@ int main() {
 	if(global_array_no_size[0] != 40) return 40;
 	if(global_array_no_size[1] != 50) return 41;
 	if(global_array_no_size[2] != 60) return 42;
+
+	if(sizeof(global_char_array) != 4) return 43;
+
+	if(global_struct_initialized.a != 16) return 44;
+	if(global_struct_initialized.b != 32) return 45;
+
+	if(global_struct_partially_initialized.a != 8) return 46;
+	if(global_struct_partially_initialized.b != 16) return 47;
+	if(global_struct_partially_initialized.c != 0) return 48;
+	if(global_struct_partially_initialized.d != 0) return 49;
+
+	if(struct_array_initialized[0].a != 12) return 50;
+	if(struct_array_initialized[0].b != 14) return 51;
+	if(struct_array_initialized[0].c != 10) return 52;
+	if(struct_array_initialized[0].d != 11) return 53;
+	if(struct_array_initialized[1].a != 1) return 54;
+	if(struct_array_initialized[1].b != 2) return 55;
+	if(struct_array_initialized[1].c != 3) return 56;
+	if(struct_array_initialized[1].d != 4) return 57;
+
+	if(struct_array_partially_initialized[0].a != 12) return 58;
+	if(struct_array_partially_initialized[0].b != 14) return 59;
+	if(struct_array_partially_initialized[0].c != 0) return 60;
+	if(struct_array_partially_initialized[0].d != 0) return 61;
+	if(struct_array_partially_initialized[1].a != 1) return 62;
+	if(struct_array_partially_initialized[1].b != 0) return 63;
+	if(struct_array_partially_initialized[1].c != 0) return 64;
+	if(struct_array_partially_initialized[1].d != 0) return 65;
+	if(struct_array_partially_initialized[2].a != 0) return 62;
+	if(struct_array_partially_initialized[2].b != 0) return 63;
+	if(struct_array_partially_initialized[2].c != 0) return 64;
+	if(struct_array_partially_initialized[2].d != 0) return 65;
+
+	if(struct_pointers.zero != 0) return 66;
+	if(function_called != 0) return 67;
+	int* glob = struct_pointers.global;
+
+	if(*glob != 0) return 68;
+	FUNCTION f = struct_pointers.func;
+	f();
+	if(function_called != 1) return 69;
+	if(*glob != 1) return 70;
+
+	char* s = struct_pointers.str;
+	if(s[0] != 's') return 71;
+	if(s[1] != 't') return 72;
+	if(s[2] != 'r') return 73;
+	if(s[3] != '\0') return 74;
 
 	return 0;
 }

@@ -15,6 +15,13 @@
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
 * Current
+** Added
+Added support for global initializer list for structs of integers.
+Added support for initializing global arrays of structs using initializer lists
+
+* 1.12.1 - 2025-03-16
+** Fixed
+Fixed handling of case statements with enums and defines.
 
 * 1.12 - 2025-03-15
 ** Added

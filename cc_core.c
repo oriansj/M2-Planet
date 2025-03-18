@@ -792,7 +792,7 @@ void emit_pop(int reg, char* note)
 
 int type_is_pointer(struct type* type_size)
 {
-	return type_size->type != type_size;
+	return type_size->type != type_size || match("FUNCTION", type_size->name);
 }
 
 int type_is_struct_or_union(struct type* type_size)
@@ -3645,24 +3645,167 @@ void global_variable_zero_initialize(int size)
 	}
 }
 
-int global_array_initializer_list(struct type* type_size, int array_modifier)
+void global_value_output(int value, int size)
 {
-	char* hex_table = "0123456789ABCDEF";
-	char* string;
-
-	int amount_of_elements = 0;
-	int value;
-	if(type_size->size == 1)
+	if(size == 1)
 	{
-		globals_list = emit("'", globals_list);
-	}
+		char* hex_table = "0123456789ABCDEF";
+		char* string;
 
-	if(type_size->size == 2)
+		string = calloc(6, sizeof(char));
+		string[0] = '\'';
+		string[1] = hex_table[value >> 4];
+		string[2] = hex_table[value & 15];
+		string[3] = '\'';
+		string[4] = ' ';
+
+		globals_list = emit(string, globals_list);
+	}
+	else if(size == 2)
 	{
 		line_error();
 		fputs("Initializer list for elements of size 2 is not supported.", stderr);
 		exit(EXIT_FAILURE);
 	}
+	else if(size >= 4)
+	{
+		globals_list = emit("%", globals_list);
+		globals_list = emit(int2str(value, 10, FALSE), globals_list);
+		globals_list = emit(" ", globals_list);
+
+		if(size == 8)
+		{
+			globals_list = emit("%0 ", globals_list);
+		}
+	}
+
+}
+
+void global_struct_initializer_list(struct type* type_size);
+void global_value_selection(struct type* type_size)
+{
+	if(type_is_pointer(type_size))
+	{
+		if(('"' == global_token->s[0]))
+		{
+			char* name = global_token->s + 1;
+			globals_list = emit("&GLOBAL_", globals_list);
+			globals_list = emit(name, globals_list);
+			globals_list = emit("_contents ", globals_list);
+
+			if(register_size == 8)
+			{
+				global_value_output(0, 4);
+			}
+
+			strings_list = emit(":GLOBAL_", strings_list);
+			strings_list = emit(name, strings_list);
+			strings_list = emit("_contents\n", strings_list);
+			strings_list = emit(parse_string(global_token->s), strings_list);
+
+			require_extra_token();
+		}
+		else if(match("0", global_token->s))
+		{
+			global_value_output(0, register_size);
+			require_extra_token();
+		}
+		else if(global_token->s[0] == '&')
+		{
+			require_extra_token();
+
+			char* name = global_token->s;
+			struct token_list* lookup_token = sym_lookup(name, global_function_list);
+			if(NULL != lookup_token)
+			{
+				globals_list = emit("&FUNCTION_", globals_list);
+				globals_list = emit(name, globals_list);
+				globals_list = emit(" ", globals_list);
+			}
+			else
+			{
+				lookup_token = sym_lookup(name, global_symbol_list);
+				if(NULL != lookup_token)
+				{
+					globals_list = emit("&GLOBAL_", globals_list);
+					globals_list = emit(name, globals_list);
+					globals_list = emit(" ", globals_list);
+				}
+				else
+				{
+					line_error();
+					fputs("Unable to find address of '", stderr);
+					fputs(name, stderr);
+					fputs("'.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+			}
+			if(register_size > 4)
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
+			require_extra_token();
+		}
+		else
+		{
+			line_error();
+			fputs("Invalid initializer for global struct pointer member.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if(type_is_struct_or_union(type_size))
+	{
+		global_struct_initializer_list(type_size);
+	}
+	else
+	{
+		int value = constant_expression();
+		global_value_output(value, type_size->size);
+	}
+}
+
+void global_struct_initializer_list(struct type* type_size)
+{
+	require_match("Struct assignment initialization is invalid for globals.", "{");
+	require(NULL != global_token, "EOF in global struct initialization");
+
+	struct type* member = type_size->members;
+
+	do
+	{
+		if(member == NULL)
+		{
+			line_error();
+			fputs("Global struct initializer list has too many values.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		global_value_selection(member->type);
+
+		member = member->members;
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	while(global_token->s[0] != '}');
+
+	while(member != NULL)
+	{
+		global_value_output(0, member->size);
+		member = member->members;
+	}
+
+	globals_list = emit("\n", globals_list);
+
+	require_match("Struct assignment initialization is invalid for globals.", "}");
+	require(NULL != global_token, "EOF in global struct initialization");
+}
+
+int global_array_initializer_list(struct type* type_size, int array_modifier)
+{
+	int amount_of_elements = 0;
 
 	do
 	{
@@ -3673,28 +3816,7 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 			exit(EXIT_FAILURE);
 		}
 
-		value = constant_expression();
-
-		if(type_size->size == 1)
-		{
-			string = calloc(4, sizeof(char));
-			string[0] = hex_table[value >> 4];
-			string[1] = hex_table[value & 15];
-			string[2] = ' ';
-
-			globals_list = emit(string, globals_list);
-		}
-		else if(type_size->size >= 4)
-		{
-			globals_list = emit("%", globals_list);
-			globals_list = emit(int2str(value, 10, FALSE), globals_list);
-			globals_list = emit(" ", globals_list);
-
-			if(type_size->size == 8)
-			{
-				globals_list = emit("%0 ", globals_list);
-			}
-		}
+		global_value_selection(type_size);
 
 		amount_of_elements = amount_of_elements + 1;
 
@@ -3706,12 +3828,6 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 	while (global_token->s[0] != '}');
 
 	require_extra_token();
-
-	if(type_size->size == 1)
-	{
-		globals_list = emit("'", globals_list);
-	}
-	globals_list = emit("\n", globals_list);
 
 	if(array_modifier == 0)
 	{
@@ -3725,23 +3841,35 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 		array_modifier = amount_of_elements;
 	}
 
+	int size;
 	while(amount_of_elements < array_modifier)
 	{
-		if(type_size->size == 1)
+		size = type_size->size;
+		if(size == 1 || size == 4 || size == 8)
 		{
-			globals_list = emit("'00'\n", globals_list);
+			global_value_output(0, size);
 		}
-		else if(type_size->size == 4)
+		else
 		{
-			globals_list = emit("%0\n", globals_list);
-		}
-		else if(type_size->size == 8)
-		{
-			globals_list = emit("%0 %0\n", globals_list);
+			while(size > 0)
+			{
+				if(size >= 4)
+				{
+					global_value_output(0, 4);
+					size = size - 4;
+				}
+				else
+				{
+					global_value_output(0, 1);
+					size = size - 1;
+				}
+			}
+			globals_list = emit("\n", globals_list);
 		}
 
 		amount_of_elements = amount_of_elements + 1;
 	}
+
 
 	return array_modifier;
 }
@@ -3839,56 +3967,7 @@ void global_assignment(char* name, struct type* type_size)
 
 	require_extra_token();
 
-	if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
-	{
-		require_match("Struct assignment initialization is invalid for globals.", "{");
-		require(NULL != global_token, "EOF in global struct initialization");
-
-		line_error();
-		fputs("Global initialization for structs is not supported.", stderr);
-		exit(EXIT_FAILURE);
-	}
-	else if(('"' == global_token->s[0]))
-	{ /* Assume a string*/
-		globals_list = emit("&GLOBAL_", globals_list);
-		globals_list = emit(name, globals_list);
-		globals_list = emit("_contents\n", globals_list);
-
-		globals_list = emit(":GLOBAL_", globals_list);
-		globals_list = emit(name, globals_list);
-		globals_list = emit("_contents\n", globals_list);
-		globals_list = emit(parse_string(global_token->s), globals_list);
-
-		require_extra_token();
-	}
-	else
-	{
-		int value = constant_expression();
-		if(value == 0)
-		{
-			global_variable_zero_initialize(register_size);
-		}
-		else if(value < 0)
-		{
-			line_error();
-			fputs("Negative values in global variable assignment are not supported.", stdout);
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			char* value_string = int2str(value, 10, FALSE);
-
-			globals_list = emit("%", globals_list);
-			globals_list = emit(value_string, globals_list);
-
-			if(register_size == 8)
-			{
-				globals_list = emit(" %0", globals_list);
-			}
-			globals_list = emit("\n", globals_list);
-		}
-
-	}
+	global_value_selection(type_size);
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }

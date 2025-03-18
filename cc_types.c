@@ -478,6 +478,20 @@ struct type* build_union(struct type* last, int offset)
 	return last;
 }
 
+struct type* reverse_members_type_list(struct type* head)
+{
+	struct type* root = NULL;
+	struct type* next;
+	while(NULL != head)
+	{
+		next = head->members;
+		head->members = root;
+		root = head;
+		head = next;
+	}
+	return root;
+}
+
 struct type* create_struct(void)
 {
 	int offset = 0;
@@ -569,6 +583,9 @@ struct type* create_struct(void)
 		require_match("ERROR in create_struct\n Missing ;\n", ";");
 		require(NULL != global_token, "Unterminated struct\n");
 	}
+
+	/* Members are prepended so the list needs to be reversed. */
+	last = reverse_members_type_list(last);
 
 	require_extra_token();
 
