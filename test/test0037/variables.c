@@ -98,7 +98,8 @@ struct {
 	int* zero;
 	int* global;
 	void* func;
-} struct_pointers = {0, &function_called, &some_function};
+	char* str;
+} struct_pointers = {0, &function_called, &some_function, "str"};
 
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
@@ -229,6 +230,12 @@ int main() {
 	f();
 	if(function_called != 1) return 69;
 	if(*glob != 1) return 70;
+
+	char* s = struct_pointers.str;
+	if(s[0] != 's') return 71;
+	if(s[1] != 't') return 72;
+	if(s[2] != 'r') return 73;
+	if(s[3] != '\0') return 74;
 
 	return 0;
 }

@@ -3681,15 +3681,95 @@ void global_value_output(int value, int size)
 
 }
 
+void global_struct_initializer_list(struct type* type_size);
+void global_value_selection(struct type* type_size)
+{
+	if(type_is_pointer(type_size))
+	{
+		if(('"' == global_token->s[0]))
+		{
+			char* name = global_token->s + 1;
+			globals_list = emit("&GLOBAL_", globals_list);
+			globals_list = emit(name, globals_list);
+			globals_list = emit("_contents ", globals_list);
+
+			if(register_size == 8)
+			{
+				global_value_output(0, 4);
+			}
+
+			strings_list = emit(":GLOBAL_", strings_list);
+			strings_list = emit(name, strings_list);
+			strings_list = emit("_contents\n", strings_list);
+			strings_list = emit(parse_string(global_token->s), strings_list);
+
+			require_extra_token();
+		}
+		else if(match("0", global_token->s))
+		{
+			global_value_output(0, register_size);
+			require_extra_token();
+		}
+		else if(global_token->s[0] == '&')
+		{
+			require_extra_token();
+
+			char* name = global_token->s;
+			struct token_list* lookup_token = sym_lookup(name, global_function_list);
+			if(NULL != lookup_token)
+			{
+				globals_list = emit("&FUNCTION_", globals_list);
+				globals_list = emit(name, globals_list);
+				globals_list = emit(" ", globals_list);
+			}
+			else
+			{
+				lookup_token = sym_lookup(name, global_symbol_list);
+				if(NULL != lookup_token)
+				{
+					globals_list = emit("&GLOBAL_", globals_list);
+					globals_list = emit(name, globals_list);
+					globals_list = emit(" ", globals_list);
+				}
+				else
+				{
+					line_error();
+					fputs("Unable to find address of '", stderr);
+					fputs(name, stderr);
+					fputs("'.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+			}
+			if(register_size > 4)
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
+			require_extra_token();
+		}
+		else
+		{
+			line_error();
+			fputs("Invalid initializer for global struct pointer member.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if(type_is_struct_or_union(type_size))
+	{
+		global_struct_initializer_list(type_size);
+	}
+	else
+	{
+		int value = constant_expression();
+		global_value_output(value, type_size->size);
+	}
+}
+
 void global_struct_initializer_list(struct type* type_size)
 {
 		require_match("Struct assignment initialization is invalid for globals.", "{");
 		require(NULL != global_token, "EOF in global struct initialization");
 
 		struct type* member = type_size->members;
-		int value;
-		struct token_list* lookup_token;
-		char* name;
 
 		do
 		{
@@ -3700,61 +3780,7 @@ void global_struct_initializer_list(struct type* type_size)
 				exit(EXIT_FAILURE);
 			}
 
-			if(type_is_pointer(member->type))
-			{
-				if(match("0", global_token->s))
-				{
-					global_value_output(0, register_size);
-					require_extra_token();
-				}
-				else if(global_token->s[0] == '&')
-				{
-					require_extra_token();
-
-					name = global_token->s;
-					lookup_token = sym_lookup(name, global_function_list);
-					if(NULL != lookup_token)
-					{
-						globals_list = emit("&FUNCTION_", globals_list);
-						globals_list = emit(name, globals_list);
-						globals_list = emit(" ", globals_list);
-					}
-					else
-					{
-						lookup_token = sym_lookup(name, global_symbol_list);
-						if(NULL != lookup_token)
-						{
-							globals_list = emit("&GLOBAL_", globals_list);
-							globals_list = emit(name, globals_list);
-							globals_list = emit(" ", globals_list);
-						}
-						else
-						{
-							line_error();
-							fputs("Unable to find address of '", stderr);
-							fputs(name, stderr);
-							fputs("'.\n", stderr);
-							exit(EXIT_FAILURE);
-						}
-					}
-					if(register_size > 4)
-					{
-						globals_list = emit("%0 ", globals_list);
-					}
-					require_extra_token();
-				}
-				else
-				{
-					line_error();
-					fputs("Invalid initializer for global struct pointer member.\n", stderr);
-					exit(EXIT_FAILURE);
-				}
-			}
-			else
-			{
-				value = constant_expression();
-				global_value_output(value, member->size);
-			}
+			global_value_selection(member->type);
 
 			member = member->members;
 
@@ -3771,6 +3797,8 @@ void global_struct_initializer_list(struct type* type_size)
 			member = member->members;
 		}
 
+		globals_list = emit("\n", globals_list);
+
 		require_match("Struct assignment initialization is invalid for globals.", "}");
 		require(NULL != global_token, "EOF in global struct initialization");
 }
@@ -3778,7 +3806,6 @@ void global_struct_initializer_list(struct type* type_size)
 int global_array_initializer_list(struct type* type_size, int array_modifier)
 {
 	int amount_of_elements = 0;
-	int value;
 
 	do
 	{
@@ -3789,16 +3816,7 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 			exit(EXIT_FAILURE);
 		}
 
-		if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
-		{
-			global_struct_initializer_list(type_size);
-		}
-		else
-		{
-			value = constant_expression();
-
-			global_value_output(value, type_size->size);
-		}
+		global_value_selection(type_size);
 
 		amount_of_elements = amount_of_elements + 1;
 
@@ -3810,8 +3828,6 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 	while (global_token->s[0] != '}');
 
 	require_extra_token();
-
-	globals_list = emit("\n", globals_list);
 
 	if(array_modifier == 0)
 	{
