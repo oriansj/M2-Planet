@@ -16,6 +16,10 @@
 
 * Current
 
+* 1.12.1 - 2025-03-16
+** Fixed
+Fixed handling of case statements with enums and defines.
+
 * 1.12 - 2025-03-15
 ** Added
 Added support for switch statements
