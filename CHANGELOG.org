@@ -17,6 +17,7 @@
 * Current
 ** Added
 Added support for global initializer list for structs of integers.
+Added support for initializing global arrays of structs using initializer lists
 
 * 1.12.1 - 2025-03-16
 ** Fixed

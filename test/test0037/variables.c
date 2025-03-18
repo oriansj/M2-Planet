@@ -74,6 +74,20 @@ int global_array_partially_initialized[5] = {10 };
 int global_array_no_size[] = {40, 50, 60};
 char global_char_array[] = { 1, 2, 3, 4 };
 
+struct {
+	int a;
+	int b;
+	char c;
+	char d;
+} struct_array_initialized[] = {{12, 14, 10, 11}, {1, 2, 3, 4}};
+
+struct {
+	int a;
+	int b;
+	int c;
+	int d;
+} struct_array_partially_initialized[3] = {{12, 14}, {1}};
+
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
@@ -172,6 +186,27 @@ int main() {
 	if(global_struct_partially_initialized.c != 0) return 48;
 	if(global_struct_partially_initialized.d != 0) return 49;
 
+	if(struct_array_initialized[0].a != 12) return 50;
+	if(struct_array_initialized[0].b != 14) return 51;
+	if(struct_array_initialized[0].c != 10) return 52;
+	if(struct_array_initialized[0].d != 11) return 53;
+	if(struct_array_initialized[1].a != 1) return 54;
+	if(struct_array_initialized[1].b != 2) return 55;
+	if(struct_array_initialized[1].c != 3) return 56;
+	if(struct_array_initialized[1].d != 4) return 57;
+
+	if(struct_array_partially_initialized[0].a != 12) return 58;
+	if(struct_array_partially_initialized[0].b != 14) return 59;
+	if(struct_array_partially_initialized[0].c != 0) return 60;
+	if(struct_array_partially_initialized[0].d != 0) return 61;
+	if(struct_array_partially_initialized[1].a != 1) return 62;
+	if(struct_array_partially_initialized[1].b != 0) return 63;
+	if(struct_array_partially_initialized[1].c != 0) return 64;
+	if(struct_array_partially_initialized[1].d != 0) return 65;
+	if(struct_array_partially_initialized[2].a != 0) return 62;
+	if(struct_array_partially_initialized[2].b != 0) return 63;
+	if(struct_array_partially_initialized[2].c != 0) return 64;
+	if(struct_array_partially_initialized[2].d != 0) return 65;
 
 	return 0;
 }

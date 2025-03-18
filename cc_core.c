@@ -3734,9 +3734,16 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 			exit(EXIT_FAILURE);
 		}
 
-		value = constant_expression();
+		if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
+		{
+			global_struct_initializer_list(type_size);
+		}
+		else
+		{
+			value = constant_expression();
 
-		global_value_output(value, type_size->size);
+			global_value_output(value, type_size->size);
+		}
 
 		amount_of_elements = amount_of_elements + 1;
 
@@ -3763,23 +3770,35 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 		array_modifier = amount_of_elements;
 	}
 
+	int size;
 	while(amount_of_elements < array_modifier)
 	{
-		if(type_size->size == 1)
+		size = type_size->size;
+		if(size == 1 || size == 4 || size == 8)
 		{
-			globals_list = emit("'00'\n", globals_list);
+			global_value_output(0, size);
 		}
-		else if(type_size->size == 4)
+		else
 		{
-			globals_list = emit("%0\n", globals_list);
-		}
-		else if(type_size->size == 8)
-		{
-			globals_list = emit("%0 %0\n", globals_list);
+			while(size > 0)
+			{
+				if(size >= 4)
+				{
+					global_value_output(0, 4);
+					size = size - 4;
+				}
+				else
+				{
+					global_value_output(0, 1);
+					size = size - 1;
+				}
+			}
+			globals_list = emit("\n", globals_list);
 		}
 
 		amount_of_elements = amount_of_elements + 1;
 	}
+
 
 	return array_modifier;
 }
