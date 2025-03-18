@@ -3766,41 +3766,41 @@ void global_value_selection(struct type* type_size)
 
 void global_struct_initializer_list(struct type* type_size)
 {
-		require_match("Struct assignment initialization is invalid for globals.", "{");
-		require(NULL != global_token, "EOF in global struct initialization");
+	require_match("Struct assignment initialization is invalid for globals.", "{");
+	require(NULL != global_token, "EOF in global struct initialization");
 
-		struct type* member = type_size->members;
+	struct type* member = type_size->members;
 
-		do
+	do
+	{
+		if(member == NULL)
 		{
-			if(member == NULL)
-			{
-				line_error();
-				fputs("Global struct initializer list has too many values.\n", stderr);
-				exit(EXIT_FAILURE);
-			}
-
-			global_value_selection(member->type);
-
-			member = member->members;
-
-			if(global_token->s[0] == ',')
-			{
-				require_extra_token();
-			}
-		}
-		while(global_token->s[0] != '}');
-
-		while(member != NULL)
-		{
-			global_value_output(0, member->size);
-			member = member->members;
+			line_error();
+			fputs("Global struct initializer list has too many values.\n", stderr);
+			exit(EXIT_FAILURE);
 		}
 
-		globals_list = emit("\n", globals_list);
+		global_value_selection(member->type);
 
-		require_match("Struct assignment initialization is invalid for globals.", "}");
-		require(NULL != global_token, "EOF in global struct initialization");
+		member = member->members;
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	while(global_token->s[0] != '}');
+
+	while(member != NULL)
+	{
+		global_value_output(0, member->size);
+		member = member->members;
+	}
+
+	globals_list = emit("\n", globals_list);
+
+	require_match("Struct assignment initialization is invalid for globals.", "}");
+	require(NULL != global_token, "EOF in global struct initialization");
 }
 
 int global_array_initializer_list(struct type* type_size, int array_modifier)
