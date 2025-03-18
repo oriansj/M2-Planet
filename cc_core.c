@@ -3967,51 +3967,7 @@ void global_assignment(char* name, struct type* type_size)
 
 	require_extra_token();
 
-	if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
-	{
-		global_struct_initializer_list(type_size);
-	}
-	else if(('"' == global_token->s[0]))
-	{ /* Assume a string*/
-		globals_list = emit("&GLOBAL_", globals_list);
-		globals_list = emit(name, globals_list);
-		globals_list = emit("_contents\n", globals_list);
-
-		globals_list = emit(":GLOBAL_", globals_list);
-		globals_list = emit(name, globals_list);
-		globals_list = emit("_contents\n", globals_list);
-		globals_list = emit(parse_string(global_token->s), globals_list);
-
-		require_extra_token();
-	}
-	else
-	{
-		int value = constant_expression();
-		if(value == 0)
-		{
-			global_variable_zero_initialize(register_size);
-		}
-		else if(value < 0)
-		{
-			line_error();
-			fputs("Negative values in global variable assignment are not supported.", stdout);
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			char* value_string = int2str(value, 10, FALSE);
-
-			globals_list = emit("%", globals_list);
-			globals_list = emit(value_string, globals_list);
-
-			if(register_size == 8)
-			{
-				globals_list = emit(" %0", globals_list);
-			}
-			globals_list = emit("\n", globals_list);
-		}
-
-	}
+	global_value_selection(type_size);
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
