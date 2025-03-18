@@ -57,6 +57,15 @@ struct T {
 	int b;
 };
 
+struct T global_struct_initialized = {16, 32};
+
+struct {
+	int a;
+	int b;
+	char c;
+	char d;
+} global_struct_partially_initialized = {8, 16};
+
 int global_uninitialized;
 int global_initialized = 1 + 2 + 3 + 4;
 
@@ -154,6 +163,15 @@ int main() {
 	if(global_array_no_size[2] != 60) return 42;
 
 	if(sizeof(global_char_array) != 4) return 43;
+
+	if(global_struct_initialized.a != 16) return 44;
+	if(global_struct_initialized.b != 32) return 45;
+
+	if(global_struct_partially_initialized.a != 8) return 46;
+	if(global_struct_partially_initialized.b != 16) return 47;
+	if(global_struct_partially_initialized.c != 0) return 48;
+	if(global_struct_partially_initialized.d != 0) return 49;
+
 
 	return 0;
 }

@@ -3681,6 +3681,45 @@ void global_value_output(int value, int size)
 
 }
 
+void global_struct_initializer_list(struct type* type_size)
+{
+		require_match("Struct assignment initialization is invalid for globals.", "{");
+		require(NULL != global_token, "EOF in global struct initialization");
+
+		struct type* member = type_size->members;
+		int value;
+
+		do
+		{
+			if(member == NULL)
+			{
+				line_error();
+				fputs("Global struct initializer list has too many values.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			value = constant_expression();
+			global_value_output(value, member->size);
+
+			member = member->members;
+
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		while(global_token->s[0] != '}');
+
+		while(member != NULL)
+		{
+			global_value_output(0, member->size);
+			member = member->members;
+		}
+
+		require_match("Struct assignment initialization is invalid for globals.", "}");
+		require(NULL != global_token, "EOF in global struct initialization");
+}
+
 int global_array_initializer_list(struct type* type_size, int array_modifier)
 {
 	int amount_of_elements = 0;
@@ -3840,12 +3879,7 @@ void global_assignment(char* name, struct type* type_size)
 
 	if(!type_is_pointer(type_size) && type_is_struct_or_union(type_size))
 	{
-		require_match("Struct assignment initialization is invalid for globals.", "{");
-		require(NULL != global_token, "EOF in global struct initialization");
-
-		line_error();
-		fputs("Global initialization for structs is not supported.", stderr);
-		exit(EXIT_FAILURE);
+		global_struct_initializer_list(type_size);
 	}
 	else if(('"' == global_token->s[0]))
 	{ /* Assume a string*/
