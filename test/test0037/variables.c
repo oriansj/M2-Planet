@@ -88,6 +88,18 @@ struct {
 	int d;
 } struct_array_partially_initialized[3] = {{12, 14}, {1}};
 
+int function_called = 0;
+
+void some_function() {
+	function_called = 1;
+}
+
+struct {
+	int* zero;
+	int* global;
+	void* func;
+} struct_pointers = {0, &function_called, &some_function};
+
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
@@ -207,6 +219,16 @@ int main() {
 	if(struct_array_partially_initialized[2].b != 0) return 63;
 	if(struct_array_partially_initialized[2].c != 0) return 64;
 	if(struct_array_partially_initialized[2].d != 0) return 65;
+
+	if(struct_pointers.zero != 0) return 66;
+	if(function_called != 0) return 67;
+	int* glob = struct_pointers.global;
+
+	if(*glob != 0) return 68;
+	FUNCTION f = struct_pointers.func;
+	f();
+	if(function_called != 1) return 69;
+	if(*glob != 1) return 70;
 
 	return 0;
 }

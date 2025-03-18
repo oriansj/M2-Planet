@@ -792,7 +792,7 @@ void emit_pop(int reg, char* note)
 
 int type_is_pointer(struct type* type_size)
 {
-	return type_size->type != type_size;
+	return type_size->type != type_size || match("FUNCTION", type_size->name);
 }
 
 int type_is_struct_or_union(struct type* type_size)
@@ -3688,6 +3688,8 @@ void global_struct_initializer_list(struct type* type_size)
 
 		struct type* member = type_size->members;
 		int value;
+		struct token_list* lookup_token;
+		char* name;
 
 		do
 		{
@@ -3698,8 +3700,61 @@ void global_struct_initializer_list(struct type* type_size)
 				exit(EXIT_FAILURE);
 			}
 
-			value = constant_expression();
-			global_value_output(value, member->size);
+			if(type_is_pointer(member->type))
+			{
+				if(match("0", global_token->s))
+				{
+					global_value_output(0, register_size);
+					require_extra_token();
+				}
+				else if(global_token->s[0] == '&')
+				{
+					require_extra_token();
+
+					name = global_token->s;
+					lookup_token = sym_lookup(name, global_function_list);
+					if(NULL != lookup_token)
+					{
+						globals_list = emit("&FUNCTION_", globals_list);
+						globals_list = emit(name, globals_list);
+						globals_list = emit(" ", globals_list);
+					}
+					else
+					{
+						lookup_token = sym_lookup(name, global_symbol_list);
+						if(NULL != lookup_token)
+						{
+							globals_list = emit("&GLOBAL_", globals_list);
+							globals_list = emit(name, globals_list);
+							globals_list = emit(" ", globals_list);
+						}
+						else
+						{
+							line_error();
+							fputs("Unable to find address of '", stderr);
+							fputs(name, stderr);
+							fputs("'.\n", stderr);
+							exit(EXIT_FAILURE);
+						}
+					}
+					if(register_size > 4)
+					{
+						globals_list = emit("%0 ", globals_list);
+					}
+					require_extra_token();
+				}
+				else
+				{
+					line_error();
+					fputs("Invalid initializer for global struct pointer member.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+			}
+			else
+			{
+				value = constant_expression();
+				global_value_output(value, member->size);
+			}
 
 			member = member->members;
 
