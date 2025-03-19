@@ -1323,7 +1323,8 @@ void variable_load(struct token_list* a, int num_dereference)
 	}
 
 	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
+	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -1658,6 +1659,8 @@ void postfix_expr_dot(void)
 
 void postfix_expr_array(void)
 {
+	char* prefix_operator = global_token->prev->prev->s;
+
 	struct type* array = current_target;
 	common_recursion(expression);
 	current_target = array;
@@ -1685,7 +1688,8 @@ void postfix_expr_array(void)
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
 
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s))
+	int is_prefix_operator = match("++", prefix_operator) || match("--", prefix_operator);
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator)
 	{
 		assign = "";
 	}
@@ -2162,17 +2166,48 @@ void primary_expr(void)
 		else if(AARCH64 == Architecture) emit_out("MVN_X0\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 not\n");
 	}
-	else if(match("--", global_token->s))
+	else if(match("--", global_token->s) || match("++", global_token->s))
 	{
-		line_error();
-		fputs("Prefix operator -- not supported.\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	else if(match("++", global_token->s))
-	{
-		line_error();
-		fputs("Prefix operator -- not supported.\n", stderr);
-		exit(EXIT_FAILURE);
+		maybe_bootstrap_error("prefix operators --/++");
+
+		emit_out("# prefix inc/dec\n");
+
+		emit_push(REGISTER_ZERO, "Previous value");
+		require_extra_token();
+		postfix_expr();
+		emit_pop(REGISTER_ONE, "Restore previous value");
+
+		emit_push(REGISTER_ONE, "Previous value");
+		emit_push(REGISTER_ZERO, "Address of variable");
+
+		emit_dereference(REGISTER_ZERO, "Deref to get value");
+
+		int value = 1;
+		if(type_is_pointer(current_target))
+		{
+			value = current_target->type->size;
+		}
+		emit_load_immediate(REGISTER_ONE, value, "Load prefix add/sub");
+
+		if(global_token->s[0] == '-')
+		{
+			line_error();
+			fputs("Prefix operator -- not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+		else
+		{
+			emit_add(REGISTER_ZERO, REGISTER_ONE, "Add prefix to deref value");
+		}
+
+		emit_pop(REGISTER_ONE, "Address of variable");
+
+		/* Store REGISTER_ZERO in REGISTER_ONE deref */
+		emit_out(store_value(current_target->size));
+
+		emit_pop(REGISTER_ONE, "Previous value");
+
+		emit_out("# prefix inc/dec end\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
