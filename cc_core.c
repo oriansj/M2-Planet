@@ -432,6 +432,72 @@ void emit_add(int destination_reg, int source_reg, char* note)
 	}
 }
 
+/* Subtracts destination and source and places result in destination */
+void emit_sub(int destination_reg, int source_reg, char* note)
+{
+	char* destination_name = register_from_string(destination_reg);
+	char* source_name = register_from_string(source_reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("SUB R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(source_name);
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("sub_");
+		emit_out(destination_name);
+		emit_out(",");
+		emit_out(source_name);
+		emit_out("\n");
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'0' ");
+		emit_out(destination_name);
+		emit_out(" ");
+		emit_out(destination_name);
+		emit_out(" SUB ");
+		emit_out(source_name);
+		emit_out(" ARITH2_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("SUB_");
+		emit_out(destination_name);
+		emit_out("_");
+		emit_out(source_name);
+		emit_out("_");
+		emit_out(destination_name);
+	}
+	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	{
+		emit_out("rd_");
+		emit_out(destination_name);
+		emit_out(" rs1_");
+		emit_out(source_name);
+		emit_out(" rs2_");
+		emit_out(destination_name);
+		emit_out(" sub");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
+
 void emit_mul_into_register_zero(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -2170,6 +2236,7 @@ void primary_expr(void)
 	}
 	else if(match("--", global_token->s) || match("++", global_token->s))
 	{
+		int is_subtract = global_token->s[0] == '-';
 		maybe_bootstrap_error("prefix operators --/++");
 
 		emit_out("# prefix inc/dec\n");
@@ -2191,11 +2258,9 @@ void primary_expr(void)
 		}
 		emit_load_immediate(REGISTER_ONE, value, "Load prefix add/sub");
 
-		if(global_token->s[0] == '-')
+		if(is_subtract)
 		{
-			line_error();
-			fputs("Prefix operator -- not supported.\n", stderr);
-			exit(EXIT_FAILURE);
+			emit_sub(REGISTER_ZERO, REGISTER_ONE, "Sub prefix from deref value");
 		}
 		else
 		{

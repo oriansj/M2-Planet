@@ -21,9 +21,14 @@ int for_loop() {
 	for(i = 0; i < 5; ++i) {
 		++a;
 	}
-
 	if(a != 5) return 1;
 	if(i != 5) return 1;
+
+	for(i = 5; i > 0; --i) {
+		--a;
+	}
+	if(a != 0) return 1;
+	if(i != 0) return 1;
 
 	return 0;
 }
@@ -40,6 +45,14 @@ int while_loop() {
 	if(a != 4) return 1;
 	if(i != 5) return 1;
 
+	while(--i > 0) {
+		--a;
+	}
+
+	/* When i == 0 a won't be decremented */
+	if(a != 0) return 1;
+	if(i != 0) return 1;
+
 	return 0;
 }
 
@@ -51,14 +64,81 @@ int do_while_loop() {
 		++a;
 	}
 	while(++i < 5);
-
 	if(a != 5) return 1;
 	if(i != 5) return 1;
+
+	do {
+		--a;
+	}
+	while(--i > 0);
+	if(a != 0) return 1;
+	if(i != 0) return 1;
+
+	return 0;
+}
+
+struct T {
+	int a;
+	int b;
+};
+
+int pointers(int* a, char* b, struct T* t) {
+	a[0] = 10;
+	a[1] = 11;
+	a[2] = 12;
+
+	if(*a != 10) return 1;
+	++a;
+	if(*a != 11) return 1;
+	++a;
+	if(*a != 12) return 1;
+	--a;
+	if(*a != 11) return 1;
+	--a;
+	if(*a != 10) return 1;
+
+	b[0] = 13;
+	b[1] = 14;
+	b[2] = 15;
+
+	if(*b != 13) return 1;
+	++b;
+	if(*b != 14) return 1;
+	++b;
+	if(*b != 15) return 1;
+	--b;
+	if(*b != 14) return 1;
+	--b;
+	if(*b != 13) return 1;
+
+	t[0].a = 16;
+	t[0].b = 17;
+	t[1].a = 18;
+	t[1].b = 19;
+	t[2].a = 20;
+	t[2].b = 21;
+
+	if(t->a != 16) return 1;
+	if(t->b != 17) return 1;
+	++t;
+	if(t->a != 18) return 1;
+	if(t->b != 19) return 1;
+	++t;
+	if(t->a != 20) return 1;
+	if(t->b != 21) return 1;
+	--t;
+	if(t->a != 18) return 1;
+	if(t->b != 19) return 1;
+	--t;
+	if(t->a != 16) return 1;
+	if(t->b != 17) return 1;
 
 	return 0;
 }
 
 int arr[3];
+char brr[3];
+struct T trr[3];
 int main() {
 	int a = 0;
 	if(++a != 1) return 1;
@@ -85,5 +165,14 @@ int main() {
 
 	if(arr[0] != 1) return 14;
 
+	if(--a != 2) return 15;
+	if(--a != 1) return 16;
+	if(--a != 0) return 17;
+
+	if(--arr[0] != 0) return 18;
+
+	struct T* trr_ptr = trr;
+
+	if(pointers(arr, brr, trr_ptr) != 0) return 19;
 }
 
