@@ -2119,7 +2119,7 @@ void primary_expr(void)
 	}
 
 	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
-	else if('-' == global_token->s[0])
+	else if(match("-", global_token->s))
 	{
 		if((KNIGHT_POSIX != Architecture) && (KNIGHT_NATIVE != Architecture))
 		{
@@ -2161,6 +2161,18 @@ void primary_expr(void)
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 MVN_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("MVN_X0\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 not\n");
+	}
+	else if(match("--", global_token->s))
+	{
+		line_error();
+		fputs("Prefix operator -- not supported.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	else if(match("++", global_token->s))
+	{
+		line_error();
+		fputs("Prefix operator -- not supported.\n", stderr);
+		exit(EXIT_FAILURE);
 	}
 	else if(global_token->s[0] == '(')
 	{
