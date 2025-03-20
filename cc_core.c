@@ -48,6 +48,7 @@ int escape_lookup(char* c);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
 struct type *mirror_type(struct type *source);
+struct type* new_function_pointer_typedef(char* name);
 struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*, char*);
@@ -432,6 +433,72 @@ void emit_add(int destination_reg, int source_reg, char* note)
 	}
 }
 
+/* Subtracts destination and source and places result in destination */
+void emit_sub(int destination_reg, int source_reg, char* note)
+{
+	char* destination_name = register_from_string(destination_reg);
+	char* source_name = register_from_string(source_reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("SUB R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(destination_name);
+		emit_out(" R");
+		emit_out(source_name);
+	}
+	else if(X86 == Architecture || AMD64 == Architecture)
+	{
+		emit_out("sub_");
+		emit_out(destination_name);
+		emit_out(",");
+		emit_out(source_name);
+		emit_out("\n");
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'0' ");
+		emit_out(destination_name);
+		emit_out(" ");
+		emit_out(destination_name);
+		emit_out(" SUB ");
+		emit_out(source_name);
+		emit_out(" ARITH2_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("SUB_");
+		emit_out(destination_name);
+		emit_out("_");
+		emit_out(source_name);
+		emit_out("_");
+		emit_out(destination_name);
+	}
+	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	{
+		emit_out("rd_");
+		emit_out(destination_name);
+		emit_out(" rs1_");
+		emit_out(source_name);
+		emit_out(" rs2_");
+		emit_out(destination_name);
+		emit_out(" sub");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
+
 void emit_mul_into_register_zero(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
@@ -577,21 +644,23 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		}
 		else
 		{
-			/* TODO: We use register one as a temporary which might be surprising. */
+			emit_push(REGISTER_ONE, note);
 			emit_load_immediate(REGISTER_ONE, value, note);
-			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS");
+			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
+			emit_pop(REGISTER_ONE, note);
 		}
 	}
 	else if(AARCH64 == Architecture)
 	{
-		/* TODO: We use register one as a temporary which might be surprising. */
 		emit_move(destination, offset_register, note);
+		emit_push(REGISTER_ONE, note);
 		emit_load_immediate(REGISTER_ONE, value, note);
 		emit_out("SUB_");
 		emit_out(destination_name);
 		emit_out("_");
 		emit_out(destination_name);
-		emit_out("_X1");
+		emit_out("_X1\n");
+		emit_pop(REGISTER_ONE, note);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
@@ -792,7 +861,7 @@ void emit_pop(int reg, char* note)
 
 int type_is_pointer(struct type* type_size)
 {
-	return type_size->type != type_size || match("FUNCTION", type_size->name);
+	return type_size->type != type_size || (type_size->options & TO_FUNCTION_POINTER);
 }
 
 int type_is_struct_or_union(struct type* type_size)
@@ -1302,11 +1371,12 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
+int num_dereference_after_postfix;
 void postfix_expr_stub(void);
 void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
-	if((match("FUNCTION", a->type->name) || match("FUNCTION*", a->type->name)) && match("(", global_token->s))
+	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 	{
 		function_call(int2str(a->depth, 10, TRUE), TRUE);
 		return;
@@ -1323,7 +1393,9 @@ void variable_load(struct token_list* a, int num_dereference)
 	}
 
 	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array)
+	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator && !is_postfix_operator)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -1335,11 +1407,15 @@ void variable_load(struct token_list* a, int num_dereference)
 		return;
 	}
 
-	while (num_dereference > 0)
+	num_dereference_after_postfix = num_dereference;
+	if(!is_postfix_operator)
 	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		current_target = current_target->type;
-		num_dereference = num_dereference - 1;
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
 	}
 }
 
@@ -1635,6 +1711,56 @@ void postfix_expr_arrow(void)
 	}
 }
 
+void postfix_expr_inc_or_dec(void)
+{
+	int is_subtract = global_token->s[0] == '-';
+	require_extra_token();
+
+	emit_out("# postfix inc/dec\n");
+	emit_push(REGISTER_ONE, "Old register one value");
+
+	emit_push(REGISTER_ZERO, "Address of variable");
+	emit_dereference(REGISTER_ZERO, "Get value");
+
+	/* We need the address to be at the top of the stack and the value to be below it */
+	emit_pop(REGISTER_ONE, "Address of variable");
+	emit_push(REGISTER_ZERO, "Value before postfix operator");
+	emit_push(REGISTER_ONE, "Address of variable");
+
+	int value = 1;
+	if(type_is_pointer(current_target))
+	{
+		value = current_target->type->size;
+	}
+	emit_load_immediate(REGISTER_ONE, value, "Load offset");
+
+	if(is_subtract)
+	{
+		emit_sub(REGISTER_ZERO, REGISTER_ONE, "Subtract offset");
+	}
+	else
+	{
+		emit_add(REGISTER_ZERO, REGISTER_ONE, "Add offset");
+	}
+
+	emit_pop(REGISTER_ONE, "Address of variable");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(current_target->size));
+
+	emit_pop(REGISTER_ZERO, "Value before postfix operator");
+	emit_pop(REGISTER_ONE, "Previous value");
+
+	while (num_dereference_after_postfix > 0)
+	{
+		emit_out(load_value(current_target->type->size, current_target->type->is_signed));
+		current_target = current_target->type;
+		num_dereference_after_postfix = num_dereference_after_postfix - 1;
+	}
+
+	emit_out("# postfix inc/dec end\n");
+}
+
 void postfix_expr_dot(void)
 {
 	maybe_bootstrap_error("Member access using .");
@@ -1658,6 +1784,8 @@ void postfix_expr_dot(void)
 
 void postfix_expr_array(void)
 {
+	char* prefix_operator = global_token->prev->prev->s;
+
 	struct type* array = current_target;
 	common_recursion(expression);
 	current_target = array;
@@ -1685,7 +1813,9 @@ void postfix_expr_array(void)
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
 
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s))
+	int is_prefix_operator = match("++", prefix_operator) || match("--", prefix_operator);
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator)
 	{
 		assign = "";
 	}
@@ -1807,6 +1937,12 @@ void postfix_expr_stub(void)
 	if(match(".", global_token->s))
 	{
 		postfix_expr_dot();
+		postfix_expr_stub();
+	}
+
+	if(match("++", global_token->s) || match("--", global_token->s))
+	{
+		postfix_expr_inc_or_dec();
 		postfix_expr_stub();
 	}
 }
@@ -2119,7 +2255,7 @@ void primary_expr(void)
 	}
 
 	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
-	else if('-' == global_token->s[0])
+	else if(match("-", global_token->s))
 	{
 		if((KNIGHT_POSIX != Architecture) && (KNIGHT_NATIVE != Architecture))
 		{
@@ -2161,6 +2297,48 @@ void primary_expr(void)
 		else if(ARMV7L == Architecture) emit_out("'0' R0 R0 MVN_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("MVN_X0\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 not\n");
+	}
+	else if(match("--", global_token->s) || match("++", global_token->s))
+	{
+		int is_subtract = global_token->s[0] == '-';
+		maybe_bootstrap_error("prefix operators --/++");
+
+		emit_out("# prefix inc/dec\n");
+
+		emit_push(REGISTER_ZERO, "Previous value");
+		require_extra_token();
+		postfix_expr();
+		emit_pop(REGISTER_ONE, "Restore previous value");
+
+		emit_push(REGISTER_ONE, "Previous value");
+		emit_push(REGISTER_ZERO, "Address of variable");
+
+		emit_dereference(REGISTER_ZERO, "Deref to get value");
+
+		int value = 1;
+		if(type_is_pointer(current_target))
+		{
+			value = current_target->type->size;
+		}
+		emit_load_immediate(REGISTER_ONE, value, "Load prefix add/sub");
+
+		if(is_subtract)
+		{
+			emit_sub(REGISTER_ZERO, REGISTER_ONE, "Sub prefix from deref value");
+		}
+		else
+		{
+			emit_add(REGISTER_ZERO, REGISTER_ONE, "Add prefix to deref value");
+		}
+
+		emit_pop(REGISTER_ONE, "Address of variable");
+
+		/* Store REGISTER_ZERO in REGISTER_ONE deref */
+		emit_out(store_value(current_target->size));
+
+		emit_pop(REGISTER_ONE, "Previous value");
+
+		emit_out("# prefix inc/dec end\n");
 	}
 	else if(global_token->s[0] == '(')
 	{
@@ -2532,9 +2710,6 @@ void collect_local(void)
 	struct type* current_type = type_size;
 
 	require(NULL != global_token, "Received EOF while collecting locals\n");
-	require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
-	require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
-	require(NULL != type_size, "Must have non-null type\n");
 
 	struct token_list* list_to_append_to = function->locals;
 	struct token_list* a;
@@ -2589,6 +2764,15 @@ void collect_local(void)
 		}
 
 		function->locals = a;
+
+		if(global_token->s[0] == '(') {
+			line_error();
+			fputs("Function pointers as local variables are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
+		require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
 
 		emit_out("# Defining local ");
 		emit_out(global_token->s);
@@ -3611,16 +3795,57 @@ void global_constant(void)
 	}
 }
 
+struct type* typedef_function_pointer(void)
+{
+	require_extra_token(); /* skip '(' */
+	require_match("Invalid token in function pointer parsing, expected '*'.\n", "*");
+	require(NULL != global_token, "Received EOF while reading typedef function pointer\n");
+
+	char* name = global_token->s;
+
+	require_extra_token();
+	require_match("Invalid token in function pointer parsing, expected ')'.\n", ")");
+	require_match("Invalid token in function pointer parsing, expected '('.\n", "(");
+
+	while(global_token->s[0] != ')')
+	{
+		type_name();
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	require_extra_token(); /* skip ')' */
+
+	if(match(name, "FUNCTION"))
+	{
+		/* Don't create unnecessary duplicates of built-in types */
+		return function_pointer;
+	}
+
+	return new_function_pointer_typedef(name);
+}
+
 struct type* global_typedef(void)
 {
-	struct type* type_size;
-	/* typedef $TYPE $NAME; */
-	require_extra_token();
-	type_size = type_name();
+	require_extra_token(); /* skip 'typedef' */
+
+	struct type* type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
-	type_size = mirror_type(type_size);
-	global_token = global_token->next;
+
+	if(global_token->s[0] == '(')
+	{
+		typedef_function_pointer();
+	}
+	else
+	{
+		type_size = mirror_type(type_size);
+		global_token = global_token->next;
+	}
+
 	require_match("ERROR in typedef statement\nMissing ;\n", ";");
+
 	return type_size;
 }
 

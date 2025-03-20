@@ -73,6 +73,10 @@ void require_token(void);
 void emit_push(int, char*);
 void emit_pop(int, char*);
 
+/* TO = Type Option */
+// CONSTANT TO_FUNCTION_POINTER 1
+#define TO_FUNCTION_POINTER 1
+
 struct type
 {
 	struct type* next;
@@ -85,6 +89,7 @@ struct type
 	/* Pointer indirection of type */
 	struct type* type;
 	char* name;
+	int options;
 };
 
 /* TLO = Token List Option */
