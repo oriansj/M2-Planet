@@ -860,7 +860,7 @@ void emit_pop(int reg, char* note)
 
 int type_is_pointer(struct type* type_size)
 {
-	return type_size->type != type_size || match("FUNCTION", type_size->name);
+	return type_size->type != type_size || (type_size->options & TO_FUNCTION_POINTER);
 }
 
 int type_is_struct_or_union(struct type* type_size)
@@ -1375,7 +1375,7 @@ void postfix_expr_stub(void);
 void variable_load(struct token_list* a, int num_dereference)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
-	if((match("FUNCTION", a->type->name) || match("FUNCTION*", a->type->name)) && match("(", global_token->s))
+	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 	{
 		function_call(int2str(a->depth, 10, TRUE), TRUE);
 		return;

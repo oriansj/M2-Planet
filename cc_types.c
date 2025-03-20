@@ -166,6 +166,8 @@ void initialize_types(void)
 
 	/* Define FUNCTION */
 	hold = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
+	hold->options = TO_FUNCTION_POINTER; /* FUNCTION */
+	hold->indirect->options = TO_FUNCTION_POINTER; /* FUNCTION* */
 	prim_types = add_primitive(hold);
 
 	if(BOOTSTRAP_MODE)
