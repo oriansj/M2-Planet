@@ -50,6 +50,7 @@ struct type* signed_long;
 struct type* unsigned_long;
 struct type* signed_long_long;
 struct type* unsigned_long_long;
+struct type* function_pointer;
 
 /* enable bootstrap-mode */
 int BOOTSTRAP_MODE;

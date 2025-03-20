@@ -165,10 +165,10 @@ void initialize_types(void)
 	prim_types = add_primitive(hold);
 
 	/* Define FUNCTION */
-	hold = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
-	hold->options = TO_FUNCTION_POINTER; /* FUNCTION */
-	hold->indirect->options = TO_FUNCTION_POINTER; /* FUNCTION* */
-	prim_types = add_primitive(hold);
+	function_pointer = new_primitive("FUNCTION", "FUNCTION*", "FUNCTION**", register_size, FALSE);
+	function_pointer->options = TO_FUNCTION_POINTER; /* FUNCTION */
+	function_pointer->indirect->options = TO_FUNCTION_POINTER; /* FUNCTION* */
+	prim_types = add_primitive(function_pointer);
 
 	if(BOOTSTRAP_MODE)
 	{
@@ -739,6 +739,15 @@ struct type* type_name(void)
 	}
 
 	return ret;
+}
+
+struct type* new_function_pointer_typedef(char* name)
+{
+	struct type* first = new_primitive(name, name, name, register_size, FALSE);
+	first->options = TO_FUNCTION_POINTER;
+	first->indirect->options = TO_FUNCTION_POINTER;
+
+	return add_primitive(first);
 }
 
 struct type *mirror_type(struct type *source)

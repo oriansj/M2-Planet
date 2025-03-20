@@ -53,6 +53,7 @@ extern struct type* signed_long;
 extern struct type* unsigned_long;
 extern struct type* signed_long_long;
 extern struct type* unsigned_long_long;
+extern struct type* function_pointer;
 
 /* enable bootstrap-mode */
 extern int BOOTSTRAP_MODE;

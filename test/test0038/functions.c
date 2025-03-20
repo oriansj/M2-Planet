@@ -15,6 +15,10 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+typedef void (*FUNCTION)(void);
+typedef int (*MyFunction)(int, int);
+typedef int (*MyFunc)(int*, int**);
+
 static int a;
 
 static int add_static(int a) { return a + a; }
@@ -36,6 +40,9 @@ int main() {
 	if(2 != add_inline(1)) return 4;
 
 	if(a != 1) return 5;
+
+	MyFunction my_function;
+	MyFunc my_func;
 
 	return 0;
 }

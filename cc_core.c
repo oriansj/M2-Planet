@@ -48,6 +48,7 @@ int escape_lookup(char* c);
 void require(int bool, char* error);
 struct token_list* reverse_list(struct token_list* head);
 struct type *mirror_type(struct type *source);
+struct type* new_function_pointer_typedef(char* name);
 struct type* add_primitive(struct type* a);
 
 void global_variable_definition(struct type*, char*);
@@ -3788,6 +3789,38 @@ void global_constant(void)
 	}
 }
 
+struct type* typedef_function_pointer(void)
+{
+	require_extra_token(); /* skip '(' */
+	require_match("Invalid token in function pointer parsing, expected '*'.\n", "*");
+	require(NULL != global_token, "Received EOF while reading typedef function pointer\n");
+
+	char* name = global_token->s;
+
+	require_extra_token();
+	require_match("Invalid token in function pointer parsing, expected ')'.\n", ")");
+	require_match("Invalid token in function pointer parsing, expected '('.\n", "(");
+
+	while(global_token->s[0] != ')')
+	{
+		type_name();
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	require_extra_token(); /* skip ')' */
+
+	if(match(name, "FUNCTION"))
+	{
+		/* Don't create unnecessary duplicates of built-in types */
+		return function_pointer;
+	}
+
+	return new_function_pointer_typedef(name);
+}
+
 struct type* global_typedef(void)
 {
 	require_extra_token(); /* skip 'typedef' */
@@ -3797,9 +3830,7 @@ struct type* global_typedef(void)
 
 	if(global_token->s[0] == '(')
 	{
-		line_error();
-		fputs("Function pointers are not allowed in typedefs.\n", stderr);
-		exit(EXIT_FAILURE);
+		typedef_function_pointer();
 	}
 	else
 	{
