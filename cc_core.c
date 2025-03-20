@@ -3790,14 +3790,25 @@ void global_constant(void)
 
 struct type* global_typedef(void)
 {
-	struct type* type_size;
-	/* typedef $TYPE $NAME; */
-	require_extra_token();
-	type_size = type_name();
+	require_extra_token(); /* skip 'typedef' */
+
+	struct type* type_size = type_name();
 	require(NULL != global_token, "Received EOF while reading typedef\n");
-	type_size = mirror_type(type_size);
-	global_token = global_token->next;
+
+	if(global_token->s[0] == '(')
+	{
+		line_error();
+		fputs("Function pointers are not allowed in typedefs.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		type_size = mirror_type(type_size);
+		global_token = global_token->next;
+	}
+
 	require_match("ERROR in typedef statement\nMissing ;\n", ";");
+
 	return type_size;
 }
 
