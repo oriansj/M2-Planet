@@ -30,6 +30,18 @@ int for_loop() {
 	if(a != 0) return 1;
 	if(i != 0) return 1;
 
+	for(i = 0; i < 5; i++) {
+		a++;
+	}
+	if(a != 5) return 1;
+	if(i != 5) return 1;
+
+	for(i = 5; i > 0; i--) {
+		a--;
+	}
+	if(a != 0) return 1;
+	if(i != 0) return 1;
+
 	return 0;
 }
 
@@ -53,6 +65,20 @@ int while_loop() {
 	if(a != 0) return 1;
 	if(i != 0) return 1;
 
+	while(i++ < 5) {
+		a++;
+	}
+
+	if(a != 5) return 1;
+	if(i != 6) return 1;
+
+	while(i-- > 0) {
+		a--;
+	}
+
+	if(a != -1) return 1;
+	if(i != -1) return 1;
+
 	return 0;
 }
 
@@ -73,6 +99,20 @@ int do_while_loop() {
 	while(--i > 0);
 	if(a != 0) return 1;
 	if(i != 0) return 1;
+
+	do {
+		a++;
+	}
+	while(i++ < 5);
+	if(a != 6) return 1;
+	if(i != 6) return 1;
+
+	do {
+		a--;
+	}
+	while(i-- > 0);
+	if(a != -1) return 1;
+	if(i != -1) return 1;
 
 	return 0;
 }
@@ -136,6 +176,60 @@ int pointers(int* a, char* b, struct T* t) {
 	return 0;
 }
 
+int pointers_postfix(int* a, char* b, struct T* t) {
+	a[0] = 10;
+	a[1] = 11;
+	a[2] = 12;
+
+	if(*a != 10) return 1;
+	a++;
+	if(*a != 11) return 1;
+	a++;
+	if(*a != 12) return 1;
+	a--;
+	if(*a != 11) return 1;
+	a--;
+	if(*a != 10) return 1;
+
+	b[0] = 13;
+	b[1] = 14;
+	b[2] = 15;
+
+	if(*b != 13) return 1;
+	b++;
+	if(*b != 14) return 1;
+	b++;
+	if(*b != 15) return 1;
+	b--;
+	if(*b != 14) return 1;
+	b--;
+	if(*b != 13) return 1;
+
+	t[0].a = 16;
+	t[0].b = 17;
+	t[1].a = 18;
+	t[1].b = 19;
+	t[2].a = 20;
+	t[2].b = 21;
+
+	if(t->a != 16) return 1;
+	if(t->b != 17) return 1;
+	t++;
+	if(t->a != 18) return 1;
+	if(t->b != 19) return 1;
+	t++;
+	if(t->a != 20) return 1;
+	if(t->b != 21) return 1;
+	t--;
+	if(t->a != 18) return 1;
+	if(t->b != 19) return 1;
+	t--;
+	if(t->a != 16) return 1;
+	if(t->b != 17) return 1;
+
+	return 0;
+}
+
 int arr[3];
 char brr[3];
 struct T trr[3];
@@ -174,5 +268,29 @@ int main() {
 	struct T* trr_ptr = trr;
 
 	if(pointers(arr, brr, trr_ptr) != 0) return 19;
+	if(pointers_postfix(arr, brr, trr_ptr) != 0) return 20;
+
+	i = 0;
+	arr[i++] = 10;
+	arr[i++] = 11;
+	arr[i] = 12;
+
+	if(arr[0] != 10) return 21;
+	if(arr[1] != 11) return 22;
+	if(arr[2] != 12) return 23;
+
+	if(arr[0]++ != 10) return 24;
+	if(arr[0] != 11) return 25;
+
+	if(arr[0]-- != 11) return 26;
+	if(arr[0] != 10) return 27;
+
+	int b = 0;
+	if(b++ != 0) return 28;
+	if(b++ != 1) return 29;
+	if(b != 2) return 30;
+	if(b-- != 2) return 31;
+	if(b-- != 1) return 32;
+	if(b != 0) return 33;
 }
 

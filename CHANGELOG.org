@@ -19,6 +19,7 @@
 Added support for global initializer list for structs of integers.
 Added support for initializing global arrays of structs using initializer lists
 Added support for prefix operators ++ and --
+Added support for postfix operators ++ and --
 
 * 1.12.1 - 2025-03-16
 ** Fixed

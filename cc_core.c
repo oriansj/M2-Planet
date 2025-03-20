@@ -1392,7 +1392,8 @@ void variable_load(struct token_list* a, int num_dereference)
 
 	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
 	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator)
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator && !is_postfix_operator)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -1704,6 +1705,49 @@ void postfix_expr_arrow(void)
 	}
 }
 
+void postfix_expr_inc_or_dec(void)
+{
+	int is_subtract = global_token->s[0] == '-';
+	require_extra_token();
+
+	emit_out("# postfix inc/dec\n");
+	emit_push(REGISTER_ONE, "Old register one value");
+
+	emit_push(REGISTER_ZERO, "Address of variable");
+	emit_dereference(REGISTER_ZERO, "Get value");
+
+	/* We need the address to be at the top of the stack and the value to be below it */
+	emit_pop(REGISTER_ONE, "Address of variable");
+	emit_push(REGISTER_ZERO, "Value before postfix operator");
+	emit_push(REGISTER_ONE, "Address of variable");
+
+	int value = 1;
+	if(type_is_pointer(current_target))
+	{
+		value = current_target->type->size;
+	}
+	emit_load_immediate(REGISTER_ONE, value, "Load offset");
+
+	if(is_subtract)
+	{
+		emit_sub(REGISTER_ZERO, REGISTER_ONE, "Subtract offset");
+	}
+	else
+	{
+		emit_add(REGISTER_ZERO, REGISTER_ONE, "Add offset");
+	}
+
+	emit_pop(REGISTER_ONE, "Address of variable");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(current_target->size));
+
+	emit_pop(REGISTER_ZERO, "Value before postfix operator");
+	emit_pop(REGISTER_ONE, "Previous value");
+
+	emit_out("# postfix inc/dec end\n");
+}
+
 void postfix_expr_dot(void)
 {
 	maybe_bootstrap_error("Member access using .");
@@ -1757,7 +1801,8 @@ void postfix_expr_array(void)
 	require(NULL != global_token, "truncated array expression\n");
 
 	int is_prefix_operator = match("++", prefix_operator) || match("--", prefix_operator);
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator)
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator)
 	{
 		assign = "";
 	}
@@ -1879,6 +1924,12 @@ void postfix_expr_stub(void)
 	if(match(".", global_token->s))
 	{
 		postfix_expr_dot();
+		postfix_expr_stub();
+	}
+
+	if(match("++", global_token->s) || match("--", global_token->s))
+	{
+		postfix_expr_inc_or_dec();
 		postfix_expr_stub();
 	}
 }
