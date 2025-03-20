@@ -2710,9 +2710,6 @@ void collect_local(void)
 	struct type* current_type = type_size;
 
 	require(NULL != global_token, "Received EOF while collecting locals\n");
-	require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
-	require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
-	require(NULL != type_size, "Must have non-null type\n");
 
 	struct token_list* list_to_append_to = function->locals;
 	struct token_list* a;
@@ -2767,6 +2764,15 @@ void collect_local(void)
 		}
 
 		function->locals = a;
+
+		if(global_token->s[0] == '(') {
+			line_error();
+			fputs("Function pointers as local variables are not supported.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
+		require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
 
 		emit_out("# Defining local ");
 		emit_out(global_token->s);
