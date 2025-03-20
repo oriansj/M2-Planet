@@ -230,6 +230,52 @@ int pointers_postfix(int* a, char* b, struct T* t) {
 	return 0;
 }
 
+int pointers_postfix_complex(int* a, char* b, struct T* t) {
+	a[0] = 10;
+	a[1] = 11;
+	a[2] = 12;
+
+	if(*a++ != 10) return 1;
+	if(*a++ != 11) return 1;
+	if(*a-- != 12) return 1;
+	if(*a-- != 11) return 1;
+	if(*a != 10) return 1;
+
+	b[0] = 13;
+	b[1] = 14;
+	b[2] = 15;
+
+	if(*b++ != 13) return 1;
+	if(*b++ != 14) return 1;
+	if(*b-- != 15) return 1;
+	if(*b-- != 14) return 1;
+	if(*b != 13) return 1;
+
+	t[0].a = 16;
+	t[0].b = 17;
+	t[1].a = 18;
+	t[1].b = 19;
+	t[2].a = 20;
+	t[2].b = 21;
+
+	if(t->a != 16) return 1;
+	if(t++->b != 17) return 1;
+
+	if(t->a != 18) return 1;
+	if(t++->b != 19) return 1;
+
+	if(t->a != 20) return 1;
+	if(t--->b != 21) return 1;
+
+	if(t->a != 18) return 1;
+	if(t--->b != 19) return 1;
+
+	if(t->a != 16) return 1;
+	if(t->b != 17) return 1;
+
+	return 0;
+}
+
 int arr[3];
 char brr[3];
 struct T trr[3];
@@ -292,5 +338,7 @@ int main() {
 	if(b-- != 2) return 31;
 	if(b-- != 1) return 32;
 	if(b != 0) return 33;
+
+	if(pointers_postfix_complex(arr, brr, trr_ptr) != 0) return 34;
 }
 

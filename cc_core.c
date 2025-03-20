@@ -1370,6 +1370,7 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
+int num_dereference_after_postfix;
 void postfix_expr_stub(void);
 void variable_load(struct token_list* a, int num_dereference)
 {
@@ -1405,11 +1406,15 @@ void variable_load(struct token_list* a, int num_dereference)
 		return;
 	}
 
-	while (num_dereference > 0)
+	num_dereference_after_postfix = num_dereference;
+	if(!is_postfix_operator)
 	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		current_target = current_target->type;
-		num_dereference = num_dereference - 1;
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
 	}
 }
 
@@ -1744,6 +1749,13 @@ void postfix_expr_inc_or_dec(void)
 
 	emit_pop(REGISTER_ZERO, "Value before postfix operator");
 	emit_pop(REGISTER_ONE, "Previous value");
+
+	while (num_dereference_after_postfix > 0)
+	{
+		emit_out(load_value(current_target->type->size, current_target->type->is_signed));
+		current_target = current_target->type;
+		num_dereference_after_postfix = num_dereference_after_postfix - 1;
+	}
 
 	emit_out("# postfix inc/dec end\n");
 }
