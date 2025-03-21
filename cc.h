@@ -42,6 +42,14 @@
 // CONSTANT RISCV64 8
 #define RISCV64 8
 
+/* Stack grows to higher memory addresses */
+// CONSTANT STACK_DIRECTION_PLUS 0
+#define STACK_DIRECTION_PLUS 0
+
+/* Stack grows to lower memory addresses */
+// CONSTANT STACK_DIRECTION_MINUS 1
+#define STACK_DIRECTION_MINUS 1
+
 // CONSTANT NO_STRUCT_DEFINITION 0
 #define NO_STRUCT_DEFINITION 0
 

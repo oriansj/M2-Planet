@@ -433,6 +433,14 @@ void emit_add(int destination_reg, int source_reg, char* note)
 	}
 }
 
+void emit_add_immediate(int reg, int value, char* note)
+{
+	emit_push(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_ONE, value, note);
+	emit_add(reg, REGISTER_ONE, note);
+	emit_pop(REGISTER_ONE, note);
+}
+
 /* Subtracts destination and source and places result in destination */
 void emit_sub(int destination_reg, int source_reg, char* note)
 {
@@ -498,6 +506,13 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 	}
 }
 
+void emit_sub_immediate(int reg, int value, char* note)
+{
+	emit_push(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_ONE, value, note);
+	emit_sub(reg, REGISTER_ONE, note);
+	emit_pop(REGISTER_ONE, note);
+}
 
 void emit_mul_into_register_zero(int reg, char* note)
 {
@@ -547,8 +562,10 @@ void emit_mul_into_register_zero(int reg, char* note)
 
 void emit_mul_register_zero_with_immediate(int value, char* note)
 {
+	emit_push(REGISTER_ONE, note);
 	emit_load_immediate(REGISTER_ONE, value, note);
 	emit_mul_into_register_zero(REGISTER_ONE, note);
+	emit_pop(REGISTER_ONE, note);
 }
 
 void emit_move(int destination_reg, int source_reg, char* note)
@@ -1698,8 +1715,7 @@ void postfix_expr_arrow(void)
 
 	if(0 != i->offset)
 	{
-		emit_load_immediate(REGISTER_ONE, i->offset, "-> offset calculation");
-		emit_add(REGISTER_ZERO, REGISTER_ONE, "-> offset calculation");
+		emit_add_immediate(REGISTER_ZERO, i->offset, "-> offset calculation");
 	}
 
 	if(global_token->s[0] == '.') return;
@@ -1732,15 +1748,14 @@ void postfix_expr_inc_or_dec(void)
 	{
 		value = current_target->type->size;
 	}
-	emit_load_immediate(REGISTER_ONE, value, "Load offset");
 
 	if(is_subtract)
 	{
-		emit_sub(REGISTER_ZERO, REGISTER_ONE, "Subtract offset");
+		emit_sub_immediate(REGISTER_ZERO, value, "Subtract offset");
 	}
 	else
 	{
-		emit_add(REGISTER_ZERO, REGISTER_ONE, "Add offset");
+		emit_add_immediate(REGISTER_ZERO, value, "Add offset");
 	}
 
 	emit_pop(REGISTER_ONE, "Address of variable");
@@ -1773,8 +1788,7 @@ void postfix_expr_dot(void)
 
 	if(0 != i->offset)
 	{
-		emit_load_immediate(REGISTER_ONE, i->offset, ". offset calculation");
-		emit_add(REGISTER_ZERO, REGISTER_ONE, ". offset calculation");
+		emit_add_immediate(REGISTER_ZERO, i->offset, ". offset calculation");
 	}
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 	if(match("[", global_token->s) || match(".", global_token->s)) return;
@@ -1800,12 +1814,7 @@ void postfix_expr_array(void)
 	}
 	else
 	{
-		emit_push(REGISTER_ONE, "primary expr array");
-		emit_load_immediate(REGISTER_ONE, current_target->type->size, "primary expr array");
-
-		emit_mul_into_register_zero(REGISTER_ONE, "primary expr array");
-
-		emit_pop(REGISTER_ONE, "primary expr array");
+		emit_mul_register_zero_with_immediate(current_target->type->size, "primary expr array");
 	}
 
 	emit_add(REGISTER_ZERO, REGISTER_ONE, "primary expr array");
@@ -2320,15 +2329,14 @@ void primary_expr(void)
 		{
 			value = current_target->type->size;
 		}
-		emit_load_immediate(REGISTER_ONE, value, "Load prefix add/sub");
 
 		if(is_subtract)
 		{
-			emit_sub(REGISTER_ZERO, REGISTER_ONE, "Sub prefix from deref value");
+			emit_sub_immediate(REGISTER_ZERO, value, "Sub prefix from deref value");
 		}
 		else
 		{
-			emit_add(REGISTER_ZERO, REGISTER_ONE, "Add prefix to deref value");
+			emit_add_immediate(REGISTER_ZERO, value, "Add prefix to deref value");
 		}
 
 		emit_pop(REGISTER_ONE, "Address of variable");
@@ -2754,13 +2762,14 @@ void collect_local(void)
 		}
 		else
 		{
-			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->locals->depth + register_size;
-			else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
-			else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
-			else if(RISCV32 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				a->depth = function->locals->depth + register_size;
+			}
+			else
+			{
+				a->depth = function->locals->depth - register_size;
+			}
 		}
 
 		function->locals = a;
@@ -2815,14 +2824,14 @@ void collect_local(void)
 		/* Adjust the depth of local structs. When stack grows downwards, we want them to
 		   start at the bottom of allocated space. */
 		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
-		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		if(stack_direction == STACK_DIRECTION_PLUS)
+		{
+			a->depth = a->depth + struct_depth_adjustment;
+		}
+		else
+		{
+			a->depth = a->depth - struct_depth_adjustment;
+		}
 
 		if(match("=", global_token->s))
 		{
