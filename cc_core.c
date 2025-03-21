@@ -2762,13 +2762,14 @@ void collect_local(void)
 		}
 		else
 		{
-			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->locals->depth + register_size;
-			else if(X86 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(AMD64 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(ARMV7L == Architecture) a->depth = function->locals->depth + register_size;
-			else if(AARCH64 == Architecture) a->depth = function->locals->depth + register_size;
-			else if(RISCV32 == Architecture) a->depth = function->locals->depth - register_size;
-			else if(RISCV64 == Architecture) a->depth = function->locals->depth - register_size;
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				a->depth = function->locals->depth + register_size;
+			}
+			else
+			{
+				a->depth = function->locals->depth - register_size;
+			}
 		}
 
 		function->locals = a;
