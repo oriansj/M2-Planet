@@ -273,6 +273,18 @@ int main(int argc, char** argv)
 		init_macro_env("__knight__", "1", "--architecture", env);
 	}
 
+	if(Architecture == KNIGHT_NATIVE
+		|| Architecture == KNIGHT_POSIX
+		|| Architecture == ARMV7L
+		|| Architecture == AARCH64)
+	{
+		stack_direction = STACK_DIRECTION_PLUS;
+	}
+	else
+	{
+		stack_direction = STACK_DIRECTION_MINUS;
+	}
+
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{

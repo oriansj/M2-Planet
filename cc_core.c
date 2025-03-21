@@ -2823,14 +2823,14 @@ void collect_local(void)
 		/* Adjust the depth of local structs. When stack grows downwards, we want them to
 		   start at the bottom of allocated space. */
 		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
-		if(KNIGHT_POSIX == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(KNIGHT_NATIVE == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(X86 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(AMD64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(ARMV7L == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(AARCH64 == Architecture) a->depth = a->depth + struct_depth_adjustment;
-		else if(RISCV32 == Architecture) a->depth = a->depth - struct_depth_adjustment;
-		else if(RISCV64 == Architecture) a->depth = a->depth - struct_depth_adjustment;
+		if(stack_direction == STACK_DIRECTION_PLUS)
+		{
+			a->depth = a->depth + struct_depth_adjustment;
+		}
+		else
+		{
+			a->depth = a->depth - struct_depth_adjustment;
+		}
 
 		if(match("=", global_token->s))
 		{
