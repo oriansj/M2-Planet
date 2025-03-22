@@ -405,17 +405,40 @@ struct type* lookup_global_type(void)
 
 struct type* lookup_member(struct type* parent, char* name)
 {
+	int is_anonymous_type = match("", parent->name);
+	if(is_anonymous_type)
+	{
+		/* We need to be able to know if we're in an anonymous type */
+		parent = parent->type;
+	}
+
 	struct type* i;
 	require(NULL != parent, "Not a valid struct type\n");
+	struct type* anonymous;
 	for(i = parent->members; NULL != i; i = i->members)
 	{
-		if(match(i->name, name)) return i;
+		if(match("", i->name))
+		{
+			/* Anonymous struct/union (C11 extension */
+			 anonymous = lookup_member(i, name);
+			 if(anonymous != NULL)
+			 {
+				 return anonymous;
+			 }
+		}
+		else if(match(i->name, name)) return i;
+	}
+
+	/* Anonymous types are not guaranteed to have the member in them */
+	if(is_anonymous_type)
+	{
+		return NULL;
 	}
 
 	fputs("ERROR in lookup_member ", stderr);
 	fputs(parent->name, stderr);
 	fputs("->", stderr);
-	fputs(global_token->s, stderr);
+	fputs(name, stderr);
 	fputs(" does not exist\n", stderr);
 	line_error();
 	fputs("\n", stderr);
@@ -436,8 +459,41 @@ struct type* build_member(struct type* last, int offset)
 	struct type* member_type = type_name();
 	require(NULL != member_type, "struct member type can not be invalid\n");
 	i->type = member_type;
-	i->name = global_token->s;
-	require_extra_token();
+
+	if(global_token->s[0] != ';')
+	{
+		i->name = global_token->s;
+		require_extra_token();
+	}
+	else
+	{
+		struct type* iterator = i->type->members;
+		if(iterator == NULL)
+		{
+			line_error();
+			fputs("Missing name for non-struct/union type.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		if(!match(i->type->name, "anonymous struct"))
+		{
+			line_error();
+			fputs("Anonymous members can not have a type name.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		/* Anonymous struct/union (C11 extension) */
+		i->name = "";
+
+		/* We need to offset all the member so that they're pointing correctly
+		 * into the current struct. */
+		while (iterator != NULL)
+		{
+			iterator->offset = iterator->offset + offset;
+
+			iterator = iterator->members;
+		}
+	}
 
 	/* Check to see if array */
 	if(match( "[", global_token->s))
