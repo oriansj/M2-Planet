@@ -488,9 +488,9 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 		emit_out("rd_");
 		emit_out(destination_name);
 		emit_out(" rs1_");
-		emit_out(source_name);
-		emit_out(" rs2_");
 		emit_out(destination_name);
+		emit_out(" rs2_");
+		emit_out(source_name);
 		emit_out(" sub");
 	}
 
