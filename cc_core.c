@@ -3898,9 +3898,16 @@ void global_value_output(int value, int size)
 	}
 	else if(size == 2)
 	{
-		line_error();
-		fputs("Initializer list for elements of size 2 is not supported.", stderr);
-		exit(EXIT_FAILURE);
+		if(value < 0 && Architecture != RISCV64 && Architecture != RISCV32)
+		{
+			globals_list = emit("@", globals_list);
+		}
+		else
+		{
+			globals_list = emit("$", globals_list);
+		}
+		globals_list = emit(int2str(value, 10, FALSE), globals_list);
+		globals_list = emit(" ", globals_list);
 	}
 	else if(size >= 4)
 	{
