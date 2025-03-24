@@ -475,7 +475,7 @@ struct type* build_member(struct type* last, int offset)
 			exit(EXIT_FAILURE);
 		}
 
-		if(!match(i->type->name, "anonymous struct"))
+		if(!match(i->type->name, "anonymous struct") && !match(i->type->name, "anonymous union"))
 		{
 			line_error();
 			fputs("Anonymous members can not have a type name.\n", stderr);
@@ -516,26 +516,6 @@ struct type* build_member(struct type* last, int offset)
 	return i;
 }
 
-struct type* build_union(struct type* last, int offset)
-{
-	int size = 0;
-	global_token = global_token->next;
-	require_match("ERROR in build_union\nMissing {\n", "{");
-	while('}' != global_token->s[0])
-	{
-		last = build_member(last, offset);
-		if(member_size > size)
-		{
-			size = member_size;
-		}
-		require_match("ERROR in build_union\nMissing ;\n", ";");
-		require(NULL != global_token, "Unterminated union\n");
-	}
-	member_size = size;
-	require_extra_token();
-	return last;
-}
-
 struct type* reverse_members_type_list(struct type* head)
 {
 	struct type* root = NULL;
@@ -550,14 +530,20 @@ struct type* reverse_members_type_list(struct type* head)
 	return root;
 }
 
-struct type* create_struct(void)
+struct type* create_struct(int is_union)
 {
 	int offset = 0;
 	member_size = 0;
 
 	struct type* head = NULL;
 	struct type* i = NULL;
+
 	char* name = "anonymous struct";
+	if(is_union)
+	{
+		name = "anonymous union";
+	}
+
 	int has_name = global_token->s[0] != '{';
 	if(has_name)
 	{
@@ -624,20 +610,25 @@ struct type* create_struct(void)
 		return head;
 	}
 
+	int largest_member_size = 0;
 	require_match("ERROR in create_struct\n Missing {\n", "{");
 	struct type* last = NULL;
 	require(NULL != global_token, "Incomplete struct definition at end of file\n");
 	while('}' != global_token->s[0])
 	{
-		if(match(global_token->s, "union"))
-		{
-			last = build_union(last, offset);
-		}
-		else
-		{
-			last = build_member(last, offset);
-		}
+		last = build_member(last, offset);
+
 		offset = offset + member_size;
+		if(member_size > largest_member_size)
+		{
+			largest_member_size = member_size;
+		}
+
+		if(is_union)
+		{
+			offset = 0;
+		}
+
 		require_match("ERROR in create_struct\n Missing ;\n", ";");
 		require(NULL != global_token, "Unterminated struct\n");
 	}
@@ -648,6 +639,11 @@ struct type* create_struct(void)
 	require_extra_token();
 
 	head->size = offset;
+	if(is_union)
+	{
+		head->size = largest_member_size;
+	}
+
 	head->members = last;
 	i->members = last;
 
@@ -754,7 +750,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
-			return create_struct();
+			return create_struct(FALSE);
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -765,6 +761,15 @@ struct type* type_name(void)
 		if(NULL == ret)
 		{
 			return create_enum();
+		}
+	}
+	else if(match("union", global_token->s))
+	{
+		require_extra_token();
+		ret = lookup_global_type();
+		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		{
+			return create_struct(TRUE);
 		}
 	}
 	else

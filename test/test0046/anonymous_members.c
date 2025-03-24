@@ -15,6 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+typedef union { int seven; int also_seven; int also_also_seven; } SevenUnion;
+
 struct {
 	int one;
 	struct {
@@ -56,5 +58,22 @@ int main() {
 	if(su.four != 4) return 8;
 
 	if(sizeof(su) != 3 * sizeof(int)) return 9;
+
+	union {
+		int six;
+		int also_six;
+		int also_also_six;
+	} t;
+
+	t.six = 6;
+	if(t.six != 6) return 10;
+	if(t.also_six != 6) return 11;
+	if(t.also_also_six != 6) return 12;
+
+	SevenUnion seven;
+	seven.seven = 7;
+	if(seven.seven != 7) return 13;
+	if(seven.also_seven != 7) return 14;
+	if(seven.also_also_seven != 7) return 15;
 }
 

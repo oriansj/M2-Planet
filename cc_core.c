@@ -3573,6 +3573,7 @@ void statement(void)
 	else if((NULL != lookup_primitive_type()) ||
 	          match("enum", global_token->s) ||
 	          match("struct", global_token->s) ||
+	          match("union", global_token->s) ||
 	          match("const", global_token->s))
 	{
 		/* Multi token lookup may move the global_token, but collect_local does a lookup of its own. */
@@ -3897,9 +3898,16 @@ void global_value_output(int value, int size)
 	}
 	else if(size == 2)
 	{
-		line_error();
-		fputs("Initializer list for elements of size 2 is not supported.", stderr);
-		exit(EXIT_FAILURE);
+		if(value < 0 && Architecture != RISCV64 && Architecture != RISCV32)
+		{
+			globals_list = emit("@", globals_list);
+		}
+		else
+		{
+			globals_list = emit("$", globals_list);
+		}
+		globals_list = emit(int2str(value, 10, FALSE), globals_list);
+		globals_list = emit(" ", globals_list);
 	}
 	else if(size >= 4)
 	{
@@ -3913,6 +3921,17 @@ void global_value_output(int value, int size)
 		}
 	}
 
+}
+
+void global_pad_to_register_size(int bytes_written)
+{
+	int alignment_size = register_size - (bytes_written % register_size);
+	while(alignment_size != 0)
+	{
+		globals_list = emit("'00' ", globals_list);
+
+		alignment_size = alignment_size - 1;
+	}
 }
 
 void global_struct_initializer_list(struct type* type_size);
@@ -4168,6 +4187,8 @@ int global_static_array(struct type* type_size, char* name)
 		require_match("Missing { after = in global array", "{");
 
 		array_modifier = global_array_initializer_list(type_size, array_modifier);
+
+		global_pad_to_register_size(array_modifier * type_size->size);
 	}
 	else
 	{
@@ -4202,6 +4223,8 @@ void global_assignment(char* name, struct type* type_size)
 	require_extra_token();
 
 	global_value_selection(type_size);
+
+	global_pad_to_register_size(type_size->size);
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
