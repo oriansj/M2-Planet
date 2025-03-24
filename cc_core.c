@@ -3573,6 +3573,7 @@ void statement(void)
 	else if((NULL != lookup_primitive_type()) ||
 	          match("enum", global_token->s) ||
 	          match("struct", global_token->s) ||
+	          match("union", global_token->s) ||
 	          match("const", global_token->s))
 	{
 		/* Multi token lookup may move the global_token, but collect_local does a lookup of its own. */
