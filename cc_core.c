@@ -3923,6 +3923,17 @@ void global_value_output(int value, int size)
 
 }
 
+void global_pad_to_register_size(int bytes_written)
+{
+	int alignment_size = register_size - (bytes_written % register_size);
+	while(alignment_size != 0)
+	{
+		globals_list = emit("'00' ", globals_list);
+
+		alignment_size = alignment_size - 1;
+	}
+}
+
 void global_struct_initializer_list(struct type* type_size);
 void global_value_selection(struct type* type_size)
 {
@@ -4176,6 +4187,8 @@ int global_static_array(struct type* type_size, char* name)
 		require_match("Missing { after = in global array", "{");
 
 		array_modifier = global_array_initializer_list(type_size, array_modifier);
+
+		global_pad_to_register_size(array_modifier * type_size->size);
 	}
 	else
 	{
@@ -4210,6 +4223,8 @@ void global_assignment(char* name, struct type* type_size)
 	require_extra_token();
 
 	global_value_selection(type_size);
+
+	global_pad_to_register_size(type_size->size);
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
