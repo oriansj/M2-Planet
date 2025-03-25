@@ -75,6 +75,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
+		else if(reg == REGISTER_UNUSED1) return "2";
+		else if(reg == REGISTER_UNUSED2) return "3";
+		else if(reg == REGISTER_LOCALS) return "4";
 		else if(reg == REGISTER_TEMP) return "13";
 		else if(reg == REGISTER_BASE) return "14";
 		else if(reg == REGISTER_STACK) return "15";
@@ -86,6 +89,9 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "edi";
 		else if(reg == REGISTER_BASE) return "ebp";
 		else if(reg == REGISTER_STACK) return "esp";
+		else if(reg == REGISTER_LOCALS) return "esi";
+		else if(reg == REGISTER_UNUSED1) return "ecx";
+		else if(reg == REGISTER_UNUSED2) return "edx";
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -94,11 +100,17 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "rdi";
 		else if(reg == REGISTER_BASE) return "rbp";
 		else if(reg == REGISTER_STACK) return "rsp";
+		else if(reg == REGISTER_LOCALS) return "rsi";
+		else if(reg == REGISTER_UNUSED1) return "rcx";
+		else if(reg == REGISTER_UNUSED2) return "rdx";
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
+		else if(reg == REGISTER_LOCALS) return "R2";
+		else if(reg == REGISTER_UNUSED1) return "R3";
+		else if(reg == REGISTER_UNUSED2) return "R4";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -108,6 +120,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
+		else if(reg == REGISTER_LOCALS) return "X2";
+		else if(reg == REGISTER_UNUSED1) return "X3";
+		else if(reg == REGISTER_UNUSED2) return "X4";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -117,6 +132,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
+		else if(reg == REGISTER_LOCALS) return "a2";
+		else if(reg == REGISTER_UNUSED1) return "a3";
+		else if(reg == REGISTER_UNUSED2) return "a4";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";

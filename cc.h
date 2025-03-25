@@ -77,6 +77,12 @@ void require_token(void);
 // CONSTANT REGISTER_RETURN 4
 #define REGISTER_STACK 5
 // CONSTANT REGISTER_STACK 5
+#define REGISTER_LOCALS 6
+// CONSTANT REGISTER_LOCALS 6
+#define REGISTER_UNUSED1 7
+// CONSTANT REGISTER_UNUSED1 7
+#define REGISTER_UNUSED2 8
+// CONSTANT REGISTER_UNUSED2 8
 
 void emit_push(int, char*);
 void emit_pop(int, char*);
