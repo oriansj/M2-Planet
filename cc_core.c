@@ -4280,6 +4280,7 @@ void program(void)
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
+	char* name;
 
 new_type:
 	/* Deal with garbage input */
@@ -4318,9 +4319,19 @@ new_type:
 	}
 
 	require(NULL != global_token->next, "Unterminated global\n");
+	if(global_token->s[0] == '(')
+	{
+		line_error();
+		fputs("Global function pointers are not supported.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		name = global_token->s;
+	}
 
 	/* Add to global symbol table */
-	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
+	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
 	require_extra_token();
 
 	/* Deal with global functions */
@@ -4333,21 +4344,21 @@ new_type:
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size, global_token->prev->s);
+		global_variable_definition(type_size, name);
 		goto new_type;
 	}
 
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		global_assignment(global_token->prev->s, type_size);
+		global_assignment(name, type_size);
 		goto new_type;
 	}
 
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_symbol_list->array_modifier = global_static_array(type_size, global_token->prev->s);
+		global_symbol_list->array_modifier = global_static_array(type_size, name);
 		goto new_type;
 	}
 
