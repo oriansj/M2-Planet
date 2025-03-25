@@ -15,6 +15,12 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* We should be able to have pointers to types that aren't declared. */
+struct HasPointers {
+	struct StructDoesntExist* struct_doesnt_exist;
+	union UnionDoesntExist* union_doesnt_exist;
+};
+
 struct forward;
 
 typedef struct forward TypedefForward;

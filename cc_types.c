@@ -460,7 +460,31 @@ struct type* build_member(struct type* last, int offset)
 	require(NULL != member_type, "struct member type can not be invalid\n");
 	i->type = member_type;
 
-	if(global_token->s[0] != ';')
+	if(global_token->s[0] == '(')
+	{
+		require_extra_token(); /* skip '(' */
+		require_match("Required '*' after '(' in struct function pointer.", "*");
+
+		i->name = global_token->s;
+		require_extra_token();
+
+		require_match("Required ')' after name in struct function pointer.", ")");
+		require_match("Required '(' after ')' in struct function pointer.", "(");
+
+		while(global_token->s[0] != ')')
+		{
+			type_name();
+
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		require_extra_token(); /* skip ')' */
+
+		i->type = function_pointer;
+	}
+	else if(global_token->s[0] != ';')
 	{
 		i->name = global_token->s;
 		require_extra_token();
@@ -530,6 +554,41 @@ struct type* reverse_members_type_list(struct type* head)
 	return root;
 }
 
+struct type* create_forward_declared_struct(char* name, int prepend_to_global_types)
+{
+	struct type* head = calloc(1, sizeof(struct type));
+	require(NULL != head, "Exhausted memory while creating a struct\n");
+	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
+	struct type* ii = calloc(1, sizeof(struct type));
+	require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
+
+	head->name = name;
+	head->type = head;
+	head->indirect = i;
+	head->next = global_types;
+	head->size = NO_STRUCT_DEFINITION;
+	head->members = NULL;
+
+	i->name = head->name;
+	i->type = head;
+	i->indirect = ii;
+	i->size = register_size;
+	i->members = NULL;
+
+	ii->name = head->name;
+	ii->type = i;
+	ii->indirect = ii;
+	ii->size = register_size;
+
+	if(prepend_to_global_types)
+	{
+		global_types = head;
+	}
+
+	return head;
+}
+
 struct type* create_struct(int is_union)
 {
 	int offset = 0;
@@ -554,36 +613,8 @@ struct type* create_struct(int is_union)
 
 	if(NULL == head)
 	{
-		head = calloc(1, sizeof(struct type));
-		require(NULL != head, "Exhausted memory while creating a struct\n");
-		i = calloc(1, sizeof(struct type));
-		require(NULL != i, "Exhausted memory while creating a struct indirection\n");
-		struct type* ii = calloc(1, sizeof(struct type));
-		require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
-
-		head->name = name;
-		head->type = head;
-		head->indirect = i;
-		head->next = global_types;
-		head->size = NO_STRUCT_DEFINITION;
-		head->members = NULL;
-
-		i->name = head->name;
-		i->type = head;
-		i->indirect = ii;
-		i->size = register_size;
-		i->members = NULL;
-
-		ii->name = head->name;
-		ii->type = i;
-		ii->indirect = ii;
-		ii->size = register_size;
-
-		if(has_name)
-		{
-			/* Anonymous types shouldn't be looked up by name. */
-			global_types = head;
-		}
+		head = create_forward_declared_struct(name, has_name);
+		i = head->indirect;
 	}
 	else
 	{
@@ -617,6 +648,13 @@ struct type* create_struct(int is_union)
 	while('}' != global_token->s[0])
 	{
 		last = build_member(last, offset);
+
+		if(member_size == NO_STRUCT_DEFINITION)
+		{
+			line_error();
+			fputs("Can not use non-defined type in object.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 
 		offset = offset + member_size;
 		if(member_size > largest_member_size)
@@ -748,9 +786,13 @@ struct type* type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			return create_struct(FALSE);
+		}
+		else if(NULL == ret)
+		{
+			ret = create_forward_declared_struct(global_token->next->s, TRUE);
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -767,9 +809,13 @@ struct type* type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			return create_struct(TRUE);
+		}
+		else if(NULL == ret)
+		{
+			ret = create_forward_declared_struct(global_token->next->s, TRUE);
 		}
 	}
 	else

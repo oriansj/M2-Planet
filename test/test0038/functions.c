@@ -31,6 +31,16 @@ inline static int add_reversed(int b) { return b + b; }
 
 _Noreturn void do_not_return();
 
+void (*global_function_pointer)(void);
+void (*global_int_fp)(int, int);
+void (*global_pointer_fp)(int*, int*);
+
+struct {
+	void (*f)(void);
+	void (*f_int)(int, int);
+	void (*f_pointer)(int*, int*);
+};
+
 int main() {
 	a = 1;
 
@@ -43,6 +53,9 @@ int main() {
 
 	MyFunction my_function;
 	MyFunc my_func;
+	void (*function_pointer)(void);
+	void (*int_fp)(int, int);
+	void (*pointer_fp)(int*, int*);
 
 	return 0;
 }

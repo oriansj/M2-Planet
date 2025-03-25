@@ -75,6 +75,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
+		else if(reg == REGISTER_UNUSED1) return "2";
+		else if(reg == REGISTER_UNUSED2) return "3";
+		else if(reg == REGISTER_LOCALS) return "4";
 		else if(reg == REGISTER_TEMP) return "13";
 		else if(reg == REGISTER_BASE) return "14";
 		else if(reg == REGISTER_STACK) return "15";
@@ -86,6 +89,9 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "edi";
 		else if(reg == REGISTER_BASE) return "ebp";
 		else if(reg == REGISTER_STACK) return "esp";
+		else if(reg == REGISTER_LOCALS) return "esi";
+		else if(reg == REGISTER_UNUSED1) return "ecx";
+		else if(reg == REGISTER_UNUSED2) return "edx";
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -94,11 +100,17 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "rdi";
 		else if(reg == REGISTER_BASE) return "rbp";
 		else if(reg == REGISTER_STACK) return "rsp";
+		else if(reg == REGISTER_LOCALS) return "rsi";
+		else if(reg == REGISTER_UNUSED1) return "rcx";
+		else if(reg == REGISTER_UNUSED2) return "rdx";
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
+		else if(reg == REGISTER_LOCALS) return "R2";
+		else if(reg == REGISTER_UNUSED1) return "R3";
+		else if(reg == REGISTER_UNUSED2) return "R4";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -108,6 +120,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
+		else if(reg == REGISTER_LOCALS) return "X2";
+		else if(reg == REGISTER_UNUSED1) return "X3";
+		else if(reg == REGISTER_UNUSED2) return "X4";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -117,6 +132,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
+		else if(reg == REGISTER_LOCALS) return "a2";
+		else if(reg == REGISTER_UNUSED1) return "a3";
+		else if(reg == REGISTER_UNUSED2) return "a4";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
@@ -1108,11 +1126,10 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(char* s, int is_function_pointer)
+void function_call(struct token_list* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
-	int passed = 0;
 
 	emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
@@ -1122,19 +1139,17 @@ void function_call(char* s, int is_function_pointer)
 	emit_push(REGISTER_BASE, "Protect the old base pointer");
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
-	if(global_token->s[0] != ')')
+	int passed = 0;
+	while(global_token->s[0] != ')')
 	{
 		expression();
 		require(NULL != global_token, "incomplete function call, received EOF instead of )\n");
-		emit_push(REGISTER_ZERO, "_process_expression1");
-		passed = 1;
+		emit_push(REGISTER_ZERO, "function argument");
+		passed = passed + 1;
 
-		while(global_token->s[0] == ',')
+		if(global_token->s[0] == ',')
 		{
 			require_extra_token();
-			expression();
-			emit_push(REGISTER_ZERO, "_process_expression2");
-			passed = passed + 1;
 		}
 	}
 
@@ -1142,7 +1157,7 @@ void function_call(char* s, int is_function_pointer)
 
 	if(TRUE == is_function_pointer)
 	{
-		int value = strtoint(s);
+		int value = s->depth;
 
 		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
@@ -1192,31 +1207,31 @@ void function_call(char* s, int is_function_pointer)
 
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
-			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s, "function call");
+			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s->s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
 		else if((X86 == Architecture) || (AMD64 == Architecture))
 		{
 			emit_out("call %FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out("\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
 			emit_out("^~FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out(" CALL_ALWAYS\n");
 			emit_pop(REGISTER_RETURN, "Restore the old link register");
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s, "function call");
+			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s->s, "function call");
 			emit_out("BLR_X16\n");
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			emit_out("rd_ra $FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out(" jal\n");
 		}
 	}
@@ -1395,7 +1410,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	require(NULL != global_token, "incomplete variable load received\n");
 	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 	{
-		function_call(int2str(a->depth, 10, TRUE), TRUE);
+		function_call(a, TRUE);
 		return;
 	}
 	current_target = a->type;
@@ -1441,7 +1456,7 @@ void function_load(struct token_list* a)
 	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
-		function_call(a->s, FALSE);
+		function_call(a, FALSE);
 		return;
 	}
 
@@ -2723,10 +2738,43 @@ void collect_local(void)
 	struct token_list* a;
 	unsigned struct_depth_adjustment;
 	unsigned i;
+	char* name;
 
 	do
 	{
-		a = sym_declare(global_token->s, current_type, list_to_append_to);
+		if(global_token->s[0] == '(')
+		{
+			require_extra_token();
+
+			require_match("Required '*' after '(' in local function pointer.\n", "*");
+			require(NULL != global_token->s, "NULL token in local function pointer");
+
+			name = global_token->s;
+			require_extra_token();
+
+			require_match("Required ')' after name in local function pointer.\n", ")");
+			require_match("Required '(' after ')' in local function pointer.\n", "(");
+
+			while(global_token->s[0] != ')')
+			{
+				type_name();
+
+				if(global_token->s[0] == ',')
+				{
+					require_extra_token();
+				}
+			}
+			require_extra_token();
+
+			current_type = function_pointer;
+		}
+		else
+		{
+			name = global_token->s;
+			require_extra_token();
+		}
+
+		a = sym_declare(name, current_type, list_to_append_to);
 		list_to_append_to = a;
 
 		if(match("main", function->s) && (NULL == function->locals))
@@ -2774,20 +2822,12 @@ void collect_local(void)
 
 		function->locals = a;
 
-		if(global_token->s[0] == '(') {
-			line_error();
-			fputs("Function pointers as local variables are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
-		}
-
-		require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
-		require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
+		require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
+		require(!iskeywordp(name), "You are not allowed to use a keyword as a local variable name\n");
 
 		emit_out("# Defining local ");
-		emit_out(global_token->s);
+		emit_out(name);
 		emit_out("\n");
-
-		require_extra_token();
 
 		a->array_modifier = 1;
 		if(match("[", global_token->s))
@@ -4255,6 +4295,7 @@ void program(void)
 	function = NULL;
 	Address_of = FALSE;
 	struct type* type_size;
+	char* name;
 
 new_type:
 	/* Deal with garbage input */
@@ -4293,10 +4334,38 @@ new_type:
 	}
 
 	require(NULL != global_token->next, "Unterminated global\n");
+	if(global_token->s[0] == '(')
+	{
+		require_extra_token(); /* skip '(' */
+		require_match("Required '*' after '*' in global function pointer.\n", "*");
+
+		name = global_token->s;
+		require_extra_token();
+
+		require_match("Required ')' after name in global function pointer.\n", ")");
+		require_match("Required '(' after ')' in global function pointer.\n", "(");
+
+		while(global_token->s[0] != ')')
+		{
+			type_name();
+
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		require_extra_token(); /* skip ')' */
+
+		type_size = function_pointer;
+	}
+	else
+	{
+		name = global_token->s;
+		require_extra_token();
+	}
 
 	/* Add to global symbol table */
-	global_symbol_list = sym_declare(global_token->s, type_size, global_symbol_list);
-	require_extra_token();
+	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
@@ -4308,21 +4377,21 @@ new_type:
 	/* Deal with global variables */
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size, global_token->prev->s);
+		global_variable_definition(type_size, name);
 		goto new_type;
 	}
 
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		global_assignment(global_token->prev->s, type_size);
+		global_assignment(name, type_size);
 		goto new_type;
 	}
 
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_symbol_list->array_modifier = global_static_array(type_size, global_token->prev->s);
+		global_symbol_list->array_modifier = global_static_array(type_size, name);
 		goto new_type;
 	}
 
