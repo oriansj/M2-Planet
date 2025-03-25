@@ -4321,18 +4321,36 @@ new_type:
 	require(NULL != global_token->next, "Unterminated global\n");
 	if(global_token->s[0] == '(')
 	{
-		line_error();
-		fputs("Global function pointers are not supported.\n", stderr);
-		exit(EXIT_FAILURE);
+		require_extra_token(); /* skip '(' */
+		require_match("Required '*' after '*' in global function pointer.\n", "*");
+
+		name = global_token->s;
+		require_extra_token();
+
+		require_match("Required ')' after name in global function pointer.\n", ")");
+		require_match("Required '(' after ')' in global function pointer.\n", "(");
+
+		while(global_token->s[0] != ')')
+		{
+			type_name();
+
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		require_extra_token(); /* skip ')' */
+
+		type_size = function_pointer;
 	}
 	else
 	{
 		name = global_token->s;
+		require_extra_token();
 	}
 
 	/* Add to global symbol table */
 	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
-	require_extra_token();
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
