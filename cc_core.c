@@ -1112,7 +1112,6 @@ void function_call(char* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
-	int passed = 0;
 
 	emit_push(REGISTER_TEMP, "Protect temp register we are going to use");
 	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
@@ -1122,19 +1121,17 @@ void function_call(char* s, int is_function_pointer)
 	emit_push(REGISTER_BASE, "Protect the old base pointer");
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
-	if(global_token->s[0] != ')')
+	int passed = 0;
+	while(global_token->s[0] != ')')
 	{
 		expression();
 		require(NULL != global_token, "incomplete function call, received EOF instead of )\n");
-		emit_push(REGISTER_ZERO, "_process_expression1");
-		passed = 1;
+		emit_push(REGISTER_ZERO, "function argument");
+		passed = passed + 1;
 
-		while(global_token->s[0] == ',')
+		if(global_token->s[0] == ',')
 		{
 			require_extra_token();
-			expression();
-			emit_push(REGISTER_ZERO, "_process_expression2");
-			passed = passed + 1;
 		}
 	}
 
