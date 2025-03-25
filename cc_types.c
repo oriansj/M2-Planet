@@ -649,6 +649,13 @@ struct type* create_struct(int is_union)
 	{
 		last = build_member(last, offset);
 
+		if(member_size == NO_STRUCT_DEFINITION)
+		{
+			line_error();
+			fputs("Can not use non-defined type in object.\n", stderr);
+			exit(EXIT_FAILURE);
+		}
+
 		offset = offset + member_size;
 		if(member_size > largest_member_size)
 		{
@@ -779,9 +786,13 @@ struct type* type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			return create_struct(FALSE);
+		}
+		else if(NULL == ret)
+		{
+			ret = create_forward_declared_struct(global_token->next->s, TRUE);
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -798,9 +809,13 @@ struct type* type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(NULL == ret || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
 		{
 			return create_struct(TRUE);
+		}
+		else if(NULL == ret)
+		{
+			ret = create_forward_declared_struct(global_token->next->s, TRUE);
 		}
 	}
 	else
