@@ -554,6 +554,41 @@ struct type* reverse_members_type_list(struct type* head)
 	return root;
 }
 
+struct type* create_forward_declared_struct(char* name, int prepend_to_global_types)
+{
+	struct type* head = calloc(1, sizeof(struct type));
+	require(NULL != head, "Exhausted memory while creating a struct\n");
+	struct type* i = calloc(1, sizeof(struct type));
+	require(NULL != i, "Exhausted memory while creating a struct indirection\n");
+	struct type* ii = calloc(1, sizeof(struct type));
+	require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
+
+	head->name = name;
+	head->type = head;
+	head->indirect = i;
+	head->next = global_types;
+	head->size = NO_STRUCT_DEFINITION;
+	head->members = NULL;
+
+	i->name = head->name;
+	i->type = head;
+	i->indirect = ii;
+	i->size = register_size;
+	i->members = NULL;
+
+	ii->name = head->name;
+	ii->type = i;
+	ii->indirect = ii;
+	ii->size = register_size;
+
+	if(prepend_to_global_types)
+	{
+		global_types = head;
+	}
+
+	return head;
+}
+
 struct type* create_struct(int is_union)
 {
 	int offset = 0;
@@ -578,36 +613,8 @@ struct type* create_struct(int is_union)
 
 	if(NULL == head)
 	{
-		head = calloc(1, sizeof(struct type));
-		require(NULL != head, "Exhausted memory while creating a struct\n");
-		i = calloc(1, sizeof(struct type));
-		require(NULL != i, "Exhausted memory while creating a struct indirection\n");
-		struct type* ii = calloc(1, sizeof(struct type));
-		require(NULL != ii, "Exhausted memory while creating a struct double indirection\n");
-
-		head->name = name;
-		head->type = head;
-		head->indirect = i;
-		head->next = global_types;
-		head->size = NO_STRUCT_DEFINITION;
-		head->members = NULL;
-
-		i->name = head->name;
-		i->type = head;
-		i->indirect = ii;
-		i->size = register_size;
-		i->members = NULL;
-
-		ii->name = head->name;
-		ii->type = i;
-		ii->indirect = ii;
-		ii->size = register_size;
-
-		if(has_name)
-		{
-			/* Anonymous types shouldn't be looked up by name. */
-			global_types = head;
-		}
+		head = create_forward_declared_struct(name, has_name);
+		i = head->indirect;
 	}
 	else
 	{
