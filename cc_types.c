@@ -460,7 +460,13 @@ struct type* build_member(struct type* last, int offset)
 	require(NULL != member_type, "struct member type can not be invalid\n");
 	i->type = member_type;
 
-	if(global_token->s[0] != ';')
+	if(global_token->s[0] == '(')
+	{
+		line_error();
+		fputs("Function pointers in objects are not supported.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	else if(global_token->s[0] != ';')
 	{
 		i->name = global_token->s;
 		require_extra_token();
