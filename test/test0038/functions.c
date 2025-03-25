@@ -35,6 +35,12 @@ void (*global_function_pointer)(void);
 void (*global_int_fp)(int, int);
 void (*global_pointer_fp)(int*, int*);
 
+struct {
+	void (*f)(void);
+	void (*f_int)(int, int);
+	void (*f_pointer)(int*, int*);
+};
+
 int main() {
 	a = 1;
 

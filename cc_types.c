@@ -462,9 +462,27 @@ struct type* build_member(struct type* last, int offset)
 
 	if(global_token->s[0] == '(')
 	{
-		line_error();
-		fputs("Function pointers in objects are not supported.\n", stderr);
-		exit(EXIT_FAILURE);
+		require_extra_token(); /* skip '(' */
+		require_match("Required '*' after '(' in struct function pointer.", "*");
+
+		i->name = global_token->s;
+		require_extra_token();
+
+		require_match("Required ')' after name in struct function pointer.", ")");
+		require_match("Required '(' after ')' in struct function pointer.", "(");
+
+		while(global_token->s[0] != ')')
+		{
+			type_name();
+
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		require_extra_token(); /* skip ')' */
+
+		i->type = function_pointer;
 	}
 	else if(global_token->s[0] != ';')
 	{
