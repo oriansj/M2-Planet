@@ -2723,10 +2723,43 @@ void collect_local(void)
 	struct token_list* a;
 	unsigned struct_depth_adjustment;
 	unsigned i;
+	char* name;
 
 	do
 	{
-		a = sym_declare(global_token->s, current_type, list_to_append_to);
+		if(global_token->s[0] == '(')
+		{
+			require_extra_token();
+
+			require_match("Required '*' after '(' in local function pointer.\n", "*");
+			require(NULL != global_token->s, "NULL token in local function pointer");
+
+			name = global_token->s;
+			require_extra_token();
+
+			require_match("Required ')' after name in local function pointer.\n", ")");
+			require_match("Required '(' after ')' in local function pointer.\n", "(");
+
+			while(global_token->s[0] != ')')
+			{
+				type_name();
+
+				if(global_token->s[0] == ',')
+				{
+					require_extra_token();
+				}
+			}
+			require_extra_token();
+
+			current_type = function_pointer;
+		}
+		else
+		{
+			name = global_token->s;
+			require_extra_token();
+		}
+
+		a = sym_declare(name, current_type, list_to_append_to);
 		list_to_append_to = a;
 
 		if(match("main", function->s) && (NULL == function->locals))
@@ -2774,20 +2807,12 @@ void collect_local(void)
 
 		function->locals = a;
 
-		if(global_token->s[0] == '(') {
-			line_error();
-			fputs("Function pointers as local variables are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
-		}
-
-		require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
-		require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a local variable name\n");
+		require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
+		require(!iskeywordp(name), "You are not allowed to use a keyword as a local variable name\n");
 
 		emit_out("# Defining local ");
-		emit_out(global_token->s);
+		emit_out(name);
 		emit_out("\n");
-
-		require_extra_token();
 
 		a->array_modifier = 1;
 		if(match("[", global_token->s))

@@ -43,6 +43,9 @@ int main() {
 
 	MyFunction my_function;
 	MyFunc my_func;
+	void (*function_pointer)(void);
+	void (*int_fp)(int, int);
+	void (*pointer_fp)(int*, int*);
 
 	return 0;
 }
