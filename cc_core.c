@@ -1108,7 +1108,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(char* s, int is_function_pointer)
+void function_call(struct token_list* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -1139,7 +1139,7 @@ void function_call(char* s, int is_function_pointer)
 
 	if(TRUE == is_function_pointer)
 	{
-		int value = strtoint(s);
+		int value = s->depth;
 
 		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
@@ -1189,31 +1189,31 @@ void function_call(char* s, int is_function_pointer)
 
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
-			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s, "function call");
+			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s->s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
 		else if((X86 == Architecture) || (AMD64 == Architecture))
 		{
 			emit_out("call %FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out("\n");
 		}
 		else if(ARMV7L == Architecture)
 		{
 			emit_out("^~FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out(" CALL_ALWAYS\n");
 			emit_pop(REGISTER_RETURN, "Restore the old link register");
 		}
 		else if(AARCH64 == Architecture)
 		{
-			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s, "function call");
+			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s->s, "function call");
 			emit_out("BLR_X16\n");
 		}
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 		{
 			emit_out("rd_ra $FUNCTION_");
-			emit_out(s);
+			emit_out(s->s);
 			emit_out(" jal\n");
 		}
 	}
@@ -1392,7 +1392,7 @@ void variable_load(struct token_list* a, int num_dereference)
 	require(NULL != global_token, "incomplete variable load received\n");
 	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 	{
-		function_call(int2str(a->depth, 10, TRUE), TRUE);
+		function_call(a, TRUE);
 		return;
 	}
 	current_target = a->type;
@@ -1438,7 +1438,7 @@ void function_load(struct token_list* a)
 	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
-		function_call(a->s, FALSE);
+		function_call(a, FALSE);
 		return;
 	}
 
