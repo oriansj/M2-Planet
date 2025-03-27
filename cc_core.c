@@ -4271,6 +4271,8 @@ void global_assignment(char* name, struct type* type_size)
 
 void declare_global_variable(struct type* type_size, char* name)
 {
+	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
@@ -4390,8 +4392,6 @@ new_type:
 
 	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
 	{
-		global_symbol_list = sym_declare(name, type_size, global_symbol_list);
-
 		declare_global_variable(type_size, name);
 		goto new_type;
 	}
