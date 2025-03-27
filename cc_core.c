@@ -3532,7 +3532,7 @@ void process_static_variable(int is_loop_variable)
 
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size, new_name);
+		global_assignment(new_name, type_size);
 		return;
 	}
 
