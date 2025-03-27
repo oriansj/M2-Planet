@@ -4388,19 +4388,18 @@ new_type:
 		require_extra_token();
 	}
 
-	/* Add to global symbol table */
-	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
+	{
+		global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+
+		declare_global_variable(type_size, name);
+		goto new_type;
+	}
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
 		declare_function();
-		goto new_type;
-	}
-
-	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
-	{
-		declare_global_variable(type_size, name);
 		goto new_type;
 	}
 
