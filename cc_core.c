@@ -1240,7 +1240,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 
 	for(; passed > 0; passed = passed - 1)
 	{
-		emit_pop(REGISTER_ONE, "_process_expression_locals");
+		emit_pop(REGISTER_ONE, "Clean up function arguments");
 	}
 
 	emit_pop(REGISTER_LOCALS, "Restore old locals pointer");
