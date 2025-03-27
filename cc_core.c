@@ -1137,6 +1137,8 @@ void function_call(struct token_list* s, int is_function_pointer)
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 	}
 	emit_push(REGISTER_BASE, "Protect the old base pointer");
+	emit_push(REGISTER_LOCALS, "Protect the old locals pointer");
+
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
 	int passed = 0;
@@ -1241,6 +1243,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 		emit_pop(REGISTER_ONE, "_process_expression_locals");
 	}
 
+	emit_pop(REGISTER_LOCALS, "Restore old locals pointer");
 	emit_pop(REGISTER_BASE, "Restore old base pointer");
 	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
 	{
@@ -3427,6 +3430,7 @@ void process_break(void)
 		emit_pop(REGISTER_ONE, "break_cleanup_locals");
 		i = i->next;
 	}
+
 	require_extra_token();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
@@ -3786,6 +3790,10 @@ void declare_function(void)
 		emit_out(":FUNCTION_");
 		emit_out(function->s);
 		emit_out("\n");
+
+		/* Save the current location of the stack pointer. */
+		emit_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
+
 		/* If we add any statics we don't want them globally available */
 		function_static_variables_list = NULL;
 		statement();
