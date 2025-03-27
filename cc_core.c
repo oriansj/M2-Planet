@@ -3532,7 +3532,7 @@ void process_static_variable(int is_loop_variable)
 
 	if(match(";", global_token->s))
 	{
-		global_variable_definition(type_size, new_name);
+		global_assignment(new_name, type_size);
 		return;
 	}
 
@@ -4260,13 +4260,34 @@ void global_assignment(char* name, struct type* type_size)
 {
 	global_variable_header(name);
 
-	require_extra_token();
+	if(global_token->s[0] == ';')
+	{
+		global_variable_zero_initialize(type_size->size);
+	}
+	else
+	{
+		require_match("ERROR in global_assignment\nMissing =\n", "=");
 
-	global_value_selection(type_size);
+		global_value_selection(type_size);
 
-	global_pad_to_register_size(type_size->size);
+		global_pad_to_register_size(type_size->size);
+	}
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
+}
+
+void declare_global_variable(struct type* type_size, char* name)
+{
+	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+
+	/* Deal with global static arrays */
+	if(match("[", global_token->s))
+	{
+		global_symbol_list->array_modifier = global_static_array(type_size, name);
+		return;
+	}
+
+	global_assignment(name, type_size);
 }
 
 /*
@@ -4364,34 +4385,16 @@ new_type:
 		require_extra_token();
 	}
 
-	/* Add to global symbol table */
-	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
+	{
+		declare_global_variable(type_size, name);
+		goto new_type;
+	}
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
 		declare_function();
-		goto new_type;
-	}
-
-	/* Deal with global variables */
-	if(match(";", global_token->s))
-	{
-		global_variable_definition(type_size, name);
-		goto new_type;
-	}
-
-	/* Deal with assignment to a global variable */
-	if(match("=", global_token->s))
-	{
-		global_assignment(name, type_size);
-		goto new_type;
-	}
-
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		global_symbol_list->array_modifier = global_static_array(type_size, name);
 		goto new_type;
 	}
 
