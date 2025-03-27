@@ -4260,11 +4260,18 @@ void global_assignment(char* name, struct type* type_size)
 {
 	global_variable_header(name);
 
-	require_extra_token();
+	if(global_token->s[0] == ';')
+	{
+		global_variable_zero_initialize(type_size->size);
+	}
+	else
+	{
+		require_match("ERROR in global_assignment\nMissing =\n", "=");
 
-	global_value_selection(type_size);
+		global_value_selection(type_size);
 
-	global_pad_to_register_size(type_size->size);
+		global_pad_to_register_size(type_size->size);
+	}
 
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
@@ -4280,19 +4287,7 @@ void declare_global_variable(struct type* type_size, char* name)
 		return;
 	}
 
-	/* Deal with global variables */
-	if(match(";", global_token->s))
-	{
-		global_variable_definition(type_size, name);
-		return;
-	}
-
-	/* Deal with assignment to a global variable */
-	if(match("=", global_token->s))
-	{
-		global_assignment(name, type_size);
-		return;
-	}
+	global_assignment(name, type_size);
 }
 
 /*
