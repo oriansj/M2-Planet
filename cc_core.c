@@ -1683,11 +1683,7 @@ void multiply_by_object_size(int object_size)
 		return;
 	}
 
-	emit_push(REGISTER_ONE, "pointer arithmetic");
-
 	emit_mul_register_zero_with_immediate(current_target->type->size, "pointer arithmetic");
-
-	emit_pop(REGISTER_ONE, "pointer arithmetic");
 }
 
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
