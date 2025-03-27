@@ -3395,16 +3395,9 @@ void return_result(void)
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
-	struct token_list* i;
-	unsigned size_local_var;
-	for(i = function->locals; NULL != i; i = i->next)
+	if(function->locals != NULL)
 	{
-		size_local_var = ceil_div(i->type->size * i->array_modifier, register_size);
-		while(size_local_var != 0)
-		{
-			emit_pop(REGISTER_ONE, "_return_result_locals");
-			size_local_var = size_local_var - 1;
-		}
+		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
