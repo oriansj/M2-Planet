@@ -4269,6 +4269,30 @@ void global_assignment(char* name, struct type* type_size)
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
 
+void declare_global_variable(struct type* type_size, char* name)
+{
+	/* Deal with global static arrays */
+	if(match("[", global_token->s))
+	{
+		global_symbol_list->array_modifier = global_static_array(type_size, name);
+		return;
+	}
+
+	/* Deal with global variables */
+	if(match(";", global_token->s))
+	{
+		global_variable_definition(type_size, name);
+		return;
+	}
+
+	/* Deal with assignment to a global variable */
+	if(match("=", global_token->s))
+	{
+		global_assignment(name, type_size);
+		return;
+	}
+}
+
 /*
  * program:
  *     declaration
@@ -4374,24 +4398,9 @@ new_type:
 		goto new_type;
 	}
 
-	/* Deal with global variables */
-	if(match(";", global_token->s))
+	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
 	{
-		global_variable_definition(type_size, name);
-		goto new_type;
-	}
-
-	/* Deal with assignment to a global variable */
-	if(match("=", global_token->s))
-	{
-		global_assignment(name, type_size);
-		goto new_type;
-	}
-
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		global_symbol_list->array_modifier = global_static_array(type_size, name);
+		declare_global_variable(type_size, name);
 		goto new_type;
 	}
 
