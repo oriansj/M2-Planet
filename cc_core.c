@@ -3684,16 +3684,12 @@ void collect_arguments(void)
 		{
 			/* Periods can only be in the argument list as a variadic parameter
 			 * so if there is a period it's part of a variadic parameter */
-			require(global_token->next != NULL, "EOF in variadic parameter");
-			require(global_token->next->s[0] == '.', "Invalid token '.' in macro parameter list");
-			require(global_token->next->next != NULL, "EOF in second variadic parameter");
-			require(global_token->next->next->s[0] == '.', "Invalid tokens '..' in macro parameter list");
+			require_match("Invalid token found in variadic arguments token", ".");
+			require_match("Invalid token found in variadic arguments token", ".");
+			require_match("Invalid token found in variadic arguments token", ".");
 
 			maybe_bootstrap_error("variadic functions");
-
-			line_error();
-			fputs("Variadic functions are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
+			break;
 		}
 
 		type_size = type_name();
