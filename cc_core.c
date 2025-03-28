@@ -75,9 +75,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
-		else if(reg == REGISTER_UNUSED1) return "2";
-		else if(reg == REGISTER_UNUSED2) return "3";
-		else if(reg == REGISTER_LOCALS) return "4";
+		else if(reg == REGISTER_UNUSED1) return "10";
+		else if(reg == REGISTER_UNUSED2) return "11";
+		else if(reg == REGISTER_LOCALS) return "12";
 		else if(reg == REGISTER_TEMP) return "13";
 		else if(reg == REGISTER_BASE) return "14";
 		else if(reg == REGISTER_STACK) return "15";
@@ -100,17 +100,17 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_TEMP) return "rdi";
 		else if(reg == REGISTER_BASE) return "rbp";
 		else if(reg == REGISTER_STACK) return "rsp";
-		else if(reg == REGISTER_LOCALS) return "rsi";
-		else if(reg == REGISTER_UNUSED1) return "rcx";
-		else if(reg == REGISTER_UNUSED2) return "rdx";
+		else if(reg == REGISTER_LOCALS) return "r13";
+		else if(reg == REGISTER_UNUSED1) return "r14";
+		else if(reg == REGISTER_UNUSED2) return "r15";
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
-		else if(reg == REGISTER_LOCALS) return "R2";
-		else if(reg == REGISTER_UNUSED1) return "R3";
-		else if(reg == REGISTER_UNUSED2) return "R4";
+		else if(reg == REGISTER_LOCALS) return "R8";
+		else if(reg == REGISTER_UNUSED1) return "R9";
+		else if(reg == REGISTER_UNUSED2) return "R10";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -120,9 +120,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
-		else if(reg == REGISTER_LOCALS) return "X2";
-		else if(reg == REGISTER_UNUSED1) return "X3";
-		else if(reg == REGISTER_UNUSED2) return "X4";
+		else if(reg == REGISTER_LOCALS) return "X13";
+		else if(reg == REGISTER_UNUSED1) return "X14";
+		else if(reg == REGISTER_UNUSED2) return "X15";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -132,9 +132,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
-		else if(reg == REGISTER_LOCALS) return "a2";
-		else if(reg == REGISTER_UNUSED1) return "a3";
-		else if(reg == REGISTER_UNUSED2) return "a4";
+		else if(reg == REGISTER_LOCALS) return "t0";
+		else if(reg == REGISTER_UNUSED1) return "t1";
+		else if(reg == REGISTER_UNUSED2) return "t2";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
@@ -1137,6 +1137,8 @@ void function_call(struct token_list* s, int is_function_pointer)
 		emit_push(REGISTER_RETURN, "Protect the old return pointer (link)");
 	}
 	emit_push(REGISTER_BASE, "Protect the old base pointer");
+	emit_push(REGISTER_LOCALS, "Protect the old locals pointer");
+
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
 	int passed = 0;
@@ -1238,9 +1240,10 @@ void function_call(struct token_list* s, int is_function_pointer)
 
 	for(; passed > 0; passed = passed - 1)
 	{
-		emit_pop(REGISTER_ONE, "_process_expression_locals");
+		emit_pop(REGISTER_ONE, "Clean up function arguments");
 	}
 
+	emit_pop(REGISTER_LOCALS, "Restore old locals pointer");
 	emit_pop(REGISTER_BASE, "Restore old base pointer");
 	if((AARCH64 == Architecture) || (RISCV64 == Architecture) || (RISCV32 == Architecture))
 	{
@@ -1680,11 +1683,7 @@ void multiply_by_object_size(int object_size)
 		return;
 	}
 
-	emit_push(REGISTER_ONE, "pointer arithmetic");
-
 	emit_mul_register_zero_with_immediate(current_target->type->size, "pointer arithmetic");
-
-	emit_pop(REGISTER_ONE, "pointer arithmetic");
 }
 
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
@@ -3392,16 +3391,9 @@ void return_result(void)
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
-	struct token_list* i;
-	unsigned size_local_var;
-	for(i = function->locals; NULL != i; i = i->next)
+	if(function->locals != NULL)
 	{
-		size_local_var = ceil_div(i->type->size * i->array_modifier, register_size);
-		while(size_local_var != 0)
-		{
-			emit_pop(REGISTER_ONE, "_return_result_locals");
-			size_local_var = size_local_var - 1;
-		}
+		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
@@ -3427,6 +3419,7 @@ void process_break(void)
 		emit_pop(REGISTER_ONE, "break_cleanup_locals");
 		i = i->next;
 	}
+
 	require_extra_token();
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
@@ -3786,6 +3779,10 @@ void declare_function(void)
 		emit_out(":FUNCTION_");
 		emit_out(function->s);
 		emit_out("\n");
+
+		/* Save the current location of the stack pointer. */
+		emit_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
+
 		/* If we add any statics we don't want them globally available */
 		function_static_variables_list = NULL;
 		statement();
