@@ -1126,7 +1126,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(struct token_list* s, int is_function_pointer)
+void function_call(struct token_list* s, int is_function_pointer, int is_local)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -1161,7 +1161,13 @@ void function_call(struct token_list* s, int is_function_pointer)
 	{
 		int value = s->depth;
 
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, value, "function pointer call");
+		int reg = REGISTER_BASE;
+		if(is_local)
+		{
+			reg = REGISTER_LOCALS;
+		}
+
+		emit_load_relative_to_register(REGISTER_ZERO, reg, value, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
 
 		if(ARMV7L == Architecture)
@@ -1408,17 +1414,23 @@ int is_compound_assignment(char* token)
 
 int num_dereference_after_postfix;
 void postfix_expr_stub(void);
-void variable_load(struct token_list* a, int num_dereference)
+void variable_load(struct token_list* a, int num_dereference, int is_local)
 {
 	require(NULL != global_token, "incomplete variable load received\n");
 	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 	{
-		function_call(a, TRUE);
+		function_call(a, TRUE, is_local);
 		return;
 	}
 	current_target = a->type;
 
-	emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, a->depth, "variable load");
+	int reg = REGISTER_BASE;
+	if(is_local)
+	{
+		reg = REGISTER_LOCALS;
+	}
+
+	emit_load_relative_to_register(REGISTER_ZERO, reg, a->depth, "variable load");
 
 	if(TRUE == Address_of) return;
 	if(match(".", global_token->s))
@@ -1459,7 +1471,7 @@ void function_load(struct token_list* a)
 	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
-		function_call(a, FALSE);
+		function_call(a, FALSE, FALSE);
 		return;
 	}
 
@@ -1596,14 +1608,14 @@ void primary_expr_variable(void)
 	a = sym_lookup(s, function->locals);
 	if(NULL != a)
 	{
-		variable_load(a, num_dereference);
+		variable_load(a, num_dereference, TRUE);
 		return;
 	}
 
 	a = sym_lookup(s, function->arguments);
 	if(NULL != a)
 	{
-		variable_load(a, num_dereference);
+		variable_load(a, num_dereference, FALSE);
 		return;
 	}
 
@@ -2776,36 +2788,16 @@ void collect_local(void)
 		a = sym_declare(name, current_type, list_to_append_to);
 		list_to_append_to = a;
 
-		if(match("main", function->s) && (NULL == function->locals))
+		if(NULL == function->locals)
 		{
-			if(KNIGHT_NATIVE == Architecture) a->depth = register_size;
-			else if(KNIGHT_POSIX == Architecture) a->depth = 20;
-			else if(X86 == Architecture) a->depth = -20;
-			else if(AMD64 == Architecture) a->depth = -40;
-			else if(ARMV7L == Architecture) a->depth = 16;
-			else if(AARCH64 == Architecture) a->depth = 32; /* argc, argv, envp and the local (8 bytes each) */
-			else if(RISCV32 == Architecture) a->depth = -16;
-			else if(RISCV64 == Architecture) a->depth = -32;
-		}
-		else if((NULL == function->arguments) && (NULL == function->locals))
-		{
-			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = register_size;
-			else if(X86 == Architecture) a->depth = -8;
-			else if(AMD64 == Architecture) a->depth = -16;
-			else if(ARMV7L == Architecture) a->depth = 8;
-			else if(AARCH64 == Architecture) a->depth = register_size;
-			else if(RISCV32 == Architecture) a->depth = -4;
-			else if(RISCV64 == Architecture) a->depth = -8;
-		}
-		else if(NULL == function->locals)
-		{
-			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->arguments->depth + 8;
-			else if(X86 == Architecture) a->depth = function->arguments->depth - 8;
-			else if(AMD64 == Architecture) a->depth = function->arguments->depth - 16;
-			else if(ARMV7L == Architecture) a->depth = function->arguments->depth + 8;
-			else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
-			else if(RISCV32 == Architecture) a->depth = function->arguments->depth - 4;
-			else if(RISCV64 == Architecture) a->depth = function->arguments->depth - 8;
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				a->depth = register_size;
+			}
+			else
+			{
+				a->depth = -register_size;
+			}
 		}
 		else
 		{
@@ -3692,16 +3684,12 @@ void collect_arguments(void)
 		{
 			/* Periods can only be in the argument list as a variadic parameter
 			 * so if there is a period it's part of a variadic parameter */
-			require(global_token->next != NULL, "EOF in variadic parameter");
-			require(global_token->next->s[0] == '.', "Invalid token '.' in macro parameter list");
-			require(global_token->next->next != NULL, "EOF in second variadic parameter");
-			require(global_token->next->next->s[0] == '.', "Invalid tokens '..' in macro parameter list");
+			require_match("Invalid token found in variadic arguments token", ".");
+			require_match("Invalid token found in variadic arguments token", ".");
+			require_match("Invalid token found in variadic arguments token", ".");
 
 			maybe_bootstrap_error("variadic functions");
-
-			line_error();
-			fputs("Variadic functions are not supported.\n", stderr);
-			exit(EXIT_FAILURE);
+			break;
 		}
 
 		type_size = type_name();
