@@ -170,6 +170,10 @@ void initialize_types(void)
 	function_pointer->indirect->options = TO_FUNCTION_POINTER; /* FUNCTION* */
 	prim_types = add_primitive(function_pointer);
 
+	/* Define _va_list */
+	hold = new_primitive("__va_list", "__va_list*", "__va_list**", register_size, FALSE);
+	prim_types = add_primitive(hold);
+
 	if(BOOTSTRAP_MODE)
 	{
 		/* Define FILE */
@@ -736,7 +740,7 @@ struct type* create_enum(void)
 	int expr = 0;
 	while('}' != global_token->s[0])
 	{
-		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list, TLO_CONSTANT);
 		global_constant_list->type = integer;
 
 		require_extra_token();

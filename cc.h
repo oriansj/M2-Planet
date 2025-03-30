@@ -107,8 +107,22 @@ struct type
 };
 
 /* TLO = Token List Option */
+// CONSTANT TLO_NONE 0
+#define TLO_NONE 0
 // CONSTANT TLO_LOCAL_ARRAY 1
 #define TLO_LOCAL_ARRAY 1
+// CONSTANT TLO_STATIC 2
+#define TLO_STATIC 2
+// CONSTANT TLO_GLOBAL 4
+#define TLO_GLOBAL 4
+// CONSTANT TLO_ARGUMENT 8
+#define TLO_ARGUMENT 8
+// CONSTANT TLO_LOCAL 16
+#define TLO_LOCAL 16
+// CONSTANT TLO_FUNCTION 32
+#define TLO_FUNCTION 32
+// CONSTANT TLO_CONSTANT 64
+#define TLO_CONSTANT 64
 
 struct token_list
 {
@@ -138,6 +152,6 @@ struct static_variable_list
 	struct token_list* global_variable;
 };
 
-struct token_list* sym_declare(char *s, struct type* t, struct token_list* list);
+struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options);
 
 #include "cc_globals.h"

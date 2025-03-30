@@ -55,6 +55,8 @@ void global_variable_definition(struct type*, char*);
 void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
 
+struct type* type_name(void);
+
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
@@ -926,7 +928,7 @@ char* create_unique_id(char* prefix, char* s, char* num)
 	return buf;
 }
 
-struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
+struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options)
 {
 	struct token_list* a = calloc(1, sizeof(struct token_list));
 	require(NULL != a, "Exhausted memory while attempting to declare a symbol\n");
@@ -934,6 +936,7 @@ struct token_list* sym_declare(char *s, struct type* t, struct token_list* list)
 	a->s = s;
 	a->type = t;
 	a->array_modifier = 1;
+	a->options = options;
 	return a;
 }
 
@@ -1258,11 +1261,6 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	emit_pop(REGISTER_TEMP, "Restore temp register");
 }
 
-void constant_load(char* s)
-{
-	emit_load_immediate(REGISTER_ZERO, strtoint(s), "constant load");
-}
-
 char* load_value_signed(unsigned size)
 {
 	if(size == 1)
@@ -1412,59 +1410,7 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
-int num_dereference_after_postfix;
 void postfix_expr_stub(void);
-void variable_load(struct token_list* a, int num_dereference, int is_local)
-{
-	require(NULL != global_token, "incomplete variable load received\n");
-	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-	{
-		function_call(a, TRUE, is_local);
-		return;
-	}
-	current_target = a->type;
-
-	int reg = REGISTER_BASE;
-	if(is_local)
-	{
-		reg = REGISTER_LOCALS;
-	}
-
-	emit_load_relative_to_register(REGISTER_ZERO, reg, a->depth, "variable load");
-
-	if(TRUE == Address_of) return;
-	if(match(".", global_token->s))
-	{
-		postfix_expr_stub();
-		return;
-	}
-
-	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
-	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
-	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator && !is_postfix_operator)
-	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		while (num_dereference > 0)
-		{
-			current_target = current_target->type;
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			num_dereference = num_dereference - 1;
-		}
-		return;
-	}
-
-	num_dereference_after_postfix = num_dereference;
-	if(!is_postfix_operator)
-	{
-		while (num_dereference > 0)
-		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			current_target = current_target->type;
-			num_dereference = num_dereference - 1;
-		}
-	}
-}
 
 void function_load(struct token_list* a)
 {
@@ -1476,23 +1422,6 @@ void function_load(struct token_list* a)
 	}
 
 	emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", a->s, "function load");
-}
-
-void global_load(struct token_list* a)
-{
-	current_target = a->type;
-	emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", a->s, "global load");
-
-	require(NULL != global_token, "unterminated global load\n");
-	if(TRUE == Address_of) return;
-	if(match(".", global_token->s))
-	{
-		postfix_expr_stub();
-		return;
-	}
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
-
-	emit_out(load_value(register_size, current_target->is_signed));
 }
 
 /*
@@ -1582,6 +1511,160 @@ void primary_expr_number(char* s)
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
+struct token_list* load_address_of_variable(char* s)
+{
+	struct token_list* variable = static_variable_lookup(s);
+	if(NULL != variable)
+	{
+		current_target = variable->type;
+		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		return variable;
+	}
+
+	variable = sym_lookup(s, function->locals);
+	if(NULL != variable)
+	{
+		require(NULL != global_token, "incomplete variable load received\n");
+		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		{
+			function_call(variable, TRUE, TRUE);
+			return NULL;
+		}
+
+		current_target = variable->type;
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_LOCALS, variable->depth, "local variable load");
+		return variable;
+	}
+
+	variable = sym_lookup(s, function->arguments);
+	if(NULL != variable)
+	{
+		require(NULL != global_token, "incomplete variable load received\n");
+		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		{
+			function_call(variable, TRUE, FALSE);
+			return NULL;
+		}
+		current_target = variable->type;
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, variable->depth, "function argument load");
+		return variable;
+	}
+
+	variable = sym_lookup(s, global_function_list);
+	if(NULL != variable)
+	{
+		function_load(variable);
+		return NULL;
+	}
+
+	variable = sym_lookup(s, global_symbol_list);
+	if(NULL != variable)
+	{
+		current_target = variable->type;
+		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		return variable;
+	}
+
+	line_error();
+	fputs(s ,stderr);
+	fputs(" is not a defined symbol\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+void emit_va_start_intrinsic(void)
+{
+	emit_out("# __va_start intrinsic\n");
+	require_match("Invalid token after __va_start, expected '('", "(");
+
+	require_token();
+	char* ap_name = global_token->s;
+
+	require_extra_token();
+
+	require_match("Invalid token in __va_start, expected ','", ",");
+
+	require_token();
+	char* variable_name = global_token->s;
+	require_extra_token();
+
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+
+
+	/* We could avoid this push/pop if load_address_of_variable could load directly into a register */
+	load_address_of_variable(ap_name);
+	emit_push(REGISTER_ZERO, "Push ap");
+
+	struct token_list* loaded = load_address_of_variable(variable_name);
+	if(stack_direction == STACK_DIRECTION_PLUS)
+	{
+		emit_add_immediate(REGISTER_ZERO, loaded->type->size, "Add size of variable");
+	}
+	else
+	{
+		emit_sub_immediate(REGISTER_ZERO, loaded->type->size, "Subtract size of variable");
+	}
+
+	emit_pop(REGISTER_ONE, "Pop AP");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(register_size));
+	emit_out("# __va_start intrinsic end\n");
+}
+
+void emit_va_arg_intrinsic(void)
+{
+	emit_out("# __va_arg intrinsic\n");
+	require_match("Invalid token after __va_arg, expected '('", "(");
+
+	require_token();
+	char* ap_name = global_token->s;
+
+	require_extra_token();
+
+	require_match("Invalid token in __va_arg, expected ','", ",");
+
+	require_token();
+	struct type* type_size = type_name();
+
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+
+	emit_out("# REGISTER_ZERO = *ap\n");
+	load_address_of_variable(ap_name);
+	emit_dereference(REGISTER_ZERO, "Deref ap");
+	emit_dereference(REGISTER_ZERO, "Deref ap");
+	emit_push(REGISTER_ZERO, "Dereffed va_arg");
+
+	emit_out("# ap = ap - sizeof(ty)\n");
+	load_address_of_variable(ap_name);
+	emit_push(REGISTER_ZERO, "Push ap address");
+	emit_dereference(REGISTER_ZERO, "Deref ap for pointer to va_arg");
+	if(stack_direction == STACK_DIRECTION_PLUS)
+	{
+		emit_add_immediate(REGISTER_ZERO, type_size->size, "Add size of variable");
+	}
+	else
+	{
+		emit_sub_immediate(REGISTER_ZERO, type_size->size, "Subtract size of variable");
+	}
+
+	emit_pop(REGISTER_ONE, "Pop AP address");
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(type_size->size));
+
+	emit_pop(REGISTER_ZERO, "Dereffed va_arg");
+
+	emit_out("# __va_arg intrinsic end\n");
+}
+
+void emit_va_end_intrinsic(void)
+{
+	/* va_end is a noop for our impl */
+	require_match("Invalid token after __va_arg, expected '('", "(");
+	require_extra_token();
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+}
+
+int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
 	int num_dereference = 0;
@@ -1591,52 +1674,82 @@ void primary_expr_variable(void)
 	}
 	char* s = global_token->s;
 	require_extra_token();
+
+	if(match("__va_start", s))
+	{
+		emit_va_start_intrinsic();
+		return;
+	}
+	else if(match("__va_arg", s))
+	{
+		emit_va_arg_intrinsic();
+		return;
+	}
+	else if(match("__va_end", s))
+	{
+		emit_va_end_intrinsic();
+		return;
+	}
+	else if(match("__va_copy", s))
+	{
+		emit_va_end_intrinsic();
+		return;
+	}
+
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
-		constant_load(a->arguments->s);
+		emit_load_immediate(REGISTER_ZERO, strtoint(a->arguments->s), "constant load");
 		return;
 	}
 
-	a = static_variable_lookup(s);
-	if(NULL != a)
+	struct token_list* type = load_address_of_variable(s);
+	if(TRUE == Address_of) return;
+	if(type == NULL) return;
+
+	int options = type->options;
+
+	if(match(".", global_token->s))
 	{
-		global_load(a);
+		postfix_expr_stub();
 		return;
 	}
 
-	a = sym_lookup(s, function->locals);
-	if(NULL != a)
+	int is_assignment = match("=", global_token->s);
+	int is_compound_operator = is_compound_assignment(global_token->s);
+	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
+	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
+
+	int size = register_size;
+	if(options == TLO_LOCAL || options == TLO_ARGUMENT)
 	{
-		variable_load(a, num_dereference, TRUE);
-		return;
+		size = current_target->size;
 	}
 
-	a = sym_lookup(s, function->arguments);
-	if(NULL != a)
+	if(should_emit)
 	{
-		variable_load(a, num_dereference, FALSE);
+		emit_out(load_value(size, current_target->is_signed));
+		while (num_dereference > 0)
+		{
+			current_target = current_target->type;
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			num_dereference = num_dereference - 1;
+		}
 		return;
 	}
 
-	a = sym_lookup(s, global_function_list);
-	if(NULL != a)
+	num_dereference_after_postfix = num_dereference;
+	if(!is_postfix_operator)
 	{
-		function_load(a);
-		return;
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
 	}
-
-	a = sym_lookup(s, global_symbol_list);
-	if(NULL != a)
-	{
-		global_load(a);
-		return;
-	}
-
-	line_error();
-	fputs(s ,stderr);
-	fputs(" is not a defined symbol\n", stderr);
-	exit(EXIT_FAILURE);
 }
 
 void primary_expr(void);
@@ -1869,7 +1982,6 @@ void postfix_expr_array(void)
  *         !postfix-expr
  *         sizeof ( type )
  */
-struct type* type_name(void);
 int unary_expr_sizeof(void)
 {
 	require_extra_token();
@@ -2289,7 +2401,7 @@ void primary_expr(void)
 		Address_of = FALSE;
 	}
 
-	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
+	if(match("sizeof", global_token->s)) emit_load_immediate(REGISTER_ZERO, unary_expr_sizeof(), "load sizeof");
 	else if(match("-", global_token->s))
 	{
 		if((KNIGHT_POSIX != Architecture) && (KNIGHT_NATIVE != Architecture))
@@ -2785,7 +2897,7 @@ void collect_local(void)
 			require_extra_token();
 		}
 
-		a = sym_declare(name, current_type, list_to_append_to);
+		a = sym_declare(name, current_type, list_to_append_to, TLO_LOCAL);
 		list_to_append_to = a;
 
 		if(NULL == function->locals)
@@ -3512,7 +3624,7 @@ void process_static_variable(int is_loop_variable)
 	offset = offset + copy_string(new_name + offset, "_", MAX_STRING - offset);
 	copy_string(new_name + offset, variable->local_variable_name, MAX_STRING - offset);
 
-	variable->global_variable = sym_declare(new_name, type_size, NULL);
+	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();
 
 	if(match(";", global_token->s))
@@ -3529,11 +3641,8 @@ void process_static_variable(int is_loop_variable)
 			global_variable_definition(type_size, new_name);
 			require(NULL != global_token, "NULL token received in loop variable assignment");
 
-			/* global_load requires the global_token to see the current token as =
-			 * in order to prevent loading the value rather than the address. */
-			global_token = global_token->prev;
-			global_load(variable->global_variable);
-			require_extra_token();
+			current_target = variable->global_variable->type;
+			emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->global_variable->s, "loop variable load");
 
 			emit_push(REGISTER_ZERO, "_process_expression1");
 
@@ -3705,7 +3814,7 @@ void collect_arguments(void)
 			/* deal with foo(int a, char b) */
 			require(!in_set(global_token->s[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in argument variable name\n");
 			require(!iskeywordp(global_token->s), "You are not allowed to use a keyword as a argument variable name\n");
-			a = sym_declare(global_token->s, type_size, function->arguments);
+			a = sym_declare(global_token->s, type_size, function->arguments, TLO_ARGUMENT);
 			if(NULL == function->arguments)
 			{
 				if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = 0;
@@ -3745,7 +3854,7 @@ void collect_arguments(void)
 void declare_function(void)
 {
 	current_count = 0;
-	function = sym_declare(global_token->prev->s, NULL, global_function_list);
+	function = sym_declare(global_token->prev->s, NULL, global_function_list, TLO_FUNCTION);
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = function;
@@ -3810,7 +3919,7 @@ void declare_function(void)
 void global_constant(void)
 {
 	require_extra_token();
-	global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+	global_constant_list = sym_declare(global_token->s, NULL, global_constant_list, TLO_CONSTANT);
 
 	require(NULL != global_token->next, "CONSTANT lacks a value\n");
 	if(match("sizeof", global_token->next->s))
@@ -4263,7 +4372,7 @@ void global_assignment(char* name, struct type* type_size)
 
 void declare_global_variable(struct type* type_size, char* name)
 {
-	global_symbol_list = sym_declare(name, type_size, global_symbol_list);
+	global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
 
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
