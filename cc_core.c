@@ -1258,11 +1258,6 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	emit_pop(REGISTER_TEMP, "Restore temp register");
 }
 
-void constant_load(char* s)
-{
-	emit_load_immediate(REGISTER_ZERO, strtoint(s), "constant load");
-}
-
 char* load_value_signed(unsigned size)
 {
 	if(size == 1)
@@ -1594,7 +1589,7 @@ void primary_expr_variable(void)
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
-		constant_load(a->arguments->s);
+		emit_load_immediate(REGISTER_ZERO, strtoint(a->arguments->s), "constant load");
 		return;
 	}
 
@@ -2289,7 +2284,7 @@ void primary_expr(void)
 		Address_of = FALSE;
 	}
 
-	if(match("sizeof", global_token->s)) constant_load(int2str(unary_expr_sizeof(), 10, TRUE));
+	if(match("sizeof", global_token->s)) emit_load_immediate(REGISTER_ZERO, unary_expr_sizeof(), "load sizeof");
 	else if(match("-", global_token->s))
 	{
 		if((KNIGHT_POSIX != Architecture) && (KNIGHT_NATIVE != Architecture))
