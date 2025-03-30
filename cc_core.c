@@ -1421,28 +1421,6 @@ void function_load(struct token_list* a)
 	emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", a->s, "function load");
 }
 
-void global_load(struct token_list* a)
-{
-	current_target = a->type;
-	emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", a->s, "global load");
-
-	require(NULL != global_token, "unterminated global load\n");
-	if(TRUE == Address_of) return;
-	if(match(".", global_token->s))
-	{
-		postfix_expr_stub();
-		return;
-	}
-
-	int is_assignment = match("=", global_token->s);
-	int is_compound_operator = is_compound_assignment(global_token->s);
-	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
-	if(!is_assignment && !is_compound_operator && !is_local_array)
-	{
-		emit_out(load_value(register_size, current_target->is_signed));
-	}
-}
-
 /*
  * primary-expr:
  * FAILURE
@@ -3592,11 +3570,8 @@ void process_static_variable(int is_loop_variable)
 			global_variable_definition(type_size, new_name);
 			require(NULL != global_token, "NULL token received in loop variable assignment");
 
-			/* global_load requires the global_token to see the current token as =
-			 * in order to prevent loading the value rather than the address. */
-			global_token = global_token->prev;
-			global_load(variable->global_variable);
-			require_extra_token();
+			current_target = variable->global_variable->type;
+			emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->global_variable->s, "loop variable load");
 
 			emit_push(REGISTER_ZERO, "_process_expression1");
 
