@@ -1610,11 +1610,11 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	if(type == LLA_STATIC)
+	int is_assignment = match("=", global_token->s);
+	int is_compound_operator = is_compound_assignment(global_token->s);
+	int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
+	if(type == LLA_STATIC || type == LLA_GLOBAL)
 	{
-		int is_assignment = match("=", global_token->s);
-		int is_compound_operator = is_compound_assignment(global_token->s);
-		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
 		if(!is_assignment && !is_compound_operator && !is_local_array)
 		{
 			emit_out(load_value(register_size, current_target->is_signed));
@@ -1622,9 +1622,6 @@ void primary_expr_variable(void)
 	}
 	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
 	{
-		int is_assignment = match("=", global_token->s);
-		int is_compound_operator = is_compound_assignment(global_token->s);
-		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
 		int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
 		int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
 		if(!is_assignment && !is_compound_operator && !is_local_array && !is_prefix_operator && !is_postfix_operator)
@@ -1648,16 +1645,6 @@ void primary_expr_variable(void)
 				current_target = current_target->type;
 				num_dereference = num_dereference - 1;
 			}
-		}
-	}
-	else if(type == LLA_GLOBAL)
-	{
-		int is_assignment = match("=", global_token->s);
-		int is_compound_operator = is_compound_assignment(global_token->s);
-		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
-		if(!is_assignment && !is_compound_operator && !is_local_array)
-		{
-			emit_out(load_value(register_size, current_target->is_signed));
 		}
 	}
 }
