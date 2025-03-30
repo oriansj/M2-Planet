@@ -17,14 +17,9 @@
 
 typedef __va_list va_list;
 
-#if defined(__knight__) || defined(__arm__) || defined(__aarch64__)
-#define va_arg(ap, ty) *ap; ap = ap + sizeof(ty)
-#else
-#define va_arg(ap, ty) *ap; ap = ap - sizeof(ty)
-#endif
-
 /* M2-Planet still has problems with function-like macros. */
 #define va_start __va_start
+#define va_arg __va_arg
 
 #define va_end(ap) ap
 
@@ -44,9 +39,18 @@ int add_numbers(int count, ...)
 	return result;
 }
 
+int simple(int first, ...)
+{
+	va_list ap;
+	va_start(ap, first);
+
+	return va_arg(ap, int);
+}
+
 int main() {
-	if(add_numbers(4, 25, 25, 50, 50) != 150) return 1;
-	if(add_numbers(3, 25, 25, 50) != 100) return 2;
-	if(add_numbers(2, 25, 25) != 50) return 3;
+	if(simple(1, 2) != 2) return 1;
+	if(add_numbers(4, 25, 25, 50, 50) != 150) return 2;
+	if(add_numbers(3, 25, 25, 50) != 100) return 3;
+	if(add_numbers(2, 25, 25) != 50) return 4;
 }
 

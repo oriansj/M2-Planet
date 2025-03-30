@@ -55,6 +55,8 @@ void global_variable_definition(struct type*, char*);
 void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
 
+struct type* type_name(void);
+
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
@@ -1609,6 +1611,51 @@ void emit_va_start_intrinsic(void)
 	emit_out("# __va_start intrinsic end\n");
 }
 
+void emit_va_arg_intrinsic(void)
+{
+	emit_out("# __va_arg intrinsic\n");
+	require_match("Invalid token after __va_arg, expected '('", "(");
+
+	require_token();
+	char* ap_name = global_token->s;
+
+	require_extra_token();
+
+	require_match("Invalid token in __va_arg, expected ','", ",");
+
+	require_token();
+	struct type* type_size = type_name();
+
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+
+	emit_out("# REGISTER_ZERO = *ap\n");
+	load_address_of_variable(ap_name);
+	emit_dereference(REGISTER_ZERO, "Deref ap");
+	emit_dereference(REGISTER_ZERO, "Deref ap");
+	emit_push(REGISTER_ZERO, "Dereffed va_arg");
+
+	emit_out("# ap = ap - sizeof(ty)\n");
+	load_address_of_variable(ap_name);
+	emit_push(REGISTER_ZERO, "Push ap address");
+	emit_dereference(REGISTER_ZERO, "Deref ap for pointer to va_arg");
+	if(stack_direction == STACK_DIRECTION_PLUS)
+	{
+		emit_add_immediate(REGISTER_ZERO, type_size->size, "Add size of variable");
+	}
+	else
+	{
+		emit_sub_immediate(REGISTER_ZERO, type_size->size, "Subtract size of variable");
+	}
+
+	emit_pop(REGISTER_ONE, "Pop AP address");
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(type_size->size));
+
+	emit_pop(REGISTER_ZERO, "Dereffed va_arg");
+
+	emit_out("# __va_arg intrinsic end\n");
+}
+
 int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
@@ -1623,6 +1670,11 @@ void primary_expr_variable(void)
 	if(match("__va_start", s))
 	{
 		emit_va_start_intrinsic();
+		return;
+	}
+	else if(match("__va_arg", s))
+	{
+		emit_va_arg_intrinsic();
 		return;
 	}
 
@@ -1912,7 +1964,6 @@ void postfix_expr_array(void)
  *         !postfix-expr
  *         sizeof ( type )
  */
-struct type* type_name(void);
 int unary_expr_sizeof(void)
 {
 	require_extra_token();
