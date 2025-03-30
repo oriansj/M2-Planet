@@ -736,7 +736,7 @@ struct type* create_enum(void)
 	int expr = 0;
 	while('}' != global_token->s[0])
 	{
-		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list);
+		global_constant_list = sym_declare(global_token->s, NULL, global_constant_list, TLO_CONSTANT);
 		global_constant_list->type = integer;
 
 		require_extra_token();
