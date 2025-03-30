@@ -1690,6 +1690,11 @@ void primary_expr_variable(void)
 		emit_va_end_intrinsic();
 		return;
 	}
+	else if(match("__va_copy", s))
+	{
+		emit_va_end_intrinsic();
+		return;
+	}
 
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)

@@ -21,6 +21,7 @@ typedef __va_list va_list;
 #define va_start __va_start
 #define va_arg __va_arg
 #define va_end __va_end
+#define va_copy(ap1, ap2) ap2 = ap1
 
 int add_numbers(int count, ...)
 {
@@ -46,10 +47,36 @@ int simple(int first, ...)
 	return va_arg(ap, int);
 }
 
+int copy(int count, ...)
+{
+	int result = 0;
+	int second_count = count;
+	va_list args;
+	va_list second_args;
+	va_start(args, count);
+	va_copy(args, second_args);
+
+	int i;
+	for (i = 0; i < count; ++i) {
+		result += va_arg(args, int);
+	}
+
+	int i;
+	for (i = 0; i < count; ++i) {
+		result += va_arg(second_args, int);
+	}
+
+	va_end(args);
+	va_end(second_args);
+
+	return result;
+}
+
 int main() {
 	if(simple(1, 2) != 2) return 1;
 	if(add_numbers(4, 25, 25, 50, 50) != 150) return 2;
 	if(add_numbers(3, 25, 25, 50) != 100) return 3;
 	if(add_numbers(2, 25, 25) != 50) return 4;
+	if(copy(2, 25, 25) != 100) return 5;
 }
 
