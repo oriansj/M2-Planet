@@ -1434,10 +1434,12 @@ void variable_load(struct token_list* a, int num_dereference, int is_local)
 		return;
 	}
 
+	int is_assignment = match("=", global_token->s);
+	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
 	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
 	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
-	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_local_array && !is_prefix_operator && !is_postfix_operator)
+	if(!is_assignment && !is_compound_operator && !is_local_array && !is_prefix_operator && !is_postfix_operator)
 	{
 		emit_out(load_value(current_target->size, current_target->is_signed));
 		while (num_dereference > 0)
@@ -1485,9 +1487,14 @@ void global_load(struct token_list* a)
 		postfix_expr_stub();
 		return;
 	}
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
 
-	emit_out(load_value(register_size, current_target->is_signed));
+	int is_assignment = match("=", global_token->s);
+	int is_compound_operator = is_compound_assignment(global_token->s);
+	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
+	if(!is_assignment && !is_compound_operator && !is_local_array)
+	{
+		emit_out(load_value(register_size, current_target->is_signed));
+	}
 }
 
 /*
