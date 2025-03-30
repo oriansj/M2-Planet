@@ -1614,45 +1614,36 @@ void primary_expr_variable(void)
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
-	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (type == LLA_LOCAL || type == LLA_ARGUMENT);
-	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (type == LLA_LOCAL || type == LLA_ARGUMENT);
+	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (type != LLA_STATIC && type != LLA_GLOBAL);
+	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (type != LLA_STATIC && type != LLA_GLOBAL);
 	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
-	if(type == LLA_STATIC || type == LLA_GLOBAL)
+
+	int size = register_size;
+	if(type == LLA_LOCAL || type == LLA_ARGUMENT)
 	{
-		if(should_emit)
-		{
-			emit_out(load_value(register_size, current_target->is_signed));
-			while (num_dereference > 0)
-			{
-				current_target = current_target->type;
-				emit_out(load_value(current_target->size, current_target->is_signed));
-				num_dereference = num_dereference - 1;
-			}
-		}
+		size = current_target->size;
 	}
-	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
+
+	if(should_emit)
 	{
-		if(should_emit)
+		emit_out(load_value(size, current_target->is_signed));
+		while (num_dereference > 0)
+		{
+			current_target = current_target->type;
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			num_dereference = num_dereference - 1;
+		}
+		return;
+	}
+
+	num_dereference_after_postfix = num_dereference;
+	if(!is_postfix_operator)
+	{
+		while (num_dereference > 0)
 		{
 			emit_out(load_value(current_target->size, current_target->is_signed));
-			while (num_dereference > 0)
-			{
-				current_target = current_target->type;
-				emit_out(load_value(current_target->size, current_target->is_signed));
-				num_dereference = num_dereference - 1;
-			}
-			return;
-		}
-
-		num_dereference_after_postfix = num_dereference;
-		if(!is_postfix_operator)
-		{
-			while (num_dereference > 0)
-			{
-				emit_out(load_value(current_target->size, current_target->is_signed));
-				current_target = current_target->type;
-				num_dereference = num_dereference - 1;
-			}
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
 		}
 	}
 }
