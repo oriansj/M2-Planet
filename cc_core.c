@@ -1618,6 +1618,12 @@ void primary_expr_variable(void)
 		if(!is_assignment && !is_compound_operator && !is_local_array)
 		{
 			emit_out(load_value(register_size, current_target->is_signed));
+			while (num_dereference > 0)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+				num_dereference = num_dereference - 1;
+			}
 		}
 	}
 	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
