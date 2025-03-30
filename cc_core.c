@@ -1603,6 +1603,7 @@ void primary_expr_variable(void)
 
 	int type = load_address_of_variable(s);
 	if(TRUE == Address_of) return;
+	if(type == LLA_SKIP) return;
 
 	if(match(".", global_token->s))
 	{
@@ -1613,9 +1614,12 @@ void primary_expr_variable(void)
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
+	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (type == LLA_LOCAL || type == LLA_ARGUMENT);
+	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (type == LLA_LOCAL || type == LLA_ARGUMENT);
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
 	if(type == LLA_STATIC || type == LLA_GLOBAL)
 	{
-		if(!is_assignment && !is_compound_operator && !is_local_array)
+		if(should_emit)
 		{
 			emit_out(load_value(register_size, current_target->is_signed));
 			while (num_dereference > 0)
@@ -1628,9 +1632,7 @@ void primary_expr_variable(void)
 	}
 	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
 	{
-		int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
-		int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
-		if(!is_assignment && !is_compound_operator && !is_local_array && !is_prefix_operator && !is_postfix_operator)
+		if(should_emit)
 		{
 			emit_out(load_value(current_target->size, current_target->is_signed));
 			while (num_dereference > 0)
