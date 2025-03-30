@@ -1407,61 +1407,7 @@ int is_compound_assignment(char* token)
 	return FALSE;
 }
 
-int num_dereference_after_postfix;
 void postfix_expr_stub(void);
-void variable_load(struct token_list* a, int num_dereference, int is_local)
-{
-	require(NULL != global_token, "incomplete variable load received\n");
-	if((a->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-	{
-		function_call(a, TRUE, is_local);
-		return;
-	}
-	current_target = a->type;
-
-	int reg = REGISTER_BASE;
-	if(is_local)
-	{
-		reg = REGISTER_LOCALS;
-	}
-
-	emit_load_relative_to_register(REGISTER_ZERO, reg, a->depth, "variable load");
-
-	if(TRUE == Address_of) return;
-	if(match(".", global_token->s))
-	{
-		postfix_expr_stub();
-		return;
-	}
-
-	int is_assignment = match("=", global_token->s);
-	int is_compound_operator = is_compound_assignment(global_token->s);
-	int is_local_array = match("[", global_token->s) && (a->options & TLO_LOCAL_ARRAY);
-	int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
-	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
-	if(!is_assignment && !is_compound_operator && !is_local_array && !is_prefix_operator && !is_postfix_operator)
-	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		while (num_dereference > 0)
-		{
-			current_target = current_target->type;
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			num_dereference = num_dereference - 1;
-		}
-		return;
-	}
-
-	num_dereference_after_postfix = num_dereference;
-	if(!is_postfix_operator)
-	{
-		while (num_dereference > 0)
-		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			current_target = current_target->type;
-			num_dereference = num_dereference - 1;
-		}
-	}
-}
 
 void function_load(struct token_list* a)
 {
@@ -1584,6 +1530,82 @@ void primary_expr_number(char* s)
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
+/* LLA = Load Local Address */
+#define LLA_SKIP 0
+// CONSTANT LLA_SKIP 0
+#define LLA_STATIC 1
+// CONSTANT LLA_STATIC 1
+#define LLA_GLOBAL 2
+// CONSTANT LLA_GLOBAL 2
+#define LLA_ARGUMENT 4
+// CONSTANT LLA_ARGUMENT 4
+#define LLA_LOCAL 8
+// CONSTANT LLA_LOCAL 8
+#define LLA_FUNCTION 16
+// CONSTANT LLA_FUNCTION 16
+
+struct token_list* loaded_variable;
+int load_address_of_variable(char* s)
+{
+	loaded_variable = static_variable_lookup(s);
+	if(NULL != loaded_variable)
+	{
+		current_target = loaded_variable->type;
+		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", loaded_variable->s, "global load");
+		return LLA_STATIC;
+	}
+
+	loaded_variable = sym_lookup(s, function->locals);
+	if(NULL != loaded_variable)
+	{
+		require(NULL != global_token, "incomplete variable load received\n");
+		if((loaded_variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		{
+			function_call(loaded_variable, TRUE, TRUE);
+			return LLA_SKIP;
+		}
+
+		current_target = loaded_variable->type;
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_LOCALS, loaded_variable->depth, "local variable load");
+		return LLA_LOCAL;
+	}
+
+	loaded_variable = sym_lookup(s, function->arguments);
+	if(NULL != loaded_variable)
+	{
+		require(NULL != global_token, "incomplete variable load received\n");
+		if((loaded_variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		{
+			function_call(loaded_variable, TRUE, FALSE);
+			return LLA_SKIP;
+		}
+		current_target = loaded_variable->type;
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, loaded_variable->depth, "function argument load");
+		return LLA_ARGUMENT;
+	}
+
+	loaded_variable = sym_lookup(s, global_function_list);
+	if(NULL != loaded_variable)
+	{
+		function_load(loaded_variable);
+		return LLA_SKIP;
+	}
+
+	loaded_variable = sym_lookup(s, global_symbol_list);
+	if(NULL != loaded_variable)
+	{
+		current_target = loaded_variable->type;
+		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", loaded_variable->s, "global load");
+		return LLA_GLOBAL;
+	}
+
+	line_error();
+	fputs(s ,stderr);
+	fputs(" is not a defined symbol\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
 	int num_dereference = 0;
@@ -1593,6 +1615,7 @@ void primary_expr_variable(void)
 	}
 	char* s = global_token->s;
 	require_extra_token();
+
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)
 	{
@@ -1600,45 +1623,83 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	a = static_variable_lookup(s);
-	if(NULL != a)
+	int type = load_address_of_variable(s);
+	if(type == LLA_STATIC)
 	{
-		global_load(a);
+		if(TRUE == Address_of) return;
+		if(match(".", global_token->s))
+		{
+			postfix_expr_stub();
+			return;
+		}
+
+		int is_assignment = match("=", global_token->s);
+		int is_compound_operator = is_compound_assignment(global_token->s);
+		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
+		if(!is_assignment && !is_compound_operator && !is_local_array)
+		{
+			emit_out(load_value(register_size, current_target->is_signed));
+		}
 		return;
 	}
-
-	a = sym_lookup(s, function->locals);
-	if(NULL != a)
+	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
 	{
-		variable_load(a, num_dereference, TRUE);
+		if(TRUE == Address_of) return;
+		if(match(".", global_token->s))
+		{
+			postfix_expr_stub();
+			return;
+		}
+
+		int is_assignment = match("=", global_token->s);
+		int is_compound_operator = is_compound_assignment(global_token->s);
+		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
+		int is_prefix_operator = match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s);
+		int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+		if(!is_assignment && !is_compound_operator && !is_local_array && !is_prefix_operator && !is_postfix_operator)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			while (num_dereference > 0)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+				num_dereference = num_dereference - 1;
+			}
+			return;
+		}
+
+		num_dereference_after_postfix = num_dereference;
+		if(!is_postfix_operator)
+		{
+			while (num_dereference > 0)
+			{
+				emit_out(load_value(current_target->size, current_target->is_signed));
+				current_target = current_target->type;
+				num_dereference = num_dereference - 1;
+			}
+		}
 		return;
 	}
-
-	a = sym_lookup(s, function->arguments);
-	if(NULL != a)
+	else if(type == LLA_GLOBAL)
 	{
-		variable_load(a, num_dereference, FALSE);
+		require(NULL != global_token, "unterminated global load\n");
+		if(TRUE == Address_of) return;
+		if(match(".", global_token->s))
+		{
+			postfix_expr_stub();
+			return;
+		}
+
+		int is_assignment = match("=", global_token->s);
+		int is_compound_operator = is_compound_assignment(global_token->s);
+		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
+		if(!is_assignment && !is_compound_operator && !is_local_array)
+		{
+			emit_out(load_value(register_size, current_target->is_signed));
+		}
+
 		return;
 	}
-
-	a = sym_lookup(s, global_function_list);
-	if(NULL != a)
-	{
-		function_load(a);
-		return;
-	}
-
-	a = sym_lookup(s, global_symbol_list);
-	if(NULL != a)
-	{
-		global_load(a);
-		return;
-	}
-
-	line_error();
-	fputs(s ,stderr);
-	fputs(" is not a defined symbol\n", stderr);
-	exit(EXIT_FAILURE);
 }
 
 void primary_expr(void);
