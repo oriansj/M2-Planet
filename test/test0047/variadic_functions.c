@@ -20,8 +20,7 @@ typedef __va_list va_list;
 /* M2-Planet still has problems with function-like macros. */
 #define va_start __va_start
 #define va_arg __va_arg
-
-#define va_end(ap) ap
+#define va_end __va_end
 
 int add_numbers(int count, ...)
 {

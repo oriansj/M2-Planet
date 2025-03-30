@@ -1656,6 +1656,14 @@ void emit_va_arg_intrinsic(void)
 	emit_out("# __va_arg intrinsic end\n");
 }
 
+void emit_va_end_intrinsic(void)
+{
+	/* va_end is a noop for our impl */
+	require_match("Invalid token after __va_arg, expected '('", "(");
+	require_extra_token();
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+}
+
 int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
@@ -1675,6 +1683,11 @@ void primary_expr_variable(void)
 	else if(match("__va_arg", s))
 	{
 		emit_va_arg_intrinsic();
+		return;
+	}
+	else if(match("__va_end", s))
+	{
+		emit_va_end_intrinsic();
 		return;
 	}
 
