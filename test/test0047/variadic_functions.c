@@ -15,32 +15,33 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-typedef char* va_list;
+typedef __va_list va_list;
 
 #if defined(__knight__) || defined(__arm__) || defined(__aarch64__)
-#define va_start(ap, variable) ap = &variable + sizeof(variable)
 #define va_arg(ap, ty) *ap; ap = ap + sizeof(ty)
 #else
-#define va_start(ap, variable) ap = &variable - sizeof(variable)
 #define va_arg(ap, ty) *ap; ap = ap - sizeof(ty)
 #endif
+
+/* M2-Planet still has problems with function-like macros. */
+#define va_start __va_start
 
 #define va_end(ap) ap
 
 int add_numbers(int count, ...)
 {
-    int result = 0;
-    va_list args;
-    va_start(args, count);
- 
-		int i;
-    for (i = 0; i < count; ++i) {
-        result += va_arg(args, int);
-    }
- 
-    va_end(args);
+	int result = 0;
+	va_list args;
+	va_start(args, count);
 
-    return result;
+	int i;
+	for (i = 0; i < count; ++i) {
+		result += va_arg(args, int);
+	}
+
+	va_end(args);
+
+	return result;
 }
 
 int main() {

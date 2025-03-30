@@ -1569,6 +1569,46 @@ struct token_list* load_address_of_variable(char* s)
 	exit(EXIT_FAILURE);
 }
 
+void emit_va_start_intrinsic(void)
+{
+	emit_out("# __va_start intrinsic\n");
+	require_match("Invalid token after __va_start, expected '('", "(");
+
+	require_token();
+	char* ap_name = global_token->s;
+
+	require_extra_token();
+
+	require_match("Invalid token in __va_start, expected ','", ",");
+
+	require_token();
+	char* variable_name = global_token->s;
+	require_extra_token();
+
+	require_match("Invalid token at end of __va_start, expected ')'", ")");
+
+
+	/* We could avoid this push/pop if load_address_of_variable could load directly into a register */
+	load_address_of_variable(ap_name);
+	emit_push(REGISTER_ZERO, "Push ap");
+
+	struct token_list* loaded = load_address_of_variable(variable_name);
+	if(stack_direction == STACK_DIRECTION_PLUS)
+	{
+		emit_add_immediate(REGISTER_ZERO, loaded->type->size, "Add size of variable");
+	}
+	else
+	{
+		emit_sub_immediate(REGISTER_ZERO, loaded->type->size, "Subtract size of variable");
+	}
+
+	emit_pop(REGISTER_ONE, "Pop AP");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(register_size));
+	emit_out("# __va_start intrinsic end\n");
+}
+
 int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
@@ -1579,6 +1619,12 @@ void primary_expr_variable(void)
 	}
 	char* s = global_token->s;
 	require_extra_token();
+
+	if(match("__va_start", s))
+	{
+		emit_va_start_intrinsic();
+		return;
+	}
 
 	struct token_list* a = sym_lookup(s, global_constant_list);
 	if(NULL != a)

@@ -170,6 +170,10 @@ void initialize_types(void)
 	function_pointer->indirect->options = TO_FUNCTION_POINTER; /* FUNCTION* */
 	prim_types = add_primitive(function_pointer);
 
+	/* Define _Bool */
+	hold = new_primitive("__va_list", "__va_list*", "__va_list**", register_size, FALSE);
+	prim_types = add_primitive(hold);
+
 	if(BOOTSTRAP_MODE)
 	{
 		/* Define FILE */
