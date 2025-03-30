@@ -1602,15 +1602,16 @@ void primary_expr_variable(void)
 	}
 
 	int type = load_address_of_variable(s);
+	if(TRUE == Address_of) return;
+
+	if(match(".", global_token->s))
+	{
+		postfix_expr_stub();
+		return;
+	}
+
 	if(type == LLA_STATIC)
 	{
-		if(TRUE == Address_of) return;
-		if(match(".", global_token->s))
-		{
-			postfix_expr_stub();
-			return;
-		}
-
 		int is_assignment = match("=", global_token->s);
 		int is_compound_operator = is_compound_assignment(global_token->s);
 		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
@@ -1618,17 +1619,9 @@ void primary_expr_variable(void)
 		{
 			emit_out(load_value(register_size, current_target->is_signed));
 		}
-		return;
 	}
 	else if(type == LLA_LOCAL || type == LLA_ARGUMENT)
 	{
-		if(TRUE == Address_of) return;
-		if(match(".", global_token->s))
-		{
-			postfix_expr_stub();
-			return;
-		}
-
 		int is_assignment = match("=", global_token->s);
 		int is_compound_operator = is_compound_assignment(global_token->s);
 		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
@@ -1656,18 +1649,9 @@ void primary_expr_variable(void)
 				num_dereference = num_dereference - 1;
 			}
 		}
-		return;
 	}
 	else if(type == LLA_GLOBAL)
 	{
-		require(NULL != global_token, "unterminated global load\n");
-		if(TRUE == Address_of) return;
-		if(match(".", global_token->s))
-		{
-			postfix_expr_stub();
-			return;
-		}
-
 		int is_assignment = match("=", global_token->s);
 		int is_compound_operator = is_compound_assignment(global_token->s);
 		int is_local_array = match("[", global_token->s) && (loaded_variable->options & TLO_LOCAL_ARRAY);
@@ -1675,8 +1659,6 @@ void primary_expr_variable(void)
 		{
 			emit_out(load_value(register_size, current_target->is_signed));
 		}
-
-		return;
 	}
 }
 
