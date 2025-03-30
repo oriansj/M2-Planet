@@ -27,6 +27,7 @@ mkdir -p ${TMPDIR}
 bin/M2-Planet \
 	--architecture ${ARCH} \
 	--debug \
+	-f M2libc/stdarg.h \
 	-f M2libc/sys/types.h \
 	-f M2libc/stddef.h \
 	-f M2libc/signal.h \
