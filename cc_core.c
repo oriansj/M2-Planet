@@ -2835,6 +2835,7 @@ unsigned ceil_div(unsigned a, unsigned b)
 	return (a + b - 1) / b;
 }
 
+int locals_depth;
 void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
@@ -2925,6 +2926,7 @@ void collect_local(void)
 				a->depth = function->locals->depth - register_size;
 			}
 		}
+		locals_depth = locals_depth + register_size;
 
 		function->locals = a;
 
@@ -2978,6 +2980,7 @@ void collect_local(void)
 		{
 			a->depth = a->depth - struct_depth_adjustment;
 		}
+		locals_depth = locals_depth + struct_depth_adjustment;
 
 		if(match("=", global_token->s))
 		{
@@ -3880,14 +3883,23 @@ void declare_function(void)
 		emit_out(function->s);
 		emit_out("\n");
 
+		locals_depth = 0;
+
 		/* Save the current location of the stack pointer. */
 		emit_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
+
+		char* stack_reserve_string = calloc(MAX_STRING, sizeof(char));
+		emit_out(stack_reserve_string);
 
 		/* If we add any statics we don't want them globally available */
 		function_static_variables_list = NULL;
 		statement();
 		/* Just to be sure this doesn't escape the function somehow. */
 		function_static_variables_list = NULL;
+
+		int offset = copy_string(stack_reserve_string, "# Locals depth: ", MAX_STRING);
+		offset = offset + copy_string(stack_reserve_string + offset, int2str(locals_depth, 10, FALSE), MAX_STRING - offset);
+		copy_string(stack_reserve_string + offset, "\n", MAX_STRING - offset);
 
 		/* C99 5.1.2.2.3 Program termination
 		 * [..] reaching the } that terminates the main function returns a value of 0.
