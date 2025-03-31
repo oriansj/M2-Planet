@@ -2792,6 +2792,7 @@ void expression(void)
 int iskeywordp(char* s)
 {
 	if(match("auto", s)) return TRUE;
+	if(match("_Bool", s)) return TRUE;
 	if(match("break", s)) return TRUE;
 	if(match("case", s)) return TRUE;
 	if(match("char", s)) return TRUE;
@@ -2809,6 +2810,7 @@ int iskeywordp(char* s)
 	if(match("if", s)) return TRUE;
 	if(match("int", s)) return TRUE;
 	if(match("long", s)) return TRUE;
+	if(match("_Noreturn", s)) return TRUE;
 	if(match("register", s)) return TRUE;
 	if(match("restrict", s)) return TRUE;
 	if(match("return", s)) return TRUE;
