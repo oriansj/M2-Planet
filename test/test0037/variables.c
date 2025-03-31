@@ -101,6 +101,62 @@ struct {
 	char* str;
 } struct_pointers = {0, &function_called, &some_function, "str"};
 
+struct PointerTypeQualifiers {
+	char* const ci;
+	int* const li;
+	struct T* const ls;
+	void* const lv;
+
+	const char* const cci;
+	const int* const cli;
+	const struct T* const cls;
+	const void* const clv;
+
+	const char* restrict rci;
+	const int* restrict rli;
+	const struct T* restrict rls;
+	const void* restrict rlv;
+
+	const char* const restrict crci;
+	const int* const restrict crli;
+	const struct T* const restrict crls;
+	const void* const restrict crlv;
+};
+
+void pointer_type_qualifiers(
+		char* const p,
+		struct T* const s,
+		void * const v,
+
+		const char* restrict rp,
+		struct T* restrict rs,
+		void * restrict rv,
+
+		const char* const restrict crp,
+		struct T* const restrict crs,
+		void * const restrict crv)
+{
+	char* const ci;
+	int* const li;
+	struct T* const ls;
+	void* const lv;
+
+	const char* const cci;
+	const int* const cli;
+	const struct T* const cls;
+	const void* const clv;
+
+	const char* restrict rci;
+	const int* restrict rli;
+	const struct T* restrict rls;
+	const void* restrict rlv;
+
+	const char* const restrict crci;
+	const int* const restrict crli;
+	const struct T* const restrict crls;
+	const void* const restrict crlv;
+}
+
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
 	d = 3;
