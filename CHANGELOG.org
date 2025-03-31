@@ -23,6 +23,7 @@ Added support for postfix operators ++ and --
 Added ability to parse typedefs for simple function pointers
 Added support for anonymous structs (C11 extension). This was already implemented as the only way to use unions.
 Added support for unions in all places where structs work
+Added support for the `restrict` and `const` pointer type qualifiers.
 
 * 1.12.1 - 2025-03-16
 ** Fixed

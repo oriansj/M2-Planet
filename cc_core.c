@@ -2810,6 +2810,7 @@ int iskeywordp(char* s)
 	if(match("int", s)) return TRUE;
 	if(match("long", s)) return TRUE;
 	if(match("register", s)) return TRUE;
+	if(match("restrict", s)) return TRUE;
 	if(match("return", s)) return TRUE;
 	if(match("short", s)) return TRUE;
 	if(match("signed", s)) return TRUE;

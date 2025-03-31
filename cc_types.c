@@ -847,6 +847,11 @@ struct type* type_name(void)
 	{
 		ret = ret->indirect;
 		require_extra_token();
+
+		while(match("const", global_token->s) || match("restrict", global_token->s))
+		{
+			require_extra_token();
+		}
 	}
 
 	return ret;
