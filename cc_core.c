@@ -77,7 +77,7 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
-		else if(reg == REGISTER_UNUSED1) return "10";
+		else if(reg == REGISTER_EMIT_TEMP) return "10";
 		else if(reg == REGISTER_UNUSED2) return "11";
 		else if(reg == REGISTER_LOCALS) return "12";
 		else if(reg == REGISTER_TEMP) return "13";
@@ -92,7 +92,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_BASE) return "ebp";
 		else if(reg == REGISTER_STACK) return "esp";
 		else if(reg == REGISTER_LOCALS) return "esi";
-		else if(reg == REGISTER_UNUSED1) return "ecx";
+		else if(reg == REGISTER_EMIT_TEMP) return "ecx";
 		else if(reg == REGISTER_UNUSED2) return "edx";
 	}
 	else if(AMD64 == Architecture)
@@ -103,7 +103,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_BASE) return "rbp";
 		else if(reg == REGISTER_STACK) return "rsp";
 		else if(reg == REGISTER_LOCALS) return "r13";
-		else if(reg == REGISTER_UNUSED1) return "r14";
+		else if(reg == REGISTER_EMIT_TEMP) return "r14";
 		else if(reg == REGISTER_UNUSED2) return "r15";
 	}
 	else if(ARMV7L == Architecture)
@@ -111,7 +111,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
 		else if(reg == REGISTER_LOCALS) return "R8";
-		else if(reg == REGISTER_UNUSED1) return "R9";
+		else if(reg == REGISTER_EMIT_TEMP) return "R9";
 		else if(reg == REGISTER_UNUSED2) return "R10";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
@@ -123,7 +123,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
 		else if(reg == REGISTER_LOCALS) return "X13";
-		else if(reg == REGISTER_UNUSED1) return "X14";
+		else if(reg == REGISTER_EMIT_TEMP) return "X14";
 		else if(reg == REGISTER_UNUSED2) return "X15";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
@@ -135,7 +135,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
 		else if(reg == REGISTER_LOCALS) return "t0";
-		else if(reg == REGISTER_UNUSED1) return "t1";
+		else if(reg == REGISTER_EMIT_TEMP) return "t1";
 		else if(reg == REGISTER_UNUSED2) return "t2";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
@@ -455,10 +455,8 @@ void emit_add(int destination_reg, int source_reg, char* note)
 
 void emit_add_immediate(int reg, int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_add(reg, REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_add(reg, REGISTER_EMIT_TEMP, note);
 }
 
 /* Subtracts destination and source and places result in destination */
@@ -528,10 +526,8 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void emit_sub_immediate(int reg, int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_sub(reg, REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_sub(reg, REGISTER_EMIT_TEMP, note);
 }
 
 void emit_mul_into_register_zero(int reg, char* note)
@@ -582,10 +578,8 @@ void emit_mul_into_register_zero(int reg, char* note)
 
 void emit_mul_register_zero_with_immediate(int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_mul_into_register_zero(REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_mul_into_register_zero(REGISTER_EMIT_TEMP, note);
 }
 
 void emit_move(int destination_reg, int source_reg, char* note)
@@ -681,23 +675,14 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		}
 		else
 		{
-			emit_push(REGISTER_ONE, note);
-			emit_load_immediate(REGISTER_ONE, value, note);
-			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
-			emit_pop(REGISTER_ONE, note);
+			emit_move(destination, offset_register, note);
+			emit_sub_immediate(destination, value, note);
 		}
 	}
 	else if(AARCH64 == Architecture)
 	{
 		emit_move(destination, offset_register, note);
-		emit_push(REGISTER_ONE, note);
-		emit_load_immediate(REGISTER_ONE, value, note);
-		emit_out("SUB_");
-		emit_out(destination_name);
-		emit_out("_");
-		emit_out(destination_name);
-		emit_out("_X1\n");
-		emit_pop(REGISTER_ONE, note);
+		emit_sub_immediate(destination, value, note);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
@@ -1511,13 +1496,13 @@ void primary_expr_number(char* s)
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
-struct token_list* load_address_of_variable(char* s)
+struct token_list* load_address_of_variable_into_register(int reg, char* s)
 {
 	struct token_list* variable = static_variable_lookup(s);
 	if(NULL != variable)
 	{
 		current_target = variable->type;
-		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		emit_load_named_immediate(reg, "GLOBAL_", variable->s, "global load");
 		return variable;
 	}
 
@@ -1532,7 +1517,7 @@ struct token_list* load_address_of_variable(char* s)
 		}
 
 		current_target = variable->type;
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_LOCALS, variable->depth, "local variable load");
+		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
 		return variable;
 	}
 
@@ -1546,7 +1531,7 @@ struct token_list* load_address_of_variable(char* s)
 			return NULL;
 		}
 		current_target = variable->type;
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, variable->depth, "function argument load");
+		emit_load_relative_to_register(reg, REGISTER_BASE, variable->depth, "function argument load");
 		return variable;
 	}
 
@@ -1561,7 +1546,7 @@ struct token_list* load_address_of_variable(char* s)
 	if(NULL != variable)
 	{
 		current_target = variable->type;
-		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		emit_load_named_immediate(reg, "GLOBAL_", variable->s, "global load");
 		return variable;
 	}
 
@@ -1590,11 +1575,11 @@ void emit_va_start_intrinsic(void)
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
 
-	/* We could avoid this push/pop if load_address_of_variable could load directly into a register */
-	load_address_of_variable(ap_name);
+	/* We could avoid this push/pop if load_address_of_variable_into_register could load directly into a register */
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_push(REGISTER_ZERO, "Push ap");
 
-	struct token_list* loaded = load_address_of_variable(variable_name);
+	struct token_list* loaded = load_address_of_variable_into_register(REGISTER_ZERO, variable_name);
 	if(stack_direction == STACK_DIRECTION_PLUS)
 	{
 		emit_add_immediate(REGISTER_ZERO, loaded->type->size, "Add size of variable");
@@ -1629,13 +1614,13 @@ void emit_va_arg_intrinsic(void)
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
 	emit_out("# REGISTER_ZERO = *ap\n");
-	load_address_of_variable(ap_name);
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_dereference(REGISTER_ZERO, "Deref ap");
 	emit_dereference(REGISTER_ZERO, "Deref ap");
 	emit_push(REGISTER_ZERO, "Dereffed va_arg");
 
 	emit_out("# ap = ap - sizeof(ty)\n");
-	load_address_of_variable(ap_name);
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_push(REGISTER_ZERO, "Push ap address");
 	emit_dereference(REGISTER_ZERO, "Deref ap for pointer to va_arg");
 	if(stack_direction == STACK_DIRECTION_PLUS)
@@ -1703,7 +1688,7 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	struct token_list* type = load_address_of_variable(s);
+	struct token_list* type = load_address_of_variable_into_register(REGISTER_ZERO, s);
 	if(TRUE == Address_of) return;
 	if(type == NULL) return;
 
@@ -2993,6 +2978,7 @@ void collect_local(void)
 
 			require_extra_token();
 			expression();
+
 		}
 
 		i = ceil_div(a->type->size * a->array_modifier, register_size);
