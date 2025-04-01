@@ -675,19 +675,14 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		}
 		else
 		{
-			emit_push(REGISTER_ONE, note);
-			emit_load_immediate(REGISTER_ONE, value, note);
-			emit_sub(destination, REGISTER_ONE, note);
-			emit_pop(REGISTER_ONE, note);
+			emit_move(destination, offset_register, note);
+			emit_sub_immediate(destination, value, note);
 		}
 	}
 	else if(AARCH64 == Architecture)
 	{
 		emit_move(destination, offset_register, note);
-		emit_push(REGISTER_ONE, note);
-		emit_load_immediate(REGISTER_ONE, value, note);
-		emit_sub(destination, REGISTER_ONE, note);
-		emit_pop(REGISTER_ONE, note);
+		emit_sub_immediate(destination, value, note);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
