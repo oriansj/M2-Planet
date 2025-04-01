@@ -677,7 +677,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		{
 			emit_push(REGISTER_ONE, note);
 			emit_load_immediate(REGISTER_ONE, value, note);
-			emit_out("'0' R0 R0 SUB R1 ARITH2_ALWAYS\n");
+			emit_sub(destination, REGISTER_ONE, note);
 			emit_pop(REGISTER_ONE, note);
 		}
 	}
@@ -686,11 +686,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		emit_move(destination, offset_register, note);
 		emit_push(REGISTER_ONE, note);
 		emit_load_immediate(REGISTER_ONE, value, note);
-		emit_out("SUB_");
-		emit_out(destination_name);
-		emit_out("_");
-		emit_out(destination_name);
-		emit_out("_X1\n");
+		emit_sub(destination, REGISTER_ONE, note);
 		emit_pop(REGISTER_ONE, note);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
