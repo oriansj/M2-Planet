@@ -1505,13 +1505,13 @@ void primary_expr_number(char* s)
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
-struct token_list* load_address_of_variable(char* s)
+struct token_list* load_address_of_variable_into_register(int reg, char* s)
 {
 	struct token_list* variable = static_variable_lookup(s);
 	if(NULL != variable)
 	{
 		current_target = variable->type;
-		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		emit_load_named_immediate(reg, "GLOBAL_", variable->s, "global load");
 		return variable;
 	}
 
@@ -1526,7 +1526,7 @@ struct token_list* load_address_of_variable(char* s)
 		}
 
 		current_target = variable->type;
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_LOCALS, variable->depth, "local variable load");
+		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
 		return variable;
 	}
 
@@ -1540,7 +1540,7 @@ struct token_list* load_address_of_variable(char* s)
 			return NULL;
 		}
 		current_target = variable->type;
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, variable->depth, "function argument load");
+		emit_load_relative_to_register(reg, REGISTER_BASE, variable->depth, "function argument load");
 		return variable;
 	}
 
@@ -1555,7 +1555,7 @@ struct token_list* load_address_of_variable(char* s)
 	if(NULL != variable)
 	{
 		current_target = variable->type;
-		emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->s, "global load");
+		emit_load_named_immediate(reg, "GLOBAL_", variable->s, "global load");
 		return variable;
 	}
 
@@ -1584,11 +1584,11 @@ void emit_va_start_intrinsic(void)
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
 
-	/* We could avoid this push/pop if load_address_of_variable could load directly into a register */
-	load_address_of_variable(ap_name);
+	/* We could avoid this push/pop if load_address_of_variable_into_register could load directly into a register */
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_push(REGISTER_ZERO, "Push ap");
 
-	struct token_list* loaded = load_address_of_variable(variable_name);
+	struct token_list* loaded = load_address_of_variable_into_register(REGISTER_ZERO, variable_name);
 	if(stack_direction == STACK_DIRECTION_PLUS)
 	{
 		emit_add_immediate(REGISTER_ZERO, loaded->type->size, "Add size of variable");
@@ -1623,13 +1623,13 @@ void emit_va_arg_intrinsic(void)
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
 	emit_out("# REGISTER_ZERO = *ap\n");
-	load_address_of_variable(ap_name);
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_dereference(REGISTER_ZERO, "Deref ap");
 	emit_dereference(REGISTER_ZERO, "Deref ap");
 	emit_push(REGISTER_ZERO, "Dereffed va_arg");
 
 	emit_out("# ap = ap - sizeof(ty)\n");
-	load_address_of_variable(ap_name);
+	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
 	emit_push(REGISTER_ZERO, "Push ap address");
 	emit_dereference(REGISTER_ZERO, "Deref ap for pointer to va_arg");
 	if(stack_direction == STACK_DIRECTION_PLUS)
@@ -1697,7 +1697,7 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	struct token_list* type = load_address_of_variable(s);
+	struct token_list* type = load_address_of_variable_into_register(REGISTER_ZERO, s);
 	if(TRUE == Address_of) return;
 	if(type == NULL) return;
 
@@ -2987,6 +2987,7 @@ void collect_local(void)
 
 			require_extra_token();
 			expression();
+
 		}
 
 		i = ceil_div(a->type->size * a->array_modifier, register_size);
