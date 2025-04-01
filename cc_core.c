@@ -77,7 +77,7 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
-		else if(reg == REGISTER_UNUSED1) return "10";
+		else if(reg == REGISTER_EMIT_TEMP) return "10";
 		else if(reg == REGISTER_UNUSED2) return "11";
 		else if(reg == REGISTER_LOCALS) return "12";
 		else if(reg == REGISTER_TEMP) return "13";
@@ -92,7 +92,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_BASE) return "ebp";
 		else if(reg == REGISTER_STACK) return "esp";
 		else if(reg == REGISTER_LOCALS) return "esi";
-		else if(reg == REGISTER_UNUSED1) return "ecx";
+		else if(reg == REGISTER_EMIT_TEMP) return "ecx";
 		else if(reg == REGISTER_UNUSED2) return "edx";
 	}
 	else if(AMD64 == Architecture)
@@ -103,7 +103,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_BASE) return "rbp";
 		else if(reg == REGISTER_STACK) return "rsp";
 		else if(reg == REGISTER_LOCALS) return "r13";
-		else if(reg == REGISTER_UNUSED1) return "r14";
+		else if(reg == REGISTER_EMIT_TEMP) return "r14";
 		else if(reg == REGISTER_UNUSED2) return "r15";
 	}
 	else if(ARMV7L == Architecture)
@@ -111,7 +111,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "R0";
 		else if(reg == REGISTER_ONE) return "R1";
 		else if(reg == REGISTER_LOCALS) return "R8";
-		else if(reg == REGISTER_UNUSED1) return "R9";
+		else if(reg == REGISTER_EMIT_TEMP) return "R9";
 		else if(reg == REGISTER_UNUSED2) return "R10";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
@@ -123,7 +123,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "X0";
 		else if(reg == REGISTER_ONE) return "X1";
 		else if(reg == REGISTER_LOCALS) return "X13";
-		else if(reg == REGISTER_UNUSED1) return "X14";
+		else if(reg == REGISTER_EMIT_TEMP) return "X14";
 		else if(reg == REGISTER_UNUSED2) return "X15";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
@@ -135,7 +135,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
 		else if(reg == REGISTER_LOCALS) return "t0";
-		else if(reg == REGISTER_UNUSED1) return "t1";
+		else if(reg == REGISTER_EMIT_TEMP) return "t1";
 		else if(reg == REGISTER_UNUSED2) return "t2";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
@@ -455,10 +455,8 @@ void emit_add(int destination_reg, int source_reg, char* note)
 
 void emit_add_immediate(int reg, int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_add(reg, REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_add(reg, REGISTER_EMIT_TEMP, note);
 }
 
 /* Subtracts destination and source and places result in destination */
@@ -528,10 +526,8 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void emit_sub_immediate(int reg, int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_sub(reg, REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_sub(reg, REGISTER_EMIT_TEMP, note);
 }
 
 void emit_mul_into_register_zero(int reg, char* note)
@@ -582,10 +578,8 @@ void emit_mul_into_register_zero(int reg, char* note)
 
 void emit_mul_register_zero_with_immediate(int value, char* note)
 {
-	emit_push(REGISTER_ONE, note);
-	emit_load_immediate(REGISTER_ONE, value, note);
-	emit_mul_into_register_zero(REGISTER_ONE, note);
-	emit_pop(REGISTER_ONE, note);
+	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	emit_mul_into_register_zero(REGISTER_EMIT_TEMP, note);
 }
 
 void emit_move(int destination_reg, int source_reg, char* note)
