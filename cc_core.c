@@ -149,9 +149,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
-		else if(reg == REGISTER_LOCALS) return "t0";
-		else if(reg == REGISTER_EMIT_TEMP) return "t1";
-		else if(reg == REGISTER_UNUSED2) return "t2";
+		else if(reg == REGISTER_LOCALS) return "t3";
+		else if(reg == REGISTER_EMIT_TEMP) return "t4";
+		else if(reg == REGISTER_UNUSED2) return "t5";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
@@ -2898,7 +2898,6 @@ void collect_local(void)
 	struct token_list* list_to_append_to = function->locals;
 	struct token_list* a;
 	unsigned struct_depth_adjustment;
-	unsigned i;
 	char* name;
 
 	do
@@ -3028,13 +3027,10 @@ void collect_local(void)
 			require_extra_token();
 			expression();
 
-		}
-
-		i = ceil_div(a->type->size * a->array_modifier, register_size);
-		while(i != 0)
-		{
-			emit_push(REGISTER_ZERO, a->s);
-			i = i - 1;
+			load_address_of_variable_into_register(REGISTER_ONE, name);
+			/* Store value of REGISTER_ZERO in REGISTER_ONE deref.
+			 * The result of expression() will be in REGISTER_ZERO. */
+			emit_out(store_value(type_size->size));
 		}
 
 		if(global_token->s[0] == ',')
@@ -3536,10 +3532,7 @@ void return_result(void)
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
-	if(function->locals != NULL)
-	{
-		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
-	}
+	emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("ret\n");
@@ -3556,13 +3549,6 @@ void process_break(void)
 		line_error();
 		fputs("Not inside of a loop or case statement\n", stderr);
 		exit(EXIT_FAILURE);
-	}
-	struct token_list* i = function->locals;
-	while(i != break_frame)
-	{
-		if(NULL == i) break;
-		emit_pop(REGISTER_ONE, "break_cleanup_locals");
-		i = i->next;
 	}
 
 	require_extra_token();
@@ -3625,26 +3611,6 @@ void recursive_statement(void)
 	}
 	global_token = global_token->next;
 
-	/* Clean up any locals added */
-
-	if(((X86 == Architecture) && !match("ret\n", output_list->s)) ||
-	   ((AMD64 == Architecture) && !match("ret\n", output_list->s)) ||
-	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
-	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) ||
-	   ((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) ||
-	   (((RISCV32 == Architecture) || (RISCV64 == Architecture)) && !match("ret\n", output_list->s)))
-	{
-		struct token_list* i;
-		int j;
-		for(i = function->locals; frame != i; i = i->next)
-		{
-			j = ceil_div(i->type->size * i->array_modifier, register_size);
-			while (j != 0) {
-				emit_pop(REGISTER_ONE, "_recursive_statement_locals");
-				j = j - 1;
-			}
-		}
-	}
 	function->locals = frame;
 }
 
@@ -3932,9 +3898,21 @@ void declare_function(void)
 		/* Just to be sure this doesn't escape the function somehow. */
 		function_static_variables_list = NULL;
 
-		int offset = copy_string(stack_reserve_string, "# Locals depth: ", MAX_STRING);
-		offset = offset + copy_string(stack_reserve_string + offset, int2str(locals_depth, 10, FALSE), MAX_STRING - offset);
-		copy_string(stack_reserve_string + offset, "\n", MAX_STRING - offset);
+		if(locals_depth != 0)
+		{
+			reset_emit_string();
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				write_add_immediate(REGISTER_STACK, locals_depth, "Reserve stack");
+			}
+			else
+			{
+				write_sub_immediate(REGISTER_STACK, locals_depth, "Reserve stack");
+			}
+			copy_string(stack_reserve_string, emit_string, MAX_STRING);
+		}
+
+		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 
 		/* C99 5.1.2.2.3 Program termination
 		 * [..] reaching the } that terminates the main function returns a value of 0.
