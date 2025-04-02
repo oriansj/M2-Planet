@@ -71,6 +71,21 @@ void emit_out(char* s)
 	output_list = emit(s, output_list);
 }
 
+char* emit_string;
+int emit_string_index;
+
+void emit_to_string(char* s)
+{
+	emit_string_index = emit_string_index + copy_string(emit_string + emit_string_index, s, MAX_STRING - emit_string_index);
+}
+
+void reset_emit_string(void)
+{
+	/* Emitted strings are just added to a linked list so we need a new one each time. */
+	emit_string = calloc(MAX_STRING, sizeof(char));
+	emit_string_index = 0;
+}
+
 char* register_from_string(int reg)
 {
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
@@ -228,7 +243,7 @@ void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 	}
 }
 
-void emit_load_immediate(int reg, int value, char* note)
+void write_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
 	char* value_string = int2str(value, 10, TRUE);
@@ -236,17 +251,17 @@ void emit_load_immediate(int reg, int value, char* note)
 	{
 		if((32767 > value) && (value > -32768))
 		{
-			emit_out("LOADI R");
-			emit_out(reg_name);
-			emit_out(" ");
-			emit_out(value_string);
+			emit_to_string("LOADI R");
+			emit_to_string(reg_name);
+			emit_to_string(" ");
+			emit_to_string(value_string);
 		}
 		else
 		{
-			emit_out("LOADR R");
-			emit_out(reg_name);
-			emit_out(" 4\nJUMP 4\n%");
-			emit_out(int2str(value, 10, TRUE));
+			emit_to_string("LOADR R");
+			emit_to_string(reg_name);
+			emit_to_string(" 4\nJUMP 4\n%");
+			emit_to_string(int2str(value, 10, TRUE));
 		}
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
@@ -256,82 +271,82 @@ void emit_load_immediate(int reg, int value, char* note)
 			/* This is the recommended way of zeroing a register on x86/amd64.
 			 * xor eax, eax (32 bit registers) for both x86 and amd64 since it
 			 * takes up a byte less and still zeros the register. */
-			emit_out("xor_e");
+			emit_to_string("xor_e");
 			/* amd64 register starts with r but we need it to start with e */
-			emit_out(reg_name + 1);
-			emit_out(",e");
-			emit_out(reg_name + 1);
+			emit_to_string(reg_name + 1);
+			emit_to_string(",e");
+			emit_to_string(reg_name + 1);
 		}
 		else
 		{
-			emit_out("mov_");
-			emit_out(reg_name);
-			emit_out(", %");
-			emit_out(value_string);
+			emit_to_string("mov_");
+			emit_to_string(reg_name);
+			emit_to_string(", %");
+			emit_to_string(value_string);
 		}
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if((127 >= value) && (value >= -128))
 		{
-			emit_out("!");
-			emit_out(value_string);
-			emit_out(" ");
-			emit_out(reg_name);
-			emit_out(" LOADI8_ALWAYS");
+			emit_to_string("!");
+			emit_to_string(value_string);
+			emit_to_string(" ");
+			emit_to_string(reg_name);
+			emit_to_string(" LOADI8_ALWAYS");
 		}
 		else
 		{
-			emit_out("!0 ");
-			emit_out(reg_name);
-			emit_out(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-			emit_out(value_string);
+			emit_to_string("!0 ");
+			emit_to_string(reg_name);
+			emit_to_string(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+			emit_to_string(value_string);
 		}
 	}
 	else if(AARCH64 == Architecture)
 	{
 		if((value == 0) || (value == 1 && reg == 0))
 		{
-			emit_out("SET_");
-			emit_out(reg_name);
-			emit_out("_TO_");
-			emit_out(value_string);
+			emit_to_string("SET_");
+			emit_to_string(reg_name);
+			emit_to_string("_TO_");
+			emit_to_string(value_string);
 		}
 		else
 		{
-			emit_out("LOAD_W");
+			emit_to_string("LOAD_W");
 			/* Normal register starts with X for 64bit wide
 			 * but we need W. */
-			emit_out(reg_name + 1);
-			emit_out("_AHEAD\nSKIP_32_DATA\n%");
-			emit_out(value_string);
+			emit_to_string(reg_name + 1);
+			emit_to_string("_AHEAD\nSKIP_32_DATA\n%");
+			emit_to_string(value_string);
 		}
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		if((2047 >= value) && (value >= -2048))
 		{
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(value_string);
-			emit_out(" addi");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(value_string);
+			emit_to_string(" addi");
 		}
 		else if (0 == (value >> 30))
 		{
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" ~");
-			emit_out(value_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" ~");
+			emit_to_string(value_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(value_string);
-			emit_out(" addi");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(value_string);
+			emit_to_string(" addi");
 		}
 		else
 		{
@@ -340,53 +355,59 @@ void emit_load_immediate(int reg, int value, char* note)
 			int low = ((value >> 30) << 30) ^ value;
 			char* low_string = int2str(low, 10, TRUE);
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" ~");
-			emit_out(high_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" ~");
+			emit_to_string(high_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(high_string);
-			emit_out(" addi\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(high_string);
+			emit_to_string(" addi\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" rs2_x30 slli\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs2_x30 slli\n");
 
-			emit_out("rd_t1 ~");
-			emit_out(low_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_t1 ~");
+			emit_to_string(low_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_t1 rs1_t1 !");
-			emit_out(low_string);
-			emit_out(" addi\n");
+			emit_to_string("rd_t1 rs1_t1 !");
+			emit_to_string(low_string);
+			emit_to_string(" addi\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" rs2_t1 or");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs2_t1 or");
 		}
 	}
 
-
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
+}
+
+void emit_load_immediate(int reg, int value, char* note)
+{
+	reset_emit_string();
+	write_load_immediate(reg, value, note);
+	emit_out(emit_string);
 }
 
 /* Adds destination and source and places result in destination */
