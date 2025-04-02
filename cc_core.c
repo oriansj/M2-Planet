@@ -2897,6 +2897,7 @@ void collect_local(void)
 	struct token_list* a;
 	unsigned struct_depth_adjustment;
 	char* name;
+	int function_depth_offset = 0;
 
 	do
 	{
@@ -2974,44 +2975,23 @@ void collect_local(void)
 			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
 
-		if(NULL == function->locals)
+		if(NULL != function->locals)
 		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = register_size;
-			}
-			else
-			{
-				a->depth = -register_size;
-			}
+			function_depth_offset = function->locals->depth;
 		}
-		else
-		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = function->locals->depth + register_size;
-			}
-			else
-			{
-				a->depth = function->locals->depth - register_size;
-			}
-		}
-		locals_depth = locals_depth + register_size;
 
-		function->locals = a;
-
-		/* Adjust the depth of local structs. When stack grows downwards, we want them to
-		   start at the bottom of allocated space. */
 		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
 		if(stack_direction == STACK_DIRECTION_PLUS)
 		{
-			a->depth = a->depth + struct_depth_adjustment;
+			a->depth = function_depth_offset + register_size + struct_depth_adjustment;
 		}
 		else
 		{
-			a->depth = a->depth - struct_depth_adjustment;
+			a->depth = function_depth_offset - register_size - struct_depth_adjustment;
 		}
-		locals_depth = locals_depth + struct_depth_adjustment;
+		locals_depth = locals_depth + register_size + struct_depth_adjustment;
+
+		function->locals = a;
 
 		if(match("=", global_token->s))
 		{
