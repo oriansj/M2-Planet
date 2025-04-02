@@ -488,74 +488,88 @@ void emit_add_immediate(int reg, int value, char* note)
 }
 
 /* Subtracts destination and source and places result in destination */
-void emit_sub(int destination_reg, int source_reg, char* note)
+void write_sub(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("SUB R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(source_name);
+		emit_to_string("SUB R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(source_name);
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
 	{
-		emit_out("sub_");
-		emit_out(destination_name);
-		emit_out(",");
-		emit_out(source_name);
-		emit_out("\n");
+		emit_to_string("sub_");
+		emit_to_string(destination_name);
+		emit_to_string(",");
+		emit_to_string(source_name);
+		emit_to_string("\n");
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' ");
-		emit_out(destination_name);
-		emit_out(" ");
-		emit_out(destination_name);
-		emit_out(" SUB ");
-		emit_out(source_name);
-		emit_out(" ARITH2_ALWAYS");
+		emit_to_string("'0' ");
+		emit_to_string(destination_name);
+		emit_to_string(" ");
+		emit_to_string(destination_name);
+		emit_to_string(" SUB ");
+		emit_to_string(source_name);
+		emit_to_string(" ARITH2_ALWAYS");
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("SUB_");
-		emit_out(destination_name);
-		emit_out("_");
-		emit_out(source_name);
-		emit_out("_");
-		emit_out(destination_name);
+		emit_to_string("SUB_");
+		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
+		emit_to_string("_");
+		emit_to_string(destination_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
-		emit_out("rd_");
-		emit_out(destination_name);
-		emit_out(" rs1_");
-		emit_out(destination_name);
-		emit_out(" rs2_");
-		emit_out(source_name);
-		emit_out(" sub");
+		emit_to_string("rd_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs1_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs2_");
+		emit_to_string(source_name);
+		emit_to_string(" sub");
 	}
 
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
+}
+
+void emit_sub(int destination_reg, int source_reg, char* note)
+{
+	reset_emit_string();
+	write_sub(destination_reg, source_reg, note);
+	emit_out(emit_string);
+}
+
+void write_sub_immediate(int reg, int value, char* note)
+{
+	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	write_sub(reg, REGISTER_EMIT_TEMP, note);
 }
 
 void emit_sub_immediate(int reg, int value, char* note)
 {
-	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	emit_sub(reg, REGISTER_EMIT_TEMP, note);
+	reset_emit_string();
+	write_sub_immediate(reg, value, note);
+	emit_out(emit_string);
 }
 
 void emit_mul_into_register_zero(int reg, char* note)
