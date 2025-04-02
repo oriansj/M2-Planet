@@ -1622,11 +1622,6 @@ void emit_va_start_intrinsic(void)
 
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
-
-	/* We could avoid this push/pop if load_address_of_variable_into_register could load directly into a register */
-	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
-	emit_push(REGISTER_ZERO, "Push ap");
-
 	struct token_list* loaded = load_address_of_variable_into_register(REGISTER_ZERO, variable_name);
 	if(stack_direction == STACK_DIRECTION_PLUS)
 	{
@@ -1637,7 +1632,7 @@ void emit_va_start_intrinsic(void)
 		emit_sub_immediate(REGISTER_ZERO, loaded->type->size, "Subtract size of variable");
 	}
 
-	emit_pop(REGISTER_ONE, "Pop AP");
+	load_address_of_variable_into_register(REGISTER_ONE, ap_name);
 
 	/* Store REGISTER_ZERO in REGISTER_ONE deref */
 	emit_out(store_value(register_size));
