@@ -305,7 +305,7 @@ void write_load_immediate(int reg, int value, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if((value == 0) || (value == 1 && reg == 0))
+		if((value == 0 && (reg == 0 || reg == 1)) || (value == 1 && reg == 0))
 		{
 			emit_to_string("SET_");
 			emit_to_string(reg_name);
