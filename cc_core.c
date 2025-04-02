@@ -51,8 +51,8 @@ struct type *mirror_type(struct type *source);
 struct type* new_function_pointer_typedef(char* name);
 struct type* add_primitive(struct type* a);
 
-void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
+void declare_global_variable(struct type* type_size, struct token_list* variable);
 
 struct type* type_name(void);
 
@@ -3632,24 +3632,7 @@ void process_static_variable(void)
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();
 
-	if(match(";", global_token->s))
-	{
-		global_assignment(new_name, type_size);
-		return;
-	}
-
-	/* Deal with assignment to a global variable */
-	if(match("=", global_token->s))
-	{
-		global_assignment(new_name, type_size);
-		return;
-	}
-
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		variable->global_variable->array_modifier = global_static_array(type_size, new_name);
-	}
+	declare_global_variable(type_size, variable->global_variable);
 }
 
 /*
@@ -4367,18 +4350,16 @@ void global_assignment(char* name, struct type* type_size)
 	require_match("ERROR in Program\nMissing ;\n", ";");
 }
 
-void declare_global_variable(struct type* type_size, char* name)
+void declare_global_variable(struct type* type_size, struct token_list* variable)
 {
-	global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-
 	/* Deal with global static arrays */
 	if(match("[", global_token->s))
 	{
-		global_symbol_list->array_modifier = global_static_array(type_size, name);
+		variable->array_modifier = global_static_array(type_size, variable->s);
 		return;
 	}
 
-	global_assignment(name, type_size);
+	global_assignment(variable->s, type_size);
 }
 
 /*
@@ -4478,7 +4459,8 @@ new_type:
 
 	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
 	{
-		declare_global_variable(type_size, name);
+		global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
+		declare_global_variable(type_size, global_symbol_list);
 		goto new_type;
 	}
 
