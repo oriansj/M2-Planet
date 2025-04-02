@@ -51,7 +51,6 @@ struct type *mirror_type(struct type *source);
 struct type* new_function_pointer_typedef(char* name);
 struct type* add_primitive(struct type* a);
 
-void global_variable_definition(struct type*, char*);
 void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
 
@@ -2870,15 +2869,14 @@ unsigned ceil_div(unsigned a, unsigned b)
 }
 
 int locals_depth;
-void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
-		process_static_variable(TRUE);
-		return;
+		maybe_bootstrap_error("Variable inside loop");
 	}
+
 	struct type* type_size = type_name();
 	if(type_size->size == NO_STRUCT_DEFINITION)
 	{
@@ -3615,7 +3613,7 @@ void recursive_statement(void)
 }
 
 /* Variables inside loops are currently just global variables */
-void process_static_variable(int is_loop_variable)
+void process_static_variable(void)
 {
 	maybe_bootstrap_error("static local variable");
 
@@ -3643,27 +3641,7 @@ void process_static_variable(int is_loop_variable)
 	/* Deal with assignment to a global variable */
 	if(match("=", global_token->s))
 	{
-		if(is_loop_variable)
-		{
-			global_variable_definition(type_size, new_name);
-			require(NULL != global_token, "NULL token received in loop variable assignment");
-
-			current_target = variable->global_variable->type;
-			emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->global_variable->s, "loop variable load");
-
-			emit_push(REGISTER_ZERO, "_process_expression1");
-
-			expression();
-
-			emit_pop(REGISTER_ONE, "static_loop_variable");
-
-			emit_out(store_value(type_size->size));
-			require_match("Missing ; from loop variable.\n", ";");
-		}
-		else
-		{
-			global_assignment(new_name, type_size);
-		}
+		global_assignment(new_name, type_size);
 		return;
 	}
 
@@ -3778,7 +3756,7 @@ void statement(void)
 	{
 		require_extra_token();
 
-		process_static_variable(FALSE);
+		process_static_variable();
 	}
 	else
 	{
@@ -4367,15 +4345,6 @@ int global_static_array(struct type* type_size, char* name)
 	require_match("missing ;\n", ";");
 
 	return array_modifier;
-}
-
-void global_variable_definition(struct type* type_size, char* variable_name)
-{
-	global_variable_header(variable_name);
-
-	global_variable_zero_initialize(type_size->size);
-
-	require_extra_token();
 }
 
 void global_assignment(char* name, struct type* type_size)
