@@ -2980,16 +2980,16 @@ void collect_local(void)
 			function_depth_offset = function->locals->depth;
 		}
 
-		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
+		struct_depth_adjustment = ceil_div(a->type->size * a->array_modifier, register_size) * register_size;
 		if(stack_direction == STACK_DIRECTION_PLUS)
 		{
-			a->depth = function_depth_offset + register_size + struct_depth_adjustment;
+			a->depth = function_depth_offset + struct_depth_adjustment;
 		}
 		else
 		{
-			a->depth = function_depth_offset - register_size - struct_depth_adjustment;
+			a->depth = function_depth_offset - struct_depth_adjustment;
 		}
-		locals_depth = locals_depth + register_size + struct_depth_adjustment;
+		locals_depth = locals_depth + struct_depth_adjustment;
 
 		function->locals = a;
 
