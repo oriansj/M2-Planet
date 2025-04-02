@@ -4227,9 +4227,26 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 int global_static_array(struct type* type_size, char* name)
 {
-	maybe_bootstrap_error("global array definitions");
-
 	global_variable_header(name);
+
+	if(global_token->s[0] == ';')
+	{
+		global_variable_zero_initialize(type_size->size);
+		global_token = global_token->next;
+		return 0;
+	}
+	else if(global_token->s[0] == '=')
+	{
+		require_extra_token();
+
+		global_value_selection(type_size);
+
+		global_pad_to_register_size(type_size->size);
+		global_token = global_token->next;
+		return 0;
+	}
+
+	maybe_bootstrap_error("global array definitions");
 
 	globals_list = emit("&GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
@@ -4305,36 +4322,9 @@ int global_static_array(struct type* type_size, char* name)
 	return array_modifier;
 }
 
-void global_assignment(char* name, struct type* type_size)
-{
-	global_variable_header(name);
-
-	if(global_token->s[0] == ';')
-	{
-		global_variable_zero_initialize(type_size->size);
-	}
-	else
-	{
-		require_match("ERROR in global_assignment\nMissing =\n", "=");
-
-		global_value_selection(type_size);
-
-		global_pad_to_register_size(type_size->size);
-	}
-
-	require_match("ERROR in Program\nMissing ;\n", ";");
-}
-
 void declare_global_variable(struct type* type_size, struct token_list* variable)
 {
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		variable->array_modifier = global_static_array(type_size, variable->s);
-		return;
-	}
-
-	global_assignment(variable->s, type_size);
+	variable->array_modifier = global_static_array(type_size, variable->s);
 }
 
 /*
