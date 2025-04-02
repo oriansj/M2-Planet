@@ -2935,32 +2935,6 @@ void collect_local(void)
 		a = sym_declare(name, current_type, list_to_append_to, TLO_LOCAL);
 		list_to_append_to = a;
 
-		if(NULL == function->locals)
-		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = register_size;
-			}
-			else
-			{
-				a->depth = -register_size;
-			}
-		}
-		else
-		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = function->locals->depth + register_size;
-			}
-			else
-			{
-				a->depth = function->locals->depth - register_size;
-			}
-		}
-		locals_depth = locals_depth + register_size;
-
-		function->locals = a;
-
 		require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
 		require(!iskeywordp(name), "You are not allowed to use a keyword as a local variable name\n");
 
@@ -2999,6 +2973,32 @@ void collect_local(void)
 
 			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
+
+		if(NULL == function->locals)
+		{
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				a->depth = register_size;
+			}
+			else
+			{
+				a->depth = -register_size;
+			}
+		}
+		else
+		{
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				a->depth = function->locals->depth + register_size;
+			}
+			else
+			{
+				a->depth = function->locals->depth - register_size;
+			}
+		}
+		locals_depth = locals_depth + register_size;
+
+		function->locals = a;
 
 		/* Adjust the depth of local structs. When stack grows downwards, we want them to
 		   start at the bottom of allocated space. */
