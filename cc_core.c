@@ -481,10 +481,17 @@ void emit_add(int destination_reg, int source_reg, char* note)
 	emit_out(emit_string);
 }
 
+void write_add_immediate(int reg, int value, char* note)
+{
+	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	write_add(reg, REGISTER_EMIT_TEMP, note);
+}
+
 void emit_add_immediate(int reg, int value, char* note)
 {
-	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	emit_add(reg, REGISTER_EMIT_TEMP, note);
+	reset_emit_string();
+	write_add_immediate(reg, value, note);
+	emit_out(emit_string);
 }
 
 /* Subtracts destination and source and places result in destination */
