@@ -26,6 +26,10 @@ Added support for unions in all places where structs work
 Added support for the `restrict` and `const` pointer type qualifiers.
 Added support for variadic functions.
 
+** Changed
+Space for local variables in functions is now allocated up front
+Variables in loop bodies are now located on the stack
+
 * 1.12.1 - 2025-03-16
 ** Fixed
 Fixed handling of case statements with enums and defines.

@@ -51,9 +51,8 @@ struct type *mirror_type(struct type *source);
 struct type* new_function_pointer_typedef(char* name);
 struct type* add_primitive(struct type* a);
 
-void global_variable_definition(struct type*, char*);
-void global_assignment(char*, struct type*);
 int global_static_array(struct type*, char*);
+void declare_global_variable(struct type* type_size, struct token_list* variable);
 
 struct type* type_name(void);
 
@@ -69,6 +68,21 @@ struct token_list* emit(char *s, struct token_list* head)
 void emit_out(char* s)
 {
 	output_list = emit(s, output_list);
+}
+
+char* emit_string;
+int emit_string_index;
+
+void emit_to_string(char* s)
+{
+	emit_string_index = emit_string_index + copy_string(emit_string + emit_string_index, s, MAX_STRING - emit_string_index);
+}
+
+void reset_emit_string(void)
+{
+	/* Emitted strings are just added to a linked list so we need a new one each time. */
+	emit_string = calloc(MAX_STRING, sizeof(char));
+	emit_string_index = 0;
 }
 
 char* register_from_string(int reg)
@@ -134,9 +148,9 @@ char* register_from_string(int reg)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
-		else if(reg == REGISTER_LOCALS) return "t0";
-		else if(reg == REGISTER_EMIT_TEMP) return "t1";
-		else if(reg == REGISTER_UNUSED2) return "t2";
+		else if(reg == REGISTER_LOCALS) return "t3";
+		else if(reg == REGISTER_EMIT_TEMP) return "t4";
+		else if(reg == REGISTER_UNUSED2) return "t5";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
@@ -228,7 +242,7 @@ void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 	}
 }
 
-void emit_load_immediate(int reg, int value, char* note)
+void write_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
 	char* value_string = int2str(value, 10, TRUE);
@@ -236,17 +250,17 @@ void emit_load_immediate(int reg, int value, char* note)
 	{
 		if((32767 > value) && (value > -32768))
 		{
-			emit_out("LOADI R");
-			emit_out(reg_name);
-			emit_out(" ");
-			emit_out(value_string);
+			emit_to_string("LOADI R");
+			emit_to_string(reg_name);
+			emit_to_string(" ");
+			emit_to_string(value_string);
 		}
 		else
 		{
-			emit_out("LOADR R");
-			emit_out(reg_name);
-			emit_out(" 4\nJUMP 4\n%");
-			emit_out(int2str(value, 10, TRUE));
+			emit_to_string("LOADR R");
+			emit_to_string(reg_name);
+			emit_to_string(" 4\nJUMP 4\n%");
+			emit_to_string(int2str(value, 10, TRUE));
 		}
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
@@ -256,82 +270,82 @@ void emit_load_immediate(int reg, int value, char* note)
 			/* This is the recommended way of zeroing a register on x86/amd64.
 			 * xor eax, eax (32 bit registers) for both x86 and amd64 since it
 			 * takes up a byte less and still zeros the register. */
-			emit_out("xor_e");
+			emit_to_string("xor_e");
 			/* amd64 register starts with r but we need it to start with e */
-			emit_out(reg_name + 1);
-			emit_out(",e");
-			emit_out(reg_name + 1);
+			emit_to_string(reg_name + 1);
+			emit_to_string(",e");
+			emit_to_string(reg_name + 1);
 		}
 		else
 		{
-			emit_out("mov_");
-			emit_out(reg_name);
-			emit_out(", %");
-			emit_out(value_string);
+			emit_to_string("mov_");
+			emit_to_string(reg_name);
+			emit_to_string(", %");
+			emit_to_string(value_string);
 		}
 	}
 	else if(ARMV7L == Architecture)
 	{
 		if((127 >= value) && (value >= -128))
 		{
-			emit_out("!");
-			emit_out(value_string);
-			emit_out(" ");
-			emit_out(reg_name);
-			emit_out(" LOADI8_ALWAYS");
+			emit_to_string("!");
+			emit_to_string(value_string);
+			emit_to_string(" ");
+			emit_to_string(reg_name);
+			emit_to_string(" LOADI8_ALWAYS");
 		}
 		else
 		{
-			emit_out("!0 ");
-			emit_out(reg_name);
-			emit_out(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
-			emit_out(value_string);
+			emit_to_string("!0 ");
+			emit_to_string(reg_name);
+			emit_to_string(" LOAD32 R15 MEMORY\n~0 JUMP_ALWAYS\n%");
+			emit_to_string(value_string);
 		}
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if((value == 0) || (value == 1 && reg == 0))
+		if((value == 0 && (reg == 0 || reg == 1)) || (value == 1 && reg == 0))
 		{
-			emit_out("SET_");
-			emit_out(reg_name);
-			emit_out("_TO_");
-			emit_out(value_string);
+			emit_to_string("SET_");
+			emit_to_string(reg_name);
+			emit_to_string("_TO_");
+			emit_to_string(value_string);
 		}
 		else
 		{
-			emit_out("LOAD_W");
+			emit_to_string("LOAD_W");
 			/* Normal register starts with X for 64bit wide
 			 * but we need W. */
-			emit_out(reg_name + 1);
-			emit_out("_AHEAD\nSKIP_32_DATA\n%");
-			emit_out(value_string);
+			emit_to_string(reg_name + 1);
+			emit_to_string("_AHEAD\nSKIP_32_DATA\n%");
+			emit_to_string(value_string);
 		}
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		if((2047 >= value) && (value >= -2048))
 		{
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(value_string);
-			emit_out(" addi");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(value_string);
+			emit_to_string(" addi");
 		}
 		else if (0 == (value >> 30))
 		{
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" ~");
-			emit_out(value_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" ~");
+			emit_to_string(value_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(value_string);
-			emit_out(" addi");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(value_string);
+			emit_to_string(" addi");
 		}
 		else
 		{
@@ -340,194 +354,228 @@ void emit_load_immediate(int reg, int value, char* note)
 			int low = ((value >> 30) << 30) ^ value;
 			char* low_string = int2str(low, 10, TRUE);
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" ~");
-			emit_out(high_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" ~");
+			emit_to_string(high_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" !");
-			emit_out(high_string);
-			emit_out(" addi\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" !");
+			emit_to_string(high_string);
+			emit_to_string(" addi\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" rs2_x30 slli\n");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs2_x30 slli\n");
 
-			emit_out("rd_t1 ~");
-			emit_out(low_string);
-			emit_out(" lui\n");
+			emit_to_string("rd_t1 ~");
+			emit_to_string(low_string);
+			emit_to_string(" lui\n");
 
-			emit_out("rd_t1 rs1_t1 !");
-			emit_out(low_string);
-			emit_out(" addi\n");
+			emit_to_string("rd_t1 rs1_t1 !");
+			emit_to_string(low_string);
+			emit_to_string(" addi\n");
 
-			emit_out("rd_");
-			emit_out(reg_name);
-			emit_out(" rs1_");
-			emit_out(reg_name);
-			emit_out(" rs2_t1 or");
+			emit_to_string("rd_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs1_");
+			emit_to_string(reg_name);
+			emit_to_string(" rs2_t1 or");
 		}
 	}
 
-
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
 }
 
+void emit_load_immediate(int reg, int value, char* note)
+{
+	reset_emit_string();
+	write_load_immediate(reg, value, note);
+	emit_out(emit_string);
+}
+
 /* Adds destination and source and places result in destination */
-void emit_add(int destination_reg, int source_reg, char* note)
+void write_add(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("ADD R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(source_name);
+		emit_to_string("ADD R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(source_name);
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
 	{
-		emit_out("add_");
-		emit_out(destination_name);
-		emit_out(",");
-		emit_out(source_name);
+		emit_to_string("add_");
+		emit_to_string(destination_name);
+		emit_to_string(",");
+		emit_to_string(source_name);
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' ");
-		emit_out(destination_name);
-		emit_out(" ");
-		emit_out(destination_name);
-		emit_out(" ADD ");
-		emit_out(source_name);
-		emit_out(" ARITH2_ALWAYS");
+		emit_to_string("'0' ");
+		emit_to_string(destination_name);
+		emit_to_string(" ");
+		emit_to_string(destination_name);
+		emit_to_string(" ADD ");
+		emit_to_string(source_name);
+		emit_to_string(" ARITH2_ALWAYS");
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("ADD_");
-		emit_out(destination_name);
-		emit_out("_");
-		emit_out(source_name);
-		emit_out("_");
-		emit_out(destination_name);
+		emit_to_string("ADD_");
+		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
+		emit_to_string("_");
+		emit_to_string(destination_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
-		emit_out("rd_");
-		emit_out(destination_name);
-		emit_out(" rs1_");
-		emit_out(source_name);
-		emit_out(" rs2_");
-		emit_out(destination_name);
-		emit_out(" add");
+		emit_to_string("rd_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs1_");
+		emit_to_string(source_name);
+		emit_to_string(" rs2_");
+		emit_to_string(destination_name);
+		emit_to_string(" add");
 	}
 
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
+}
+
+void emit_add(int destination_reg, int source_reg, char* note)
+{
+	reset_emit_string();
+	write_add(destination_reg, source_reg, note);
+	emit_out(emit_string);
+}
+
+void write_add_immediate(int reg, int value, char* note)
+{
+	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	write_add(reg, REGISTER_EMIT_TEMP, note);
 }
 
 void emit_add_immediate(int reg, int value, char* note)
 {
-	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	emit_add(reg, REGISTER_EMIT_TEMP, note);
+	reset_emit_string();
+	write_add_immediate(reg, value, note);
+	emit_out(emit_string);
 }
 
 /* Subtracts destination and source and places result in destination */
-void emit_sub(int destination_reg, int source_reg, char* note)
+void write_sub(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("SUB R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(source_name);
+		emit_to_string("SUB R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(source_name);
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
 	{
-		emit_out("sub_");
-		emit_out(destination_name);
-		emit_out(",");
-		emit_out(source_name);
-		emit_out("\n");
+		emit_to_string("sub_");
+		emit_to_string(destination_name);
+		emit_to_string(",");
+		emit_to_string(source_name);
+		emit_to_string("\n");
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' ");
-		emit_out(destination_name);
-		emit_out(" ");
-		emit_out(destination_name);
-		emit_out(" SUB ");
-		emit_out(source_name);
-		emit_out(" ARITH2_ALWAYS");
+		emit_to_string("'0' ");
+		emit_to_string(destination_name);
+		emit_to_string(" ");
+		emit_to_string(destination_name);
+		emit_to_string(" SUB ");
+		emit_to_string(source_name);
+		emit_to_string(" ARITH2_ALWAYS");
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("SUB_");
-		emit_out(destination_name);
-		emit_out("_");
-		emit_out(source_name);
-		emit_out("_");
-		emit_out(destination_name);
+		emit_to_string("SUB_");
+		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
+		emit_to_string("_");
+		emit_to_string(destination_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
-		emit_out("rd_");
-		emit_out(destination_name);
-		emit_out(" rs1_");
-		emit_out(destination_name);
-		emit_out(" rs2_");
-		emit_out(source_name);
-		emit_out(" sub");
+		emit_to_string("rd_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs1_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs2_");
+		emit_to_string(source_name);
+		emit_to_string(" sub");
 	}
 
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
+}
+
+void emit_sub(int destination_reg, int source_reg, char* note)
+{
+	reset_emit_string();
+	write_sub(destination_reg, source_reg, note);
+	emit_out(emit_string);
+}
+
+void write_sub_immediate(int reg, int value, char* note)
+{
+	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+	write_sub(reg, REGISTER_EMIT_TEMP, note);
 }
 
 void emit_sub_immediate(int reg, int value, char* note)
 {
-	emit_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	emit_sub(reg, REGISTER_EMIT_TEMP, note);
+	reset_emit_string();
+	write_sub_immediate(reg, value, note);
+	emit_out(emit_string);
 }
 
 void emit_mul_into_register_zero(int reg, char* note)
@@ -1574,11 +1622,6 @@ void emit_va_start_intrinsic(void)
 
 	require_match("Invalid token at end of __va_start, expected ')'", ")");
 
-
-	/* We could avoid this push/pop if load_address_of_variable_into_register could load directly into a register */
-	load_address_of_variable_into_register(REGISTER_ZERO, ap_name);
-	emit_push(REGISTER_ZERO, "Push ap");
-
 	struct token_list* loaded = load_address_of_variable_into_register(REGISTER_ZERO, variable_name);
 	if(stack_direction == STACK_DIRECTION_PLUS)
 	{
@@ -1589,7 +1632,7 @@ void emit_va_start_intrinsic(void)
 		emit_sub_immediate(REGISTER_ZERO, loaded->type->size, "Subtract size of variable");
 	}
 
-	emit_pop(REGISTER_ONE, "Pop AP");
+	load_address_of_variable_into_register(REGISTER_ONE, ap_name);
 
 	/* Store REGISTER_ZERO in REGISTER_ONE deref */
 	emit_out(store_value(register_size));
@@ -2821,15 +2864,14 @@ unsigned ceil_div(unsigned a, unsigned b)
 }
 
 int locals_depth;
-void process_static_variable(int);
 /* Process local variable */
 void collect_local(void)
 {
 	if(NULL != break_target_func)
 	{
-		process_static_variable(TRUE);
-		return;
+		maybe_bootstrap_error("Variable inside loop");
 	}
+
 	struct type* type_size = type_name();
 	if(type_size->size == NO_STRUCT_DEFINITION)
 	{
@@ -2849,8 +2891,8 @@ void collect_local(void)
 	struct token_list* list_to_append_to = function->locals;
 	struct token_list* a;
 	unsigned struct_depth_adjustment;
-	unsigned i;
 	char* name;
+	int function_depth_offset = 0;
 
 	do
 	{
@@ -2888,32 +2930,6 @@ void collect_local(void)
 
 		a = sym_declare(name, current_type, list_to_append_to, TLO_LOCAL);
 		list_to_append_to = a;
-
-		if(NULL == function->locals)
-		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = register_size;
-			}
-			else
-			{
-				a->depth = -register_size;
-			}
-		}
-		else
-		{
-			if(stack_direction == STACK_DIRECTION_PLUS)
-			{
-				a->depth = function->locals->depth + register_size;
-			}
-			else
-			{
-				a->depth = function->locals->depth - register_size;
-			}
-		}
-		locals_depth = locals_depth + register_size;
-
-		function->locals = a;
 
 		require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in local variable name\n");
 		require(!iskeywordp(name), "You are not allowed to use a keyword as a local variable name\n");
@@ -2954,18 +2970,23 @@ void collect_local(void)
 			require_match("ERROR in collect_local\nMissing ] after local array size\n", "]");
 		}
 
-		/* Adjust the depth of local structs. When stack grows downwards, we want them to
-		   start at the bottom of allocated space. */
-		struct_depth_adjustment = (ceil_div(a->type->size * a->array_modifier, register_size) - 1) * register_size;
+		if(NULL != function->locals)
+		{
+			function_depth_offset = function->locals->depth;
+		}
+
+		struct_depth_adjustment = ceil_div(a->type->size * a->array_modifier, register_size) * register_size;
 		if(stack_direction == STACK_DIRECTION_PLUS)
 		{
-			a->depth = a->depth + struct_depth_adjustment;
+			a->depth = function_depth_offset + struct_depth_adjustment;
 		}
 		else
 		{
-			a->depth = a->depth - struct_depth_adjustment;
+			a->depth = function_depth_offset - struct_depth_adjustment;
 		}
 		locals_depth = locals_depth + struct_depth_adjustment;
+
+		function->locals = a;
 
 		if(match("=", global_token->s))
 		{
@@ -2979,13 +3000,10 @@ void collect_local(void)
 			require_extra_token();
 			expression();
 
-		}
-
-		i = ceil_div(a->type->size * a->array_modifier, register_size);
-		while(i != 0)
-		{
-			emit_push(REGISTER_ZERO, a->s);
-			i = i - 1;
+			load_address_of_variable_into_register(REGISTER_ONE, name);
+			/* Store value of REGISTER_ZERO in REGISTER_ONE deref.
+			 * The result of expression() will be in REGISTER_ZERO. */
+			emit_out(store_value(type_size->size));
 		}
 
 		if(global_token->s[0] == ',')
@@ -3487,10 +3505,7 @@ void return_result(void)
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
-	if(function->locals != NULL)
-	{
-		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
-	}
+	emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("ret\n");
@@ -3507,13 +3522,6 @@ void process_break(void)
 		line_error();
 		fputs("Not inside of a loop or case statement\n", stderr);
 		exit(EXIT_FAILURE);
-	}
-	struct token_list* i = function->locals;
-	while(i != break_frame)
-	{
-		if(NULL == i) break;
-		emit_pop(REGISTER_ONE, "break_cleanup_locals");
-		i = i->next;
 	}
 
 	require_extra_token();
@@ -3576,31 +3584,11 @@ void recursive_statement(void)
 	}
 	global_token = global_token->next;
 
-	/* Clean up any locals added */
-
-	if(((X86 == Architecture) && !match("ret\n", output_list->s)) ||
-	   ((AMD64 == Architecture) && !match("ret\n", output_list->s)) ||
-	   (((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s)) ||
-	   ((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s)) ||
-	   ((AARCH64 == Architecture) && !match("RETURN\n", output_list->s)) ||
-	   (((RISCV32 == Architecture) || (RISCV64 == Architecture)) && !match("ret\n", output_list->s)))
-	{
-		struct token_list* i;
-		int j;
-		for(i = function->locals; frame != i; i = i->next)
-		{
-			j = ceil_div(i->type->size * i->array_modifier, register_size);
-			while (j != 0) {
-				emit_pop(REGISTER_ONE, "_recursive_statement_locals");
-				j = j - 1;
-			}
-		}
-	}
 	function->locals = frame;
 }
 
 /* Variables inside loops are currently just global variables */
-void process_static_variable(int is_loop_variable)
+void process_static_variable(void)
 {
 	maybe_bootstrap_error("static local variable");
 
@@ -3619,44 +3607,7 @@ void process_static_variable(int is_loop_variable)
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();
 
-	if(match(";", global_token->s))
-	{
-		global_assignment(new_name, type_size);
-		return;
-	}
-
-	/* Deal with assignment to a global variable */
-	if(match("=", global_token->s))
-	{
-		if(is_loop_variable)
-		{
-			global_variable_definition(type_size, new_name);
-			require(NULL != global_token, "NULL token received in loop variable assignment");
-
-			current_target = variable->global_variable->type;
-			emit_load_named_immediate(REGISTER_ZERO, "GLOBAL_", variable->global_variable->s, "loop variable load");
-
-			emit_push(REGISTER_ZERO, "_process_expression1");
-
-			expression();
-
-			emit_pop(REGISTER_ONE, "static_loop_variable");
-
-			emit_out(store_value(type_size->size));
-			require_match("Missing ; from loop variable.\n", ";");
-		}
-		else
-		{
-			global_assignment(new_name, type_size);
-		}
-		return;
-	}
-
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		variable->global_variable->array_modifier = global_static_array(type_size, new_name);
-	}
+	declare_global_variable(type_size, variable->global_variable);
 }
 
 /*
@@ -3763,7 +3714,7 @@ void statement(void)
 	{
 		require_extra_token();
 
-		process_static_variable(FALSE);
+		process_static_variable();
 	}
 	else
 	{
@@ -3883,9 +3834,21 @@ void declare_function(void)
 		/* Just to be sure this doesn't escape the function somehow. */
 		function_static_variables_list = NULL;
 
-		int offset = copy_string(stack_reserve_string, "# Locals depth: ", MAX_STRING);
-		offset = offset + copy_string(stack_reserve_string + offset, int2str(locals_depth, 10, FALSE), MAX_STRING - offset);
-		copy_string(stack_reserve_string + offset, "\n", MAX_STRING - offset);
+		if(locals_depth != 0)
+		{
+			reset_emit_string();
+			if(stack_direction == STACK_DIRECTION_PLUS)
+			{
+				write_add_immediate(REGISTER_STACK, locals_depth, "Reserve stack");
+			}
+			else
+			{
+				write_sub_immediate(REGISTER_STACK, locals_depth, "Reserve stack");
+			}
+			copy_string(stack_reserve_string, emit_string, MAX_STRING);
+		}
+
+		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
 
 		/* C99 5.1.2.2.3 Program termination
 		 * [..] reaching the } that terminates the main function returns a value of 0.
@@ -4264,9 +4227,26 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 int global_static_array(struct type* type_size, char* name)
 {
-	maybe_bootstrap_error("global array definitions");
-
 	global_variable_header(name);
+
+	if(global_token->s[0] == ';')
+	{
+		global_variable_zero_initialize(type_size->size);
+		global_token = global_token->next;
+		return 0;
+	}
+	else if(global_token->s[0] == '=')
+	{
+		require_extra_token();
+
+		global_value_selection(type_size);
+
+		global_pad_to_register_size(type_size->size);
+		global_token = global_token->next;
+		return 0;
+	}
+
+	maybe_bootstrap_error("global array definitions");
 
 	globals_list = emit("&GLOBAL_STORAGE_", globals_list);
 	globals_list = emit(name, globals_list);
@@ -4342,47 +4322,9 @@ int global_static_array(struct type* type_size, char* name)
 	return array_modifier;
 }
 
-void global_variable_definition(struct type* type_size, char* variable_name)
+void declare_global_variable(struct type* type_size, struct token_list* variable)
 {
-	global_variable_header(variable_name);
-
-	global_variable_zero_initialize(type_size->size);
-
-	require_extra_token();
-}
-
-void global_assignment(char* name, struct type* type_size)
-{
-	global_variable_header(name);
-
-	if(global_token->s[0] == ';')
-	{
-		global_variable_zero_initialize(type_size->size);
-	}
-	else
-	{
-		require_match("ERROR in global_assignment\nMissing =\n", "=");
-
-		global_value_selection(type_size);
-
-		global_pad_to_register_size(type_size->size);
-	}
-
-	require_match("ERROR in Program\nMissing ;\n", ";");
-}
-
-void declare_global_variable(struct type* type_size, char* name)
-{
-	global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-
-	/* Deal with global static arrays */
-	if(match("[", global_token->s))
-	{
-		global_symbol_list->array_modifier = global_static_array(type_size, name);
-		return;
-	}
-
-	global_assignment(name, type_size);
+	variable->array_modifier = global_static_array(type_size, variable->s);
 }
 
 /*
@@ -4482,7 +4424,8 @@ new_type:
 
 	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
 	{
-		declare_global_variable(type_size, name);
+		global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
+		declare_global_variable(type_size, global_symbol_list);
 		goto new_type;
 	}
 
