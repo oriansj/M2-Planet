@@ -3608,6 +3608,8 @@ void process_static_variable(void)
 	require_extra_token();
 
 	declare_global_variable(type_size, variable->global_variable);
+
+	require_match("Expected ; after static variable declarations\n", ";");
 }
 
 /*
@@ -4229,10 +4231,9 @@ int global_static_array(struct type* type_size, char* name)
 {
 	global_variable_header(name);
 
-	if(global_token->s[0] == ';')
+	if(global_token->s[0] == ';' || global_token->s[0] == ',')
 	{
 		global_variable_zero_initialize(type_size->size);
-		global_token = global_token->next;
 		return 0;
 	}
 	else if(global_token->s[0] == '=')
@@ -4242,7 +4243,6 @@ int global_static_array(struct type* type_size, char* name)
 		global_value_selection(type_size);
 
 		global_pad_to_register_size(type_size->size);
-		global_token = global_token->next;
 		return 0;
 	}
 
@@ -4316,8 +4316,6 @@ int global_static_array(struct type* type_size, char* name)
 
 		global_variable_zero_initialize(size);
 	}
-
-	require_match("missing ;\n", ";");
 
 	return array_modifier;
 }
@@ -4394,42 +4392,55 @@ new_type:
 	require(NULL != global_token->next, "Unterminated global\n");
 
 	if(global_token->s[0] == '('
+				|| global_token->next->s[0] == ','
 				|| global_token->next->s[0] == ';'
 				|| global_token->next->s[0] == '='
 				|| global_token->next->s[0] == '[')
 	{
-		if(global_token->s[0] == '(')
+		do
 		{
-			require_extra_token(); /* skip '(' */
-			require_match("Required '*' after '*' in global function pointer.\n", "*");
-
-			name = global_token->s;
-			require_extra_token();
-
-			require_match("Required ')' after name in global function pointer.\n", ")");
-			require_match("Required '(' after ')' in global function pointer.\n", "(");
-
-			while(global_token->s[0] != ')')
+			if(global_token->s[0] == '(')
 			{
-				type_name();
+				require_extra_token(); /* skip '(' */
+				require_match("Required '*' after '*' in global function pointer.\n", "*");
 
-				if(global_token->s[0] == ',')
+				name = global_token->s;
+				require_extra_token();
+
+				require_match("Required ')' after name in global function pointer.\n", ")");
+				require_match("Required '(' after ')' in global function pointer.\n", "(");
+
+				while(global_token->s[0] != ')')
 				{
-					require_extra_token();
+					type_name();
+
+					if(global_token->s[0] == ',')
+					{
+						require_extra_token();
+					}
 				}
+				require_extra_token(); /* skip ')' */
+
+				type_size = function_pointer;
 			}
-			require_extra_token(); /* skip ')' */
+			else
+			{
+				name = global_token->s;
+				require_extra_token();
+			}
 
-			type_size = function_pointer;
-		}
-		else
-		{
-			name = global_token->s;
-			require_extra_token();
-		}
+			global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
+			declare_global_variable(type_size, global_symbol_list);
 
-		global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-		declare_global_variable(type_size, global_symbol_list);
+			if(global_token->s[0] == ',')
+			{
+				require_extra_token();
+			}
+		}
+		while(global_token->s[0] != ';');
+
+		require_match("Expected ; after global declarations", ";");
+
 		goto new_type;
 	}
 

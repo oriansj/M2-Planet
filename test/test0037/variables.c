@@ -94,6 +94,10 @@ void some_function() {
 	function_called = 1;
 }
 
+int some_global_function(void) {
+	function_called = 1;
+}
+
 struct {
 	int* zero;
 	int* global;
@@ -156,6 +160,8 @@ void pointer_type_qualifiers(
 	const struct T* const restrict crls;
 	const void* const restrict crlv;
 }
+
+int ga = 0, gb = 1, gc = 2, gd, garr[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, (*gfunc)(void);
 
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
@@ -292,6 +298,24 @@ int main() {
 	if(s[1] != 't') return 72;
 	if(s[2] != 'r') return 73;
 	if(s[3] != '\0') return 74;
+
+	if(ga != 0) return 75;
+	if(gb != 1) return 76;
+	if(gc != 2) return 77;
+	if(gd != 0) return 78;
+
+	if(garr[0] != 10) return 79;
+	if(garr[1] != 9) return 80;
+	if(garr[2] != 8) return 81;
+	if(garr[3] != 7) return 82;
+	if(garr[4] != 6) return 83;
+	if(garr[5] != 5) return 84;
+	if(garr[6] != 4) return 85;
+	if(garr[7] != 3) return 86;
+	if(garr[8] != 2) return 87;
+	if(garr[9] != 1) return 88;
+
+	gfunc = some_global_function;
 
 	return 0;
 }
