@@ -4392,42 +4392,48 @@ new_type:
 	}
 
 	require(NULL != global_token->next, "Unterminated global\n");
-	if(global_token->s[0] == '(')
+
+	if(global_token->s[0] == '('
+				|| global_token->next->s[0] == ';'
+				|| global_token->next->s[0] == '='
+				|| global_token->next->s[0] == '[')
 	{
-		require_extra_token(); /* skip '(' */
-		require_match("Required '*' after '*' in global function pointer.\n", "*");
-
-		name = global_token->s;
-		require_extra_token();
-
-		require_match("Required ')' after name in global function pointer.\n", ")");
-		require_match("Required '(' after ')' in global function pointer.\n", "(");
-
-		while(global_token->s[0] != ')')
+		if(global_token->s[0] == '(')
 		{
-			type_name();
+			require_extra_token(); /* skip '(' */
+			require_match("Required '*' after '*' in global function pointer.\n", "*");
 
-			if(global_token->s[0] == ',')
+			name = global_token->s;
+			require_extra_token();
+
+			require_match("Required ')' after name in global function pointer.\n", ")");
+			require_match("Required '(' after ')' in global function pointer.\n", "(");
+
+			while(global_token->s[0] != ')')
 			{
-				require_extra_token();
+				type_name();
+
+				if(global_token->s[0] == ',')
+				{
+					require_extra_token();
+				}
 			}
+			require_extra_token(); /* skip ')' */
+
+			type_size = function_pointer;
 		}
-		require_extra_token(); /* skip ')' */
+		else
+		{
+			name = global_token->s;
+			require_extra_token();
+		}
 
-		type_size = function_pointer;
-	}
-	else
-	{
-		name = global_token->s;
-		require_extra_token();
-	}
-
-	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
-	{
 		global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
 		declare_global_variable(type_size, global_symbol_list);
 		goto new_type;
 	}
+
+	require_extra_token();
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))
