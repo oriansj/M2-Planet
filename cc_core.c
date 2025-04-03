@@ -4025,13 +4025,19 @@ void global_value_output(int value, int size)
 
 void global_pad_to_register_size(int bytes_written)
 {
-	int alignment_size = register_size - (bytes_written % register_size);
-	while(alignment_size != 0)
+	int remaining = (bytes_written % register_size);
+	if(remaining != 0)
 	{
-		globals_list = emit("'00' ", globals_list);
+		int alignment_size = register_size - remaining;
+		while(alignment_size != 0)
+		{
+			globals_list = emit("'00' ", globals_list);
 
-		alignment_size = alignment_size - 1;
+			alignment_size = alignment_size - 1;
+		}
 	}
+
+	globals_list = emit("\n", globals_list);
 }
 
 void global_struct_initializer_list(struct type* type_size);
