@@ -3593,16 +3593,17 @@ void process_static_variable(void)
 	maybe_bootstrap_error("static local variable");
 
 	struct type* type_size = type_name();
+	char* name = global_token->s;
 
 	struct static_variable_list* variable = calloc(1, sizeof(struct static_variable_list));
 	variable->next = function_static_variables_list;
 	function_static_variables_list = variable;
-	variable->local_variable_name = global_token->s;
-	char* new_name = calloc(MAX_STRING, sizeof(char));
+	variable->local_variable_name = name;
 
+	char* new_name = calloc(MAX_STRING, sizeof(char));
 	int offset = copy_string(new_name, function->s, MAX_STRING);
 	offset = offset + copy_string(new_name + offset, "_", MAX_STRING - offset);
-	copy_string(new_name + offset, variable->local_variable_name, MAX_STRING - offset);
+	copy_string(new_name + offset, name, MAX_STRING - offset);
 
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();
