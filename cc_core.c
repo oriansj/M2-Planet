@@ -3593,21 +3593,24 @@ void process_static_variable(void)
 	maybe_bootstrap_error("static local variable");
 
 	struct type* type_size = type_name();
+	char* name = global_token->s;
 
 	struct static_variable_list* variable = calloc(1, sizeof(struct static_variable_list));
 	variable->next = function_static_variables_list;
 	function_static_variables_list = variable;
-	variable->local_variable_name = global_token->s;
-	char* new_name = calloc(MAX_STRING, sizeof(char));
+	variable->local_variable_name = name;
 
+	char* new_name = calloc(MAX_STRING, sizeof(char));
 	int offset = copy_string(new_name, function->s, MAX_STRING);
 	offset = offset + copy_string(new_name + offset, "_", MAX_STRING - offset);
-	copy_string(new_name + offset, variable->local_variable_name, MAX_STRING - offset);
+	copy_string(new_name + offset, name, MAX_STRING - offset);
 
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();
 
 	declare_global_variable(type_size, variable->global_variable);
+
+	require_match("Expected ; after static variable declarations\n", ";");
 }
 
 /*
@@ -4023,13 +4026,19 @@ void global_value_output(int value, int size)
 
 void global_pad_to_register_size(int bytes_written)
 {
-	int alignment_size = register_size - (bytes_written % register_size);
-	while(alignment_size != 0)
+	int remaining = (bytes_written % register_size);
+	if(remaining != 0)
 	{
-		globals_list = emit("'00' ", globals_list);
+		int alignment_size = register_size - remaining;
+		while(alignment_size != 0)
+		{
+			globals_list = emit("'00' ", globals_list);
 
-		alignment_size = alignment_size - 1;
+			alignment_size = alignment_size - 1;
+		}
 	}
+
+	globals_list = emit("\n", globals_list);
 }
 
 void global_struct_initializer_list(struct type* type_size);
@@ -4229,10 +4238,9 @@ int global_static_array(struct type* type_size, char* name)
 {
 	global_variable_header(name);
 
-	if(global_token->s[0] == ';')
+	if(global_token->s[0] == ';' || global_token->s[0] == ',')
 	{
 		global_variable_zero_initialize(type_size->size);
-		global_token = global_token->next;
 		return 0;
 	}
 	else if(global_token->s[0] == '=')
@@ -4242,7 +4250,6 @@ int global_static_array(struct type* type_size, char* name)
 		global_value_selection(type_size);
 
 		global_pad_to_register_size(type_size->size);
-		global_token = global_token->next;
 		return 0;
 	}
 
@@ -4317,8 +4324,6 @@ int global_static_array(struct type* type_size, char* name)
 		global_variable_zero_initialize(size);
 	}
 
-	require_match("missing ;\n", ";");
-
 	return array_modifier;
 }
 
@@ -4392,42 +4397,61 @@ new_type:
 	}
 
 	require(NULL != global_token->next, "Unterminated global\n");
-	if(global_token->s[0] == '(')
+
+	if(global_token->s[0] == '('
+				|| global_token->next->s[0] == ','
+				|| global_token->next->s[0] == ';'
+				|| global_token->next->s[0] == '='
+				|| global_token->next->s[0] == '[')
 	{
-		require_extra_token(); /* skip '(' */
-		require_match("Required '*' after '*' in global function pointer.\n", "*");
-
-		name = global_token->s;
-		require_extra_token();
-
-		require_match("Required ')' after name in global function pointer.\n", ")");
-		require_match("Required '(' after ')' in global function pointer.\n", "(");
-
-		while(global_token->s[0] != ')')
+		do
 		{
-			type_name();
+			if(global_token->s[0] == '(')
+			{
+				require_extra_token(); /* skip '(' */
+				require_match("Required '*' after '*' in global function pointer.\n", "*");
+
+				name = global_token->s;
+				require_extra_token();
+
+				require_match("Required ')' after name in global function pointer.\n", ")");
+				require_match("Required '(' after ')' in global function pointer.\n", "(");
+
+				while(global_token->s[0] != ')')
+				{
+					type_name();
+
+					if(global_token->s[0] == ',')
+					{
+						require_extra_token();
+					}
+				}
+				require_extra_token(); /* skip ')' */
+
+				type_size = function_pointer;
+			}
+			else
+			{
+				name = global_token->s;
+				require_extra_token();
+			}
+
+			global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
+			declare_global_variable(type_size, global_symbol_list);
 
 			if(global_token->s[0] == ',')
 			{
 				require_extra_token();
 			}
 		}
-		require_extra_token(); /* skip ')' */
+		while(global_token->s[0] != ';');
 
-		type_size = function_pointer;
-	}
-	else
-	{
-		name = global_token->s;
-		require_extra_token();
-	}
+		require_match("Expected ; after global declarations", ";");
 
-	if(global_token->s[0] == ';' || global_token->s[0] == '=' || global_token->s[0] == '[')
-	{
-		global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-		declare_global_variable(type_size, global_symbol_list);
 		goto new_type;
 	}
+
+	require_extra_token();
 
 	/* Deal with global functions */
 	if(match("(", global_token->s))

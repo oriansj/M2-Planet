@@ -25,6 +25,7 @@ Added support for anonymous structs (C11 extension). This was already implemente
 Added support for unions in all places where structs work
 Added support for the `restrict` and `const` pointer type qualifiers.
 Added support for variadic functions.
+Added support for multiple global variable declarations per statement
 
 ** Changed
 Space for local variables in functions is now allocated up front
