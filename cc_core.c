@@ -531,9 +531,9 @@ void write_sub(int destination_reg, int source_reg, char* note)
 		emit_to_string("SUB_");
 		emit_to_string(destination_name);
 		emit_to_string("_");
-		emit_to_string(source_name);
-		emit_to_string("_");
 		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
@@ -690,6 +690,11 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	char* destination_name = register_from_string(destination);
 	char* offset_name = register_from_string(offset_register);
 	char* value_string = int2str(value, 10, TRUE);
+	int absolute_value = value;
+	if(value < 0)
+	{
+		absolute_value = -absolute_value;
+	}
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
@@ -730,7 +735,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	else if(AARCH64 == Architecture)
 	{
 		emit_move(destination, offset_register, note);
-		emit_sub_immediate(destination, value, note);
+		emit_sub_immediate(destination, absolute_value, note);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
