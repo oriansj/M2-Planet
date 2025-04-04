@@ -531,9 +531,9 @@ void write_sub(int destination_reg, int source_reg, char* note)
 		emit_to_string("SUB_");
 		emit_to_string(destination_name);
 		emit_to_string("_");
-		emit_to_string(source_name);
-		emit_to_string("_");
 		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
