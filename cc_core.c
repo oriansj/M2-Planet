@@ -286,7 +286,7 @@ void write_load_immediate(int reg, int value, char* note)
 	}
 	else if(ARMV7L == Architecture)
 	{
-		if((127 >= value) && (value >= -128))
+		if((127 >= value) && (value >= 0))
 		{
 			emit_to_string("!");
 			emit_to_string(value_string);
