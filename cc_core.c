@@ -3244,7 +3244,7 @@ process_switch_iter:
 	else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
 	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
 	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
-	else if(AARCH64 == Architecture) emit_out("SKIP_32_DATA\n&_SWITCH_DEFAULT_");
+	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_DEFAULT_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
 
 	uniqueID_out(function->s, number_string);
