@@ -274,8 +274,7 @@ int main(int argc, char** argv)
 	}
 
 	if(Architecture == KNIGHT_NATIVE
-		|| Architecture == KNIGHT_POSIX
-		|| Architecture == ARMV7L)
+		|| Architecture == KNIGHT_POSIX)
 	{
 		stack_direction = STACK_DIRECTION_PLUS;
 	}
