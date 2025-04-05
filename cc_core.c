@@ -521,9 +521,9 @@ void write_sub(int destination_reg, int source_reg, char* note)
 		emit_to_string("'0' ");
 		emit_to_string(destination_name);
 		emit_to_string(" ");
-		emit_to_string(destination_name);
-		emit_to_string(" SUB ");
 		emit_to_string(source_name);
+		emit_to_string(" SUB ");
+		emit_to_string(destination_name);
 		emit_to_string(" ARITH2_ALWAYS");
 	}
 	else if(AARCH64 == Architecture)
