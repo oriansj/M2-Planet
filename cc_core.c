@@ -716,10 +716,10 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 	else if(ARMV7L == Architecture)
 	{
-		if((127 >= value) && (value >= 0))
+		if((127 >= absolute_value) && (absolute_value >= 0))
 		{
 			emit_out("!");
-			emit_out(value_string);
+			emit_out(int2str(absolute_value, 10, FALSE));
 			emit_out(" ");
 			emit_out(destination_name);
 			emit_out(" SUB ");
