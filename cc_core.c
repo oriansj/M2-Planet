@@ -3225,7 +3225,7 @@ process_switch_iter:
 		else if(X86 == Architecture) emit_out("cmp\nje %_SWITCH_CASE_");
 		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nje %_SWITCH_CASE_");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n^~_SWITCH_CASE_");
-		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSKIP_32_DATA\n&_SWITCH_CASE_");
+		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_CASE_");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 rs2_a1 sub\nrs1_a0 @8 bnez\n$_SWITCH_CASE_");
 
 		emit_out(backtrack->value);
