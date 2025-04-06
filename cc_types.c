@@ -796,7 +796,7 @@ struct type* fallible_type_name(void)
 		}
 		else if(NULL == ret)
 		{
-			ret = create_forward_declared_struct(global_token->next->s, TRUE);
+			ret = create_forward_declared_struct(global_token->s, TRUE);
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -819,7 +819,7 @@ struct type* fallible_type_name(void)
 		}
 		else if(NULL == ret)
 		{
-			ret = create_forward_declared_struct(global_token->next->s, TRUE);
+			ret = create_forward_declared_struct(global_token->s, TRUE);
 		}
 	}
 	else
