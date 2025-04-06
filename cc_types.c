@@ -467,6 +467,12 @@ char* parse_function_pointer(void)
 	{
 		type_name();
 
+		if(global_token->s[0] != ')' && global_token->s[0] != ',')
+		{
+			/* skip optional name */
+			require_extra_token();
+		}
+
 		if(global_token->s[0] == ',')
 		{
 			require_extra_token();

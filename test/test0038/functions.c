@@ -17,7 +17,9 @@
 
 typedef void (*FUNCTION)(void);
 typedef int (*MyFunction)(int, int);
+typedef int (*MyFunctionArgs)(int first_arg, int second_arg);
 typedef int (*MyFunc)(int*, int**);
+typedef int (*MyFuncArgs)(int* first_arg, int** second_arg);
 
 static int a;
 
@@ -34,11 +36,15 @@ _Noreturn void do_not_return();
 void (*global_function_pointer)(void);
 void (*global_int_fp)(int, int);
 void (*global_pointer_fp)(int*, int*);
+void (*global_int_name_fp)(int first_arg, int second_arg);
+void (*global_pointer_name_fp)(int* first_arg, int* second_arg);
 
 struct {
 	void (*f)(void);
 	void (*f_int)(int, int);
 	void (*f_pointer)(int*, int*);
+	void (*f_name_int)(int first_arg, int second_arg);
+	void (*f_pointer_name)(int* first_arg, int* second_arg);
 };
 
 int main() {
@@ -53,9 +59,14 @@ int main() {
 
 	MyFunction my_function;
 	MyFunc my_func;
+	MyFuncArgs my_func_args;
+	MyFunctionArgs my_function_args;
+
 	void (*function_pointer)(void);
 	void (*int_fp)(int, int);
 	void (*pointer_fp)(int*, int*);
+	void (*int_name_fp)(int first_arg, int second_arg);
+	void (*pointer_name_fp)(int* first_arg, int* second_arg);
 
 	return 0;
 }
