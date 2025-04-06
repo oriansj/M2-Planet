@@ -107,6 +107,7 @@ clean:
 	./test/cleanup_test.sh 0045
 	./test/cleanup_test.sh 0046
 	./test/cleanup_test.sh 0047
+	./test/cleanup_test.sh 0048
 	./test/cleanup_test.sh 0100
 	./test/cleanup_test.sh 0101
 	./test/cleanup_test.sh 0102
@@ -132,6 +133,7 @@ test: bin/M2-Planet | bin test/results
 .PHONY: Generate-test-answers
 Generate-test-answers:
 	sha256sum test/results/* >| test/test.answers
+	sha256sum test/test1000/proof >| test/test1000/proof.answer
 
 DESTDIR:=
 PREFIX:=/usr/local

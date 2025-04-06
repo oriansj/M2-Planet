@@ -54,7 +54,10 @@ struct type* add_primitive(struct type* a);
 int global_static_array(struct type*, char*);
 void declare_global_variable(struct type* type_size, struct token_list* variable);
 
+struct type* fallible_type_name(void);
 struct type* type_name(void);
+
+char* parse_function_pointer(void);
 
 struct token_list* emit(char *s, struct token_list* head)
 {
@@ -2507,8 +2510,23 @@ void primary_expr(void)
 	else if(global_token->s[0] == '(')
 	{
 		require_extra_token();
-		expression();
-		require_match("Error in Primary expression\nDidn't get )\n", ")");
+		struct type* type_size = fallible_type_name();
+		if(type_size != NULL)
+		{
+			if(global_token->s[0] == '(')
+			{
+				parse_function_pointer();
+				type_size = function_pointer;
+			}
+			require_match("Invalid character received in cast. Expected ')'.\n", ")");
+			primary_expr();
+			current_target = type_size;
+		}
+		else
+		{
+			expression();
+			require_match("Error in Primary expression\nDidn't get )\n", ")");
+		}
 	}
 	else if(global_token->s[0] == '\'') primary_expr_char();
 	else if(global_token->s[0] == '"') primary_expr_string();
@@ -2888,28 +2906,7 @@ void collect_local(void)
 	{
 		if(global_token->s[0] == '(')
 		{
-			require_extra_token();
-
-			require_match("Required '*' after '(' in local function pointer.\n", "*");
-			require(NULL != global_token->s, "NULL token in local function pointer");
-
-			name = global_token->s;
-			require_extra_token();
-
-			require_match("Required ')' after name in local function pointer.\n", ")");
-			require_match("Required '(' after ')' in local function pointer.\n", "(");
-
-			while(global_token->s[0] != ')')
-			{
-				type_name();
-
-				if(global_token->s[0] == ',')
-				{
-					require_extra_token();
-				}
-			}
-			require_extra_token();
-
+			name = parse_function_pointer();
 			current_type = function_pointer;
 		}
 		else
@@ -3911,26 +3908,7 @@ void global_constant(void)
 
 struct type* typedef_function_pointer(void)
 {
-	require_extra_token(); /* skip '(' */
-	require_match("Invalid token in function pointer parsing, expected '*'.\n", "*");
-	require(NULL != global_token, "Received EOF while reading typedef function pointer\n");
-
-	char* name = global_token->s;
-
-	require_extra_token();
-	require_match("Invalid token in function pointer parsing, expected ')'.\n", ")");
-	require_match("Invalid token in function pointer parsing, expected '('.\n", "(");
-
-	while(global_token->s[0] != ')')
-	{
-		type_name();
-
-		if(global_token->s[0] == ',')
-		{
-			require_extra_token();
-		}
-	}
-	require_extra_token(); /* skip ')' */
+	char* name = parse_function_pointer();
 
 	if(match(name, "FUNCTION"))
 	{
@@ -4411,26 +4389,7 @@ new_type:
 		{
 			if(global_token->s[0] == '(')
 			{
-				require_extra_token(); /* skip '(' */
-				require_match("Required '*' after '*' in global function pointer.\n", "*");
-
-				name = global_token->s;
-				require_extra_token();
-
-				require_match("Required ')' after name in global function pointer.\n", ")");
-				require_match("Required '(' after ')' in global function pointer.\n", "(");
-
-				while(global_token->s[0] != ')')
-				{
-					type_name();
-
-					if(global_token->s[0] == ',')
-					{
-						require_extra_token();
-					}
-				}
-				require_extra_token(); /* skip ')' */
-
+				name = parse_function_pointer();
 				type_size = function_pointer;
 			}
 			else

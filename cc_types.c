@@ -452,6 +452,46 @@ struct type* lookup_member(struct type* parent, char* name)
 struct type* type_name(void);
 void require_match(char* message, char* required);
 
+char* parse_function_pointer(void)
+{
+	require_extra_token(); /* skip '(' */
+	require_match("Required '*' after '(' in struct function pointer.", "*");
+
+	char* name = NULL;
+	if(global_token->s[0] != ')')
+	{
+		name = global_token->s;
+		require_extra_token();
+	}
+
+	require_match("Required ')' after name in struct function pointer.", ")");
+	require_match("Required '(' after ')' in struct function pointer.", "(");
+
+	while(global_token->s[0] != ')')
+	{
+		type_name();
+
+		if(global_token->s[0] == '(')
+		{
+			parse_function_pointer();
+		}
+
+		if(global_token->s[0] != ')' && global_token->s[0] != ',')
+		{
+			/* skip optional name */
+			require_extra_token();
+		}
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	require_extra_token(); /* skip ')' */
+
+	return name;
+}
+
 int member_size;
 struct type* build_member(struct type* last, int offset)
 {
@@ -466,26 +506,7 @@ struct type* build_member(struct type* last, int offset)
 
 	if(global_token->s[0] == '(')
 	{
-		require_extra_token(); /* skip '(' */
-		require_match("Required '*' after '(' in struct function pointer.", "*");
-
-		i->name = global_token->s;
-		require_extra_token();
-
-		require_match("Required ')' after name in struct function pointer.", ")");
-		require_match("Required '(' after ')' in struct function pointer.", "(");
-
-		while(global_token->s[0] != ')')
-		{
-			type_name();
-
-			if(global_token->s[0] == ',')
-			{
-				require_extra_token();
-			}
-		}
-		require_extra_token(); /* skip ')' */
-
+		i->name = parse_function_pointer();
 		i->type = function_pointer;
 	}
 	else if(global_token->s[0] != ';')
@@ -770,7 +791,7 @@ struct type* create_enum(void)
 	return head;
 }
 
-struct type* type_name(void)
+struct type* fallible_type_name(void)
 {
 	struct type* ret;
 
@@ -796,7 +817,7 @@ struct type* type_name(void)
 		}
 		else if(NULL == ret)
 		{
-			ret = create_forward_declared_struct(global_token->next->s, TRUE);
+			ret = create_forward_declared_struct(global_token->s, TRUE);
 		}
 	}
 	else if(match("enum", global_token->s))
@@ -819,7 +840,7 @@ struct type* type_name(void)
 		}
 		else if(NULL == ret)
 		{
-			ret = create_forward_declared_struct(global_token->next->s, TRUE);
+			ret = create_forward_declared_struct(global_token->s, TRUE);
 		}
 	}
 	else
@@ -827,12 +848,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret)
 		{
-			fputs("Unknown type ", stderr);
-			fputs(global_token->s, stderr);
-			fputs("\n", stderr);
-			line_error();
-			fputs("\n", stderr);
-			exit(EXIT_FAILURE);
+			return NULL;
 		}
 	}
 
@@ -855,6 +871,22 @@ struct type* type_name(void)
 	}
 
 	return ret;
+}
+
+struct type* type_name(void)
+{
+	struct type* ret = fallible_type_name();
+	if(ret != NULL)
+	{
+		return ret;
+	}
+
+	fputs("Unknown type ", stderr);
+	fputs(global_token->s, stderr);
+	fputs("\n", stderr);
+	line_error();
+	fputs("\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 struct type* new_function_pointer_typedef(char* name)
