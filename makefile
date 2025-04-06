@@ -132,6 +132,7 @@ test: bin/M2-Planet | bin test/results
 .PHONY: Generate-test-answers
 Generate-test-answers:
 	sha256sum test/results/* >| test/test.answers
+	sha256sum test/test1000/proof >| test/test1000/proof.answer
 
 DESTDIR:=
 PREFIX:=/usr/local
