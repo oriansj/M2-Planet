@@ -1092,21 +1092,6 @@ int constant_unary_expression(void)
 		global_token = global_token->next;
 		return val;
 	}
-	else if(global_token->s[0] == ':')
-	{
-		/* Switch labels have the : prepended to the front like labels.
-		 * This is just a normal integer or constant.*/
-
-		struct token_list* lookup = sym_lookup(global_token->s + 1, global_constant_list);
-		if(lookup != NULL)
-		{
-			return strtoint(lookup->arguments->s);
-		}
-		else
-		{
-			return strtoint(global_token->s + 1);
-		}
-	}
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
@@ -3092,7 +3077,7 @@ void process_case(void)
 process_case_iter:
 	require(NULL != global_token, "incomplete case statement\n");
 	if(match("case", global_token->s)) return;
-	if(match(":default", global_token->s)) return;
+	if(match("default", global_token->s)) return;
 
 	if(match("break", global_token->s))
 	{
@@ -3178,9 +3163,10 @@ process_switch_iter:
 		else line_error();
 		goto process_switch_iter;
 	}
-	else if(match(":default", global_token->s))
+	else if(match("default", global_token->s))
 	{ /* because of how M2-Planet treats labels */
 		require_extra_token();
+		require_match("ERROR in process_switch\nMISSING : after default\n", ":");
 		emit_out(":_SWITCH_DEFAULT_");
 		uniqueID_out(function->s, number_string);
 
@@ -3239,7 +3225,7 @@ process_switch_iter:
 		backtrack = hold;
 	}
 
-	/* Default to :default */
+	/* Default to default: */
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
 	else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
 	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
@@ -3645,14 +3631,26 @@ void statement(void)
 
 	struct token_list* current_token = global_token;
 
+	struct token_list* next_token = global_token->next;
+	int is_label = FALSE;
+	if(next_token != NULL)
+	{
+		if(next_token->s[0] == ':')
+		{
+			is_label = TRUE;
+		}
+	}
+
 	if(global_token->s[0] == '{')
 	{
 		recursive_statement();
 	}
-	else if(':' == global_token->s[0])
+	else if(is_label)
 	{
+		emit_out(":");
 		emit_out(global_token->s);
 		emit_out("\t#C goto label\n");
+		global_token = global_token->next;
 		require_extra_token();
 	}
 	else if((NULL != lookup_primitive_type()) ||
