@@ -770,7 +770,7 @@ struct type* create_enum(void)
 	return head;
 }
 
-struct type* type_name(void)
+struct type* fallible_type_name(void)
 {
 	struct type* ret;
 
@@ -827,12 +827,7 @@ struct type* type_name(void)
 		ret = lookup_global_type();
 		if(NULL == ret)
 		{
-			fputs("Unknown type ", stderr);
-			fputs(global_token->s, stderr);
-			fputs("\n", stderr);
-			line_error();
-			fputs("\n", stderr);
-			exit(EXIT_FAILURE);
+			return NULL;
 		}
 	}
 
@@ -855,6 +850,22 @@ struct type* type_name(void)
 	}
 
 	return ret;
+}
+
+struct type* type_name(void)
+{
+	struct type* ret = fallible_type_name();
+	if(ret != NULL)
+	{
+		return ret;
+	}
+
+	fputs("Unknown type ", stderr);
+	fputs(global_token->s, stderr);
+	fputs("\n", stderr);
+	line_error();
+	fputs("\n", stderr);
+	exit(EXIT_FAILURE);
 }
 
 struct type* new_function_pointer_typedef(char* name)
