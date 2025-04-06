@@ -452,6 +452,31 @@ struct type* lookup_member(struct type* parent, char* name)
 struct type* type_name(void);
 void require_match(char* message, char* required);
 
+char* parse_function_pointer(void)
+{
+	require_extra_token(); /* skip '(' */
+	require_match("Required '*' after '(' in struct function pointer.", "*");
+
+	char* name = global_token->s;
+	require_extra_token();
+
+	require_match("Required ')' after name in struct function pointer.", ")");
+	require_match("Required '(' after ')' in struct function pointer.", "(");
+
+	while(global_token->s[0] != ')')
+	{
+		type_name();
+
+		if(global_token->s[0] == ',')
+		{
+			require_extra_token();
+		}
+	}
+	require_extra_token(); /* skip ')' */
+
+	return name;
+}
+
 int member_size;
 struct type* build_member(struct type* last, int offset)
 {
@@ -466,26 +491,7 @@ struct type* build_member(struct type* last, int offset)
 
 	if(global_token->s[0] == '(')
 	{
-		require_extra_token(); /* skip '(' */
-		require_match("Required '*' after '(' in struct function pointer.", "*");
-
-		i->name = global_token->s;
-		require_extra_token();
-
-		require_match("Required ')' after name in struct function pointer.", ")");
-		require_match("Required '(' after ')' in struct function pointer.", "(");
-
-		while(global_token->s[0] != ')')
-		{
-			type_name();
-
-			if(global_token->s[0] == ',')
-			{
-				require_extra_token();
-			}
-		}
-		require_extra_token(); /* skip ')' */
-
+		i->name = parse_function_pointer();
 		i->type = function_pointer;
 	}
 	else if(global_token->s[0] != ';')
