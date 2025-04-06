@@ -20,5 +20,8 @@ int main() {
     int b = (int)a;
 
     if(b != 0) return 1;
+
+	void* func = 0;
+	void(*caller)(void) = (void (*)(void))func;
 }
 

@@ -457,8 +457,12 @@ char* parse_function_pointer(void)
 	require_extra_token(); /* skip '(' */
 	require_match("Required '*' after '(' in struct function pointer.", "*");
 
-	char* name = global_token->s;
-	require_extra_token();
+	char* name = NULL;
+	if(global_token->s[0] != ')')
+	{
+		name = global_token->s;
+		require_extra_token();
+	}
 
 	require_match("Required ')' after name in struct function pointer.", ")");
 	require_match("Required '(' after ')' in struct function pointer.", "(");
@@ -466,6 +470,11 @@ char* parse_function_pointer(void)
 	while(global_token->s[0] != ')')
 	{
 		type_name();
+
+		if(global_token->s[0] == '(')
+		{
+			parse_function_pointer();
+		}
 
 		if(global_token->s[0] != ')' && global_token->s[0] != ',')
 		{

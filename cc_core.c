@@ -2513,6 +2513,11 @@ void primary_expr(void)
 		struct type* type_size = fallible_type_name();
 		if(type_size != NULL)
 		{
+			if(global_token->s[0] == '(')
+			{
+				parse_function_pointer();
+				type_size = function_pointer;
+			}
 			require_match("Invalid character received in cast. Expected ')'.\n", ")");
 			primary_expr();
 			current_target = type_size;
