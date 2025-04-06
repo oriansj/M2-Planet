@@ -2511,9 +2511,9 @@ void primary_expr(void)
 		struct type* type_size = fallible_type_name();
 		if(type_size != NULL)
 		{
-			line_error();
-			fputs("Casting is not supported.\n", stderr);
-			exit(1);
+			require_match("Invalid character received in cast. Expected ')'.\n", ")");
+			primary_expr();
+			current_target = type_size;
 		}
 		else
 		{

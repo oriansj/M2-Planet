@@ -107,6 +107,7 @@ clean:
 	./test/cleanup_test.sh 0045
 	./test/cleanup_test.sh 0046
 	./test/cleanup_test.sh 0047
+	./test/cleanup_test.sh 0048
 	./test/cleanup_test.sh 0100
 	./test/cleanup_test.sh 0101
 	./test/cleanup_test.sh 0102
