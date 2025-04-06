@@ -54,6 +54,7 @@ struct type* add_primitive(struct type* a);
 int global_static_array(struct type*, char*);
 void declare_global_variable(struct type* type_size, struct token_list* variable);
 
+struct type* fallible_type_name(void);
 struct type* type_name(void);
 
 struct token_list* emit(char *s, struct token_list* head)
@@ -2507,8 +2508,18 @@ void primary_expr(void)
 	else if(global_token->s[0] == '(')
 	{
 		require_extra_token();
-		expression();
-		require_match("Error in Primary expression\nDidn't get )\n", ")");
+		struct type* type_size = fallible_type_name();
+		if(type_size != NULL)
+		{
+			line_error();
+			fputs("Casting is not supported.\n", stderr);
+			exit(1);
+		}
+		else
+		{
+			expression();
+			require_match("Error in Primary expression\nDidn't get )\n", ")");
+		}
 	}
 	else if(global_token->s[0] == '\'') primary_expr_char();
 	else if(global_token->s[0] == '"') primary_expr_string();
