@@ -90,6 +90,32 @@ int test_should_choose_enum() {
 	return 1;
 }
 
+#define EIGHTEEN 18
+
+int test_should_choose_define() {
+	int a = 18;
+
+	switch (a) {
+		case EIGHTEEN: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
+#define NINETEEN 19    /* This is my comment */
+
+int test_should_choose_define_with_comment() {
+	int a = 19;
+
+	switch (a) {
+		case NINETEEN: return 0;
+		default: return 1;
+	}
+
+	return 1;
+}
+
 int main(int argc, char** argv)
 {
 	char* a = argv[1];
@@ -167,6 +193,8 @@ int main(int argc, char** argv)
 	if(test_should_choose_expression_ending_with_integer() != 0) return 110;
 	if(test_should_choose_character() != 0) return 111;
 	if(test_should_choose_expression_character() != 0) return 112;
+	if(test_should_choose_define() != 0) return 113;
+	if(test_should_choose_define_with_comment() != 0) return 114;
 
 	return i;
 }
