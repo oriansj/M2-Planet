@@ -50,6 +50,16 @@ struct {
 	void (*f_pointer_fp)(int* first_arg, int* second_arg, void (*third_arg)(void), void (*)(void));
 };
 
+int array_arg(char arg[]) { return sizeof(arg); }
+int array_arg2(char arg[][]) { return sizeof(arg); }
+int array_arg3(char* arg[]) { return sizeof(arg); }
+int array_arg4(char* arg[][]) { return sizeof(arg); }
+int array_arg5(char arg[10 + 10]) { return sizeof(arg); }
+int array_arg6(char* arg[10 + 10]) { return sizeof(arg); }
+int array_arg7(char* arg[10 + 10][8 + 1]) { return sizeof(arg); }
+int array_arg8(char arg[10 + 10][8 + 1]) { return sizeof(arg); }
+
+
 int main() {
 	a = 1;
 
@@ -72,6 +82,15 @@ int main() {
 	void (*int_name_fp)(int first_arg, int second_arg);
 	void (*pointer_name_fp)(int* first_arg, int* second_arg);
 	void (*pointer_fp_fp)(int* first_arg, int* second_arg, void (*third_arg)(void), void (*)(void));
+
+	if(array_arg(0) != sizeof(char*)) return 6;
+	if(array_arg2(0) != sizeof(char**)) return 7;
+	if(array_arg3(0) != sizeof(char**)) return 8;
+	if(array_arg4(0) != sizeof(char***)) return 9;
+	if(array_arg5(0) != sizeof(char*)) return 10;
+	if(array_arg6(0) != sizeof(char**)) return 11;
+	if(array_arg7(0) != sizeof(char***)) return 12;
+	if(array_arg8(0) != sizeof(char**)) return 13;
 
 	return 0;
 }

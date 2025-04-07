@@ -15,6 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+int global[2] = { 1, 2 };
+
 int main() {
     unsigned a = 0;
     int b = (int)a;
@@ -23,5 +25,13 @@ int main() {
 
 	void* func = 0;
 	void(*caller)(void) = (void (*)(void))func;
+
+	void* void_ptr = global;
+
+	int r = ((int*)(void_ptr))[0];
+	if(r != 1) return 2;
+
+	r = ((int*)(void_ptr))[1];
+	if(r != 2) return 3;
 }
 

@@ -1758,7 +1758,6 @@ void primary_expr_variable(void)
 			emit_out(load_value(current_target->size, current_target->is_signed));
 			num_dereference = num_dereference - 1;
 		}
-		return;
 	}
 
 	num_dereference_after_postfix = num_dereference;
@@ -3784,6 +3783,20 @@ void collect_arguments(void)
 
 			require_extra_token();
 			function->arguments = a;
+
+			while(global_token->s[0] == '[')
+			{
+				require_extra_token();
+
+				if(global_token->s[0] != ']')
+				{
+					/* Throw away the result since we don't use it anyway */
+					constant_expression();
+				}
+
+				require_match("Invalid token received in argument array, expected ']'.\n", "]");
+				a->type = a->type->indirect;
+			}
 		}
 
 		/* ignore trailing comma (needed for foo(bar(), 1); expressions*/
@@ -4340,6 +4353,8 @@ void program(void)
 	Address_of = FALSE;
 	struct type* type_size;
 	char* name;
+	struct type* base_type;
+	struct type* current_type;
 
 new_type:
 	/* Deal with garbage input */
@@ -4385,12 +4400,16 @@ new_type:
 				|| global_token->next->s[0] == '='
 				|| global_token->next->s[0] == '[')
 	{
+		/* Declarations do not have the same pointer level so we'll need to find the actual type */
+		base_type = type_size->type->type;
+		current_type = type_size;
+
 		do
 		{
 			if(global_token->s[0] == '(')
 			{
 				name = parse_function_pointer();
-				type_size = function_pointer;
+				current_type = function_pointer;
 			}
 			else
 			{
@@ -4398,12 +4417,20 @@ new_type:
 				require_extra_token();
 			}
 
-			global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-			declare_global_variable(type_size, global_symbol_list);
+			global_symbol_list = sym_declare(name, current_type, global_symbol_list, TLO_GLOBAL);
+			declare_global_variable(current_type, global_symbol_list);
 
 			if(global_token->s[0] == ',')
 			{
 				require_extra_token();
+
+				current_type = base_type;
+				while(global_token->s[0] == '*')
+				{
+					current_type = current_type->indirect;
+
+					require_extra_token();
+				}
 			}
 		}
 		while(global_token->s[0] != ';');
