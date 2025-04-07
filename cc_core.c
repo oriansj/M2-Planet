@@ -1758,7 +1758,6 @@ void primary_expr_variable(void)
 			emit_out(load_value(current_target->size, current_target->is_signed));
 			num_dereference = num_dereference - 1;
 		}
-		return;
 	}
 
 	num_dereference_after_postfix = num_dereference;
