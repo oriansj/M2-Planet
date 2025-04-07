@@ -161,7 +161,7 @@ void pointer_type_qualifiers(
 	const void* const restrict crlv;
 }
 
-int ga = 0, gb = 1, gc = 2, gd, garr[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, (*gfunc)(void);
+int ga = 0, gb = 1, gc = 2, *gptr_zero = 0, *gptr, gd, garr[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, (*gfunc)(void);
 
 int main() {
 	int a = 0, b = 1, c = 2, d, arr[10];
@@ -316,6 +316,9 @@ int main() {
 	if(garr[9] != 1) return 88;
 
 	gfunc = some_global_function;
+
+	if(gptr_zero != 0) return 89;
+	if(sizeof(gptr) != sizeof(int*)) return 90;
 
 	return 0;
 }

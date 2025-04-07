@@ -4353,6 +4353,8 @@ void program(void)
 	Address_of = FALSE;
 	struct type* type_size;
 	char* name;
+	struct type* base_type;
+	struct type* current_type;
 
 new_type:
 	/* Deal with garbage input */
@@ -4398,12 +4400,16 @@ new_type:
 				|| global_token->next->s[0] == '='
 				|| global_token->next->s[0] == '[')
 	{
+		/* Declarations do not have the same pointer level so we'll need to find the actual type */
+		base_type = type_size->type->type;
+		current_type = type_size;
+
 		do
 		{
 			if(global_token->s[0] == '(')
 			{
 				name = parse_function_pointer();
-				type_size = function_pointer;
+				current_type = function_pointer;
 			}
 			else
 			{
@@ -4411,12 +4417,20 @@ new_type:
 				require_extra_token();
 			}
 
-			global_symbol_list = sym_declare(name, type_size, global_symbol_list, TLO_GLOBAL);
-			declare_global_variable(type_size, global_symbol_list);
+			global_symbol_list = sym_declare(name, current_type, global_symbol_list, TLO_GLOBAL);
+			declare_global_variable(current_type, global_symbol_list);
 
 			if(global_token->s[0] == ',')
 			{
 				require_extra_token();
+
+				current_type = base_type;
+				while(global_token->s[0] == '*')
+				{
+					current_type = current_type->indirect;
+
+					require_extra_token();
+				}
 			}
 		}
 		while(global_token->s[0] != ';');
