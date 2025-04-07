@@ -3783,6 +3783,20 @@ void collect_arguments(void)
 
 			require_extra_token();
 			function->arguments = a;
+
+			while(global_token->s[0] == '[')
+			{
+				require_extra_token();
+
+				if(global_token->s[0] != ']')
+				{
+					/* Throw away the result since we don't use it anyway */
+					constant_expression();
+				}
+
+				require_match("Invalid token received in argument array, expected ']'.\n", "]");
+				a->type = a->type->indirect;
+			}
 		}
 
 		/* ignore trailing comma (needed for foo(bar(), 1); expressions*/
