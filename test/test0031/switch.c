@@ -116,6 +116,19 @@ int test_should_choose_define_with_comment() {
 	return 1;
 }
 
+/*
+int test_should_allow_no_default() {
+	int a = 3;
+
+	switch (a) {
+		case 0: return 1;
+		case 1: return 1;
+	}
+
+	return 0;
+}
+*/
+
 int main(int argc, char** argv)
 {
 	char* a = argv[1];
@@ -195,6 +208,7 @@ int main(int argc, char** argv)
 	if(test_should_choose_expression_character() != 0) return 112;
 	if(test_should_choose_define() != 0) return 113;
 	if(test_should_choose_define_with_comment() != 0) return 114;
+	/*if(test_should_allow_no_default() != 0) return 115;*/
 
 	return i;
 }
