@@ -66,6 +66,7 @@ then
 	execve_image \
 		./test/results/test1000-knight-posix-binary \
 		--architecture x86 \
+    -f M2libc/ctype.c \
     -f M2libc/stdarg.h \
 		-f M2libc/sys/types.h \
 		-f M2libc/stddef.h \

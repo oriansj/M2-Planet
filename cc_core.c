@@ -3074,6 +3074,7 @@ process_case_iter:
 	require(NULL != global_token, "incomplete case statement\n");
 	if(match("case", global_token->s)) return;
 	if(match("default", global_token->s)) return;
+	if(global_token->s[0] == '}') return;
 
 	if(match("break", global_token->s))
 	{
@@ -3131,6 +3132,8 @@ void process_switch(void)
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 
+	int has_default = FALSE;
+
 	/* must be switch (exp) {$STATEMENTS}; form */
 	require_match("ERROR in process_switch\nMISSING {\n", "{");
 	struct case_list* backtrack = NULL;
@@ -3161,6 +3164,7 @@ process_switch_iter:
 	}
 	else if(match("default", global_token->s))
 	{ /* because of how M2-Planet treats labels */
+		has_default = TRUE;
 		require_extra_token();
 		require_match("ERROR in process_switch\nMISSING : after default\n", ":");
 		emit_out(":_SWITCH_DEFAULT_");
@@ -3221,18 +3225,21 @@ process_switch_iter:
 		backtrack = hold;
 	}
 
-	/* Default to default: */
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
-	else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_DEFAULT_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
+	if(has_default)
+	{
+		/* Default to default: */
+		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
+		else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
+		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
+		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
+		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_DEFAULT_");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
 
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		uniqueID_out(function->s, number_string);
+		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
+		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
+		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	}
 
 	/* put the exit of the switch */
 	emit_out(":_SWITCH_END_");
