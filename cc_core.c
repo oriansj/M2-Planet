@@ -633,59 +633,66 @@ void emit_mul_register_zero_with_immediate(int value, char* note)
 	emit_mul_into_register_zero(REGISTER_EMIT_TEMP, note);
 }
 
-void emit_move(int destination_reg, int source_reg, char* note)
+void write_move(int destination_reg, int source_reg, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 	{
-		emit_out("COPY R");
-		emit_out(destination_name);
-		emit_out(" R");
-		emit_out(source_name);
+		emit_to_string("COPY R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(source_name);
 	}
 	else if(X86 == Architecture || AMD64 == Architecture)
 	{
-		emit_out("mov_");
-		emit_out(destination_name);
-		emit_out(",");
-		emit_out(source_name);
+		emit_to_string("mov_");
+		emit_to_string(destination_name);
+		emit_to_string(",");
+		emit_to_string(source_name);
 	}
 	else if(ARMV7L == Architecture)
 	{
-		emit_out("'0' ");
-		emit_out(source_name);
-		emit_out(" ");
-		emit_out(destination_name);
-		emit_out(" NO_SHIFT MOVE_ALWAYS");
+		emit_to_string("'0' ");
+		emit_to_string(source_name);
+		emit_to_string(" ");
+		emit_to_string(destination_name);
+		emit_to_string(" NO_SHIFT MOVE_ALWAYS");
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("SET_");
-		emit_out(destination_name);
-		emit_out("_FROM_");
-		emit_out(source_name);
+		emit_to_string("SET_");
+		emit_to_string(destination_name);
+		emit_to_string("_FROM_");
+		emit_to_string(source_name);
 	}
 	else if(RISCV32 == Architecture || RISCV64 == Architecture)
 	{
-		emit_out("rd_");
-		emit_out(destination_name);
-		emit_out(" rs1_");
-		emit_out(source_name);
-		emit_out(" mv");
+		emit_to_string("rd_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs1_");
+		emit_to_string(source_name);
+		emit_to_string(" mv");
 	}
 
 	if(note == NULL)
 	{
-		emit_out("\n");
+		emit_to_string("\n");
 	}
 	else
 	{
-		emit_out(" # ");
-		emit_out(note);
-		emit_out("\n");
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
 	}
+}
+
+void emit_move(int destination_reg, int source_reg, char* note)
+{
+	reset_emit_string();
+	write_move(destination_reg, source_reg, note);
+	emit_out(emit_string);
 }
 
 void emit_load_relative_to_register(int destination, int offset_register, int value, char* note)
