@@ -1273,9 +1273,9 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 		}
 	}
 
-	for(; passed > 0; passed = passed - 1)
+	if(passed > 0)
 	{
-		emit_pop(REGISTER_ONE, "Clean up function arguments");
+		emit_move(REGISTER_STACK, REGISTER_BASE, "Clean up function arguments");
 	}
 
 	emit_pop(REGISTER_LOCALS, "Restore old locals pointer");
