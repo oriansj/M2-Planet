@@ -3498,6 +3498,7 @@ void process_while(void)
 	break_frame = nested_locals;
 }
 
+char* function_locals_cleanup_string;
 /* Ensure that functions return */
 void return_result(void)
 {
@@ -3506,7 +3507,7 @@ void return_result(void)
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
-	emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
+	emit_out(function_locals_cleanup_string);
 
 	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
 	else if(X86 == Architecture) emit_out("ret\n");
@@ -3852,11 +3853,15 @@ void declare_function(void)
 
 		locals_depth = 0;
 
+		char* allocate_locals_string = calloc(MAX_STRING, sizeof(char));
+
 		/* Save the current location of the stack pointer. */
-		emit_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
+		emit_out(allocate_locals_string);
 
 		char* stack_reserve_string = calloc(MAX_STRING, sizeof(char));
 		emit_out(stack_reserve_string);
+
+		function_locals_cleanup_string = calloc(MAX_STRING, sizeof(char));
 
 		/* If we add any statics we don't want them globally available */
 		function_static_variables_list = NULL;
@@ -3876,9 +3881,18 @@ void declare_function(void)
 				write_sub_immediate(REGISTER_STACK, locals_depth, "Reserve stack");
 			}
 			copy_string(stack_reserve_string, emit_string, MAX_STRING);
-		}
 
-		emit_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
+			emit_out(function_locals_cleanup_string);
+
+			/* Only write this if there are locals. Otherwise leave empty. */
+			reset_emit_string();
+			write_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
+			copy_string(allocate_locals_string, emit_string, MAX_STRING);
+
+			reset_emit_string();
+			write_move(REGISTER_STACK, REGISTER_LOCALS, "Undo local variables");
+			copy_string(function_locals_cleanup_string, emit_string, MAX_STRING);
+		}
 
 		/* C99 5.1.2.2.3 Program termination
 		 * [..] reaching the } that terminates the main function returns a value of 0.
