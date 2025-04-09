@@ -3921,6 +3921,8 @@ void declare_function(void)
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
 			emit_out("RETURN\n");
 		}
+
+		emit_out("\n");
 	}
 }
 
