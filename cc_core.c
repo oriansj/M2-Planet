@@ -3882,8 +3882,6 @@ void declare_function(void)
 			}
 			copy_string(stack_reserve_string, emit_string, MAX_STRING);
 
-			emit_out(function_locals_cleanup_string);
-
 			/* Only write this if there are locals. Otherwise leave empty. */
 			reset_emit_string();
 			write_move(REGISTER_LOCALS, REGISTER_STACK, "Set locals pointer");
@@ -3903,22 +3901,26 @@ void declare_function(void)
 		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
+			emit_out(function_locals_cleanup_string);
 			emit_out("RET R15\n");
 		}
 		else if((X86 == Architecture || AMD64 == Architecture || RISCV32 == Architecture || RISCV64 == Architecture)
 				&& !match("ret\n", output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
+			emit_out(function_locals_cleanup_string);
 			emit_out("ret\n");
 		}
 		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
+			emit_out(function_locals_cleanup_string);
 			emit_out("'1' LR RETURN\n");
 		}
 		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
+			emit_out(function_locals_cleanup_string);
 			emit_out("RETURN\n");
 		}
 
