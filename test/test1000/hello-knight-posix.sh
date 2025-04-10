@@ -31,6 +31,7 @@ mkdir -p ${TMPDIR}
 	-f cc_reader.c \
 	-f cc_strings.c \
 	-f cc_types.c \
+	-f cc_emit.c \
 	-f cc_core.c \
 	-f cc_macro.c \
 	-f cc.c \
@@ -83,6 +84,7 @@ then
 		-f cc_reader.c \
 		-f cc_strings.c \
 		-f cc_types.c \
+		-f cc_emit.c \
 		-f cc_core.c \
 		-f cc_macro.c \
 		-f cc.c \
