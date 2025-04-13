@@ -2175,9 +2175,7 @@ void process_if(void)
 		emit_unconditional_jump("_END_IF_", unique_id, "Else statement");
 	}
 
-	emit_out(":ELSE_");
-	emit_out(unique_id);
-	emit_out("\n");
+	emit_label("ELSE_", unique_id);
 
 	if(has_else)
 	{
@@ -2185,9 +2183,7 @@ void process_if(void)
 		statement();
 		require_token();
 	}
-	emit_out(":_END_IF_");
-	emit_out(unique_id);
-	emit_out("\n");
+	emit_label("_END_IF_", unique_id);
 }
 
 void process_case(void)
@@ -2282,9 +2278,7 @@ process_switch_iter:
 		has_default = TRUE;
 		require_extra_token();
 		require_match("ERROR in process_switch\nMISSING : after default\n", ":");
-		emit_out(":_SWITCH_DEFAULT_");
-		emit_out(unique_id);
-		emit_out("\n");
+		emit_label("_SWITCH_DEFAULT_", unique_id);
 
 		require(NULL != global_token, "recieved EOF before switch closing }\n");
 		/* collect statements until } */
@@ -2301,9 +2295,7 @@ process_switch_iter:
 	require_match("ERROR in process_switch\nMISSING }\n", "}");
 
 	/* create the table */
-	emit_out(":_SWITCH_TABLE_");
-	emit_out(unique_id);
-	emit_out("\n");
+	emit_label("_SWITCH_TABLE_", unique_id);
 
 	struct case_list* hold;
 	while(NULL != backtrack)
@@ -2338,9 +2330,7 @@ process_switch_iter:
 	}
 
 	/* put the exit of the switch */
-	emit_out(":_SWITCH_END_");
-	emit_out(unique_id);
-	emit_out("\n");
+	emit_label("_SWITCH_END_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
@@ -2937,9 +2927,7 @@ void declare_function(void)
 		emit_out("# Defining function ");
 		emit_out(function->s);
 		emit_out("\n");
-		emit_out(":FUNCTION_");
-		emit_out(function->s);
-		emit_out("\n");
+		emit_label("FUNCTION_", function->s);
 
 		locals_depth = 0;
 

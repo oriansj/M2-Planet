@@ -33,6 +33,14 @@ void emit_out(char* s)
 	output_list = emit(s, output_list);
 }
 
+void emit_label(char* prefix, char* name)
+{
+	emit_out(":");
+	emit_out(prefix);
+	emit_out(name);
+	emit_out("\n");
+}
+
 char* emit_string;
 int emit_string_index;
 

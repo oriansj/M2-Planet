@@ -20,6 +20,8 @@
 struct token_list* emit(char *s, struct token_list* head);
 void emit_out(char* s);
 
+void emit_label(char* prefix, char* name);
+
 extern char* emit_string;
 void emit_to_string(char* s);
 void reset_emit_string(void);
