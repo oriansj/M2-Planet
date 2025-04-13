@@ -2142,8 +2142,11 @@ void process_if(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# IF_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	global_token = global_token->next;
 	require_match("ERROR in process_if\nMISSING (\n", "(");
@@ -2156,7 +2159,8 @@ void process_if(void)
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$ELSE_");
 
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
@@ -2175,14 +2179,16 @@ void process_if(void)
 		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_END_IF_");
 
-		uniqueID_out(function->s, number_string);
+		emit_out(unique_id);
+		emit_out("\n");
 		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
 		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 	}
 
 	emit_out(":ELSE_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	if(has_else)
 	{
@@ -2191,7 +2197,8 @@ void process_if(void)
 		require_token();
 	}
 	emit_out(":_END_IF_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 }
 
 void process_case(void)
