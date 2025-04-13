@@ -17,6 +17,8 @@
 
 #include "cc_emit.h"
 
+void emit_load_named_immediate(int reg, char* prefix, char* name, char* note);
+
 struct token_list* emit(char *s, struct token_list* head)
 {
 	struct token_list* t = calloc(1, sizeof(struct token_list));
@@ -124,6 +126,51 @@ char* register_from_string(int reg)
 	fputs(int2str(Architecture, 10, FALSE), stderr);
 	fputs("'\n.", stderr);
 	exit(EXIT_FAILURE);
+}
+void emit_unconditional_jump(char* prefix, char* name, char* note)
+{
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("JUMP @");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if((X86 == Architecture) || (AMD64 == Architecture))
+	{
+		emit_out("jmp %");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("^~");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" JUMP_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
+		emit_out("BR_X16");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("$");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" jal");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
 }
 
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)

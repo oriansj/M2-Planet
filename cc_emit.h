@@ -26,6 +26,8 @@ void reset_emit_string(void);
 
 char* register_from_string(int reg);
 
+void emit_unconditional_jump(char* prefix, char* name, char* note);
+
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note);
 
 void write_load_immediate(int reg, int value, char* note);

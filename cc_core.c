@@ -2172,18 +2172,7 @@ void process_if(void)
 	int has_else = match("else", global_token->s);
 	if(has_else)
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_END_IF_");
-		else if(X86 == Architecture) emit_out("jmp %_END_IF_");
-		else if(AMD64 == Architecture) emit_out("jmp %_END_IF_");
-		else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_END_IF_");
-
-		emit_out(unique_id);
-		emit_out("\n");
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_END_IF_", unique_id, "Else statement");
 	}
 
 	emit_out(":ELSE_");
