@@ -2356,8 +2356,11 @@ void process_for(void)
 	break_frame = function->locals;
 	break_target_func = function->s;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# FOR_initialization_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	require_extra_token();
 
@@ -2367,8 +2370,7 @@ void process_for(void)
 		expression();
 	}
 
-	emit_out(":FOR_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
@@ -2379,59 +2381,30 @@ void process_for(void)
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$FOR_END_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_THEN_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_THEN_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_THEN_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_THEN_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_THEN_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
-	emit_out(":FOR_ITER_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_ITER_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_", unique_id, "Check conditional");
 
-	emit_out(":FOR_THEN_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_THEN_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING )\n", ")");
 	statement();
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_ITER_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_ITER_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_ITER_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_ITER_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_ITER_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_ITER_", unique_id, "Repeat iteration");
 
-	emit_out(":FOR_END_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_END_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
