@@ -2142,8 +2142,11 @@ void process_if(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# IF_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	global_token = global_token->next;
 	require_match("ERROR in process_if\nMISSING (\n", "(");
@@ -2156,7 +2159,8 @@ void process_if(void)
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$ELSE_");
 
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
@@ -2168,21 +2172,10 @@ void process_if(void)
 	int has_else = match("else", global_token->s);
 	if(has_else)
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_END_IF_");
-		else if(X86 == Architecture) emit_out("jmp %_END_IF_");
-		else if(AMD64 == Architecture) emit_out("jmp %_END_IF_");
-		else if(ARMV7L == Architecture) emit_out("^~_END_IF_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_END_IF_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_END_IF_");
-
-		uniqueID_out(function->s, number_string);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_END_IF_", unique_id, "Else statement");
 	}
 
-	emit_out(":ELSE_");
-	uniqueID_out(function->s, number_string);
+	emit_label("ELSE_", unique_id);
 
 	if(has_else)
 	{
@@ -2190,8 +2183,7 @@ void process_if(void)
 		statement();
 		require_token();
 	}
-	emit_out(":_END_IF_");
-	uniqueID_out(function->s, number_string);
+	emit_label("_END_IF_", unique_id);
 }
 
 void process_case(void)
@@ -2233,8 +2225,11 @@ void process_switch(void)
 	break_frame = function->locals;
 	break_target_func = function->s;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# switch_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	/* get what we are casing on */
 	global_token = global_token->next;
@@ -2245,18 +2240,7 @@ void process_switch(void)
 	/* Put the value in R1 as it is currently in R0 */
 	emit_move(REGISTER_ONE, REGISTER_ZERO, "process switch");
 
-	/* Jump to the switch table */
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_TABLE_");
-	else if(X86 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
-	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
-	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_TABLE_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_TABLE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_TABLE_");
-
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("_SWITCH_TABLE_", unique_id, "Jump to the switch table");
 
 	int has_default = FALSE;
 
@@ -2280,7 +2264,8 @@ process_switch_iter:
 			emit_out(":_SWITCH_CASE_");
 			emit_out(c->value);
 			emit_out("_");
-			uniqueID_out(function->s, number_string);
+			emit_out(unique_id);
+			emit_out("\n");
 			require_extra_token();
 			process_case();
 			require_token();
@@ -2293,8 +2278,7 @@ process_switch_iter:
 		has_default = TRUE;
 		require_extra_token();
 		require_match("ERROR in process_switch\nMISSING : after default\n", ":");
-		emit_out(":_SWITCH_DEFAULT_");
-		uniqueID_out(function->s, number_string);
+		emit_label("_SWITCH_DEFAULT_", unique_id);
 
 		require(NULL != global_token, "recieved EOF before switch closing }\n");
 		/* collect statements until } */
@@ -2304,26 +2288,14 @@ process_switch_iter:
 			require(NULL != global_token, "recieved EOF before switch closing }\n");
 		}
 
-		/* jump over the switch table */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_END_");
-		else if(X86 == Architecture) emit_out("jmp %_SWITCH_END_");
-		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_END_");
-		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_END_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_END_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_END_");
-
-		uniqueID_out(function->s, number_string);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_SWITCH_END_", unique_id, "jump over the switch table");
 	}
 
 	/* Switch statements must end with } */
 	require_match("ERROR in process_switch\nMISSING }\n", "}");
 
 	/* create the table */
-	emit_out(":_SWITCH_TABLE_");
-	uniqueID_out(function->s, number_string);
+	emit_label("_SWITCH_TABLE_", unique_id);
 
 	struct case_list* hold;
 	while(NULL != backtrack)
@@ -2342,7 +2314,8 @@ process_switch_iter:
 
 		emit_out(backtrack->value);
 		emit_out("_");
-		uniqueID_out(function->s, number_string);
+		emit_out(unique_id);
+		emit_out("\n");
 		if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 		else if(AARCH64 == Architecture) emit_out("\nSKIP_INST_NE\nBR_X16\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
@@ -2353,23 +2326,11 @@ process_switch_iter:
 
 	if(has_default)
 	{
-		/* Default to default: */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
-		else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_DEFAULT_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
-
-		uniqueID_out(function->s, number_string);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_SWITCH_DEFAULT_", unique_id, "Default to default:");
 	}
 
 	/* put the exit of the switch */
-	emit_out(":_SWITCH_END_");
-	uniqueID_out(function->s, number_string);
+	emit_label("_SWITCH_END_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
@@ -2395,8 +2356,11 @@ void process_for(void)
 	break_frame = function->locals;
 	break_target_func = function->s;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# FOR_initialization_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	require_extra_token();
 
@@ -2406,8 +2370,7 @@ void process_for(void)
 		expression();
 	}
 
-	emit_out(":FOR_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
@@ -2418,59 +2381,30 @@ void process_for(void)
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$FOR_END_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_THEN_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_THEN_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_THEN_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_THEN_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_THEN_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_THEN_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
-	emit_out(":FOR_ITER_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_ITER_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_", unique_id, "Check conditional");
 
-	emit_out(":FOR_THEN_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_THEN_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING )\n", ")");
 	statement();
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @FOR_ITER_");
-	else if(X86 == Architecture) emit_out("jmp %FOR_ITER_");
-	else if(AMD64 == Architecture) emit_out("jmp %FOR_ITER_");
-	else if(ARMV7L == Architecture) emit_out("^~FOR_ITER_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_ITER_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$FOR_ITER_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("FOR_ITER_", unique_id, "Repeat iteration");
 
-	emit_out(":FOR_END_");
-	uniqueID_out(function->s, number_string);
+	emit_label("FOR_END_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
@@ -2567,14 +2501,15 @@ void process_while(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	break_target_head = "END_WHILE_";
 	continue_target_head = "WHILE_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
 
-	emit_out(":WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_label("WHILE_", unique_id);
 
 	global_token = global_token->next;
 	require_match("ERROR in process_while\nMISSING (\n", "(");
@@ -2586,29 +2521,22 @@ void process_while(void)
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$END_WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 	emit_out("# THEN_while_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	require_match("ERROR in process_while\nMISSING )\n", ")");
 	statement();
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @WHILE_");
-	else if(X86 == Architecture) emit_out("jmp %WHILE_");
-	else if(AMD64 == Architecture) emit_out("jmp %WHILE_");
-	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&WHILE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$WHILE_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
-	emit_out(":END_WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_unconditional_jump("WHILE_", unique_id, "Repeat loop");
+
+	emit_label("END_WHILE_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
@@ -2647,21 +2575,14 @@ void process_break(void)
 
 	require_extra_token();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-	else if(X86 == Architecture) emit_out("jmp %");
-	else if(AMD64 == Architecture) emit_out("jmp %");
-	else if(ARMV7L == Architecture) emit_out("^~");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
+	char* break_target = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(break_target, break_target_head, MAX_STRING);
+	offset = offset + copy_string(break_target + offset, break_target_func, MAX_STRING - offset);
+	offset = offset + copy_string(break_target + offset, "_", MAX_STRING - offset);
+	copy_string(break_target + offset, break_target_num, MAX_STRING - offset);
 
-	emit_out(break_target_head);
-	emit_out(break_target_func);
-	emit_out("_");
-	emit_out(break_target_num);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" jal");
-	emit_out("\n");
+	emit_unconditional_jump("", break_target, "Break statement");
+
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
 
@@ -2675,21 +2596,15 @@ void process_continue(void)
 	}
 	require_extra_token();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-	else if(X86 == Architecture) emit_out("jmp %");
-	else if(AMD64 == Architecture) emit_out("jmp %");
-	else if(ARMV7L == Architecture) emit_out("^~");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
 
-	emit_out(continue_target_head);
-	emit_out(break_target_func);
-	emit_out("_");
-	emit_out(break_target_num);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" jal");
-	emit_out("\n");
+	char* continue_target = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(continue_target, continue_target_head, MAX_STRING);
+	offset = offset + copy_string(continue_target + offset, break_target_func, MAX_STRING - offset);
+	offset = offset + copy_string(continue_target + offset, "_", MAX_STRING - offset);
+	copy_string(continue_target + offset, break_target_num, MAX_STRING - offset);
+
+	emit_unconditional_jump("", continue_target, "Continue statement");
+
 	require_match("ERROR in continue statement\nMissing ;\n", ";");
 }
 
@@ -2820,18 +2735,8 @@ void statement(void)
 	else if(match("goto", global_token->s))
 	{
 		require_extra_token();
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-		else if(X86 == Architecture) emit_out("jmp %");
-		else if(AMD64 == Architecture) emit_out("jmp %");
-		else if(ARMV7L == Architecture) emit_out("^~");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
-		emit_out(global_token->s);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" jal");
-		emit_out("\n");
-		global_token = global_token->next;
+		emit_unconditional_jump("", global_token->s, "Goto");
+		require_extra_token();
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
 	else if(match("return", global_token->s))
@@ -2966,9 +2871,7 @@ void declare_function(void)
 		emit_out("# Defining function ");
 		emit_out(function->s);
 		emit_out("\n");
-		emit_out(":FUNCTION_");
-		emit_out(function->s);
-		emit_out("\n");
+		emit_label("FUNCTION_", function->s);
 
 		locals_depth = 0;
 

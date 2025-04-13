@@ -20,11 +20,15 @@
 struct token_list* emit(char *s, struct token_list* head);
 void emit_out(char* s);
 
+void emit_label(char* prefix, char* name);
+
 extern char* emit_string;
 void emit_to_string(char* s);
 void reset_emit_string(void);
 
 char* register_from_string(int reg);
+
+void emit_unconditional_jump(char* prefix, char* name, char* note);
 
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note);
 
