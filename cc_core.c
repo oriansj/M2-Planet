@@ -2229,8 +2229,11 @@ void process_switch(void)
 	break_frame = function->locals;
 	break_target_func = function->s;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	emit_out("# switch_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	/* get what we are casing on */
 	global_token = global_token->next;
@@ -2241,18 +2244,7 @@ void process_switch(void)
 	/* Put the value in R1 as it is currently in R0 */
 	emit_move(REGISTER_ONE, REGISTER_ZERO, "process switch");
 
-	/* Jump to the switch table */
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_TABLE_");
-	else if(X86 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
-	else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_TABLE_");
-	else if(ARMV7L == Architecture) emit_out("^~_SWITCH_TABLE_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_TABLE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_TABLE_");
-
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_unconditional_jump("_SWITCH_TABLE_", unique_id, "Jump to the switch table");
 
 	int has_default = FALSE;
 
@@ -2276,7 +2268,8 @@ process_switch_iter:
 			emit_out(":_SWITCH_CASE_");
 			emit_out(c->value);
 			emit_out("_");
-			uniqueID_out(function->s, number_string);
+			emit_out(unique_id);
+			emit_out("\n");
 			require_extra_token();
 			process_case();
 			require_token();
@@ -2290,7 +2283,8 @@ process_switch_iter:
 		require_extra_token();
 		require_match("ERROR in process_switch\nMISSING : after default\n", ":");
 		emit_out(":_SWITCH_DEFAULT_");
-		uniqueID_out(function->s, number_string);
+		emit_out(unique_id);
+		emit_out("\n");
 
 		require(NULL != global_token, "recieved EOF before switch closing }\n");
 		/* collect statements until } */
@@ -2300,18 +2294,7 @@ process_switch_iter:
 			require(NULL != global_token, "recieved EOF before switch closing }\n");
 		}
 
-		/* jump over the switch table */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_END_");
-		else if(X86 == Architecture) emit_out("jmp %_SWITCH_END_");
-		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_END_");
-		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_END_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_END_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_END_");
-
-		uniqueID_out(function->s, number_string);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_SWITCH_END_", unique_id, "jump over the switch table");
 	}
 
 	/* Switch statements must end with } */
@@ -2319,7 +2302,8 @@ process_switch_iter:
 
 	/* create the table */
 	emit_out(":_SWITCH_TABLE_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	struct case_list* hold;
 	while(NULL != backtrack)
@@ -2338,7 +2322,8 @@ process_switch_iter:
 
 		emit_out(backtrack->value);
 		emit_out("_");
-		uniqueID_out(function->s, number_string);
+		emit_out(unique_id);
+		emit_out("\n");
 		if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
 		else if(AARCH64 == Architecture) emit_out("\nSKIP_INST_NE\nBR_X16\n");
 		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
@@ -2349,23 +2334,13 @@ process_switch_iter:
 
 	if(has_default)
 	{
-		/* Default to default: */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @_SWITCH_DEFAULT_");
-		else if(X86 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-		else if(AMD64 == Architecture) emit_out("jmp %_SWITCH_DEFAULT_");
-		else if(ARMV7L == Architecture) emit_out("^~_SWITCH_DEFAULT_");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_DEFAULT_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$_SWITCH_DEFAULT_");
-
-		uniqueID_out(function->s, number_string);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_unconditional_jump("_SWITCH_DEFAULT_", unique_id, "Default to default:");
 	}
 
 	/* put the exit of the switch */
 	emit_out(":_SWITCH_END_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
