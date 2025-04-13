@@ -2501,14 +2501,15 @@ void process_while(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	break_target_head = "END_WHILE_";
 	continue_target_head = "WHILE_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
 
-	emit_out(":WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_label("WHILE_", unique_id);
 
 	global_token = global_token->next;
 	require_match("ERROR in process_while\nMISSING (\n", "(");
@@ -2520,29 +2521,22 @@ void process_while(void)
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
 	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$END_WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
 	emit_out("# THEN_while_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 
 	require_match("ERROR in process_while\nMISSING )\n", ")");
 	statement();
 	require(NULL != global_token, "Reached EOF inside of function\n");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @WHILE_");
-	else if(X86 == Architecture) emit_out("jmp %WHILE_");
-	else if(AMD64 == Architecture) emit_out("jmp %WHILE_");
-	else if(ARMV7L == Architecture) emit_out("^~WHILE_");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&WHILE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$WHILE_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
-	emit_out(":END_WHILE_");
-	uniqueID_out(function->s, number_string);
+	emit_unconditional_jump("WHILE_", unique_id, "Repeat loop");
+
+	emit_label("END_WHILE_", unique_id);
 
 	break_target_head = nested_break_head;
 	break_target_func = nested_break_func;
