@@ -2575,21 +2575,14 @@ void process_break(void)
 
 	require_extra_token();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-	else if(X86 == Architecture) emit_out("jmp %");
-	else if(AMD64 == Architecture) emit_out("jmp %");
-	else if(ARMV7L == Architecture) emit_out("^~");
-	else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
+	char* break_target = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(break_target, break_target_head, MAX_STRING);
+	offset = offset + copy_string(break_target + offset, break_target_func, MAX_STRING - offset);
+	offset = offset + copy_string(break_target + offset, "_", MAX_STRING - offset);
+	copy_string(break_target + offset, break_target_num, MAX_STRING - offset);
 
-	emit_out(break_target_head);
-	emit_out(break_target_func);
-	emit_out("_");
-	emit_out(break_target_num);
-	if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" jal");
-	emit_out("\n");
+	emit_unconditional_jump("", break_target, "Break statement");
+
 	require_match("ERROR in break statement\nMissing ;\n", ";");
 }
 
