@@ -2735,18 +2735,8 @@ void statement(void)
 	else if(match("goto", global_token->s))
 	{
 		require_extra_token();
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP @");
-		else if(X86 == Architecture) emit_out("jmp %");
-		else if(AMD64 == Architecture) emit_out("jmp %");
-		else if(ARMV7L == Architecture) emit_out("^~");
-		else if(AARCH64 == Architecture) emit_out("LOAD_W16_AHEAD\nSKIP_32_DATA\n&");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("$");
-		emit_out(global_token->s);
-		if(ARMV7L == Architecture) emit_out(" JUMP_ALWAYS");
-		else if(AARCH64 == Architecture) emit_out("\nBR_X16");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out(" jal");
-		emit_out("\n");
-		global_token = global_token->next;
+		emit_unconditional_jump("", global_token->s, "Goto");
+		require_extra_token();
 		require_match("ERROR in statement\nMissing ;\n", ";");
 	}
 	else if(match("return", global_token->s))
