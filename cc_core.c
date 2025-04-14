@@ -309,15 +309,13 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 	if(TRUE == is_function_pointer)
 	{
-		int value = s->depth;
-
 		int reg = REGISTER_BASE;
 		if(is_local)
 		{
 			reg = REGISTER_LOCALS;
 		}
 
-		emit_load_relative_to_register(REGISTER_ZERO, reg, value, "function pointer call");
+		emit_load_relative_to_register(REGISTER_ZERO, reg, s->depth, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
 
 		emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
