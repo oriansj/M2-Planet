@@ -2441,21 +2441,17 @@ void process_do(void)
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.NZ R0 @DO_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\njne %DO_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\njne %DO_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
-	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @DO_END_");
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
-		emit_out("beqz\n$DO_");
+		emit_out("rs1_a0 @DO_END_");
+		emit_out(unique_id);
+		emit_out(" beqz\n$DO_");
 		emit_out(unique_id);
 		emit_out(" jal\n");
+	}
+	else
+	{
+		emit_jump_if_not_zero(REGISTER_ZERO, "DO_", unique_id, "Rerun loop");
 	}
 
 	emit_label("DO_END_", unique_id);
