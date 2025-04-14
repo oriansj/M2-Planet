@@ -181,6 +181,67 @@ void emit_unconditional_jump(char* prefix, char* name, char* note)
 	}
 }
 
+void emit_jump_if_zero(int reg, char* prefix, char* name, char* note)
+{
+	char* reg_name = register_from_string(reg);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("JUMP.Z R");
+		emit_out(reg_name);
+		emit_out(" @");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if((X86 == Architecture) || (AMD64 == Architecture))
+	{
+		emit_out("test_");
+		emit_out(reg_name);
+		emit_out(",");
+		emit_out(reg_name);
+		emit_out("\nje %");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("!0 CMPI8 ");
+		emit_out(reg_name);
+		emit_out(" IMM_ALWAYS\n^~");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" JUMP_EQUAL");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("CBNZ_");
+		emit_out(reg_name);
+		emit_out("_PAST_BR\n");
+		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
+		emit_out("BR_X16");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rs1_");
+		emit_out(reg_name);
+		emit_out(" @8 bnez\n$");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" jal");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);

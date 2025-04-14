@@ -2152,18 +2152,7 @@ void process_if(void)
 	require_match("ERROR in process_if\nMISSING (\n", "(");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @ELSE_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %ELSE_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %ELSE_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$ELSE_");
-
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "ELSE_", unique_id, "Jump to else");
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
@@ -2375,17 +2364,7 @@ void process_for(void)
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @FOR_END_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %FOR_END_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %FOR_END_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$FOR_END_");
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
 
 	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
@@ -2515,17 +2494,8 @@ void process_while(void)
 	require_match("ERROR in process_while\nMISSING (\n", "(");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @END_WHILE_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %END_WHILE_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %END_WHILE_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$END_WHILE_");
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "END_WHILE_", unique_id, "Jump to end");
+
 	emit_out("# THEN_while_");
 	emit_out(unique_id);
 	emit_out("\n");
