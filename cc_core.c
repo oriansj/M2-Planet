@@ -82,13 +82,7 @@ void uniqueID_out(char* s, char* num)
 
 char* create_unique_id(char* prefix, char* s, char* num)
 {
-	char* buf = calloc(MAX_STRING, sizeof(char));
-	int written = copy_string(buf, prefix, MAX_STRING);
-	written = copy_string(buf + written, s, MAX_STRING - written) + written;
-	written = copy_string(buf + written, "_", MAX_STRING - written) + written;
-	copy_string(buf + written, num, MAX_STRING - written);
-
-	return buf;
+	return concat_strings4(prefix, s, "_", num);
 }
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options)
@@ -308,27 +302,28 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
 
+	if(ARMV7L == Architecture)
+	{
+		emit_push(REGISTER_RETURN, "Protect the old link register");
+	}
+
 	if(TRUE == is_function_pointer)
 	{
-		int value = s->depth;
-
 		int reg = REGISTER_BASE;
 		if(is_local)
 		{
 			reg = REGISTER_LOCALS;
 		}
 
-		emit_load_relative_to_register(REGISTER_ZERO, reg, value, "function pointer call");
+		emit_load_relative_to_register(REGISTER_ZERO, reg, s->depth, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
+	}
 
-		if(ARMV7L == Architecture)
-		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-		}
+	emit_move(REGISTER_BASE, REGISTER_TEMP, "Set new base pointer");
 
-		emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
-
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(TRUE == is_function_pointer)
+	{
+		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_out("CALL R0 R15\n");
 		}
@@ -350,26 +345,19 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function pointer call");
 			emit_out("BLR_X16\n");
 		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_RISCV)
 		{
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 	}
 	else
 	{
-		if(ARMV7L == Architecture)
-		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-		}
-
-		emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-
-		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
+		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s->s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
-		else if((X86 == Architecture) || (AMD64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_X86)
 		{
 			emit_out("call %FUNCTION_");
 			emit_out(s->s);
@@ -387,7 +375,7 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s->s, "function call");
 			emit_out("BLR_X16\n");
 		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_RISCV)
 		{
 			emit_out("rd_ra $FUNCTION_");
 			emit_out(s->s);
@@ -815,6 +803,17 @@ void primary_expr_variable(void)
 		require_extra_token();
 		num_dereference = num_dereference + 1;
 	}
+
+	struct type* cast_type = NULL;
+	if(global_token->s[0] == '(')
+	{
+		require_extra_token();
+
+		cast_type = type_name();
+
+		require_match("Expected token ')' in type cast.\n", ")");
+	}
+
 	char* s = global_token->s;
 	require_extra_token();
 
@@ -847,6 +846,12 @@ void primary_expr_variable(void)
 	}
 
 	struct token_list* type = load_address_of_variable_into_register(REGISTER_ZERO, s);
+
+	if(cast_type != NULL)
+	{
+		current_target = cast_type;
+	}
+
 	if(TRUE == Address_of) return;
 	if(type == NULL) return;
 
@@ -2152,18 +2157,7 @@ void process_if(void)
 	require_match("ERROR in process_if\nMISSING (\n", "(");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @ELSE_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %ELSE_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %ELSE_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~ELSE_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&ELSE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$ELSE_");
-
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "ELSE_", unique_id, "Jump to else");
 
 	require_match("ERROR in process_if\nMISSING )\n", ")");
 	statement();
@@ -2297,28 +2291,17 @@ process_switch_iter:
 	/* create the table */
 	emit_label("_SWITCH_TABLE_", unique_id);
 
+	char* buf;
 	struct case_list* hold;
 	while(NULL != backtrack)
 	{
 		/* put case value in R0 as the switch (value) is in R1 */
-		primary_expr_number(backtrack->value);
+		emit_load_immediate(REGISTER_ZERO, strtoint(backtrack->value), "Load case value");
 		hold = backtrack->next;
 
-		/* compare R0 and R1 and jump to case if equal */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R0 R1\nJUMP.E R0 @_SWITCH_CASE_");
-		else if(X86 == Architecture) emit_out("cmp\nje %_SWITCH_CASE_");
-		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nje %_SWITCH_CASE_");
-		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n^~_SWITCH_CASE_");
-		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_CASE_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 rs2_a1 sub\nrs1_a0 @8 bnez\n$_SWITCH_CASE_");
+		buf = concat_strings3(backtrack->value, "_", unique_id);
 
-		emit_out(backtrack->value);
-		emit_out("_");
-		emit_out(unique_id);
-		emit_out("\n");
-		if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-		else if(AARCH64 == Architecture) emit_out("\nSKIP_INST_NE\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_jump_if_equal(REGISTER_ZERO, REGISTER_ONE, "_SWITCH_CASE_", buf, "Jump to case if equal");
 
 		free(backtrack);
 		backtrack = hold;
@@ -2375,17 +2358,7 @@ void process_for(void)
 	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @FOR_END_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %FOR_END_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %FOR_END_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~FOR_END_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&FOR_END_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$FOR_END_");
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
 
 	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
@@ -2440,21 +2413,21 @@ void process_do(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	break_target_head = "DO_END_";
 	continue_target_head = "DO_TEST_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
 
-	emit_out(":DO_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_", unique_id);
 
 	require_extra_token();
 	statement();
 	require_token();
 
-	emit_out(":DO_TEST_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_TEST_", unique_id);
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
@@ -2462,24 +2435,9 @@ void process_do(void)
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.NZ R0 @DO_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\njne %DO_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\njne %DO_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
-	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @DO_END_");
-	uniqueID_out(function->s, number_string);
-	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out("beqz\n$DO_");
-		uniqueID_out(function->s, number_string);
-		emit_out("jal\n");
-	}
+	emit_jump_if_not_zero(REGISTER_ZERO, "DO_", unique_id, "Rerun loop");
 
-	emit_out(":DO_END_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_END_", unique_id);
 
 	break_frame = nested_locals;
 	break_target_head = nested_break_head;
@@ -2515,17 +2473,8 @@ void process_while(void)
 	require_match("ERROR in process_while\nMISSING (\n", "(");
 	expression();
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("JUMP.Z R0 @END_WHILE_");
-	else if(X86 == Architecture) emit_out("test_eax,eax\nje %END_WHILE_");
-	else if(AMD64 == Architecture) emit_out("test_rax,rax\nje %END_WHILE_");
-	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~END_WHILE_");
-	else if(AARCH64 == Architecture) emit_out("CBNZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&END_WHILE_");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @8 bnez\n$END_WHILE_");
-	emit_out(unique_id);
-	emit_out("\n");
-	if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\t");
-	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+	emit_jump_if_zero(REGISTER_ZERO, "END_WHILE_", unique_id, "Jump to end");
+
 	emit_out("# THEN_while_");
 	emit_out(unique_id);
 	emit_out("\n");
@@ -2575,12 +2524,7 @@ void process_break(void)
 
 	require_extra_token();
 
-	char* break_target = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(break_target, break_target_head, MAX_STRING);
-	offset = offset + copy_string(break_target + offset, break_target_func, MAX_STRING - offset);
-	offset = offset + copy_string(break_target + offset, "_", MAX_STRING - offset);
-	copy_string(break_target + offset, break_target_num, MAX_STRING - offset);
-
+	char* break_target = concat_strings4(break_target_head, break_target_func, "_", break_target_num);
 	emit_unconditional_jump("", break_target, "Break statement");
 
 	require_match("ERROR in break statement\nMissing ;\n", ";");
@@ -2596,12 +2540,7 @@ void process_continue(void)
 	}
 	require_extra_token();
 
-
-	char* continue_target = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(continue_target, continue_target_head, MAX_STRING);
-	offset = offset + copy_string(continue_target + offset, break_target_func, MAX_STRING - offset);
-	offset = offset + copy_string(continue_target + offset, "_", MAX_STRING - offset);
-	copy_string(continue_target + offset, break_target_num, MAX_STRING - offset);
+	char* continue_target = concat_strings4(continue_target_head, break_target_func, "_", break_target_num);
 
 	emit_unconditional_jump("", continue_target, "Continue statement");
 
@@ -2636,10 +2575,7 @@ void process_static_variable(void)
 	function_static_variables_list = variable;
 	variable->local_variable_name = name;
 
-	char* new_name = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(new_name, function->s, MAX_STRING);
-	offset = offset + copy_string(new_name + offset, "_", MAX_STRING - offset);
-	copy_string(new_name + offset, name, MAX_STRING - offset);
+	char* new_name = concat_strings3(function->s, "_", name);
 
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();

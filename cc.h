@@ -29,18 +29,26 @@
 #define KNIGHT_NATIVE 1
 // CONSTANT KNIGHT_POSIX 2
 #define KNIGHT_POSIX 2
-// CONSTANT X86 3
-#define X86 3
-// CONSTANT AMD64 4
-#define AMD64 4
-// CONSTANT ARMV7L 5
-#define ARMV7L 5
-// CONSTANT AARCH64 6
-#define AARCH64 6
-// CONSTANT RISCV32 7
-#define RISCV32 7
-// CONSTANT RISCV64 8
-#define RISCV64 8
+// CONSTANT X86 4
+#define X86 4
+// CONSTANT AMD64 8
+#define AMD64 8
+// CONSTANT ARMV7L 16
+#define ARMV7L 16
+// CONSTANT AARCH64 32
+#define AARCH64 32
+// CONSTANT RISCV32 64
+#define RISCV32 64
+// CONSTANT RISCV64 128
+#define RISCV64 128
+
+/* These architecture families often behave similarly */
+// CONSTANT ARCH_FAMILY_KNIGHT 3
+#define ARCH_FAMILY_KNIGHT 3
+// CONSTANT ARCH_FAMILY_X86 12
+#define ARCH_FAMILY_X86 12
+// CONSTANT ARCH_FAMILY_RISCV 192
+#define ARCH_FAMILY_RISCV 192
 
 /* Stack grows to higher memory addresses */
 // CONSTANT STACK_DIRECTION_PLUS 0
@@ -54,6 +62,9 @@
 #define NO_STRUCT_DEFINITION 0
 
 int copy_string(char* target, char* source, int max);
+char* concat_strings2(char* a, char* b);
+char* concat_strings3(char* a, char* b, char* c);
+char* concat_strings4(char* a, char* b, char* c, char* d);
 int string_length(char* a);
 int in_set(int c, char* s);
 int match(char* a, char* b);
