@@ -323,7 +323,7 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 	if(TRUE == is_function_pointer)
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_out("CALL R0 R15\n");
 		}
@@ -345,19 +345,19 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 			emit_move(REGISTER_TEMP, REGISTER_ZERO, "function pointer call");
 			emit_out("BLR_X16\n");
 		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_RISCV)
 		{
 			emit_out("rd_ra rs1_a0 jalr\n");
 		}
 	}
 	else
 	{
-		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
+		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s->s, "function call");
 			emit_out("CALL R0 R15\n");
 		}
-		else if((X86 == Architecture) || (AMD64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_X86)
 		{
 			emit_out("call %FUNCTION_");
 			emit_out(s->s);
@@ -375,7 +375,7 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 			emit_load_named_immediate(REGISTER_TEMP, "FUNCTION_", s->s, "function call");
 			emit_out("BLR_X16\n");
 		}
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+		else if(Architecture & ARCH_FAMILY_RISCV)
 		{
 			emit_out("rd_ra $FUNCTION_");
 			emit_out(s->s);

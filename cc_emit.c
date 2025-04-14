@@ -58,7 +58,7 @@ void reset_emit_string(void)
 
 char* register_from_string(int reg)
 {
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
@@ -115,7 +115,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_RETURN) return "LR";
 		else if(reg == REGISTER_STACK) return "SP";
 	}
-	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		if(reg == REGISTER_ZERO) return "a0";
 		else if(reg == REGISTER_ONE) return "a1";
@@ -137,13 +137,13 @@ char* register_from_string(int reg)
 }
 void emit_unconditional_jump(char* prefix, char* name, char* note)
 {
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("JUMP @");
 		emit_out(prefix);
 		emit_out(name);
 	}
-	else if((X86 == Architecture) || (AMD64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("jmp %");
 		emit_out(prefix);
@@ -161,7 +161,7 @@ void emit_unconditional_jump(char* prefix, char* name, char* note)
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
 		emit_out("BR_X16");
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("$");
 		emit_out(prefix);
@@ -185,7 +185,7 @@ void emit_jump_if_zero(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("JUMP.Z R");
 		emit_out(reg_name);
@@ -193,7 +193,7 @@ void emit_jump_if_zero(int reg, char* prefix, char* name, char* note)
 		emit_out(prefix);
 		emit_out(name);
 	}
-	else if((X86 == Architecture) || (AMD64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("test_");
 		emit_out(reg_name);
@@ -220,7 +220,7 @@ void emit_jump_if_zero(int reg, char* prefix, char* name, char* note)
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
 		emit_out("BR_X16");
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("rs1_");
 		emit_out(reg_name);
@@ -246,7 +246,7 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("JUMP.NZ R");
 		emit_out(reg_name);
@@ -254,7 +254,7 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 		emit_out(prefix);
 		emit_out(name);
 	}
-	else if((X86 == Architecture) || (AMD64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("test_");
 		emit_out(reg_name);
@@ -281,7 +281,7 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
 		emit_out("BR_X16");
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		fputs("TODO: RISC-V jump if not zero requires multiple labels.", stderr);
 		exit(EXIT_FAILURE);
@@ -304,7 +304,7 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 	char* reg1_name = register_from_string(reg1);
 	char* reg2_name = register_from_string(reg2);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("CMPU R");
 		emit_out(reg1_name); /* source of CMPU */
@@ -318,7 +318,7 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 		emit_out(prefix);
 		emit_out(name);
 	}
-	else if((X86 == Architecture) || (AMD64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		/* x86 define for 'cmp_ebx,eax' is just 'cmp' */
 		if(X86 == Architecture && ((reg1 + reg2) == (REGISTER_ZERO + REGISTER_ONE)))
@@ -358,7 +358,7 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
 		emit_out("SKIP_INST_NE\nBR_X16");
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("rd_");
 		emit_out(reg1_name);
@@ -389,7 +389,7 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("LOADR R");
 		emit_out(reg_name);
@@ -431,7 +431,7 @@ void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 		emit_out(prefix);
 		emit_out(name);
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("rd_");
 		emit_out(reg_name);
@@ -467,7 +467,7 @@ void write_load_immediate(int reg, int value, char* note)
 {
 	char* reg_name = register_from_string(reg);
 	char* value_string = int2str(value, 10, TRUE);
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		if((32767 > value) && (value > -32768))
 		{
@@ -484,7 +484,7 @@ void write_load_immediate(int reg, int value, char* note)
 			emit_to_string(int2str(value, 10, TRUE));
 		}
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		if(value == 0)
 		{
@@ -542,7 +542,7 @@ void write_load_immediate(int reg, int value, char* note)
 			emit_to_string(value_string);
 		}
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		if((2047 >= value) && (value >= -2048))
 		{
@@ -636,7 +636,7 @@ void write_add(int destination_reg, int source_reg, char* note)
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_to_string("ADD R");
 		emit_to_string(destination_name);
@@ -645,7 +645,7 @@ void write_add(int destination_reg, int source_reg, char* note)
 		emit_to_string(" R");
 		emit_to_string(source_name);
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_to_string("add_");
 		emit_to_string(destination_name);
@@ -671,7 +671,7 @@ void write_add(int destination_reg, int source_reg, char* note)
 		emit_to_string("_");
 		emit_to_string(destination_name);
 	}
-	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_to_string("rd_");
 		emit_to_string(destination_name);
@@ -720,7 +720,7 @@ void write_sub(int destination_reg, int source_reg, char* note)
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_to_string("SUB R");
 		emit_to_string(destination_name);
@@ -729,7 +729,7 @@ void write_sub(int destination_reg, int source_reg, char* note)
 		emit_to_string(" R");
 		emit_to_string(source_name);
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_to_string("sub_");
 		emit_to_string(destination_name);
@@ -756,7 +756,7 @@ void write_sub(int destination_reg, int source_reg, char* note)
 		emit_to_string("_");
 		emit_to_string(source_name);
 	}
-	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_to_string("rd_");
 		emit_to_string(destination_name);
@@ -803,13 +803,13 @@ void emit_mul_into_register_zero(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("MULU R0 R");
 		emit_out(reg_name);
 		emit_out(" R0");
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("mul_");
 		emit_out(reg_name);
@@ -826,7 +826,7 @@ void emit_mul_into_register_zero(int reg, char* note)
 		emit_out(reg_name);
 		emit_out("_X0");
 	}
-	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("rd_a0 rs1_");
 		emit_out(reg_name);
@@ -856,14 +856,14 @@ void write_move(int destination_reg, int source_reg, char* note)
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_to_string("COPY R");
 		emit_to_string(destination_name);
 		emit_to_string(" R");
 		emit_to_string(source_name);
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_to_string("mov_");
 		emit_to_string(destination_name);
@@ -885,7 +885,7 @@ void write_move(int destination_reg, int source_reg, char* note)
 		emit_to_string("_FROM_");
 		emit_to_string(source_name);
 	}
-	else if(RISCV32 == Architecture || RISCV64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_to_string("rd_");
 		emit_to_string(destination_name);
@@ -924,7 +924,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		absolute_value = -absolute_value;
 	}
 
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("ADDI R");
 		emit_out(destination_name);
@@ -933,7 +933,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		emit_out(" ");
 		emit_out(value_string);
 	}
-	else if((X86 == Architecture) || (AMD64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("lea_");
 		emit_out(destination_name);
@@ -965,7 +965,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 		emit_move(destination, offset_register, note);
 		emit_sub_immediate(destination, absolute_value, note);
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		if((2047 >= value) && (value >= -2048))
 		{
@@ -1011,7 +1011,7 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 void emit_dereference(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("LOAD R");
 		emit_out(reg_name);
@@ -1019,7 +1019,7 @@ void emit_dereference(int reg, char* note)
 		emit_out(reg_name);
 		emit_out(" 0");
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("mov_");
 		emit_out(reg_name);
@@ -1040,7 +1040,7 @@ void emit_dereference(int reg, char* note)
 		emit_out("DEREF_");
 		emit_out(reg_name);
 	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
 		emit_out("rd_");
 		emit_out(reg_name);
@@ -1065,13 +1065,13 @@ void emit_dereference(int reg, char* note)
 void emit_push(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("PUSHR R");
 		emit_out(reg_name);
 		emit_out(" R15");
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("push_");
 		emit_out(reg_name);
@@ -1115,13 +1115,13 @@ void emit_push(int reg, char* note)
 void emit_pop(int reg, char* note)
 {
 	char* reg_name = register_from_string(reg);
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
 		emit_out("POPR R");
 		emit_out(reg_name);
 		emit_out(" R15");
 	}
-	else if(X86 == Architecture || AMD64 == Architecture)
+	else if(Architecture & ARCH_FAMILY_X86)
 	{
 		emit_out("pop_");
 		emit_out(reg_name);

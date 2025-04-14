@@ -42,6 +42,14 @@
 // CONSTANT RISCV64 128
 #define RISCV64 128
 
+/* These architecture families often behave similarly */
+// CONSTANT ARCH_FAMILY_KNIGHT 3
+#define ARCH_FAMILY_KNIGHT 3
+// CONSTANT ARCH_FAMILY_X86 12
+#define ARCH_FAMILY_X86 12
+// CONSTANT ARCH_FAMILY_RISCV 192
+#define ARCH_FAMILY_RISCV 192
+
 /* Stack grows to higher memory addresses */
 // CONSTANT STACK_DIRECTION_PLUS 0
 #define STACK_DIRECTION_PLUS 0
