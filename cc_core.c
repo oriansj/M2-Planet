@@ -2419,21 +2419,21 @@ void process_do(void)
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
+	char* unique_id = create_unique_id("", function->s, number_string);
+
 	break_target_head = "DO_END_";
 	continue_target_head = "DO_TEST_";
 	break_target_num = number_string;
 	break_frame = function->locals;
 	break_target_func = function->s;
 
-	emit_out(":DO_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_", unique_id);
 
 	require_extra_token();
 	statement();
 	require_token();
 
-	emit_out(":DO_TEST_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_TEST_", unique_id);
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
@@ -2447,18 +2447,18 @@ void process_do(void)
 	else if(ARMV7L == Architecture) emit_out("!0 CMPI8 R0 IMM_ALWAYS\n^~DO_");
 	else if(AARCH64 == Architecture) emit_out("CBZ_X0_PAST_BR\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&DO_");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rs1_a0 @DO_END_");
-	uniqueID_out(function->s, number_string);
+	emit_out(unique_id);
+	emit_out("\n");
 	if(ARMV7L == Architecture) emit_out(" JUMP_NE\n");
 	else if(AARCH64 == Architecture) emit_out("\nBR_X16\n");
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
 		emit_out("beqz\n$DO_");
-		uniqueID_out(function->s, number_string);
-		emit_out("jal\n");
+		emit_out(unique_id);
+		emit_out(" jal\n");
 	}
 
-	emit_out(":DO_END_");
-	uniqueID_out(function->s, number_string);
+	emit_label("DO_END_", unique_id);
 
 	break_frame = nested_locals;
 	break_target_head = nested_break_head;
