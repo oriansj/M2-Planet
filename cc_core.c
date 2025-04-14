@@ -2286,6 +2286,8 @@ process_switch_iter:
 	/* create the table */
 	emit_label("_SWITCH_TABLE_", unique_id);
 
+	int offset;
+	char* buf;
 	struct case_list* hold;
 	while(NULL != backtrack)
 	{
@@ -2293,21 +2295,12 @@ process_switch_iter:
 		primary_expr_number(backtrack->value);
 		hold = backtrack->next;
 
-		/* compare R0 and R1 and jump to case if equal */
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R0 R1\nJUMP.E R0 @_SWITCH_CASE_");
-		else if(X86 == Architecture) emit_out("cmp\nje %_SWITCH_CASE_");
-		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nje %_SWITCH_CASE_");
-		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n^~_SWITCH_CASE_");
-		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nLOAD_W16_AHEAD\nSKIP_32_DATA\n&_SWITCH_CASE_");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("rd_a0 rs1_a0 rs2_a1 sub\nrs1_a0 @8 bnez\n$_SWITCH_CASE_");
+		buf = calloc(MAX_STRING, sizeof(char));
+		offset = copy_string(buf, backtrack->value, MAX_STRING);
+		offset = offset + copy_string(buf + offset, "_", MAX_STRING - offset);
+		copy_string(buf + offset, unique_id, MAX_STRING - offset);
 
-		emit_out(backtrack->value);
-		emit_out("_");
-		emit_out(unique_id);
-		emit_out("\n");
-		if(ARMV7L == Architecture) emit_out(" JUMP_EQUAL\n");
-		else if(AARCH64 == Architecture) emit_out("\nSKIP_INST_NE\nBR_X16\n");
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("jal\n");
+		emit_jump_if_equal(REGISTER_ZERO, REGISTER_ONE, "_SWITCH_CASE_", buf, "Jump to case if equal");
 
 		free(backtrack);
 		backtrack = hold;

@@ -299,6 +299,93 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 	}
 }
 
+void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note)
+{
+	char* reg1_name = register_from_string(reg1);
+	char* reg2_name = register_from_string(reg2);
+
+	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	{
+		emit_out("CMPU R");
+		emit_out(reg1_name); /* source of CMPU */
+		emit_out(" R");
+		emit_out(reg1_name);
+		emit_out(" R");
+		emit_out(reg2_name);
+		emit_out("\nJUMP.E R");
+		emit_out(reg1_name); /* source of CMPU */
+		emit_out(" @");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if((X86 == Architecture) || (AMD64 == Architecture))
+	{
+		/* x86 define for 'cmp_ebx,eax' is just 'cmp' */
+		if(X86 == Architecture && ((reg1 + reg2) == (REGISTER_ZERO + REGISTER_ONE)))
+		{
+			emit_out("cmp");
+		}
+		else
+		{
+			emit_out("cmp_");
+			emit_out(reg2_name);
+			emit_out(",");
+			emit_out(reg1_name);
+		}
+
+		emit_out("\nje %");
+		emit_out(prefix);
+		emit_out(name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_out("'0' ");
+		emit_out(reg1_name);
+		emit_out(" CMP ");
+		emit_out(reg2_name);
+		emit_out(" AUX_ALWAYS\n^~");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" JUMP_EQUAL");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_out("CMP_");
+		emit_out(reg2_name);
+		emit_out("_");
+		emit_out(reg1_name);
+		emit_out("\n");
+		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
+		emit_out("SKIP_INST_NE\nBR_X16");
+	}
+	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
+	{
+		emit_out("rd_");
+		emit_out(reg1_name);
+		emit_out(" rs1_");
+		emit_out(reg1_name);
+		emit_out(" rs2_");
+		emit_out(reg2_name);
+		emit_out(" sub\nrs1_");
+		emit_out(reg1_name);
+		emit_out(" @8 bnez\n$");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" jal");
+	}
+
+	if(note == NULL)
+	{
+		emit_out("\n");
+	}
+	else
+	{
+		emit_out(" # ");
+		emit_out(note);
+		emit_out("\n");
+	}
+}
+
 void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 {
 	char* reg_name = register_from_string(reg);
