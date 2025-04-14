@@ -2292,7 +2292,7 @@ process_switch_iter:
 	while(NULL != backtrack)
 	{
 		/* put case value in R0 as the switch (value) is in R1 */
-		primary_expr_number(backtrack->value);
+		emit_load_immediate(REGISTER_ZERO, strtoint(backtrack->value), "Load case value");
 		hold = backtrack->next;
 
 		buf = calloc(MAX_STRING, sizeof(char));
