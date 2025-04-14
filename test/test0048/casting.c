@@ -17,6 +17,12 @@
 
 int global[2] = { 1, 2 };
 
+struct T {
+	struct {
+		short i;
+	} c;
+} global_t;
+
 int main() {
     unsigned a = 0;
     int b = (int)a;
@@ -33,5 +39,32 @@ int main() {
 
 	r = ((int*)(void_ptr))[1];
 	if(r != 2) return 3;
+
+	int a = 0;
+	void* void_a = (void*)&a;
+
+	*(int*)void_a = 1;
+
+	if(a != 1) return 4;
+
+	int b = *(int*)void_a;
+
+	if(b != 1) return 5;
+
+	*(int*)void_a = 0;
+
+	if(a != 0) return 6;
+
+	b = *(int*)void_a;
+
+	if(b != 0) return 7;
+
+	short s = 12;
+	void* void_s = (void*)&s;
+	struct T* local_t = &global_t;
+
+	*(short*)void_s = local_t->c.i;
+
+	if(s != 0) return 8;
 }
 

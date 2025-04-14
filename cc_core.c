@@ -803,6 +803,17 @@ void primary_expr_variable(void)
 		require_extra_token();
 		num_dereference = num_dereference + 1;
 	}
+
+	struct type* cast_type = NULL;
+	if(global_token->s[0] == '(')
+	{
+		require_extra_token();
+
+		cast_type = type_name();
+
+		require_match("Expected token ')' in type cast.\n", ")");
+	}
+
 	char* s = global_token->s;
 	require_extra_token();
 
@@ -835,6 +846,12 @@ void primary_expr_variable(void)
 	}
 
 	struct token_list* type = load_address_of_variable_into_register(REGISTER_ZERO, s);
+
+	if(cast_type != NULL)
+	{
+		current_target = cast_type;
+	}
+
 	if(TRUE == Address_of) return;
 	if(type == NULL) return;
 
