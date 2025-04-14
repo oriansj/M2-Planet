@@ -302,6 +302,11 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
 
+	if(ARMV7L == Architecture)
+	{
+		emit_push(REGISTER_RETURN, "Protect the old link register");
+	}
+
 	if(TRUE == is_function_pointer)
 	{
 		int value = s->depth;
@@ -314,11 +319,6 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 		emit_load_relative_to_register(REGISTER_ZERO, reg, value, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
-
-		if(ARMV7L == Architecture)
-		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-		}
 
 		emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
 
@@ -351,11 +351,6 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	}
 	else
 	{
-		if(ARMV7L == Architecture)
-		{
-			emit_push(REGISTER_RETURN, "Protect the old link register");
-		}
-
 		emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
 
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
