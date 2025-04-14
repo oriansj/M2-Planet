@@ -317,9 +317,12 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 
 		emit_load_relative_to_register(REGISTER_ZERO, reg, s->depth, "function pointer call");
 		emit_dereference(REGISTER_ZERO, "function pointer call");
+	}
 
-		emit_move(REGISTER_BASE, REGISTER_TEMP, "function pointer call");
+	emit_move(REGISTER_BASE, REGISTER_TEMP, "Set new base pointer");
 
+	if(TRUE == is_function_pointer)
+	{
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
 		{
 			emit_out("CALL R0 R15\n");
@@ -349,8 +352,6 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	}
 	else
 	{
-		emit_move(REGISTER_BASE, REGISTER_TEMP, "function call");
-
 		if((KNIGHT_NATIVE == Architecture) || (KNIGHT_POSIX == Architecture))
 		{
 			emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", s->s, "function call");
