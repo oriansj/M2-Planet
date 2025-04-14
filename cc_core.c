@@ -2435,18 +2435,7 @@ void process_do(void)
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
-	if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		emit_out("rs1_a0 @DO_END_");
-		emit_out(unique_id);
-		emit_out(" beqz\n$DO_");
-		emit_out(unique_id);
-		emit_out(" jal\n");
-	}
-	else
-	{
-		emit_jump_if_not_zero(REGISTER_ZERO, "DO_", unique_id, "Rerun loop");
-	}
+	emit_jump_if_not_zero(REGISTER_ZERO, "DO_", unique_id, "Rerun loop");
 
 	emit_label("DO_END_", unique_id);
 

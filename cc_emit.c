@@ -283,8 +283,12 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
-		fputs("TODO: RISC-V jump if not zero requires multiple labels.", stderr);
-		exit(EXIT_FAILURE);
+		emit_out("rs1_");
+		emit_out(reg_name);
+		emit_out(" @8 beqz\n$");
+		emit_out(prefix);
+		emit_out(name);
+		emit_out(" jal\n");
 	}
 
 	if(note == NULL)
