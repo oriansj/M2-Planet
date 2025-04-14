@@ -72,6 +72,32 @@ int preserve_string(int c)
 	return grab_byte();
 }
 
+char* concat_strings2(char* a, char* b)
+{
+	char* buf = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(buf, a, MAX_STRING);
+	copy_string(buf + offset, b, MAX_STRING - offset);
+	return buf;
+}
+
+char* concat_strings3(char* a, char* b, char* c)
+{
+	char* buf = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(buf, a, MAX_STRING);
+	offset = offset + copy_string(buf + offset, b, MAX_STRING - offset);
+	copy_string(buf + offset, c, MAX_STRING - offset);
+	return buf;
+}
+
+char* concat_strings4(char* a, char* b, char* c, char* d)
+{
+	char* buf = calloc(MAX_STRING, sizeof(char));
+	int offset = copy_string(buf, a, MAX_STRING);
+	offset = offset + copy_string(buf + offset, b, MAX_STRING - offset);
+	offset = offset + copy_string(buf + offset, c, MAX_STRING - offset);
+	copy_string(buf + offset, d, MAX_STRING - offset);
+	return buf;
+}
 
 int copy_string(char* target, char* source, int max)
 {

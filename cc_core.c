@@ -82,13 +82,7 @@ void uniqueID_out(char* s, char* num)
 
 char* create_unique_id(char* prefix, char* s, char* num)
 {
-	char* buf = calloc(MAX_STRING, sizeof(char));
-	int written = copy_string(buf, prefix, MAX_STRING);
-	written = copy_string(buf + written, s, MAX_STRING - written) + written;
-	written = copy_string(buf + written, "_", MAX_STRING - written) + written;
-	copy_string(buf + written, num, MAX_STRING - written);
-
-	return buf;
+	return concat_strings4(prefix, s, "_", num);
 }
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options)
@@ -2286,7 +2280,6 @@ process_switch_iter:
 	/* create the table */
 	emit_label("_SWITCH_TABLE_", unique_id);
 
-	int offset;
 	char* buf;
 	struct case_list* hold;
 	while(NULL != backtrack)
@@ -2295,10 +2288,7 @@ process_switch_iter:
 		emit_load_immediate(REGISTER_ZERO, strtoint(backtrack->value), "Load case value");
 		hold = backtrack->next;
 
-		buf = calloc(MAX_STRING, sizeof(char));
-		offset = copy_string(buf, backtrack->value, MAX_STRING);
-		offset = offset + copy_string(buf + offset, "_", MAX_STRING - offset);
-		copy_string(buf + offset, unique_id, MAX_STRING - offset);
+		buf = concat_strings3(backtrack->value, "_", unique_id);
 
 		emit_jump_if_equal(REGISTER_ZERO, REGISTER_ONE, "_SWITCH_CASE_", buf, "Jump to case if equal");
 
@@ -2534,12 +2524,7 @@ void process_break(void)
 
 	require_extra_token();
 
-	char* break_target = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(break_target, break_target_head, MAX_STRING);
-	offset = offset + copy_string(break_target + offset, break_target_func, MAX_STRING - offset);
-	offset = offset + copy_string(break_target + offset, "_", MAX_STRING - offset);
-	copy_string(break_target + offset, break_target_num, MAX_STRING - offset);
-
+	char* break_target = concat_strings4(break_target_head, break_target_func, "_", break_target_num);
 	emit_unconditional_jump("", break_target, "Break statement");
 
 	require_match("ERROR in break statement\nMissing ;\n", ";");
@@ -2555,12 +2540,7 @@ void process_continue(void)
 	}
 	require_extra_token();
 
-
-	char* continue_target = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(continue_target, continue_target_head, MAX_STRING);
-	offset = offset + copy_string(continue_target + offset, break_target_func, MAX_STRING - offset);
-	offset = offset + copy_string(continue_target + offset, "_", MAX_STRING - offset);
-	copy_string(continue_target + offset, break_target_num, MAX_STRING - offset);
+	char* continue_target = concat_strings4(continue_target_head, break_target_func, "_", break_target_num);
 
 	emit_unconditional_jump("", continue_target, "Continue statement");
 
@@ -2595,10 +2575,7 @@ void process_static_variable(void)
 	function_static_variables_list = variable;
 	variable->local_variable_name = name;
 
-	char* new_name = calloc(MAX_STRING, sizeof(char));
-	int offset = copy_string(new_name, function->s, MAX_STRING);
-	offset = offset + copy_string(new_name + offset, "_", MAX_STRING - offset);
-	copy_string(new_name + offset, name, MAX_STRING - offset);
+	char* new_name = concat_strings3(function->s, "_", name);
 
 	variable->global_variable = sym_declare(new_name, type_size, NULL, TLO_STATIC);
 	require_extra_token();

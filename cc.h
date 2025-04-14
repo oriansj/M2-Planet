@@ -54,6 +54,9 @@
 #define NO_STRUCT_DEFINITION 0
 
 int copy_string(char* target, char* source, int max);
+char* concat_strings2(char* a, char* b);
+char* concat_strings3(char* a, char* b, char* c);
+char* concat_strings4(char* a, char* b, char* c, char* d);
 int string_length(char* a);
 int in_set(int c, char* s);
 int match(char* a, char* b);
