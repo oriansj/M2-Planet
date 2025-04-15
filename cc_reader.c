@@ -67,7 +67,12 @@ int preserve_string(int c)
 		if(!escape && '\\' == c ) escape = TRUE;
 		else escape = FALSE;
 		c = consume_byte(c);
-		require(EOF != c, "Unterminated string\n");
+		if(EOF == c)
+		{
+			line_error_token(token);
+			fputs("Unterminated string\n", stderr);
+			exit(EXIT_FAILURE);
+		}
 	} while(escape || (c != frequent));
 	return grab_byte();
 }

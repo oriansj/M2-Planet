@@ -164,5 +164,6 @@ struct static_variable_list
 };
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options);
+void line_error_token(struct token_list* token);
 
 #include "cc_globals.h"
