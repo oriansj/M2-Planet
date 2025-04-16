@@ -788,6 +788,7 @@ void primary_expr_variable(void)
 		require_extra_token();
 		num_dereference = num_dereference + 1;
 	}
+	num_dereference_after_postfix = num_dereference;
 
 	struct type* cast_type = NULL;
 	if(global_token->s[0] == '(')
@@ -856,14 +857,14 @@ void primary_expr_variable(void)
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator && !is_function_pointer;
 
-	int size = register_size;
-	if(options == TLO_LOCAL || options == TLO_ARGUMENT)
-	{
-		size = current_target->size;
-	}
-
 	if(should_emit)
 	{
+		int size = register_size;
+		if(options == TLO_LOCAL || options == TLO_ARGUMENT)
+		{
+			size = current_target->size;
+		}
+
 		emit_out(load_value(size, current_target->is_signed));
 		while (num_dereference > 0)
 		{
@@ -873,7 +874,6 @@ void primary_expr_variable(void)
 		}
 	}
 
-	num_dereference_after_postfix = num_dereference;
 	if(!is_postfix_operator)
 	{
 		while (num_dereference > 0)
