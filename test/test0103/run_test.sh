@@ -75,11 +75,13 @@ hex2 \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ] || [ -n "${GET_MACHINE_OVERRIDE_ALWAYS_RUN+x}" ]
 then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test0103-${ARCH}-binary ${GET_MACHINE_FLAGS} 2>&1 )
 	[ 0 = $? ] || exit 5
-	[ "$out" = "${ARCH}" ] || exit 6
+	if [ -z "${GET_MACHINE_OVERRIDE_ALWAYS_RUN+x}" ]; then
+		[ "$out" = "${ARCH}" ] || exit 6
+	fi
 fi
 exit 0
