@@ -21,7 +21,7 @@ VPATH = bin:test:test/results
 all: test
 
 # tests
-test: aarch64-tests amd64-tests knight-posix-tests knight-native-tests armv7l-tests x86-tests riscv32-tests riscv64-tests | results
+test: compile-fail aarch64-tests amd64-tests knight-posix-tests knight-native-tests armv7l-tests x86-tests riscv32-tests riscv64-tests | results
 
 aarch64-tests: \
 	run-pass-aarch64 \
@@ -340,6 +340,9 @@ riscv64-tests: \
 	test0105-riscv64-binary \
 	test0106-riscv64-binary \
 	test1000-riscv64-binary | results
+
+compile-fail: M2-Planet | results
+	test/compile-fail.sh
 
 run-pass-riscv32: M2-Planet | results
 	test/run-pass.sh riscv32
