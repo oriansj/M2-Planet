@@ -659,13 +659,6 @@ struct token_list* load_address_of_variable_into_register(int reg, char* s)
 		current_target = variable->type;
 		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
 
-		require(NULL != global_token, "incomplete variable load received\n");
-		if((current_target->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-		{
-			function_call(variable, TRUE);
-			return NULL;
-		}
-
 		return variable;
 	}
 
@@ -674,13 +667,6 @@ struct token_list* load_address_of_variable_into_register(int reg, char* s)
 	{
 		current_target = variable->type;
 		emit_load_relative_to_register(reg, REGISTER_BASE, variable->depth, "function argument load");
-
-		require(NULL != global_token, "incomplete variable load received\n");
-		if((current_target->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-		{
-			function_call(variable, TRUE);
-			return NULL;
-		}
 
 		return variable;
 	}
@@ -862,12 +848,13 @@ void primary_expr_variable(void)
 		return;
 	}
 
+	int is_function_pointer = global_token->s[0] == '(';
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
 	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator && !is_function_pointer;
 
 	int size = register_size;
 	if(options == TLO_LOCAL || options == TLO_ARGUMENT)
@@ -1237,6 +1224,20 @@ void postfix_expr_stub(void)
 	{
 		postfix_expr_inc_or_dec();
 		postfix_expr_stub();
+	}
+
+	if(global_token->s[0] == '(')
+	{
+		if((current_target->options & TO_FUNCTION_POINTER))
+		{
+			function_call(NULL, TRUE);
+		}
+		else
+		{
+			line_error();
+			fputs("Attempted to use operator ( on non-function pointer", stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
