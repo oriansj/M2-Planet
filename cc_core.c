@@ -848,12 +848,18 @@ void primary_expr_variable(void)
 		return;
 	}
 
+	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+
+	if(is_prefix_operator || is_postfix_operator)
+	{
+		return;
+	}
+
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
-	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array;
 
 	if(should_emit)
 	{
@@ -880,14 +886,11 @@ void primary_expr_variable(void)
 		}
 	}
 
-	if(!is_postfix_operator)
+	while (num_dereference > 0)
 	{
-		while (num_dereference > 0)
-		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			current_target = current_target->type;
-			num_dereference = num_dereference - 1;
-		}
+		emit_out(load_value(current_target->size, current_target->is_signed));
+		current_target = current_target->type;
+		num_dereference = num_dereference - 1;
 	}
 }
 
