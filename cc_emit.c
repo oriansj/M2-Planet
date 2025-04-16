@@ -63,7 +63,7 @@ char* register_from_string(int reg)
 		if(reg == REGISTER_ZERO) return "0";
 		else if(reg == REGISTER_ONE) return "1";
 		else if(reg == REGISTER_EMIT_TEMP) return "10";
-		else if(reg == REGISTER_UNUSED2) return "11";
+		else if(reg == REGISTER_TEMP2) return "11";
 		else if(reg == REGISTER_LOCALS) return "12";
 		else if(reg == REGISTER_TEMP) return "13";
 		else if(reg == REGISTER_BASE) return "14";
@@ -78,7 +78,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_STACK) return "esp";
 		else if(reg == REGISTER_LOCALS) return "esi";
 		else if(reg == REGISTER_EMIT_TEMP) return "ecx";
-		else if(reg == REGISTER_UNUSED2) return "edx";
+		else if(reg == REGISTER_TEMP2) return "edx";
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -89,7 +89,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_STACK) return "rsp";
 		else if(reg == REGISTER_LOCALS) return "r13";
 		else if(reg == REGISTER_EMIT_TEMP) return "r14";
-		else if(reg == REGISTER_UNUSED2) return "r15";
+		else if(reg == REGISTER_TEMP2) return "r15";
 	}
 	else if(ARMV7L == Architecture)
 	{
@@ -97,7 +97,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "R1";
 		else if(reg == REGISTER_LOCALS) return "R8";
 		else if(reg == REGISTER_EMIT_TEMP) return "R9";
-		else if(reg == REGISTER_UNUSED2) return "R10";
+		else if(reg == REGISTER_TEMP2) return "R10";
 		else if(reg == REGISTER_TEMP) return "R11";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -109,7 +109,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "X1";
 		else if(reg == REGISTER_LOCALS) return "X13";
 		else if(reg == REGISTER_EMIT_TEMP) return "X14";
-		else if(reg == REGISTER_UNUSED2) return "X15";
+		else if(reg == REGISTER_TEMP2) return "X15";
 		else if(reg == REGISTER_TEMP) return "X16";
 		else if(reg == REGISTER_BASE) return "BP";
 		else if(reg == REGISTER_RETURN) return "LR";
@@ -121,7 +121,7 @@ char* register_from_string(int reg)
 		else if(reg == REGISTER_ONE) return "a1";
 		else if(reg == REGISTER_LOCALS) return "t3";
 		else if(reg == REGISTER_EMIT_TEMP) return "t4";
-		else if(reg == REGISTER_UNUSED2) return "t5";
+		else if(reg == REGISTER_TEMP2) return "t5";
 		else if(reg == REGISTER_TEMP) return "tp";
 		else if(reg == REGISTER_BASE) return "fp";
 		else if(reg == REGISTER_RETURN) return "ra";
