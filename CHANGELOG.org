@@ -27,6 +27,7 @@ Added support for the `restrict` and `const` pointer type qualifiers.
 Added support for variadic functions.
 Added support for multiple global variable declarations per statement
 Added initial very hacky support for casting after dereferencing
+Added support for calling function pointers directly on global variables and struct members. Previously only locals worked.
 
 ** Changed
 Space for local variables in functions is now allocated up front

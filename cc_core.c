@@ -317,7 +317,6 @@ void function_call(struct token_list* s, int is_function_pointer)
 	if(TRUE == is_function_pointer)
 	{
 		emit_move(REGISTER_ZERO, REGISTER_TEMP2, "Restore function pointer");
-		emit_dereference(REGISTER_ZERO, "Deref function pointer");
 
 		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
@@ -849,13 +848,12 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	int is_function_pointer = global_token->s[0] == '(';
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
 	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator && !is_function_pointer;
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
 
 	if(should_emit)
 	{
@@ -865,11 +863,19 @@ void primary_expr_variable(void)
 			size = current_target->size;
 		}
 
+		int should_not_deref;
 		emit_out(load_value(size, current_target->is_signed));
 		while (num_dereference > 0)
 		{
-			current_target = current_target->type;
-			emit_out(load_value(current_target->size, current_target->is_signed));
+			/* Function pointers are special in C.
+			 * They can be dereferenced an infinite amount of times but still just be the actual pointer. */
+			should_not_deref = current_target->type == current_target->type->type && (current_target->type->options & TO_FUNCTION_POINTER);
+
+			if(!should_not_deref)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+			}
 			num_dereference = num_dereference - 1;
 		}
 	}
