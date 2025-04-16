@@ -17,6 +17,7 @@
 
 # Ignore all generated contents of tests
 results/
+run-pass/tmp/
 test????/tmp-*/
 test????/proof
 test0106/cc1
