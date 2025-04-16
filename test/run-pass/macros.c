@@ -133,7 +133,7 @@ int main()
 	}
 
 	char* filename = __FILE__;
-	char* expected = "test/test0035/macros.c";
+	char* expected = "./test/run-pass/macros.c";
 
 	if(compare_string(filename, expected) != 0) {
 		return 2;

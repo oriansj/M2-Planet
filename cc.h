@@ -92,8 +92,8 @@ void require_token(void);
 // CONSTANT REGISTER_LOCALS 6
 #define REGISTER_EMIT_TEMP 7
 // CONSTANT REGISTER_EMIT_TEMP 7
-#define REGISTER_UNUSED2 8
-// CONSTANT REGISTER_UNUSED2 8
+#define REGISTER_TEMP2 8
+// CONSTANT REGISTER_TEMP2 8
 
 void emit_push(int, char*);
 void emit_pop(int, char*);

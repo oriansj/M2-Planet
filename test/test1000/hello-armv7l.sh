@@ -70,7 +70,7 @@ hex2 \
 	|| exit 4
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "armv7l" ] || [ -n "${GET_MACHINE_OVERRIDE_ALWAYS_RUN+x}" ]
 then
 	# Verify that the resulting file works
 	./test/results/test1000-armv7l-binary \

@@ -271,7 +271,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(struct token_list* s, int is_function_pointer, int is_local)
+void function_call(struct token_list* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -285,6 +285,11 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	emit_push(REGISTER_LOCALS, "Protect the old locals pointer");
 
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
+
+	if(is_function_pointer)
+	{
+		emit_move(REGISTER_TEMP2, REGISTER_ZERO, "Save function pointer address");
+	}
 
 	int passed = 0;
 	while(global_token->s[0] != ')')
@@ -307,22 +312,12 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 		emit_push(REGISTER_RETURN, "Protect the old link register");
 	}
 
-	if(TRUE == is_function_pointer)
-	{
-		int reg = REGISTER_BASE;
-		if(is_local)
-		{
-			reg = REGISTER_LOCALS;
-		}
-
-		emit_load_relative_to_register(REGISTER_ZERO, reg, s->depth, "function pointer call");
-		emit_dereference(REGISTER_ZERO, "function pointer call");
-	}
-
 	emit_move(REGISTER_BASE, REGISTER_TEMP, "Set new base pointer");
 
 	if(TRUE == is_function_pointer)
 	{
+		emit_move(REGISTER_ZERO, REGISTER_TEMP2, "Restore function pointer");
+
 		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_out("CALL R0 R15\n");
@@ -553,7 +548,7 @@ void function_load(struct token_list* a)
 	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
-		function_call(a, FALSE, FALSE);
+		function_call(a, FALSE);
 		return;
 	}
 
@@ -660,29 +655,18 @@ struct token_list* load_address_of_variable_into_register(int reg, char* s)
 	variable = sym_lookup(s, function->locals);
 	if(NULL != variable)
 	{
-		require(NULL != global_token, "incomplete variable load received\n");
-		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-		{
-			function_call(variable, TRUE, TRUE);
-			return NULL;
-		}
-
 		current_target = variable->type;
 		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
+
 		return variable;
 	}
 
 	variable = sym_lookup(s, function->arguments);
 	if(NULL != variable)
 	{
-		require(NULL != global_token, "incomplete variable load received\n");
-		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-		{
-			function_call(variable, TRUE, FALSE);
-			return NULL;
-		}
 		current_target = variable->type;
 		emit_load_relative_to_register(reg, REGISTER_BASE, variable->depth, "function argument load");
+
 		return variable;
 	}
 
@@ -803,6 +787,7 @@ void primary_expr_variable(void)
 		require_extra_token();
 		num_dereference = num_dereference + 1;
 	}
+	num_dereference_after_postfix = num_dereference;
 
 	struct type* cast_type = NULL;
 	if(global_token->s[0] == '(')
@@ -863,39 +848,49 @@ void primary_expr_variable(void)
 		return;
 	}
 
+	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+
+	if(is_prefix_operator || is_postfix_operator)
+	{
+		return;
+	}
+
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
-	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array && !is_postfix_operator && !is_prefix_operator;
-
-	int size = register_size;
-	if(options == TLO_LOCAL || options == TLO_ARGUMENT)
-	{
-		size = current_target->size;
-	}
+	int should_emit = !is_assignment && !is_compound_operator && !is_local_array;
 
 	if(should_emit)
 	{
+		int size = register_size;
+		if(options == TLO_LOCAL || options == TLO_ARGUMENT)
+		{
+			size = current_target->size;
+		}
+
+		int should_not_deref;
 		emit_out(load_value(size, current_target->is_signed));
 		while (num_dereference > 0)
 		{
-			current_target = current_target->type;
-			emit_out(load_value(current_target->size, current_target->is_signed));
+			/* Function pointers are special in C.
+			 * They can be dereferenced an infinite amount of times but still just be the actual pointer. */
+			should_not_deref = current_target->type == current_target->type->type && (current_target->type->options & TO_FUNCTION_POINTER);
+
+			if(!should_not_deref)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+			}
 			num_dereference = num_dereference - 1;
 		}
 	}
 
-	num_dereference_after_postfix = num_dereference;
-	if(!is_postfix_operator)
+	while (num_dereference > 0)
 	{
-		while (num_dereference > 0)
-		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			current_target = current_target->type;
-			num_dereference = num_dereference - 1;
-		}
+		emit_out(load_value(current_target->size, current_target->is_signed));
+		current_target = current_target->type;
+		num_dereference = num_dereference - 1;
 	}
 }
 
@@ -1238,6 +1233,20 @@ void postfix_expr_stub(void)
 	{
 		postfix_expr_inc_or_dec();
 		postfix_expr_stub();
+	}
+
+	if(global_token->s[0] == '(')
+	{
+		if((current_target->options & TO_FUNCTION_POINTER))
+		{
+			function_call(NULL, TRUE);
+		}
+		else
+		{
+			line_error();
+			fputs("Attempted to use operator ( on non-function pointer", stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
@@ -3002,7 +3011,14 @@ void global_value_output(int value, int size)
 
 		if(size == 8)
 		{
-			globals_list = emit("%0 ", globals_list);
+			if(value < 0)
+			{
+				globals_list = emit("%0xffffffff ", globals_list);
+			}
+			else
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
 		}
 	}
 

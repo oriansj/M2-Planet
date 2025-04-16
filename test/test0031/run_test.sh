@@ -75,7 +75,7 @@ hex2 \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ] || [ -n "${GET_MACHINE_OVERRIDE_ALWAYS_RUN+x}" ]
 then
 	# Verify that the resulting file works first default case
 	./test/results/test0031-${ARCH}-binary

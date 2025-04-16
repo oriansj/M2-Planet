@@ -75,7 +75,7 @@ hex2 \
 	-o test/results/test0104-${ARCH}-binary \
 	|| exit 4
 
-if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ]
+if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "${ARCH}" ] || [ -n "${GET_MACHINE_OVERRIDE_ALWAYS_RUN+x}" ]
 then
 	# Verify that the compiled program returns the correct result
 	out=$(./test/results/test0104-${ARCH}-binary --version 2>&1 )
