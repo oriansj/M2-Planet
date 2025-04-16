@@ -271,7 +271,7 @@ int constant_expression(void)
 }
 
 void expression(void);
-void function_call(struct token_list* s, int is_function_pointer, int is_local)
+void function_call(struct token_list* s, int is_function_pointer)
 {
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
@@ -285,6 +285,11 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 	emit_push(REGISTER_LOCALS, "Protect the old locals pointer");
 
 	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
+
+	if(is_function_pointer)
+	{
+		emit_move(REGISTER_TEMP2, REGISTER_ZERO, "Save function pointer address");
+	}
 
 	int passed = 0;
 	while(global_token->s[0] != ')')
@@ -307,22 +312,13 @@ void function_call(struct token_list* s, int is_function_pointer, int is_local)
 		emit_push(REGISTER_RETURN, "Protect the old link register");
 	}
 
-	if(TRUE == is_function_pointer)
-	{
-		int reg = REGISTER_BASE;
-		if(is_local)
-		{
-			reg = REGISTER_LOCALS;
-		}
-
-		emit_load_relative_to_register(REGISTER_ZERO, reg, s->depth, "function pointer call");
-		emit_dereference(REGISTER_ZERO, "function pointer call");
-	}
-
 	emit_move(REGISTER_BASE, REGISTER_TEMP, "Set new base pointer");
 
 	if(TRUE == is_function_pointer)
 	{
+		emit_move(REGISTER_ZERO, REGISTER_TEMP2, "Restore function pointer");
+		emit_dereference(REGISTER_ZERO, "Deref function pointer");
+
 		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
 			emit_out("CALL R0 R15\n");
@@ -553,7 +549,7 @@ void function_load(struct token_list* a)
 	require(NULL != global_token, "incomplete function load\n");
 	if(match("(", global_token->s))
 	{
-		function_call(a, FALSE, FALSE);
+		function_call(a, FALSE);
 		return;
 	}
 
@@ -660,29 +656,32 @@ struct token_list* load_address_of_variable_into_register(int reg, char* s)
 	variable = sym_lookup(s, function->locals);
 	if(NULL != variable)
 	{
+		current_target = variable->type;
+		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
+
 		require(NULL != global_token, "incomplete variable load received\n");
-		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		if((current_target->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
 		{
-			function_call(variable, TRUE, TRUE);
+			function_call(variable, TRUE);
 			return NULL;
 		}
 
-		current_target = variable->type;
-		emit_load_relative_to_register(reg, REGISTER_LOCALS, variable->depth, "local variable load");
 		return variable;
 	}
 
 	variable = sym_lookup(s, function->arguments);
 	if(NULL != variable)
 	{
-		require(NULL != global_token, "incomplete variable load received\n");
-		if((variable->type->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
-		{
-			function_call(variable, TRUE, FALSE);
-			return NULL;
-		}
 		current_target = variable->type;
 		emit_load_relative_to_register(reg, REGISTER_BASE, variable->depth, "function argument load");
+
+		require(NULL != global_token, "incomplete variable load received\n");
+		if((current_target->options & TO_FUNCTION_POINTER) && match("(", global_token->s))
+		{
+			function_call(variable, TRUE);
+			return NULL;
+		}
+
 		return variable;
 	}
 
