@@ -93,23 +93,6 @@ clean:
 	./test/cleanup_test.sh 0029
 	./test/cleanup_test.sh 0030
 	./test/cleanup_test.sh 0031
-	./test/cleanup_test.sh 0032
-	./test/cleanup_test.sh 0033
-	./test/cleanup_test.sh 0034
-	./test/cleanup_test.sh 0035
-	./test/cleanup_test.sh 0036
-	./test/cleanup_test.sh 0037
-	./test/cleanup_test.sh 0038
-	./test/cleanup_test.sh 0039
-	./test/cleanup_test.sh 0040
-	./test/cleanup_test.sh 0041
-	./test/cleanup_test.sh 0042
-	./test/cleanup_test.sh 0043
-	./test/cleanup_test.sh 0044
-	./test/cleanup_test.sh 0045
-	./test/cleanup_test.sh 0046
-	./test/cleanup_test.sh 0047
-	./test/cleanup_test.sh 0048
 	./test/cleanup_test.sh 0100
 	./test/cleanup_test.sh 0101
 	./test/cleanup_test.sh 0102
