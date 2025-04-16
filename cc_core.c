@@ -3011,7 +3011,14 @@ void global_value_output(int value, int size)
 
 		if(size == 8)
 		{
-			globals_list = emit("%0 ", globals_list);
+			if(value < 0)
+			{
+				globals_list = emit("%0xffffffff ", globals_list);
+			}
+			else
+			{
+				globals_list = emit("%0 ", globals_list);
+			}
 		}
 	}
 
