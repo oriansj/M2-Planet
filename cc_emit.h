@@ -28,6 +28,8 @@ void reset_emit_string(void);
 
 char* register_from_string(int reg);
 
+char* integer_to_raw_byte_string(int value);
+
 void emit_unconditional_jump(char* prefix, char* name, char* note);
 
 void emit_jump_if_zero(int reg, char* prefix, char* name, char* note);

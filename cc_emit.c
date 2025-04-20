@@ -56,6 +56,29 @@ void reset_emit_string(void)
 	emit_string_index = 0;
 }
 
+char* integer_to_raw_byte_string(int value)
+{
+	if(value > 127 || value < -128)
+	{
+		fputs("Value out of range provided to 'integer_to_raw_byte_string': ", stderr);
+		fputs(int2str(value, 10, TRUE), stderr);
+		fputs("\n.", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	char* hex_table = "0123456789ABCDEF";
+	char* string;
+
+	string = calloc(6, sizeof(char));
+	string[0] = '\'';
+	string[1] = hex_table[value >> 4];
+	string[2] = hex_table[value & 15];
+	string[3] = '\'';
+	string[4] = ' ';
+
+	return string;
+}
+
 char* register_from_string(int reg)
 {
 	if(Architecture & ARCH_FAMILY_KNIGHT)
