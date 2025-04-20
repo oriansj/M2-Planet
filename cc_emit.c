@@ -792,8 +792,19 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void write_sub_immediate(int reg, int value, char* note)
 {
-	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	write_sub(reg, REGISTER_EMIT_TEMP, note);
+	if((Architecture == AMD64) && (reg == REGISTER_STACK))
+	{
+		emit_to_string("sub_rsp, %");
+		emit_to_string(int2str(value, 10, TRUE));
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else
+	{
+		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+		write_sub(reg, REGISTER_EMIT_TEMP, note);
+	}
 }
 
 void emit_sub_immediate(int reg, int value, char* note)
