@@ -815,10 +815,24 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void write_sub_immediate(int reg, int value, char* note)
 {
-	if((Architecture == AMD64) && (reg == REGISTER_STACK))
+	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_STACK))
 	{
-		emit_to_string("sub_rsp, %");
-		emit_to_string(int2str(value, 10, TRUE));
+		emit_to_string("sub_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(",");
+
+		if(127 >= value && value >= -128)
+		{
+
+			emit_to_string("BYTE ");
+			emit_to_string(integer_to_raw_byte_string(value));
+		}
+		else
+		{
+			emit_to_string(" %");
+			emit_to_string(int2str(value, 10, TRUE));
+		}
+
 		emit_to_string(" # ");
 		emit_to_string(note);
 		emit_to_string("\n");
