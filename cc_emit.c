@@ -853,7 +853,7 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void write_sub_immediate(int reg, int value, char* note)
 {
-	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_STACK))
+	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_STACK || reg == REGISTER_ZERO))
 	{
 		emit_to_string("sub_");
 		emit_to_string(register_from_string(reg));
