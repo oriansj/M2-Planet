@@ -730,8 +730,25 @@ void emit_add(int destination_reg, int source_reg, char* note)
 
 void write_add_immediate(int reg, int value, char* note)
 {
-	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	write_add(reg, REGISTER_EMIT_TEMP, note);
+	if(Architecture & ARCH_FAMILY_RISCV && (2047 >= value && value >= -2048))
+	{
+		emit_to_string("rd_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" rs1_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" !");
+		emit_to_string(int2str(value, 10, TRUE));
+		emit_to_string(" addi");
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else
+	{
+		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+		write_add(reg, REGISTER_EMIT_TEMP, note);
+	}
 }
 
 void emit_add_immediate(int reg, int value, char* note)
