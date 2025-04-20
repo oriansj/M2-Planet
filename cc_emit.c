@@ -837,6 +837,23 @@ void write_sub_immediate(int reg, int value, char* note)
 		emit_to_string(note);
 		emit_to_string("\n");
 	}
+	/* NOTE: This is not the normal range since we negate the value in the addi. */
+	else if(Architecture & ARCH_FAMILY_RISCV && (2048 >= value && value >= -2047))
+	{
+		emit_to_string("rd_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" rs1_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" !");
+		/* We negate the value because we're using addi.
+		 * There is no subi in RISCV. */
+		emit_to_string(int2str(-value, 10, TRUE));
+		emit_to_string(" addi");
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
 	else
 	{
 		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
