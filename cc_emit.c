@@ -730,7 +730,28 @@ void emit_add(int destination_reg, int source_reg, char* note)
 
 void write_add_immediate(int reg, int value, char* note)
 {
-	if(Architecture & ARCH_FAMILY_RISCV && (2047 >= value && value >= -2048))
+	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_ZERO))
+	{
+		emit_to_string("add_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(",");
+
+		if(127 >= value && value >= -128)
+		{
+			emit_to_string("BYTE ");
+			emit_to_string(integer_to_raw_byte_string(value));
+		}
+		else
+		{
+			emit_to_string(" %");
+			emit_to_string(int2str(value, 10, TRUE));
+		}
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else if(Architecture & ARCH_FAMILY_RISCV && (2047 >= value && value >= -2048))
 	{
 		emit_to_string("rd_");
 		emit_to_string(register_from_string(reg));
