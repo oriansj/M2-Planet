@@ -2978,17 +2978,7 @@ void global_value_output(int value, int size)
 {
 	if(size == 1)
 	{
-		char* hex_table = "0123456789ABCDEF";
-		char* string;
-
-		string = calloc(6, sizeof(char));
-		string[0] = '\'';
-		string[1] = hex_table[value >> 4];
-		string[2] = hex_table[value & 15];
-		string[3] = '\'';
-		string[4] = ' ';
-
-		globals_list = emit(string, globals_list);
+		globals_list = emit(integer_to_raw_byte_string(value), globals_list);
 	}
 	else if(size == 2)
 	{

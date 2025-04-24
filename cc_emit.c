@@ -56,6 +56,29 @@ void reset_emit_string(void)
 	emit_string_index = 0;
 }
 
+char* integer_to_raw_byte_string(int value)
+{
+	if(value > 127 || value < -128)
+	{
+		fputs("Value out of range provided to 'integer_to_raw_byte_string': ", stderr);
+		fputs(int2str(value, 10, TRUE), stderr);
+		fputs("\n.", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	char* hex_table = "0123456789ABCDEF";
+	char* string;
+
+	string = calloc(6, sizeof(char));
+	string[0] = '\'';
+	string[1] = hex_table[value >> 4];
+	string[2] = hex_table[value & 15];
+	string[3] = '\'';
+	string[4] = ' ';
+
+	return string;
+}
+
 char* register_from_string(int reg)
 {
 	if(Architecture & ARCH_FAMILY_KNIGHT)
@@ -707,8 +730,46 @@ void emit_add(int destination_reg, int source_reg, char* note)
 
 void write_add_immediate(int reg, int value, char* note)
 {
-	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	write_add(reg, REGISTER_EMIT_TEMP, note);
+	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_ZERO))
+	{
+		emit_to_string("add_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(",");
+
+		if(127 >= value && value >= -128)
+		{
+			emit_to_string("BYTE ");
+			emit_to_string(integer_to_raw_byte_string(value));
+		}
+		else
+		{
+			emit_to_string(" %");
+			emit_to_string(int2str(value, 10, TRUE));
+		}
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else if(Architecture & ARCH_FAMILY_RISCV && (2047 >= value && value >= -2048))
+	{
+		emit_to_string("rd_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" rs1_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" !");
+		emit_to_string(int2str(value, 10, TRUE));
+		emit_to_string(" addi");
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else
+	{
+		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+		write_add(reg, REGISTER_EMIT_TEMP, note);
+	}
 }
 
 void emit_add_immediate(int reg, int value, char* note)
@@ -792,8 +853,50 @@ void emit_sub(int destination_reg, int source_reg, char* note)
 
 void write_sub_immediate(int reg, int value, char* note)
 {
-	write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-	write_sub(reg, REGISTER_EMIT_TEMP, note);
+	if((Architecture & ARCH_FAMILY_X86) && (reg == REGISTER_STACK || reg == REGISTER_ZERO))
+	{
+		emit_to_string("sub_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(",");
+
+		if(127 >= value && value >= -128)
+		{
+
+			emit_to_string("BYTE ");
+			emit_to_string(integer_to_raw_byte_string(value));
+		}
+		else
+		{
+			emit_to_string(" %");
+			emit_to_string(int2str(value, 10, TRUE));
+		}
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	/* NOTE: This is not the normal range since we negate the value in the addi. */
+	else if(Architecture & ARCH_FAMILY_RISCV && (2048 >= value && value >= -2047))
+	{
+		emit_to_string("rd_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" rs1_");
+		emit_to_string(register_from_string(reg));
+		emit_to_string(" !");
+		/* We negate the value because we're using addi.
+		 * There is no subi in RISCV. */
+		emit_to_string(int2str(-value, 10, TRUE));
+		emit_to_string(" addi");
+
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+	else
+	{
+		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
+		write_sub(reg, REGISTER_EMIT_TEMP, note);
+	}
 }
 
 void emit_sub_immediate(int reg, int value, char* note)
