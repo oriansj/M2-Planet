@@ -870,7 +870,16 @@ void primary_expr_variable(void)
 		emit_out(load_value(size, current_target->is_signed));
 	}
 
-	if(!is_assignment)
+	if(is_assignment)
+	{
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
+	}
+	else
 	{
 		int should_not_deref;
 		while (num_dereference > 0)
@@ -884,15 +893,6 @@ void primary_expr_variable(void)
 				current_target = current_target->type;
 				emit_out(load_value(current_target->size, current_target->is_signed));
 			}
-			num_dereference = num_dereference - 1;
-		}
-	}
-	else
-	{
-		while (num_dereference > 0)
-		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
-			current_target = current_target->type;
 			num_dereference = num_dereference - 1;
 		}
 	}
