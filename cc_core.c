@@ -2362,14 +2362,25 @@ void process_for(void)
 	require_extra_token();
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
-	if(!match(";",global_token->s))
+	/* fallible_type_name moves the global token if non-NULL */
+	struct token_list* current = global_token;
+	if (fallible_type_name() != NULL)
+	{
+		global_token = current;
+		collect_local();
+	}
+	else if(!match(";", global_token->s))
 	{
 		expression();
+		require_match("ERROR in process_for\nMISSING ;1\n", ";");
+	}
+	else
+	{
+		require_match("ERROR in process_for\nMISSING ;3\n", ";");
 	}
 
 	emit_label("FOR_", unique_id);
 
-	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
 
 	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
