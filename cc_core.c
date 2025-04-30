@@ -867,9 +867,12 @@ void primary_expr_variable(void)
 		{
 			size = current_target->size;
 		}
-
-		int should_not_deref;
 		emit_out(load_value(size, current_target->is_signed));
+	}
+
+	if(!is_assignment)
+	{
+		int should_not_deref;
 		while (num_dereference > 0)
 		{
 			/* Function pointers are special in C.
