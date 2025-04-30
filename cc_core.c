@@ -850,16 +850,16 @@ void primary_expr_variable(void)
 
 	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
 
-	if(is_prefix_operator || is_postfix_operator)
+	if(is_prefix_operator || is_postfix_operator || is_local_array)
 	{
 		return;
 	}
 
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
-	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array;
+	int should_emit = !is_assignment && !is_compound_operator;
 
 	if(should_emit)
 	{
