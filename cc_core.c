@@ -859,9 +859,8 @@ void primary_expr_variable(void)
 
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
-	int should_emit = !is_assignment && !is_compound_operator;
 
-	if(should_emit)
+	if(!is_assignment && !is_compound_operator)
 	{
 		int size = register_size;
 		if(options == TLO_LOCAL || options == TLO_ARGUMENT)
@@ -885,12 +884,14 @@ void primary_expr_variable(void)
 			num_dereference = num_dereference - 1;
 		}
 	}
-
-	while (num_dereference > 0)
+	else
 	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		current_target = current_target->type;
-		num_dereference = num_dereference - 1;
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
 	}
 }
 
