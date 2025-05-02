@@ -56,6 +56,8 @@ struct type* function_pointer;
 /* enable bootstrap-mode */
 int BOOTSTRAP_MODE;
 
+int FOLLOW_INCLUDES;
+
 /* enable preprocessor-only mode */
 int PREPROCESSOR_MODE;
 

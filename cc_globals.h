@@ -59,6 +59,8 @@ extern struct type* function_pointer;
 /* enable bootstrap-mode */
 extern int BOOTSTRAP_MODE;
 
+extern int FOLLOW_INCLUDES;
+
 /* enable preprocessor-only mode */
 extern int PREPROCESSOR_MODE;
 

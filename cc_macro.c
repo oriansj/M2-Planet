@@ -23,6 +23,10 @@ void require(int bool, char* error);
 int strtoint(char* a);
 void line_error_token(struct token_list* list);
 struct token_list* eat_token(struct token_list* head);
+int copy_string(char* target, char* source, int max);
+struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
+struct token_list* remove_line_comments(struct token_list* head);
+struct token_list* reverse_list(struct token_list* head);
 
 struct conditional_inclusion
 {
@@ -655,6 +659,76 @@ void handle_error(int warning_p)
 	}
 }
 
+void handle_include(void)
+{
+	eat_current_token();
+	char* buffer = calloc(MAX_STRING, sizeof(char));
+	FILE* f = NULL;
+
+	if(macro_token->s[0] == '<')
+	{
+		/* Ignore angle includes since we can't handle them yet */
+		eat_current_token();
+		return;
+	}
+
+	char* include_filename = macro_token->s + 1;
+
+	/* The only difference between " and < includes is that " looks in the directory of the current file. */
+	if(macro_token->s[0] == '"')
+	{
+		int offset = copy_string(buffer, macro_token->filename, MAX_STRING);
+		while(buffer[offset] != '/' && offset != 0)
+		{
+			offset = offset - 1;
+		}
+
+		/* We could have no / in filename in which case we just start from 0 */
+		if(buffer[offset] == '/')
+		{
+			offset = offset + 1;
+		}
+
+		offset = offset + copy_string(buffer + offset, include_filename, MAX_STRING - offset);
+		buffer[offset] = 0;
+
+		f = fopen(buffer, "r");
+	}
+	else
+	{
+		/* < includes are not tokenized as a single token, but as a list of tokens in between < and > */
+		include_filename = calloc(MAX_STRING, sizeof(char));
+		eat_current_token(); /* Skip over '<' */
+		int offset = 0;
+		while(macro_token->s[0] != '>')
+		{
+			offset = offset + copy_string(include_filename + offset, macro_token->s, MAX_STRING - offset);
+			eat_current_token();
+		}
+	}
+
+	/* Do -I lookups */
+
+	if(f == NULL)
+	{
+		line_error_token(macro_token);
+		fputs("Unable to find include file: ", stderr);
+		fputs(include_filename, stderr);
+		fputs("\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	eat_current_token();
+
+	struct token_list* current_macro_token = macro_token;
+
+	struct token_list* new_token_list = read_all_tokens(f, NULL, buffer);
+	new_token_list = reverse_list(new_token_list);
+	new_token_list = remove_line_comments(new_token_list);
+
+	/* insert_tokens returns the point before the insertion, so the new file will automatically be preprocessed */
+	macro_token = insert_tokens(current_macro_token, new_token_list);
+}
+
 void eat_block(void);
 void macro_directive(void)
 {
@@ -795,7 +869,14 @@ void macro_directive(void)
 	}
 	else
 	{
-		if(!match("#include", macro_token->s))
+		if(match("#include", macro_token->s))
+		{
+			if(FOLLOW_INCLUDES)
+			{
+				handle_include();
+			}
+		}
+		else
 		{
 			/* Put a big fat warning but see if we can just ignore */
 			fputs(">>WARNING<<\n>>WARNING<<\n", stderr);

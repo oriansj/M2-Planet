@@ -42,6 +42,7 @@ int main(int argc, char** argv)
 	MAX_STRING = 4096;
 	BOOTSTRAP_MODE = FALSE;
 	PREPROCESSOR_MODE = FALSE;
+	FOLLOW_INCLUDES = FALSE;
 	int DEBUG = FALSE;
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
@@ -186,12 +187,18 @@ int main(int argc, char** argv)
 			fputs(" --architecture,-A ARCHITECTURE Target architecture. Call without argument to list available\n", stdout);
 			fputs(" -D                             Add define\n", stdout);
 			fputs(" -E                             Preprocess only\n", stdout);
+			fputs(" --follow-includes              Enable resolving #includes\n", stdout);
 			fputs(" --debug,-g                     Debug mode\n", stdout);
 			fputs(" --bootstrap-mode               Emulate less powerful cc_* compilers\n", stdout);
 			fputs(" --max-string N                 Size of maximum string value (default 4096)\n", stdout);
 			fputs(" --help,-h                      Display this message\n", stdout);
 			fputs(" --version,-V                   Display compiler version\n", stdout);
 			exit(EXIT_SUCCESS);
+		}
+		else if(match(argv[i], "--follow-includes"))
+		{
+			FOLLOW_INCLUDES = TRUE;
+			i = i + 1;
 		}
 		else if(match(argv[i], "-E"))
 		{
