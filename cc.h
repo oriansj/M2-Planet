@@ -16,6 +16,9 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef CC_H
+#define CC_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -167,3 +170,6 @@ struct token_list* sym_declare(char *s, struct type* t, struct token_list* list,
 void line_error_token(struct token_list* token);
 
 #include "cc_globals.h"
+
+#endif /* CC_H */
+

@@ -15,6 +15,9 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LISP_H
+#define LISP_H
+
 #include "gcc_req.h"
 
 //CONSTANT FREE 1
@@ -84,3 +87,6 @@ FILE* file_output;
 FILE* console_output;
 int echo;
 int left_to_take;
+
+#endif /* LISP_H */
+
