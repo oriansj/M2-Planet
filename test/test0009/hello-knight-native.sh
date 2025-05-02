@@ -24,17 +24,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture knight-native \
-	-f M2libc/ctype.c \
-	-f M2libc/stdarg.h \
-	-f M2libc/sys/types.h \
-	-f M2libc/stddef.h \
-	-f M2libc/sys/utsname.h \
-	-f M2libc/knight/native/unistd.c \
-	-f M2libc/knight/native/fcntl.c \
-	-f M2libc/fcntl.c \
-	-f M2libc/stdlib.c \
-	-f M2libc/stdio.h \
-	-f M2libc/stdio.c \
+	--expand-includes \
 	-f test/test0009/goto.c \
 	-o ${TMPDIR}/goto.M1 \
 	|| exit 1

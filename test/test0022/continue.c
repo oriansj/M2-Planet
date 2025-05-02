@@ -17,6 +17,7 @@
 
 #include<stdio.h>
 #include <stdlib.h>
+#include <bootstrappable.h>
 
 char* int2str(int x, int base, int signed_p);
 

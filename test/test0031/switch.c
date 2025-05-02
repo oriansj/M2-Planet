@@ -15,6 +15,8 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <bootstrappable.h>
+
 int match(char* a, char* b);
 
 enum {
