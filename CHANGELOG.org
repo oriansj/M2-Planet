@@ -30,6 +30,7 @@ Added initial very hacky support for casting after dereferencing
 Added support for calling function pointers directly on global variables and struct members. Previously only locals worked.
 Added support for initializing global variables with negative values.
 Added support for declaring variables in for loops
+Added support for using includes with the `--expand-includes` CLI option. Note that including `stdio.h` changes the `M1` libc required from `libc-core.M1` to `libc-full.M1`.
 
 ** Changed
 Space for local variables in functions is now allocated up front

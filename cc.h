@@ -166,6 +166,12 @@ struct static_variable_list
 	struct token_list* global_variable;
 };
 
+struct include_path_list
+{
+	char* path;
+	struct include_path_list* next;
+};
+
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options);
 void line_error_token(struct token_list* token);
 

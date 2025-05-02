@@ -665,13 +665,6 @@ void handle_include(void)
 	char* buffer = calloc(MAX_STRING, sizeof(char));
 	FILE* f = NULL;
 
-	if(macro_token->s[0] == '<')
-	{
-		/* Ignore angle includes since we can't handle them yet */
-		eat_current_token();
-		return;
-	}
-
 	char* include_filename = macro_token->s + 1;
 
 	/* The only difference between " and < includes is that " looks in the directory of the current file. */
@@ -707,7 +700,27 @@ void handle_include(void)
 		}
 	}
 
-	/* Do -I lookups */
+	struct include_path_list* inc = include_paths;
+	int offset;
+	while(inc != NULL && f == NULL)
+	{
+		offset = copy_string(buffer, inc->path, MAX_STRING);
+		buffer[offset] = '/';
+		offset = offset + 1;
+		copy_string(buffer + offset, include_filename, MAX_STRING - offset);
+
+		f = fopen(buffer, "r");
+
+		inc = inc->next;
+	}
+
+	if(f == NULL)
+	{
+		/* If all else fails, try to look in M2libc in the CWD */
+		offset = copy_string(buffer, "./M2libc/", MAX_STRING);
+		copy_string(buffer + offset, include_filename, MAX_STRING - offset);
+		f = fopen(buffer, "r");
+	}
 
 	if(f == NULL)
 	{

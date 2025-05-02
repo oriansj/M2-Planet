@@ -76,6 +76,8 @@ int main(int argc, char** argv)
 	char* hold;
 	int env=0;
 	char* val;
+	struct include_path_list* path;
+	struct include_path_list* end;
 
 	int i = 1;
 	while(i <= argc)
@@ -187,7 +189,8 @@ int main(int argc, char** argv)
 			fputs(" --architecture,-A ARCHITECTURE Target architecture. Call without argument to list available\n", stdout);
 			fputs(" -D                             Add define\n", stdout);
 			fputs(" -E                             Preprocess only\n", stdout);
-			fputs(" --follow-includes              Enable resolving #includes\n", stdout);
+			fputs(" --expand-includes              Enable resolving #includes\n", stdout);
+			fputs(" -I DIR                         Add DIR to include search path\n", stdout);
 			fputs(" --debug,-g                     Debug mode\n", stdout);
 			fputs(" --bootstrap-mode               Emulate less powerful cc_* compilers\n", stdout);
 			fputs(" --max-string N                 Size of maximum string value (default 4096)\n", stdout);
@@ -195,7 +198,7 @@ int main(int argc, char** argv)
 			fputs(" --version,-V                   Display compiler version\n", stdout);
 			exit(EXIT_SUCCESS);
 		}
-		else if(match(argv[i], "--follow-includes"))
+		else if(match(argv[i], "--expand-includes"))
 		{
 			FOLLOW_INCLUDES = TRUE;
 			i = i + 1;
@@ -237,6 +240,36 @@ int main(int argc, char** argv)
 			fputs(m2_patch, stderr);
 			fputs("\n", stderr);
 			exit(EXIT_SUCCESS);
+		}
+		else if(match(argv[i], "-I"))
+		{
+			i = i + 1;
+
+			path = calloc(1, sizeof(struct include_path_list));
+			path->path = argv[i];
+
+			if(argv[i] == NULL)
+			{
+				fputs("-I requires an argument\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
+			/* We want the first path on the CLI to be the first path checked so it needs to be in the proper order. */
+			if(include_paths == NULL)
+			{
+				include_paths = path;
+			}
+			else
+			{
+				end = include_paths;
+				while(end->next != NULL)
+				{
+					end = end->next;
+				}
+				end->next = path;
+			}
+
+			i = i + 1;
 		}
 		else
 		{

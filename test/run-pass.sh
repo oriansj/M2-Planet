@@ -13,7 +13,7 @@ for file in ./test/run-pass/*.c; do
 
 	# Build the test
 	bin/M2-Planet \
-	--follow-includes \
+	--expand-includes \
 	--architecture "${ARCH}" \
 	--debug \
 	"${file}" \
