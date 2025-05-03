@@ -532,16 +532,6 @@ void handle_define(void)
 	struct macro_list* hold;
 	struct token_list* expansion_end = NULL;
 
-	/* don't use #define statements from non-included blocks */
-	int conditional_define = TRUE;
-	if(NULL != conditional_inclusion_top)
-	{
-		if(FALSE == conditional_inclusion_top->include)
-		{
-			conditional_define = FALSE;
-		}
-	}
-
 	eat_current_token();
 
 	require(NULL != macro_token, "got an EOF terminated #define\n");
@@ -552,8 +542,7 @@ void handle_define(void)
 	hold->symbol = macro_token->s;
 	hold->next = macro_env;
 	hold->arguments = NULL;
-	/* provided it isn't in a non-included block */
-	if(conditional_define) macro_env = hold;
+	macro_env = hold;
 
 	/* discard the macro name */
 	eat_current_token();
@@ -600,13 +589,6 @@ void handle_define(void)
 			hold->expansion = macro_token;
 		}
 
-		/* throw away if not used */
-		if(!conditional_define && (NULL != hold))
-		{
-			free(hold);
-			hold = NULL;
-		}
-
 		eat_current_token();
 	}
 }
@@ -620,33 +602,21 @@ void handle_undef(void)
 
 void handle_error(int warning_p)
 {
-	/* don't use #error statements from non-included blocks */
-	int conditional_error = TRUE;
-	if(NULL != conditional_inclusion_top)
-	{
-		if(FALSE == conditional_inclusion_top->include)
-		{
-			conditional_error = FALSE;
-		}
-	}
 	eat_current_token();
-	/* provided it isn't in a non-included block */
-	if(conditional_error)
+	line_error_token(macro_token);
+	if(warning_p) fputs(" warning: #warning ", stderr);
+	else fputs(" error: #error ", stderr);
+	while (TRUE)
 	{
-		line_error_token(macro_token);
-		if(warning_p) fputs(" warning: #warning ", stderr);
-		else fputs(" error: #error ", stderr);
-		while (TRUE)
-		{
-			require(NULL != macro_token, "\nFailed to properly terminate error message with \\n\n");
-			if ('\n' == macro_token->s[0]) break;
-			fputs(macro_token->s, stderr);
-			macro_token = macro_token->next;
-			fputs(" ", stderr);
-		}
-		fputs("\n", stderr);
-		if(!warning_p) exit(EXIT_FAILURE);
+		require(NULL != macro_token, "\nFailed to properly terminate error message with \\n\n");
+		if ('\n' == macro_token->s[0]) break;
+		fputs(macro_token->s, stderr);
+		macro_token = macro_token->next;
+		fputs(" ", stderr);
 	}
+	fputs("\n", stderr);
+	if(!warning_p) exit(EXIT_FAILURE);
+
 	while (TRUE)
 	{
 		require(NULL != macro_token, "\nFailed to properly terminate error message with \\n\n");
@@ -1142,20 +1112,7 @@ void preprocess(void)
 		else
 		{
 			start_of_line = FALSE;
-			if(NULL == conditional_inclusion_top)
-			{
-				macro_token = maybe_expand(macro_token);
-			}
-			else if(!conditional_inclusion_top->include)
-			{
-				/* rewrite the token stream to exclude the current token */
-				eat_block();
-				start_of_line = TRUE;
-			}
-			else
-			{
-				macro_token = maybe_expand(macro_token);
-			}
+			macro_token = maybe_expand(macro_token);
 		}
 	}
 }
