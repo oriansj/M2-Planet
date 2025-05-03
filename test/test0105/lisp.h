@@ -19,6 +19,7 @@
 #define LISP_H
 
 #include "gcc_req.h"
+#include <bootstrappable.h>
 
 //CONSTANT FREE 1
 #define FREE 1

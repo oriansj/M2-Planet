@@ -22,6 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <bootstrappable.h>
 
 #define max_string 4096
 //CONSTANT max_string 4096

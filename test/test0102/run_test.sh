@@ -27,19 +27,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture ${ARCH} \
-	-f M2libc/ctype.c \
-	-f M2libc/stdarg.h \
-	-f M2libc/sys/types.h \
-	-f M2libc/stddef.h \
-	-f M2libc/signal.h \
-	-f M2libc/sys/utsname.h \
-	-f M2libc/${ARCH}/linux/unistd.c \
-	-f M2libc/${ARCH}/linux/fcntl.c \
-	-f M2libc/fcntl.c \
-	-f M2libc/stdlib.c \
-	-f M2libc/stdio.h \
-	-f M2libc/stdio.c \
-	-f M2libc/bootstrappable.c \
+	--expand-includes \
 	-f test/test0102/M1-macro.c \
 	--debug \
 	-o ${TMPDIR}/M1-macro.M1 \
