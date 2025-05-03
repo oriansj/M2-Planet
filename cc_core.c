@@ -543,18 +543,6 @@ int is_compound_assignment(char* token)
 
 void postfix_expr_stub(void);
 
-void function_load(struct token_list* a)
-{
-	require(NULL != global_token, "incomplete function load\n");
-	if(match("(", global_token->s))
-	{
-		function_call(a, FALSE);
-		return;
-	}
-
-	emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", a->s, "function load");
-}
-
 /*
  * primary-expr:
  * FAILURE
@@ -673,8 +661,8 @@ struct token_list* load_address_of_variable_into_register(int reg, char* s)
 	variable = sym_lookup(s, global_function_list);
 	if(NULL != variable)
 	{
-		function_load(variable);
-		return NULL;
+		emit_load_named_immediate(REGISTER_ZERO, "FUNCTION_", variable->s, "function load");
+		return variable;
 	}
 
 	variable = sym_lookup(s, global_symbol_list);
@@ -838,7 +826,6 @@ void primary_expr_variable(void)
 	}
 
 	if(TRUE == Address_of) return;
-	if(type == NULL) return;
 
 	int options = type->options;
 
@@ -850,27 +837,39 @@ void primary_expr_variable(void)
 
 	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
+	int is_function = options & TLO_FUNCTION;
 
-	if(is_prefix_operator || is_postfix_operator)
+	if(is_prefix_operator || is_postfix_operator || is_local_array || is_function)
 	{
 		return;
 	}
 
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
-	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
-	int should_emit = !is_assignment && !is_compound_operator && !is_local_array;
 
-	if(should_emit)
+	if(!is_assignment && !is_compound_operator)
 	{
 		int size = register_size;
 		if(options == TLO_LOCAL || options == TLO_ARGUMENT)
 		{
 			size = current_target->size;
 		}
-
-		int should_not_deref;
 		emit_out(load_value(size, current_target->is_signed));
+	}
+
+	if(is_assignment)
+	{
+		while (num_dereference > 0)
+		{
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			current_target = current_target->type;
+			num_dereference = num_dereference - 1;
+		}
+	}
+	else
+	{
+		int should_not_deref;
 		while (num_dereference > 0)
 		{
 			/* Function pointers are special in C.
@@ -884,13 +883,6 @@ void primary_expr_variable(void)
 			}
 			num_dereference = num_dereference - 1;
 		}
-	}
-
-	while (num_dereference > 0)
-	{
-		emit_out(load_value(current_target->size, current_target->is_signed));
-		current_target = current_target->type;
-		num_dereference = num_dereference - 1;
 	}
 }
 
@@ -1665,7 +1657,20 @@ void primary_expr(void)
 	}
 	else if(global_token->s[0] == '\'') primary_expr_char();
 	else if(global_token->s[0] == '"') primary_expr_string();
-	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")) primary_expr_variable();
+	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
+	{
+		struct token_list* variable = sym_lookup(global_token->s, global_function_list);
+		if (variable != NULL && global_token->next->s[0] == '(')
+		{
+			/* Call function directly without loading into register optimization */
+			require_extra_token();
+			function_call(variable, FALSE);
+		}
+		else
+		{
+			primary_expr_variable();
+		}
+	}
 	else if(global_token->s[0] == '*') primary_expr_variable();
 	else if(in_set(global_token->s[0], "0123456789"))
 	{
@@ -2357,14 +2362,25 @@ void process_for(void)
 	require_extra_token();
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
-	if(!match(";",global_token->s))
+	/* fallible_type_name moves the global token if non-NULL */
+	struct token_list* current = global_token;
+	if (fallible_type_name() != NULL)
+	{
+		global_token = current;
+		collect_local();
+	}
+	else if(!match(";", global_token->s))
 	{
 		expression();
+		require_match("ERROR in process_for\nMISSING ;1\n", ";");
+	}
+	else
+	{
+		require_match("ERROR in process_for\nMISSING ;3\n", ";");
 	}
 
 	emit_label("FOR_", unique_id);
 
-	require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	expression();
 
 	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
