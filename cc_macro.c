@@ -736,7 +736,6 @@ void macro_directive(void)
 {
 	int result;
 
-	/* FIXME: whitespace is allowed between "#"" and "if" */
 	if(match("#if", macro_token->s))
 	{
 		eat_current_token();
