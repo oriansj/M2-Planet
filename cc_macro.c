@@ -952,10 +952,21 @@ void eat_block(void)
 		if(match("#else", macro_token->s)) break;
 		if(match("#endif", macro_token->s)) break;
 	} while(TRUE);
-	require(NULL != macro_token->prev, "impossible #if block\n");
 
-	/* rewind the newline */
-	if(match("\n", macro_token->prev->s)) macro_token = macro_token->prev;
+	if(macro_token->prev != NULL)
+	{
+		/* rewind the newline */
+		if(match("\n", macro_token->prev->s)) macro_token = macro_token->prev;
+	}
+	else
+	{
+		struct token_list* newline_token = calloc(1, sizeof(struct token_list));
+		newline_token->s = "\n";
+		newline_token->filename = macro_token->filename;
+		newline_token->linenumber = macro_token->linenumber;
+		newline_token->next = macro_token;
+		macro_token = newline_token;
+	}
 }
 
 struct token_list* deep_copy_token_list(struct token_list* from)
