@@ -52,6 +52,25 @@ struct macro_list
 struct macro_list* macro_env;
 struct conditional_inclusion* conditional_inclusion_top;
 
+void push_conditional_inclusion(int include)
+{
+	struct conditional_inclusion* t = calloc(1, sizeof(struct conditional_inclusion));
+
+	t->prev = conditional_inclusion_top;
+	conditional_inclusion_top = t;
+
+	t->include = include;
+	t->previous_condition_matched = include;
+}
+
+void pop_conditional_inclusion(void)
+{
+	struct conditional_inclusion* t = conditional_inclusion_top;
+	conditional_inclusion_top = conditional_inclusion_top->prev;
+	free(t);
+}
+
+
 /* point where we are currently modifying the global_token list */
 struct token_list* macro_token;
 
@@ -715,7 +734,6 @@ void handle_include(void)
 void eat_block(void);
 void macro_directive(void)
 {
-	struct conditional_inclusion *t;
 	int result;
 
 	/* FIXME: whitespace is allowed between "#"" and "if" */
@@ -724,19 +742,13 @@ void macro_directive(void)
 		eat_current_token();
 		/* evaluate constant integer expression */
 		result = macro_expression();
-		/* push conditional inclusion */
-		t = calloc(1, sizeof(struct conditional_inclusion));
-		t->prev = conditional_inclusion_top;
-		conditional_inclusion_top = t;
-		t->include = TRUE;
+
+		push_conditional_inclusion(result);
 
 		if(FALSE == result)
 		{
-			t->include = FALSE;
 			eat_block();
 		}
-
-		t->previous_condition_matched = t->include;
 	}
 	else if(match("#ifdef", macro_token->s))
 	{
@@ -753,18 +765,7 @@ void macro_directive(void)
 			eat_block();
 		}
 
-		/* push conditional inclusion */
-		t = calloc(1, sizeof(struct conditional_inclusion));
-		t->prev = conditional_inclusion_top;
-		conditional_inclusion_top = t;
-		t->include = TRUE;
-
-		if(FALSE == result)
-		{
-			t->include = FALSE;
-		}
-
-		t->previous_condition_matched = t->include;
+		push_conditional_inclusion(result);
 	}
 	else if(match("#ifndef", macro_token->s))
 	{
@@ -780,19 +781,12 @@ void macro_directive(void)
 			eat_current_token();
 		}
 
-		/* push conditional inclusion */
-		t = calloc(1, sizeof(struct conditional_inclusion));
-		t->prev = conditional_inclusion_top;
-		conditional_inclusion_top = t;
-		t->include = TRUE;
+		push_conditional_inclusion(result);
 
 		if(FALSE == result)
 		{
-			t->include = FALSE;
 			eat_block();
 		}
-
-		t->previous_condition_matched = t->include;
 	}
 	else if(match("#elif", macro_token->s))
 	{
@@ -829,10 +823,8 @@ void macro_directive(void)
 		}
 
 		eat_current_token();
-		/* pop conditional inclusion */
-		t = conditional_inclusion_top;
-		conditional_inclusion_top = conditional_inclusion_top->prev;
-		free(t);
+
+		pop_conditional_inclusion();
 	}
 	else if(match("#define", macro_token->s))
 	{
