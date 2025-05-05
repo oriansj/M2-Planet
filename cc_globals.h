@@ -20,6 +20,8 @@
 extern struct type* global_types;
 extern struct type* prim_types;
 
+extern struct include_path_list* include_paths;
+
 /* What we are currently working on */
 extern struct token_list* global_token;
 
@@ -58,6 +60,8 @@ extern struct type* function_pointer;
 
 /* enable bootstrap-mode */
 extern int BOOTSTRAP_MODE;
+
+extern int FOLLOW_INCLUDES;
 
 /* enable preprocessor-only mode */
 extern int PREPROCESSOR_MODE;

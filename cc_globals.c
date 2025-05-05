@@ -20,6 +20,8 @@
 struct type* global_types;
 struct type* prim_types;
 
+struct include_path_list* include_paths;
+
 /* What we are currently working on */
 struct token_list* global_token;
 
@@ -55,6 +57,8 @@ struct type* function_pointer;
 
 /* enable bootstrap-mode */
 int BOOTSTRAP_MODE;
+
+int FOLLOW_INCLUDES;
 
 /* enable preprocessor-only mode */
 int PREPROCESSOR_MODE;

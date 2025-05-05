@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <bootstrappable.h>
 
 #define FALSE 0
 //CONSTANT FALSE 0

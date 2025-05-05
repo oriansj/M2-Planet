@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 Gtker
+/* Copyright (C) 2025 Gtker
  * This file is part of M2-Planet.
  *
  * M2-Planet is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-int main(void) {
-	/* Put something in the register to make sure 0 is deliberately loaded in. */
-	if((1 + 1 + 2) != 4) {
-		return 1;
-	}
+#include <stdio.h>
+
+int main() {
+	return printf("Hello world!") - 12;
 }
+

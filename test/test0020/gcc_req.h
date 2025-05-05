@@ -15,4 +15,4 @@
  * along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-typedef int (FUNCTION)(int);
+typedef int (*FUNCTION)(int);

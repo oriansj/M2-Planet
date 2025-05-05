@@ -27,18 +27,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 bin/M2-Planet \
 	--architecture ${ARCH} \
-	-f M2libc/ctype.c \
-	-f M2libc/stdarg.h \
-	-f M2libc/sys/types.h \
-	-f M2libc/stddef.h \
-	-f M2libc/signal.h \
-	-f M2libc/sys/utsname.h \
-	-f M2libc/${ARCH}/linux/unistd.c \
-	-f M2libc/${ARCH}/linux/fcntl.c \
-	-f M2libc/fcntl.c \
-	-f M2libc/stdlib.c \
-	-f M2libc/stdio.h \
-	-f M2libc/stdio.c \
+	--expand-includes \
 	-f test/test0015/file_read.c \
 	-o ${TMPDIR}/file_read.M1 \
 	|| exit 1

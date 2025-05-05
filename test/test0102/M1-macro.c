@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
+#include <bootstrappable.h>
 
 //CONSTANT max_string 4096
 #define max_string 4096

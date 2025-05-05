@@ -281,6 +281,10 @@ reset:
 	else if('#' == c)
 	{
 		c = consume_byte(c);
+		while (c == ' ' || c == '\t')
+		{
+			c = grab_byte();
+		}
 		c = preserve_keyword(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
 
 		if(match(hold_string, "#define"))

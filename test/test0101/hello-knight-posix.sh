@@ -24,19 +24,7 @@ mkdir -p ${TMPDIR}
 # Build the test
 ./bin/M2-Planet \
 	--architecture knight-posix \
-	-f M2libc/ctype.c \
-	-f M2libc/stdarg.h \
-	-f M2libc/sys/types.h \
-	-f M2libc/stddef.h \
-	-f M2libc/sys/utsname.h \
-	-f M2libc/knight/linux/unistd.c \
-	-f M2libc/knight/linux/fcntl.c \
-	-f M2libc/knight/linux/sys/stat.c \
-	-f M2libc/fcntl.c \
-	-f M2libc/stdlib.c \
-	-f M2libc/stdio.h \
-	-f M2libc/stdio.c \
-	-f M2libc/bootstrappable.c\
+	--expand-includes \
 	-f test/test0101/hex2_linker.c \
 	-o ${TMPDIR}/hex2_linker.M1 \
 	|| exit 1

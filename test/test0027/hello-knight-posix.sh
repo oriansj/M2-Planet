@@ -18,58 +18,52 @@
 
 set -x
 
-TMPDIR="test/test0029/tmp-knight-posix"
+TMPDIR="test/test0027/tmp-knight-posix"
 mkdir -p ${TMPDIR}
 
 # Build the test
 bin/M2-Planet \
 	--architecture knight-posix \
-  -f M2libc/ctype.c \
-	-f M2libc/stdarg.h \
-	-f M2libc/sys/types.h \
-	-f M2libc/stddef.h \
-	-f M2libc/sys/utsname.h \
-	-f M2libc/knight/linux/unistd.c \
-	-f M2libc/knight/linux/fcntl.c \
-	-f M2libc/fcntl.c \
-	-f M2libc/stdlib.c \
-	-f M2libc/stdio.h \
-	-f M2libc/stdio.c \
-	-f test/test0029/member_access.c \
-	-o ${TMPDIR}/member_access.M1 \
+	--expand-includes \
+	-I "$PWD/dir1" \
+	-I "$PWD/dir2" \
+	-I "$PWD/dir3" \
+	-I "$PWD/M2libc" \
+	-f test/test0027/include_paths.c \
+	-o ${TMPDIR}/include_paths.M1 \
 	|| exit 1
 
 # Macro assemble with libc written in M1-Macro
 M1 \
 	-f M2libc/knight/knight_defs.M1 \
 	-f M2libc/knight/libc-full.M1 \
-	-f ${TMPDIR}/member_access.M1 \
+	-f ${TMPDIR}/include_paths.M1 \
 	--big-endian \
 	--architecture knight-posix \
-	-o ${TMPDIR}/member_access.hex2 \
+	-o ${TMPDIR}/include_paths.hex2 \
 	|| exit 2
 
 # Resolve all linkages
 hex2 \
 	-f M2libc/knight/ELF-knight.hex2 \
-	-f ${TMPDIR}/member_access.hex2 \
+	-f ${TMPDIR}/include_paths.hex2 \
 	--big-endian \
 	--architecture knight-posix \
 	--base-address 0x0 \
-	-o test/results/test0029-knight-posix-binary \
+	-o test/results/test0027-knight-posix-binary \
 	|| exit 3
 
 # Ensure binary works if host machine supports test
 if [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ] && [ ! -z "${KNIGHT_EMULATION}" ]
 then
 	# Verify that the resulting file works
-	vm --POSIX-MODE --rom ./test/results/test0029-knight-posix-binary --memory 2M
+	vm --POSIX-MODE --rom ./test/results/test0027-knight-posix-binary --memory 2M
 	[ 0 = $? ] || exit 3
 
 elif [ "$(get_machine ${GET_MACHINE_FLAGS})" = "knight" ]
 then
 	# Verify that the compiled program returns the correct result
-	./test/results/test0029-knight-posix-binary
+	./test/results/test0027-knight-posix-binary
 	[ 0 = $? ] || exit 3
 fi
 exit 0
