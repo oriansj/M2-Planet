@@ -23,46 +23,44 @@
 #include <stdio.h>
 #include <string.h>
 
-// CONSTANT FALSE 0
-#define FALSE 0
-// CONSTANT TRUE 1
-#define TRUE 1
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
-// CONSTANT KNIGHT_NATIVE 1
-#define KNIGHT_NATIVE 1
-// CONSTANT KNIGHT_POSIX 2
-#define KNIGHT_POSIX 2
-// CONSTANT X86 4
-#define X86 4
-// CONSTANT AMD64 8
-#define AMD64 8
-// CONSTANT ARMV7L 16
-#define ARMV7L 16
-// CONSTANT AARCH64 32
-#define AARCH64 32
-// CONSTANT RISCV32 64
-#define RISCV32 64
-// CONSTANT RISCV64 128
-#define RISCV64 128
+enum
+{
+	KNIGHT_NATIVE = 1,
+	KNIGHT_POSIX = 2,
+	X86 = 4,
+	AMD64 = 8,
+	ARMV7L = 16,
+	AARCH64 = 32,
+	RISCV32 = 64,
+	RISCV64 = 128,
+};
 
 /* These architecture families often behave similarly */
-// CONSTANT ARCH_FAMILY_KNIGHT 3
-#define ARCH_FAMILY_KNIGHT 3
-// CONSTANT ARCH_FAMILY_X86 12
-#define ARCH_FAMILY_X86 12
-// CONSTANT ARCH_FAMILY_RISCV 192
-#define ARCH_FAMILY_RISCV 192
+enum
+{
+	ARCH_FAMILY_KNIGHT = 3,
+	ARCH_FAMILY_X86 = 12,
+	ARCH_FAMILY_RISCV =  192,
+};
 
-/* Stack grows to higher memory addresses */
-// CONSTANT STACK_DIRECTION_PLUS 0
-#define STACK_DIRECTION_PLUS 0
+enum
+{
+	/* Stack grows to higher memory addresses */
+	STACK_DIRECTION_PLUS = 0,
+	/* Stack grows to lower memory addresses */
+	STACK_DIRECTION_MINUS = 1,
+};
 
-/* Stack grows to lower memory addresses */
-// CONSTANT STACK_DIRECTION_MINUS 1
-#define STACK_DIRECTION_MINUS 1
-
-// CONSTANT NO_STRUCT_DEFINITION 0
-#define NO_STRUCT_DEFINITION 0
+enum
+{
+	NO_STRUCT_DEFINITION = 0,
+};
 
 int copy_string(char* target, char* source, int max);
 char* concat_strings2(char* a, char* b);
@@ -78,32 +76,28 @@ char* int2str(int x, int base, int signed_p);
 void require_extra_token(void);
 void require_token(void);
 
-#define REGISTER_ZERO 0
-// CONSTANT REGISTER_ZERO 0
-#define REGISTER_ONE 1
-// CONSTANT REGISTER_ONE 1
-#define REGISTER_TEMP 2
-// CONSTANT REGISTER_TEMP 2
-#define REGISTER_BASE 3
-// CONSTANT REGISTER_BASE 3
-/* AARCH64 and RISCV32/RISCV64 have return pointers. */
-#define REGISTER_RETURN 4
-// CONSTANT REGISTER_RETURN 4
-#define REGISTER_STACK 5
-// CONSTANT REGISTER_STACK 5
-#define REGISTER_LOCALS 6
-// CONSTANT REGISTER_LOCALS 6
-#define REGISTER_EMIT_TEMP 7
-// CONSTANT REGISTER_EMIT_TEMP 7
-#define REGISTER_TEMP2 8
-// CONSTANT REGISTER_TEMP2 8
+enum
+{
+	REGISTER_ZERO = 0,
+	REGISTER_ONE = 1,
+	REGISTER_TEMP = 2,
+	REGISTER_BASE = 3,
+	/* AARCH64 and RISCV32/RISCV64 have return pointers. */
+	REGISTER_RETURN = 4,
+	REGISTER_STACK = 5,
+	REGISTER_LOCALS = 6,
+	REGISTER_EMIT_TEMP = 7,
+	REGISTER_TEMP2 = 8,
+};
 
 void emit_push(int, char*);
 void emit_pop(int, char*);
 
 /* TO = Type Option */
-// CONSTANT TO_FUNCTION_POINTER 1
-#define TO_FUNCTION_POINTER 1
+enum
+{
+	TO_FUNCTION_POINTER = 1,
+};
 
 struct type
 {
@@ -121,22 +115,17 @@ struct type
 };
 
 /* TLO = Token List Option */
-// CONSTANT TLO_NONE 0
-#define TLO_NONE 0
-// CONSTANT TLO_LOCAL_ARRAY 1
-#define TLO_LOCAL_ARRAY 1
-// CONSTANT TLO_STATIC 2
-#define TLO_STATIC 2
-// CONSTANT TLO_GLOBAL 4
-#define TLO_GLOBAL 4
-// CONSTANT TLO_ARGUMENT 8
-#define TLO_ARGUMENT 8
-// CONSTANT TLO_LOCAL 16
-#define TLO_LOCAL 16
-// CONSTANT TLO_FUNCTION 32
-#define TLO_FUNCTION 32
-// CONSTANT TLO_CONSTANT 64
-#define TLO_CONSTANT 64
+enum
+{
+	TLO_NONE = 0,
+	TLO_LOCAL_ARRAY = 1,
+	TLO_STATIC = 2,
+	TLO_GLOBAL = 4,
+	TLO_ARGUMENT = 8,
+	TLO_LOCAL = 16,
+	TLO_FUNCTION = 32,
+	TLO_CONSTANT = 64,
+};
 
 struct token_list
 {

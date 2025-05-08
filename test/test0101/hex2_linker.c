@@ -24,12 +24,16 @@
 #include <sys/stat.h>
 #include <bootstrappable.h>
 
-#define max_string 4096
-//CONSTANT max_string 4096
-#define TRUE 1
-//CONSTANT TRUE 1
-#define FALSE 0
-//CONSTANT FALSE 0
+enum
+{
+	max_string = 4096,
+};
+
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
 int match(char* a, char* b);
 char* int2str(int x, int base, int signed_p);

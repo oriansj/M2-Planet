@@ -17,26 +17,19 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-#define TRUE 1
-#define FALSE 0
-#define H 72
-#define e 101
-#define l 108
-#define o 111
-#define space 32
-#define newline 10
-#define m 109
-#define s 115
-// CONSTANT TRUE 1
-// CONSTANT FALSE 0
-// CONSTANT H 72
-// CONSTANT e 101
-// CONSTANT l 108
-// CONSTANT o 111
-// CONSTANT space 32
-// CONSTANT newline 10
-// CONSTANT m 109
-// CONSTANT s 115
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+	H = 72,
+	e = 101,
+	l = 108,
+	o = 111,
+	space = 32,
+	newline = 10,
+	m = 109,
+	s = 115,
+};
 
 int main()
 {

@@ -715,7 +715,6 @@ struct type* create_struct(int is_union)
 
 struct type* create_enum(void)
 {
-	maybe_bootstrap_error("enum statement");
 	struct type* head = calloc(1, sizeof(struct type));
 	require(NULL != head, "Exhausted memory while creating an enum\n");
 	struct type* i = calloc(1, sizeof(struct type));
@@ -746,6 +745,7 @@ struct type* create_enum(void)
 	}
 	else
 	{
+		maybe_bootstrap_error("non-anonymous enum statement");
 		head->name = global_token->s;
 		require_extra_token();
 
@@ -772,6 +772,10 @@ struct type* create_enum(void)
 			require_extra_token();
 
 			expr = constant_expression();
+		}
+		else
+		{
+			maybe_bootstrap_error("enum statement");
 		}
 
 		global_constant_list->arguments->s = int2str(expr, 10, TRUE);
@@ -822,7 +826,6 @@ struct type* fallible_type_name(void)
 	}
 	else if(match("enum", global_token->s))
 	{
-		maybe_bootstrap_error("enum statements");
 		require_extra_token();
 		ret = lookup_global_type();
 		if(NULL == ret)

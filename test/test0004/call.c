@@ -17,10 +17,11 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-#define TRUE 1
-#define FALSE 0
-// CONSTANT TRUE 1
-// CONSTANT FALSE 0
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
 int foo(int a)
 {
