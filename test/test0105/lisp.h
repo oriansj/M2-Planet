@@ -21,29 +21,24 @@
 #include "gcc_req.h"
 #include <bootstrappable.h>
 
-//CONSTANT FREE 1
-#define FREE 1
-//CONSTANT MARKED 2
-#define MARKED 2
-//CONSTANT INT 4
-#define INT 4
-//CONSTANT SYM 8
-#define SYM 8
-//CONSTANT CONS 16
-#define CONS 16
-//CONSTANT PROC 32
-#define PROC 32
-//CONSTANT PRIMOP 64
-#define PRIMOP 64
-//CONSTANT CHAR 128
-#define CHAR 128
-//CONSTANT STRING 256
-#define STRING 256
+enum
+{
+	FREE = 1,
+	MARKED = 2,
+	INT = 4,
+	SYM = 8,
+	CONS = 16,
+	PROC = 32,
+	PRIMOP = 64,
+	CHAR = 128,
+	STRING = 256,
+};
 
-// CONSTANT FALSE 0
-#define FALSE 0
-// CONSTANT TRUE 1
-#define TRUE 1
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
 struct cell
 {
@@ -59,8 +54,10 @@ struct cell
 	struct cell* env;
 };
 
-// CONSTANT MAX_STRING 4096
-#define MAX_STRING 4096
+enum
+{
+	MAX_STRING = 4096,
+};
 
 /* Common functions */
 struct cell* make_cons(struct cell* a, struct cell* b);

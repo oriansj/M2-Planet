@@ -23,18 +23,16 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+enum
+{
+	max_string = 4096,
+};
 
-#define max_string 4096
-//CONSTANT max_string 4096
-#define TRUE 1
-//CONSTANT TRUE 1
-#define FALSE 0
-//CONSTANT FALSE 0
-
-#define FALSE 0
-// CONSTANT FALSE 0
-#define TRUE 1
-// CONSTANT TRUE 1
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
 int match(char* a, char* b)
 {

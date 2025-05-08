@@ -21,14 +21,17 @@
 #include <sys/wait.h>
 #include <bootstrappable.h>
 
-#define FALSE 0
-//CONSTANT FALSE 0
-#define TRUE 1
-//CONSTANT TRUE 1
-#define max_string 4096
-//CONSTANT max_string 4096
-#define max_args 256
-//CONSTANT max_args 256
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
+
+enum
+{
+	max_string = 4096,
+	max_args = 256,
+};
 
 char* int2str(int x, int base, int signed_p);
 int match(char* a, char* b);

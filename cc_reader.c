@@ -26,10 +26,12 @@ struct token_list* token;
 int line;
 char* file;
 
-#define DEFINE_STATE_NONE 0
-//CONSTANT DEFINE_STATE_NONE 0
-#define DEFINE_STATE_DEFINE 1
-//CONSTANT DEFINE_STATE_DEFINE 1
+enum
+{
+	DEFINE_STATE_NONE = 0,
+	DEFINE_STATE_DEFINE = 1,
+};
+
 /* Defines require knowing about whitespace to differentiate a function-like macro
  * #define FUNCTION_LIKE_MACRO(x)
  * and a regular macro that starts with an open parens

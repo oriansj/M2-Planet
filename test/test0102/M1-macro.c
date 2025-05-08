@@ -22,37 +22,39 @@
 #include <string.h>
 #include <bootstrappable.h>
 
-//CONSTANT max_string 4096
-#define max_string 4096
-//CONSTANT PROCESSED 1
-#define PROCESSED 1
-//CONSTANT STR 2
-#define STR 2
-//CONSTANT NEWLINE 3
-#define NEWLINE 3
+enum
+{
+	max_string = 4096,
+};
 
-//CONSTANT TRUE 1
-#define TRUE 1
-//CONSTANT FALSE 0
-#define FALSE 0
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
-// CONSTANT KNIGHT 0
-#define KNIGHT 0
-// CONSTANT X86 1
-#define X86 1
-// CONSTANT AMD64 2
-#define AMD64 2
-// CONSTANT ARMV7L 40
-#define ARMV7L 40
-// CONSTANT AARM64 80
-#define AARM64 80
+enum
+{
+	PROCESSED = 1,
+	STR = 2,
+	NEWLINE = 3,
+};
 
-// CONSTANT HEX 16
-#define HEX 16
-// CONSTANT OCTAL 8
-#define OCTAL 8
-// CONSTANT BINARY 2
-#define BINARY 2
+enum
+{
+	KNIGHT = 0,
+	X86 = 1,
+	AMD64 =  2,
+	ARMV7L = 40,
+	AARCH64 = 80,
+};
+
+enum
+{
+	HEX = 16,
+	OCTAL = 8,
+	BINARY = 2,
+};
 
 
 /* Imported functions */
@@ -692,7 +694,7 @@ void eval_immediates(struct blob* p)
 		else if('<' == i->Text[0]) continue;
 		else if(NULL == i->Expression)
 		{
-			if((X86 == Architecture) || (AMD64 == Architecture) || (ARMV7L == Architecture) || (AARM64 == Architecture))
+			if((X86 == Architecture) || (AMD64 == Architecture) || (ARMV7L == Architecture) || (AARCH64 == Architecture))
 			{
 				if(in_set(i->Text[0], "%~@!"))
 				{
@@ -801,7 +803,7 @@ int main(int argc, char **argv)
 			else if(match("x86", arch)) Architecture = X86;
 			else if(match("amd64", arch)) Architecture = AMD64;
 			else if(match("armv7l", arch)) Architecture = ARMV7L;
-			else if(match("aarch64", arch)) Architecture = AARM64;
+			else if(match("aarch64", arch)) Architecture = AARCH64;
 			else
 			{
 				fputs("Unknown architecture: ", stderr);

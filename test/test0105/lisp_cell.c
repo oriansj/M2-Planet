@@ -17,14 +17,6 @@
 
 #include "lisp.h"
 
-/* Deal with the fact GCC converts the 1 to the size of the structs being iterated over */
-#if __GCC__
-#define CELL_SIZE 1
-#else
-//CONSTANT CELL_SIZE sizeof(struct cell)
-#define CELL_SIZE sizeof(struct cell)
-#endif
-
 struct cell *free_cells;
 struct cell *gc_block_start;
 struct cell *top_allocated;
@@ -61,7 +53,7 @@ struct cell* insert_ordered(struct cell* i, struct cell* list)
 void reclaim_marked()
 {
 	struct cell* i;
-	for(i= top_allocated; i >= gc_block_start ; i = i - CELL_SIZE)
+	for(i= top_allocated; i >= gc_block_start ; --i)
 	{
 		if(i->type & MARKED)
 		{
@@ -128,7 +120,7 @@ void compact(struct cell* list)
 void mark_all_cells()
 {
 	struct cell* i;
-	for(i= gc_block_start; i < top_allocated; i = i + CELL_SIZE)
+	for(i= gc_block_start; i < top_allocated; ++i)
 	{
 		/* if not in the free list */
 		if(!(i->type & FREE))

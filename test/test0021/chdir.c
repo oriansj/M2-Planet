@@ -20,15 +20,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define MAX_STRING 4096
-// CONSTANT MAX_STRING 4096
+enum
+{
+	MAX_STRING = 4096,
+};
 
 char* get_current_dir_name();
 
-#define FALSE 0
-// CONSTANT FALSE 0
-#define TRUE 1
-// CONSTANT TRUE 1
+enum
+{
+	FALSE = 0,
+	TRUE = 1,
+};
 
 int match(char* a, char* b)
 {
