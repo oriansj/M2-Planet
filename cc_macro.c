@@ -727,8 +727,21 @@ void handle_include(void)
 	new_token_list = reverse_list(new_token_list);
 	new_token_list = remove_line_comments(new_token_list);
 
-	/* insert_tokens returns the point before the insertion, so the new file will automatically be preprocessed */
-	macro_token = insert_tokens(current_macro_token, new_token_list);
+	struct token_list* last_token = new_token_list;
+	while(last_token->next != NULL)
+	{
+		last_token = last_token->next;
+	}
+
+	struct token_list* next_original_token = current_macro_token->next;
+
+	current_macro_token->next = new_token_list;
+	new_token_list->prev = current_macro_token;
+
+	last_token->next = next_original_token;
+	next_original_token->prev = last_token;
+
+	macro_token = current_macro_token;
 }
 
 void eat_block(void);
