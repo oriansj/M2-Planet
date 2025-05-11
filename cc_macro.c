@@ -596,6 +596,15 @@ void handle_define(void)
 	}
 
 	expansion_end->next = NULL;
+
+	/* Fix up the prev members of the expansion.
+	 * Otherwise, they are set to the prev of the very first token. */
+	expansion_end = hold->expansion;
+	while (expansion_end->next != NULL)
+	{
+		expansion_end->next->prev = expansion_end;
+		expansion_end = expansion_end->next;
+	}
 }
 
 void handle_undef(void)
