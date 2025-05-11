@@ -581,35 +581,21 @@ void handle_define(void)
 		handle_function_like_macro(hold);
 	}
 
-	while (TRUE)
+	if (macro_token->s[0] == '\n')
 	{
-		require(NULL != macro_token, "got an EOF terminated #define\n");
+		/* hold->expansion is NULL for macros without expansion */
+		return;
+	}
 
-		if ('\n' == macro_token->s[0])
-		{
-			if(NULL == expansion_end)
-			{
-				hold->expansion = NULL;
-				expansion_end = macro_token;
-				return;
-			}
-			expansion_end->next = NULL;
-			return;
-		}
+	hold->expansion = macro_token;
 
-		require(NULL != hold, "#define got something it can't handle\n");
-
+	while (macro_token->s[0] != '\n')
+	{
 		expansion_end = macro_token;
-
-		/* in the first iteration, we set the first token of the expansion, if
-		   it exists */
-		if (NULL == hold->expansion)
-		{
-			hold->expansion = macro_token;
-		}
-
 		eat_current_token();
 	}
+
+	expansion_end->next = NULL;
 }
 
 void handle_undef(void)
