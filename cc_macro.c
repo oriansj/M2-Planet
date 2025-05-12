@@ -581,6 +581,7 @@ void handle_define(void)
 		eat_current_token();
 	}
 
+	hold->expansion->prev = NULL;
 	expansion_end->next = NULL;
 
 	/* Fix up the prev members of the expansion.
