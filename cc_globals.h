@@ -41,6 +41,7 @@ extern int string_index;
 extern int Architecture;
 extern int register_size;
 extern int stack_direction;
+extern char* return_instruction;
 
 /* Allow us to have a single settable max string */
 extern int MAX_STRING;

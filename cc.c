@@ -323,6 +323,23 @@ int main(int argc, char** argv)
 		stack_direction = STACK_DIRECTION_MINUS;
 	}
 
+	if (Architecture & ARCH_FAMILY_KNIGHT)
+	{
+		return_instruction = "RET R15\n";
+	}
+	else if (Architecture & (ARCH_FAMILY_X86 | ARCH_FAMILY_RISCV))
+	{
+		return_instruction = "ret\n";
+	}
+	else if (Architecture == ARMV7L)
+	{
+		return_instruction = "'1' LR RETURN\n";
+	}
+	else if (Architecture == AARCH64)
+	{
+		return_instruction = "RETURN\n";
+	}
+
 	/* Deal with special case of wanting to read from standard input */
 	if(stdin == in)
 	{
