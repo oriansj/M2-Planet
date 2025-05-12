@@ -6,5 +6,15 @@
 #error Should never happen 3
 #endif
 
-int main() {}
+#if 1
+#define RESULT 0
+#elif 1
+#error Should never happen 4
+#else
+#error Should never happen 5
+#endif
+
+int main() {
+	return RESULT;
+}
 

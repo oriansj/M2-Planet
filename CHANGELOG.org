@@ -37,6 +37,9 @@ Added support for spaces between `#` and text in preprocessor commands.
 Space for local variables in functions is now allocated up front
 Variables in loop bodies are now located on the stack
 
+** Fixed
+`#elif` did not correctly consider the inclusion state of previous conditionals so `#elif` essentially acted as `#if`.
+
 * 1.12.1 - 2025-03-16
 ** Fixed
 Fixed handling of case statements with enums and defines.

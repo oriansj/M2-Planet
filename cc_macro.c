@@ -787,11 +787,14 @@ void macro_directive(void)
 		eat_current_token();
 		result = macro_expression();
 		require(NULL != conditional_inclusion_top, "#elif without leading #if\n");
-		conditional_inclusion_top->previous_condition_matched = conditional_inclusion_top->previous_condition_matched || (result && !conditional_inclusion_top->previous_condition_matched);
 
-		if(FALSE == result)
+		if(FALSE == result || conditional_inclusion_top->previous_condition_matched)
 		{
 			eat_block();
+		}
+		else
+		{
+			conditional_inclusion_top->previous_condition_matched = TRUE;
 		}
 	}
 	else if(match("#else", macro_token->s))
