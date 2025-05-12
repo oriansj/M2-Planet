@@ -31,7 +31,6 @@ struct token_list* reverse_list(struct token_list* head);
 struct conditional_inclusion
 {
 	struct conditional_inclusion* prev;
-	int include; /* 1 == include, 0 == skip */
 	int previous_condition_matched; /* 1 == all subsequent conditions treated as FALSE */
 };
 
@@ -59,7 +58,6 @@ void push_conditional_inclusion(int include)
 	t->prev = conditional_inclusion_top;
 	conditional_inclusion_top = t;
 
-	t->include = include;
 	t->previous_condition_matched = include;
 }
 
@@ -789,9 +787,8 @@ void macro_directive(void)
 		eat_current_token();
 		result = macro_expression();
 		require(NULL != conditional_inclusion_top, "#elif without leading #if\n");
-		conditional_inclusion_top->include = result && !conditional_inclusion_top->previous_condition_matched;
-		conditional_inclusion_top->previous_condition_matched =
-		    conditional_inclusion_top->previous_condition_matched || conditional_inclusion_top->include;
+		conditional_inclusion_top->previous_condition_matched = conditional_inclusion_top->previous_condition_matched || (result && !conditional_inclusion_top->previous_condition_matched);
+
 		if(FALSE == result)
 		{
 			eat_block();
@@ -802,8 +799,8 @@ void macro_directive(void)
 		require(NULL != macro_token->next, "#else without leading #if\n");
 		eat_current_token();
 		require(NULL != conditional_inclusion_top, "#else without leading #if\n");
-		conditional_inclusion_top->include = !conditional_inclusion_top->previous_condition_matched;
-		if(FALSE == conditional_inclusion_top->include)
+
+		if(conditional_inclusion_top->previous_condition_matched)
 		{
 			eat_block();
 		}
