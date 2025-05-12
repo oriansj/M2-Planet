@@ -1001,6 +1001,7 @@ struct token_list* maybe_expand(struct token_list* token)
 		struct macro_argument* argument = hold->arguments;
 		struct token_list* expand_list;
 		struct token_list* start_token_copy = NULL;
+		struct token_list* end_token;
 		while (parens != 0)
 		{
 			if(argument == NULL)
@@ -1022,12 +1023,6 @@ struct token_list* maybe_expand(struct token_list* token)
 			if ((token->s[0] == ',' && parens == 1) || (token->s[0] == ')' && parens == 0))
 			{
 				token->prev->next = NULL;
-				if(start_token->next != NULL && argument->name != NULL)
-				{
-					line_error_token(start_token);
-					fputs("Function-like macro with arguments of more than one token are not supported.\n", stderr);
-					exit(EXIT_FAILURE);
-				}
 
 				expand_list = expansion;
 
@@ -1036,6 +1031,12 @@ struct token_list* maybe_expand(struct token_list* token)
 					if(match(expand_list->s, argument->name))
 					{
 						start_token_copy = deep_copy_token_list(start_token);
+						end_token = start_token_copy;
+
+						while (end_token->next != NULL)
+						{
+							end_token = end_token->next;
+						}
 
 						if (expand_list->prev != NULL)
 						{
@@ -1043,17 +1044,17 @@ struct token_list* maybe_expand(struct token_list* token)
 						}
 						start_token_copy->prev = expand_list->prev;
 
-						start_token_copy->next = expand_list->next;
-						expand_list = start_token_copy;
-						if (expand_list->prev != NULL)
+						end_token->next = expand_list->next;
+						if (expand_list->next != NULL)
 						{
-							expand_list = expand_list->prev;
+							expand_list->next->prev = end_token;
 						}
-						else
+						if (expand_list->prev == NULL)
 						{
 							/* If we don't have a prev expansion needs to be updated to the new root. */
-							expansion = expand_list;
+							expansion = start_token_copy;
 						}
+						expand_list = end_token;
 					}
 					expand_list = expand_list->next;
 				}
