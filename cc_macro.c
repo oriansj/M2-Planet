@@ -196,19 +196,7 @@ struct macro_list* lookup_macro(struct token_list* token)
 	{
 		struct macro_list* hold = create_replacement_token("__FILE__", token);
 
-		int length = string_length(token->filename);
-
-		hold->expansion->s = calloc(length + 3, sizeof(char));
-		hold->expansion->s[0] = '"';
-		hold->expansion->s[length] = '"';
-		hold->expansion->s[length + 1] = 0; /* We don't have '\0' */
-
-		/* memcpy */
-		int i;
-		for(i = 0; i < length; i = i + 1)
-		{
-			hold->expansion->s[i + 1] = token->filename[i];
-		}
+		hold->expansion->s = concat_strings2("\"", token->filename);
 
 		return hold;
 	}
