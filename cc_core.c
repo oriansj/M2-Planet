@@ -69,17 +69,6 @@ int type_is_struct_or_union(struct type* type_size)
 	return type_size->members != NULL;
 }
 
-struct token_list* uniqueID(char* s, struct token_list* l, char* num)
-{
-	l = emit("\n", emit(num, emit("_", emit(s, l))));
-	return l;
-}
-
-void uniqueID_out(char* s, char* num)
-{
-	output_list = uniqueID(s, output_list, num);
-}
-
 char* create_unique_id(char* prefix, char* s, char* num)
 {
 	return concat_strings4(prefix, s, "_", num);
