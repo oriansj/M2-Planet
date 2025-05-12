@@ -937,6 +937,11 @@ struct token_list* deep_copy_token_list(struct token_list* from)
 	struct token_list* to = calloc(1, sizeof(struct token_list));
 
 	to->next = deep_copy_token_list(from->next);
+	if (to->next != NULL)
+	{
+		/* Ensure the new prev points at this object */
+		to->next->prev = to;
+	}
 	to->locals = from->locals;
 	to->prev = from->prev;
 	to->s = from->s;
@@ -995,6 +1000,7 @@ struct token_list* maybe_expand(struct token_list* token)
 		int parens = 1;
 		struct macro_argument* argument = hold->arguments;
 		struct token_list* expand_list;
+		struct token_list* start_token_copy = NULL;
 		while (parens != 0)
 		{
 			if(argument == NULL)
@@ -1029,7 +1035,25 @@ struct token_list* maybe_expand(struct token_list* token)
 				{
 					if(match(expand_list->s, argument->name))
 					{
-						expand_list->s = start_token->s;
+						start_token_copy = deep_copy_token_list(start_token);
+
+						if (expand_list->prev != NULL)
+						{
+							expand_list->prev->next = start_token_copy;
+						}
+						start_token_copy->prev = expand_list->prev;
+
+						start_token_copy->next = expand_list->next;
+						expand_list = start_token_copy;
+						if (expand_list->prev != NULL)
+						{
+							expand_list = expand_list->prev;
+						}
+						else
+						{
+							/* If we don't have a prev expansion needs to be updated to the new root. */
+							expansion = expand_list;
+						}
 					}
 					expand_list = expand_list->next;
 				}
