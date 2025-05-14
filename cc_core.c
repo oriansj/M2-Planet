@@ -69,17 +69,6 @@ int type_is_struct_or_union(struct type* type_size)
 	return type_size->members != NULL;
 }
 
-struct token_list* uniqueID(char* s, struct token_list* l, char* num)
-{
-	l = emit("\n", emit(num, emit("_", emit(s, l))));
-	return l;
-}
-
-void uniqueID_out(char* s, char* num)
-{
-	output_list = uniqueID(s, output_list, num);
-}
-
 char* create_unique_id(char* prefix, char* s, char* num)
 {
 	return concat_strings4(prefix, s, "_", num);
@@ -2529,13 +2518,7 @@ void return_result(void)
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
 	emit_out(function_locals_cleanup_string);
-
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("RET R15\n");
-	else if(X86 == Architecture) emit_out("ret\n");
-	else if(AMD64 == Architecture) emit_out("ret\n");
-	else if(ARMV7L == Architecture) emit_out("'1' LR RETURN\n");
-	else if(AARCH64 == Architecture) emit_out("RETURN\n");
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) emit_out("ret\n");
+	emit_return();
 }
 
 void process_break(void)
@@ -2879,32 +2862,11 @@ void declare_function(void)
 		 * [..] reaching the } that terminates the main function returns a value of 0.
 		 * */
 		int is_main = match(function->s, "main");
-
-		/* Prevent duplicate RETURNS */
-		if(((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) && !match("RET R15\n", output_list->s))
+		if (!match(return_instruction, output_list->s))
 		{
 			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
 			emit_out(function_locals_cleanup_string);
-			emit_out("RET R15\n");
-		}
-		else if((X86 == Architecture || AMD64 == Architecture || RISCV32 == Architecture || RISCV64 == Architecture)
-				&& !match("ret\n", output_list->s))
-		{
-			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
-			emit_out(function_locals_cleanup_string);
-			emit_out("ret\n");
-		}
-		else if((ARMV7L == Architecture) && !match("'1' LR RETURN\n", output_list->s))
-		{
-			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
-			emit_out(function_locals_cleanup_string);
-			emit_out("'1' LR RETURN\n");
-		}
-		else if((AARCH64 == Architecture) && !match("RETURN\n", output_list->s))
-		{
-			if(is_main) emit_load_immediate(REGISTER_ZERO, 0, "declare function");
-			emit_out(function_locals_cleanup_string);
-			emit_out("RETURN\n");
+			emit_return();
 		}
 
 		emit_out("\n");

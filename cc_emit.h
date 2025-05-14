@@ -78,3 +78,4 @@ void emit_push(int reg, char* note);
 
 void emit_pop(int reg, char* note);
 
+void emit_return(void);

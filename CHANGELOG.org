@@ -32,10 +32,14 @@ Added support for initializing global variables with negative values.
 Added support for declaring variables in for loops
 Added support for using includes with the `--expand-includes` CLI option. Note that including `stdio.h` changes the `M1` libc required from `libc-core.M1` to `libc-full.M1`.
 Added support for spaces between `#` and text in preprocessor commands.
+Added support for multiple tokens as arguments to function-like macros.
 
 ** Changed
 Space for local variables in functions is now allocated up front
 Variables in loop bodies are now located on the stack
+
+** Fixed
+`#elif` did not correctly consider the inclusion state of previous conditionals so `#elif` essentially acted as `#if`.
 
 * 1.12.1 - 2025-03-16
 ** Fixed

@@ -41,6 +41,7 @@ int string_index;
 int Architecture;
 int register_size;
 int stack_direction;
+char* return_instruction;
 
 int MAX_STRING;
 struct type* integer;

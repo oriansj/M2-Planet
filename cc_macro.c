@@ -31,7 +31,6 @@ struct token_list* reverse_list(struct token_list* head);
 struct conditional_inclusion
 {
 	struct conditional_inclusion* prev;
-	int include; /* 1 == include, 0 == skip */
 	int previous_condition_matched; /* 1 == all subsequent conditions treated as FALSE */
 };
 
@@ -59,7 +58,6 @@ void push_conditional_inclusion(int include)
 	t->prev = conditional_inclusion_top;
 	conditional_inclusion_top = t;
 
-	t->include = include;
 	t->previous_condition_matched = include;
 }
 
@@ -196,19 +194,7 @@ struct macro_list* lookup_macro(struct token_list* token)
 	{
 		struct macro_list* hold = create_replacement_token("__FILE__", token);
 
-		int length = string_length(token->filename);
-
-		hold->expansion->s = calloc(length + 3, sizeof(char));
-		hold->expansion->s[0] = '"';
-		hold->expansion->s[length] = '"';
-		hold->expansion->s[length + 1] = 0; /* We don't have '\0' */
-
-		/* memcpy */
-		int i;
-		for(i = 0; i < length; i = i + 1)
-		{
-			hold->expansion->s[i + 1] = token->filename[i];
-		}
+		hold->expansion->s = concat_strings2("\"", token->filename);
 
 		return hold;
 	}
@@ -581,34 +567,30 @@ void handle_define(void)
 		handle_function_like_macro(hold);
 	}
 
-	while (TRUE)
+	if (macro_token->s[0] == '\n')
 	{
-		require(NULL != macro_token, "got an EOF terminated #define\n");
+		/* hold->expansion is NULL for macros without expansion */
+		return;
+	}
 
-		if ('\n' == macro_token->s[0])
-		{
-			if(NULL == expansion_end)
-			{
-				hold->expansion = NULL;
-				expansion_end = macro_token;
-				return;
-			}
-			expansion_end->next = NULL;
-			return;
-		}
+	hold->expansion = macro_token;
 
-		require(NULL != hold, "#define got something it can't handle\n");
-
+	while (macro_token->s[0] != '\n')
+	{
 		expansion_end = macro_token;
-
-		/* in the first iteration, we set the first token of the expansion, if
-		   it exists */
-		if (NULL == hold->expansion)
-		{
-			hold->expansion = macro_token;
-		}
-
 		eat_current_token();
+	}
+
+	hold->expansion->prev = NULL;
+	expansion_end->next = NULL;
+
+	/* Fix up the prev members of the expansion.
+	 * Otherwise, they are set to the prev of the very first token. */
+	expansion_end = hold->expansion;
+	while (expansion_end->next != NULL)
+	{
+		expansion_end->next->prev = expansion_end;
+		expansion_end = expansion_end->next;
 	}
 }
 
@@ -806,12 +788,14 @@ void macro_directive(void)
 		eat_current_token();
 		result = macro_expression();
 		require(NULL != conditional_inclusion_top, "#elif without leading #if\n");
-		conditional_inclusion_top->include = result && !conditional_inclusion_top->previous_condition_matched;
-		conditional_inclusion_top->previous_condition_matched =
-		    conditional_inclusion_top->previous_condition_matched || conditional_inclusion_top->include;
-		if(FALSE == result)
+
+		if(FALSE == result || conditional_inclusion_top->previous_condition_matched)
 		{
 			eat_block();
+		}
+		else
+		{
+			conditional_inclusion_top->previous_condition_matched = TRUE;
 		}
 	}
 	else if(match("#else", macro_token->s))
@@ -819,8 +803,8 @@ void macro_directive(void)
 		require(NULL != macro_token->next, "#else without leading #if\n");
 		eat_current_token();
 		require(NULL != conditional_inclusion_top, "#else without leading #if\n");
-		conditional_inclusion_top->include = !conditional_inclusion_top->previous_condition_matched;
-		if(FALSE == conditional_inclusion_top->include)
+
+		if(conditional_inclusion_top->previous_condition_matched)
 		{
 			eat_block();
 		}
@@ -953,6 +937,11 @@ struct token_list* deep_copy_token_list(struct token_list* from)
 	struct token_list* to = calloc(1, sizeof(struct token_list));
 
 	to->next = deep_copy_token_list(from->next);
+	if (to->next != NULL)
+	{
+		/* Ensure the new prev points at this object */
+		to->next->prev = to;
+	}
 	to->locals = from->locals;
 	to->prev = from->prev;
 	to->s = from->s;
@@ -1011,6 +1000,8 @@ struct token_list* maybe_expand(struct token_list* token)
 		int parens = 1;
 		struct macro_argument* argument = hold->arguments;
 		struct token_list* expand_list;
+		struct token_list* start_token_copy = NULL;
+		struct token_list* end_token;
 		while (parens != 0)
 		{
 			if(argument == NULL)
@@ -1032,12 +1023,6 @@ struct token_list* maybe_expand(struct token_list* token)
 			if ((token->s[0] == ',' && parens == 1) || (token->s[0] == ')' && parens == 0))
 			{
 				token->prev->next = NULL;
-				if(start_token->next != NULL && argument->name != NULL)
-				{
-					line_error_token(start_token);
-					fputs("Function-like macro with arguments of more than one token are not supported.\n", stderr);
-					exit(EXIT_FAILURE);
-				}
 
 				expand_list = expansion;
 
@@ -1045,7 +1030,31 @@ struct token_list* maybe_expand(struct token_list* token)
 				{
 					if(match(expand_list->s, argument->name))
 					{
-						expand_list->s = start_token->s;
+						start_token_copy = deep_copy_token_list(start_token);
+						end_token = start_token_copy;
+
+						while (end_token->next != NULL)
+						{
+							end_token = end_token->next;
+						}
+
+						if (expand_list->prev != NULL)
+						{
+							expand_list->prev->next = start_token_copy;
+						}
+						start_token_copy->prev = expand_list->prev;
+
+						end_token->next = expand_list->next;
+						if (expand_list->next != NULL)
+						{
+							expand_list->next->prev = end_token;
+						}
+						if (expand_list->prev == NULL)
+						{
+							/* If we don't have a prev expansion needs to be updated to the new root. */
+							expansion = start_token_copy;
+						}
+						expand_list = end_token;
 					}
 					expand_list = expand_list->next;
 				}

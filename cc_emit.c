@@ -1269,4 +1269,8 @@ void emit_pop(int reg, char* note)
 	}
 }
 
+void emit_return()
+{
+	emit_out(return_instruction);
+}
 
