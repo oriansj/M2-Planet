@@ -25,7 +25,6 @@ void line_error_token(struct token_list* list);
 struct token_list* eat_token(struct token_list* head);
 int copy_string(char* target, char* source, int max);
 struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* filename);
-struct token_list* remove_line_comments(struct token_list* head);
 struct token_list* reverse_list(struct token_list* head);
 
 struct conditional_inclusion
@@ -707,7 +706,6 @@ void handle_include(void)
 
 	struct token_list* new_token_list = read_all_tokens(f, NULL, buffer);
 	new_token_list = reverse_list(new_token_list);
-	new_token_list = remove_line_comments(new_token_list);
 
 	struct token_list* last_token = new_token_list;
 	while(last_token->next != NULL)

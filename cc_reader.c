@@ -179,52 +179,6 @@ struct token_list* eat_until_newline(struct token_list* head)
 	return NULL;
 }
 
-struct token_list* remove_line_comments(struct token_list* head)
-{
-	struct token_list* first = NULL;
-
-	while (NULL != head)
-	{
-		if(match("//", head->s))
-		{
-			head = eat_until_newline(head);
-		}
-		else
-		{
-			if(NULL == first)
-			{
-				first = head;
-			}
-			head = head->next;
-		}
-	}
-
-	return first;
-}
-
-struct token_list* remove_line_comment_tokens(struct token_list* head)
-{
-	struct token_list* first = NULL;
-
-	while (NULL != head)
-	{
-		if(match("//", head->s))
-		{
-			head = eat_token(head);
-		}
-		else
-		{
-			if(NULL == first)
-			{
-				first = head;
-			}
-			head = head->next;
-		}
-	}
-
-	return first;
-}
-
 struct token_list* remove_preprocessor_directives(struct token_list* head)
 {
 	struct token_list* first = NULL;
@@ -340,7 +294,13 @@ reset:
 		}
 		else if(c == '/')
 		{
-			c = consume_byte(c);
+			c = grab_byte();
+			while (c != '\n')
+			{
+				c = grab_byte();
+			}
+			c = grab_byte();
+			goto reset;
 		}
 		else if(c == '=')
 		{

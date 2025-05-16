@@ -2873,29 +2873,6 @@ void declare_function(void)
 	}
 }
 
-void global_constant(void)
-{
-	require_extra_token();
-	global_constant_list = sym_declare(global_token->s, NULL, global_constant_list, TLO_CONSTANT);
-
-	require(NULL != global_token->next, "CONSTANT lacks a value\n");
-	if(match("sizeof", global_token->next->s))
-	{
-		global_token = global_token->next->next;
-		require_match("ERROR in CONSTANT with sizeof\nMissing (\n", "(");
-		struct type* a = type_name();
-		require_match("ERROR in CONSTANT with sizeof\nMissing )\n", ")");
-		global_token->prev->s = int2str(a->size, 10, TRUE);
-		global_constant_list->arguments = global_token->prev;
-	}
-	else
-	{
-		global_constant_list->arguments = global_token->next;
-		require_extra_token();
-		require_extra_token();
-	}
-}
-
 struct type* typedef_function_pointer(void)
 {
 	char* name = parse_function_pointer();
@@ -3335,13 +3312,6 @@ new_type:
 	if (NULL == global_token) return;
 	require('#' != global_token->s[0], "unhandled macro directive\n");
 	require(!match("\n", global_token->s), "unexpected newline token\n");
-
-	/* Handle cc_* CONSTANT statements */
-	if(match("CONSTANT", global_token->s))
-	{
-		global_constant();
-		goto new_type;
-	}
 
 	/* Handle c typedef statements */
 	if(match("typedef", global_token->s))
