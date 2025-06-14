@@ -1400,12 +1400,12 @@ void relational_expr_stub(void)
 	}
 	else if(X86 == Architecture)
 	{
-		arithmetic_recursion(additive_expr_c, "cmp\nsetl_al\nmovzx_eax,al\n", "cmp\nsetb_al\nmovzx_eax,al\n", "<", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp\nsetle_al\nmovzx_eax,al\n", "cmp\nsetbe_al\nmovzx_eax,al\n", "<=", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp\nsetge_al\nmovzx_eax,al\n", "cmp\nsetae_al\nmovzx_eax,al\n", ">=", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp\nsetg_al\nmovzx_eax,al\n", "cmp\nseta_al\nmovzx_eax,al\n", ">", relational_expr_stub);
-		general_recursion(additive_expr_c, "cmp\nsete_al\nmovzx_eax,al\n", "==", relational_expr_stub);
-		general_recursion(additive_expr_c, "cmp\nsetne_al\nmovzx_eax,al\n", "!=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_ebx,eax\nsetl_al\nmovzx_eax,al\n", "cmp_ebx,eax\nsetb_al\nmovzx_eax,al\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_ebx,eax\nsetle_al\nmovzx_eax,al\n", "cmp_ebx,eax\nsetbe_al\nmovzx_eax,al\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_ebx,eax\nsetge_al\nmovzx_eax,al\n", "cmp_ebx,eax\nsetae_al\nmovzx_eax,al\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_ebx,eax\nsetg_al\nmovzx_eax,al\n", "cmp_ebx,eax\nseta_al\nmovzx_eax,al\n", ">", relational_expr_stub);
+		general_recursion(additive_expr_c, "cmp_ebx,eax\nsete_al\nmovzx_eax,al\n", "==", relational_expr_stub);
+		general_recursion(additive_expr_c, "cmp_ebx,eax\nsetne_al\nmovzx_eax,al\n", "!=", relational_expr_stub);
 	}
 	else if(AMD64 == Architecture)
 	{
@@ -1565,7 +1565,7 @@ void primary_expr(void)
 		common_recursion(postfix_expr);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("CMPU R0 R1 R0\nSET.G R0 R0 1\n");
-		else if(X86 == Architecture) emit_out("cmp\nseta_al\nmovzx_eax,al\n");
+		else if(X86 == Architecture) emit_out("cmp_ebx,eax\nseta_al\nmovzx_eax,al\n");
 		else if(AMD64 == Architecture) emit_out("cmp_rbx,rax\nseta_al\nmovzx_rax,al\n");
 		else if(ARMV7L == Architecture) emit_out("'0' R0 CMP R1 AUX_ALWAYS\n!0 R0 LOADI8_ALWAYS\n!1 R0 LOADI8_HI\n");
 		else if(AARCH64 == Architecture) emit_out("CMP_X1_X0\nSET_X0_TO_1\nSKIP_INST_HI\nSET_X0_TO_0\n");

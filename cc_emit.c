@@ -347,18 +347,10 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 	}
 	else if(Architecture & ARCH_FAMILY_X86)
 	{
-		/* x86 define for 'cmp_ebx,eax' is just 'cmp' */
-		if(X86 == Architecture && ((reg1 + reg2) == (REGISTER_ZERO + REGISTER_ONE)))
-		{
-			emit_out("cmp");
-		}
-		else
-		{
-			emit_out("cmp_");
-			emit_out(reg2_name);
-			emit_out(",");
-			emit_out(reg1_name);
-		}
+		emit_out("cmp_");
+		emit_out(reg2_name);
+		emit_out(",");
+		emit_out(reg1_name);
 
 		emit_out("\nje %");
 		emit_out(prefix);

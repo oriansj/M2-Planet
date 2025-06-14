@@ -59,7 +59,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -109,7 +109,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setg_al
 movzx_eax,al
 test_eax,eax
@@ -159,7 +159,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 test_eax,eax
@@ -210,7 +210,7 @@ push_ebx
 mov_eax, %45
 int !0x80
 pop_ebx
-cmp
+cmp_ebx,eax
 pop_eax
 je %FUNCTION_malloc_Done
 mov_eax, %-1
@@ -236,7 +236,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %12
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setl_al
 movzx_eax,al
 test_eax,eax
@@ -372,7 +372,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 test_eax,eax
@@ -394,7 +394,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 push_eax	#_common_recursion
@@ -409,7 +409,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -472,7 +472,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 push_eax	#_common_recursion
@@ -481,7 +481,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -492,7 +492,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -503,7 +503,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -591,7 +591,7 @@ pop_ebx	# _common_recursion
 add_eax,ebx
 movsx_eax,BYTE_PTR_[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -624,7 +624,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 push_eax	#_common_recursion
@@ -633,7 +633,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -670,7 +670,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 push_eax	#_common_recursion
@@ -679,7 +679,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -709,7 +709,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %8
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -747,7 +747,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -805,7 +805,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 test_eax,eax
@@ -830,7 +830,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -849,7 +849,7 @@ mov_eax,[eax]
 push_eax	#_common_recursion
 mov_eax, %35
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 push_eax	#_common_recursion
@@ -858,7 +858,7 @@ mov_eax,[eax]
 push_eax	#_common_recursion
 mov_eax, %59
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 pop_ebx	# _common_recursion
@@ -878,7 +878,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -921,7 +921,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %4
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 test_eax,eax
@@ -1072,7 +1072,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %16
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setne_al
 movzx_eax,al
 test_eax,eax
@@ -1143,7 +1143,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %20
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 setle_al
 movzx_eax,al
 test_eax,eax
@@ -1161,7 +1161,7 @@ sal_eax, !2
 add_eax,ebx
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -1407,7 +1407,7 @@ push_eax	#_common_recursion
 mov_eax, &GLOBAL_output
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
@@ -1530,7 +1530,7 @@ push_eax	#_common_recursion
 lea_eax,[esp+DWORD] %12
 mov_eax,[eax]
 pop_ebx	# _common_recursion
-cmp
+cmp_ebx,eax
 sete_al
 movzx_eax,al
 test_eax,eax
