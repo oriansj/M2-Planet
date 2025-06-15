@@ -45,22 +45,27 @@ void write_load_immediate(int reg, int value, char* note);
 void emit_load_immediate(int reg, int value, char* note);
 
 /* Adds destination and source and places result in destination */
-void write_add(int destination_reg, int source_reg, char* note);
+void write_add(int destination_reg, int source_reg, int is_signed, char* note);
 
-void emit_add(int destination_reg, int source_reg, char* note);
+void emit_add(int destination_reg, int source_reg, int is_signed, char* note);
 
 void write_add_immediate(int reg, int value, char* note);
 
 void emit_add_immediate(int reg, int value, char* note);
 
 /* Subtracts destination and source and places result in destination */
-void write_sub(int destination_reg, int source_reg, char* note);
+void write_sub(int destination_reg, int source_reg, int is_signed, char* note);
 
-void emit_sub(int destination_reg, int source_reg, char* note);
+void emit_sub(int destination_reg, int source_reg, int is_signed, char* note);
 
 void write_sub_immediate(int reg, int value, char* note);
 
 void emit_sub_immediate(int reg, int value, char* note);
+
+/* Might clobber source register */
+void write_rsub(int destination_reg, int source_reg, int is_signed, char* note);
+
+void emit_rsub(int destination_reg, int source_reg, int is_signed, char* note);
 
 void emit_mul_into_register_zero(int reg, char* note);
 
