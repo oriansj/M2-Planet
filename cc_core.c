@@ -1079,7 +1079,7 @@ void postfix_expr_array(void)
 		emit_mul_register_zero_with_immediate(current_target->type->size, "primary expr array");
 	}
 
-	emit_add(REGISTER_ZERO, REGISTER_ONE, "primary expr array");
+	emit_add(REGISTER_ZERO, REGISTER_ONE, TRUE, "primary expr array");
 
 	require_match("ERROR in postfix_expr\nMissing ]\n", "]");
 	require(NULL != global_token, "truncated array expression\n");
@@ -1297,35 +1297,18 @@ void additive_expr_a(void)
 
 void additive_expr_stub_b(void)
 {
-	if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
+	require(NULL != global_token, "Received EOF in additive_expr_stub_a\n");
+	if(match("+", global_token->s))
 	{
-		arithmetic_recursion(additive_expr_a, "ADD R0 R1 R0\n", "ADDU R0 R1 R0\n", "+", additive_expr_stub_b);
-		arithmetic_recursion(additive_expr_a, "SUB R0 R1 R0\n", "SUBU R0 R1 R0\n", "-", additive_expr_stub_b);
+		common_recursion(additive_expr_a);
+		emit_add(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
+		additive_expr_stub_b();
 	}
-	else if(X86 == Architecture)
+	else if(match("-", global_token->s))
 	{
-		arithmetic_recursion(additive_expr_a, "add_eax,ebx\n", "add_eax,ebx\n", "+", additive_expr_stub_b);
-		arithmetic_recursion(additive_expr_a, "sub_ebx,eax\nmov_eax,ebx\n", "sub_ebx,eax\nmov_eax,ebx\n", "-", additive_expr_stub_b);
-	}
-	else if(AMD64 == Architecture)
-	{
-		arithmetic_recursion(additive_expr_a, "add_rax,rbx\n", "add_rax,rbx\n", "+", additive_expr_stub_b);
-		arithmetic_recursion(additive_expr_a, "sub_rbx,rax\nmov_rax,rbx\n", "sub_rbx,rax\nmov_rax,rbx\n", "-", additive_expr_stub_b);
-	}
-	else if(ARMV7L == Architecture)
-	{
-		arithmetic_recursion(additive_expr_a, "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "'0' R0 R0 ADD R1 ARITH2_ALWAYS\n", "+", additive_expr_stub_b);
-		arithmetic_recursion(additive_expr_a, "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n", "-", additive_expr_stub_b);
-	}
-	else if(AARCH64 == Architecture)
-	{
-		general_recursion(additive_expr_a, "ADD_X0_X1_X0\n", "+", additive_expr_stub_b);
-		general_recursion(additive_expr_a, "SUB_X0_X1_X0\n", "-", additive_expr_stub_b);
-	}
-	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
-	{
-		general_recursion(additive_expr_a, "rd_a0 rs1_a1 rs2_a0 add\n", "+", additive_expr_stub_b);
-		general_recursion(additive_expr_a, "rd_a0 rs1_a1 rs2_a0 sub\n", "-", additive_expr_stub_b);
+		common_recursion(additive_expr_a);
+		emit_rsub(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
+		additive_expr_stub_b();
 	}
 }
 
@@ -1674,25 +1657,11 @@ char* compound_operation(char* operator, int is_signed)
 	char* operation = "";
 	if(match("+=", operator))
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-		{
-			if(is_signed) operation = "ADD R0 R1 R0\n";
-			else operation = "ADDU R0 R1 R0\n";
-		}
-		else emit_add(REGISTER_ZERO, REGISTER_ONE, "compound operation");
+		emit_add(REGISTER_ZERO, REGISTER_ONE, is_signed, "compound operation");
 	}
 	else if(match("-=", operator))
 	{
-		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture))
-		{
-			if(is_signed) operation = "SUB R0 R1 R0\n";
-			else operation =  "SUBU R0 R1 R0\n";
-		}
-		else if(X86 == Architecture) operation = "sub_ebx,eax\nmov_eax,ebx\n";
-		else if(AMD64 == Architecture) operation = "sub_rbx,rax\nmov_rax,rbx\n";
-		else if(ARMV7L == Architecture) operation = "'0' R0 R0 SUB R1 ARITH2_ALWAYS\n";
-		else if(AARCH64 == Architecture) operation = "SUB_X0_X1_X0\n";
-		else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) operation = "rd_a0 rs1_a1 rs2_a0 sub\n";
+		emit_rsub(REGISTER_ZERO, REGISTER_ONE, is_signed, "compound operation");
 	}
 	else if(match("*=", operator))
 	{

@@ -650,14 +650,17 @@ void emit_load_immediate(int reg, int value, char* note)
 }
 
 /* Adds destination and source and places result in destination */
-void write_add(int destination_reg, int source_reg, char* note)
+void write_add(int destination_reg, int source_reg, int is_signed, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
-		emit_to_string("ADD R");
+		if(is_signed)
+			emit_to_string("ADD R");
+		else
+			emit_to_string("ADDU R");
 		emit_to_string(destination_name);
 		emit_to_string(" R");
 		emit_to_string(destination_name);
@@ -713,10 +716,10 @@ void write_add(int destination_reg, int source_reg, char* note)
 	}
 }
 
-void emit_add(int destination_reg, int source_reg, char* note)
+void emit_add(int destination_reg, int source_reg, int is_signed, char* note)
 {
 	reset_emit_string();
-	write_add(destination_reg, source_reg, note);
+	write_add(destination_reg, source_reg, is_signed, note);
 	emit_out(emit_string);
 }
 
@@ -760,7 +763,7 @@ void write_add_immediate(int reg, int value, char* note)
 	else
 	{
 		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-		write_add(reg, REGISTER_EMIT_TEMP, note);
+		write_add(reg, REGISTER_EMIT_TEMP, TRUE, note);
 	}
 }
 
@@ -772,14 +775,17 @@ void emit_add_immediate(int reg, int value, char* note)
 }
 
 /* Subtracts destination and source and places result in destination */
-void write_sub(int destination_reg, int source_reg, char* note)
+void write_sub(int destination_reg, int source_reg, int is_signed, char* note)
 {
 	char* destination_name = register_from_string(destination_reg);
 	char* source_name = register_from_string(source_reg);
 
 	if(Architecture & ARCH_FAMILY_KNIGHT)
 	{
-		emit_to_string("SUB R");
+		if(is_signed)
+			emit_to_string("SUB R");
+		else
+			emit_to_string("SUBU R");
 		emit_to_string(destination_name);
 		emit_to_string(" R");
 		emit_to_string(destination_name);
@@ -836,10 +842,10 @@ void write_sub(int destination_reg, int source_reg, char* note)
 	}
 }
 
-void emit_sub(int destination_reg, int source_reg, char* note)
+void emit_sub(int destination_reg, int source_reg, int is_signed, char* note)
 {
 	reset_emit_string();
-	write_sub(destination_reg, source_reg, note);
+	write_sub(destination_reg, source_reg, is_signed, note);
 	emit_out(emit_string);
 }
 
@@ -887,7 +893,7 @@ void write_sub_immediate(int reg, int value, char* note)
 	else
 	{
 		write_load_immediate(REGISTER_EMIT_TEMP, value, note);
-		write_sub(reg, REGISTER_EMIT_TEMP, note);
+		write_sub(reg, REGISTER_EMIT_TEMP, TRUE, note);
 	}
 }
 
@@ -895,6 +901,84 @@ void emit_sub_immediate(int reg, int value, char* note)
 {
 	reset_emit_string();
 	write_sub_immediate(reg, value, note);
+	emit_out(emit_string);
+}
+
+void write_rsub(int destination_reg, int source_reg, int is_signed, char* note)
+{
+	char* destination_name = register_from_string(destination_reg);
+	char* source_name = register_from_string(source_reg);
+
+	if(Architecture & ARCH_FAMILY_KNIGHT)
+	{
+		if(is_signed)
+			emit_to_string("SUB R");
+		else
+			emit_to_string("SUBU R");
+		emit_to_string(destination_name);
+		emit_to_string(" R");
+		emit_to_string(source_name);
+		emit_to_string(" R");
+		emit_to_string(destination_name);
+	}
+	else if(Architecture & ARCH_FAMILY_X86)
+	{
+		emit_to_string("sub_");
+		emit_to_string(source_name);
+		emit_to_string(",");
+		emit_to_string(destination_name);
+		emit_to_string("\n");
+		emit_to_string("mov_");
+		emit_to_string(destination_name);
+		emit_to_string(",");
+		emit_to_string(source_name);
+	}
+	else if(ARMV7L == Architecture)
+	{
+		emit_to_string("'0' ");
+		emit_to_string(destination_name);
+		emit_to_string(" ");
+		emit_to_string(destination_name);
+		emit_to_string(" SUB ");
+		emit_to_string(source_name);
+		emit_to_string(" ARITH2_ALWAYS");
+	}
+	else if(AARCH64 == Architecture)
+	{
+		emit_to_string("SUB_");
+		emit_to_string(destination_name);
+		emit_to_string("_");
+		emit_to_string(source_name);
+		emit_to_string("_");
+		emit_to_string(destination_name);
+	}
+	else if(Architecture & ARCH_FAMILY_RISCV)
+	{
+		emit_to_string("rd_");
+		emit_to_string(destination_name);
+		emit_to_string(" rs1_");
+		emit_to_string(source_name);
+		emit_to_string(" rs2_");
+		emit_to_string(destination_name);
+		emit_to_string(" sub");
+	}
+
+	if(note == NULL)
+	{
+		emit_to_string("\n");
+	}
+	else
+	{
+		emit_to_string(" # ");
+		emit_to_string(note);
+		emit_to_string("\n");
+	}
+}
+
+void emit_rsub(int destination_reg, int source_reg, int is_signed, char* note)
+{
+	reset_emit_string();
+	write_rsub(destination_reg, source_reg, is_signed, note);
 	emit_out(emit_string);
 }
 
