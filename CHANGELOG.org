@@ -14,24 +14,24 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
-* Current
+* 1.13 - 2025-07-26
 ** Added
 Added support for global initializer list for structs of integers.
 Added support for initializing global arrays of structs using initializer lists
-Added support for prefix operators ++ and --
-Added support for postfix operators ++ and --
+Added support for prefix operators =++= and =--=
+Added support for postfix operators =++= and =--=
 Added ability to parse typedefs for simple function pointers
 Added support for anonymous structs (C11 extension). This was already implemented as the only way to use unions.
 Added support for unions in all places where structs work
-Added support for the `restrict` and `const` pointer type qualifiers.
+Added support for the =restrict= and =const= pointer type qualifiers.
 Added support for variadic functions.
 Added support for multiple global variable declarations per statement
 Added initial very hacky support for casting after dereferencing
 Added support for calling function pointers directly on global variables and struct members. Previously only locals worked.
 Added support for initializing global variables with negative values.
 Added support for declaring variables in for loops
-Added support for using includes with the `--expand-includes` CLI option. Note that including `stdio.h` changes the `M1` libc required from `libc-core.M1` to `libc-full.M1`.
-Added support for spaces between `#` and text in preprocessor commands.
+Added support for using includes with the =--expand-includes= CLI option. Note that including =stdio.h= changes the =M1= libc required from =libc-core.M1= to =libc-full.M1=.
+Added support for spaces between =#= and text in preprocessor commands.
 Added support for multiple tokens as arguments to function-like macros.
 
 ** Changed
