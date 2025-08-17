@@ -14,6 +14,10 @@
 ## You should have received a copy of the GNU General Public License
 ## along with M2-Planet.  If not, see <http://www.gnu.org/licenses/>.
 
+* 1.13 - 2025-08-17
+** Fixed
+Fixed tokenization of newline after line comment.
+
 * 1.13 - 2025-07-26
 ** Added
 Added support for global initializer list for structs of integers.

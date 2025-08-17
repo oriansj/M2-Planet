@@ -299,7 +299,6 @@ reset:
 			{
 				c = grab_byte();
 			}
-			c = grab_byte();
 			goto reset;
 		}
 		else if(c == '=')
