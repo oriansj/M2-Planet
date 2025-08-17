@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	 * since cc_* can't handle string constants. */
 	char* m2_major = "1";
 	char* m2_minor = "13";
-	char* m2_patch = "0";
+	char* m2_patch = "1";
 
 	init_macro_env("__M2__", "42", "__INTERNAL_M2__", 0); /* Setup __M2__ */
 	init_macro_env("__M2C__", m2_major, "__INTERNAL_M2__", 0);
