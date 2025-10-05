@@ -273,6 +273,12 @@ int pointers_postfix_complex(int* a, char* b, struct T* t) {
 	if(t->a != 16) return 1;
 	if(t->b != 17) return 1;
 
+	if(t->a++ != 16) return 1;
+	if(t[0].a++ != 17) return 1;
+
+	if(t->a-- != 18) return 1;
+	if(t[0].a-- != 17) return 1;
+
 	return 0;
 }
 
