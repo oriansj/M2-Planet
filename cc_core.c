@@ -982,8 +982,9 @@ void postfix_expr_arrow(void)
 
 	if(global_token->s[0] == '.') return;
 
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
 	/* We don't yet support assigning structs to structs */
-	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && (register_size >= i->size)))
+	if((!match("=", global_token->s) && !is_compound_assignment(global_token->s) && !is_postfix_operator && (register_size >= i->size)))
 	{
 		emit_out(load_value(i->size, i->is_signed));
 	}
@@ -1052,7 +1053,8 @@ void postfix_expr_dot(void)
 	{
 		emit_add_immediate(REGISTER_ZERO, i->offset, ". offset calculation");
 	}
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s)) return;
+	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || is_postfix_operator) return;
 	if(match("[", global_token->s) || match(".", global_token->s)) return;
 
 	emit_out(load_value(current_target->size, current_target->is_signed));
