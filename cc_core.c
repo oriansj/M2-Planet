@@ -584,27 +584,20 @@ void primary_expr_failure(void)
 
 void primary_expr_string(void)
 {
-	char* number_string = int2str(current_count, 10, TRUE);
-	current_count = current_count + 1;
-	char* unique_id = create_unique_id("STRING_", function->s, number_string);
-
-	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, "primary expr string");
-
-	/* The target */
-	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
-
 	/* catch case of just "foo" from segfaulting */
 	require(NULL != global_token->next, "a string by itself is not valid C\n");
+
+	char* s;
 
 	/* Parse the string */
 	if('"' != global_token->next->s[0])
 	{
-		strings_list = emit(parse_string(global_token->s), strings_list);
+		s = global_token->s;
 		require_extra_token();
 	}
 	else
 	{
-		char* s = calloc(MAX_STRING, sizeof(char));
+		s = calloc(MAX_STRING, sizeof(char));
 
 		/* prefix leading string */
 		s[0] = '"';
@@ -632,10 +625,19 @@ void primary_expr_string(void)
 			require_extra_token();
 			used_string_concatenation = TRUE;
 		}
-
-		/* Now use it */
-		strings_list = emit(parse_string(s), strings_list);
 	}
+
+	char* number_string = int2str(current_count, 10, TRUE);
+	current_count = current_count + 1;
+	char* unique_id = create_unique_id("STRING_", function->s, number_string);
+
+	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, "primary expr string");
+
+	/* The target */
+	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
+
+	/* Now use it */
+	strings_list = emit(parse_string(s), strings_list);
 }
 
 void primary_expr_char(void)
