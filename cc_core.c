@@ -59,6 +59,36 @@ struct type* type_name(void);
 
 char* parse_function_pointer(void);
 
+void flush_output_buffer(FILE* destination_file)
+{
+	if (output_file_index == 0)
+	{
+		return;
+	}
+
+	fwrite(output_file_buffer, 1, output_file_index, destination_file);
+	output_file_index = 0;
+}
+
+void write_to_out_buffer(char* s, FILE* destination_file)
+{
+	int size = string_length(s);
+
+	if (output_file_index + size >= OUTPUT_FILE_BUFFER_SIZE)
+	{
+		flush_output_buffer(destination_file);
+	}
+
+	if (size >= OUTPUT_FILE_BUFFER_SIZE)
+	{
+		fwrite(s, 1, size, destination_file);
+	}
+
+	output_file_index = output_file_index + copy_string(
+		output_file_buffer + output_file_index, s,
+		OUTPUT_FILE_BUFFER_SIZE - output_file_index);
+}
+
 int type_is_pointer(struct type* type_size)
 {
 	return type_size->type != type_size || (type_size->options & TO_FUNCTION_POINTER);
@@ -3377,7 +3407,7 @@ void recursive_output(struct token_list* head, FILE* out)
 	struct token_list* i = reverse_list(head);
 	while(NULL != i)
 	{
-		fputs(i->s, out);
+		write_to_out_buffer(i->s, out);
 		i = i->next;
 	}
 }
@@ -3386,8 +3416,8 @@ void output_tokens(struct token_list *i, FILE* out)
 {
 	while(NULL != i)
 	{
-		fputs(i->s, out);
-		fputs(" ", out);
+		write_to_out_buffer(i->s, out);
+		write_to_out_buffer(" ", out);
 		i = i->next;
 	}
 }

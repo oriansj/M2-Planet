@@ -36,6 +36,11 @@ extern struct static_variable_list* function_static_variables_list;
 /* Make our string collection more efficient */
 extern char* hold_string;
 extern int string_index;
+extern int file_index;
+extern int file_max;
+extern char* file_buffer;
+extern int output_file_index;
+extern char* output_file_buffer;
 
 /* Our Target Architecture */
 extern int Architecture;

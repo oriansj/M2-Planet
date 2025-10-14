@@ -45,6 +45,8 @@ int main(int argc, char** argv)
 	FILE* in = stdin;
 	FILE* destination_file = stdout;
 	Architecture = 0; /* catch unset */
+	file_buffer = calloc(1, FILE_BUFFER_SIZE);
+	output_file_buffer = calloc(1, OUTPUT_FILE_BUFFER_SIZE);
 
 	/* These need to be here instead of defines
 	 * since cc_* can't handle string constants. */
@@ -364,7 +366,7 @@ int main(int argc, char** argv)
 
 	if (PREPROCESSOR_MODE)
 	{
-		fputs("\n/* Preprocessed source */\n", destination_file);
+		write_to_out_buffer("\n/* Preprocessed source */\n", destination_file);
 		output_tokens(global_token, destination_file);
 		goto exit_success;
 	}
@@ -378,18 +380,19 @@ int main(int argc, char** argv)
 	program();
 
 	/* Output the program we have compiled */
-	fputs("\n# Core program\n", destination_file);
+	write_to_out_buffer("\n# Core program\n", destination_file);
 	recursive_output(output_list, destination_file);
-	if(KNIGHT_NATIVE == Architecture) fputs("\n", destination_file);
-	else if(DEBUG) fputs("\n:ELF_data\n", destination_file);
-	fputs("\n# Program global variables\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) write_to_out_buffer("\n", destination_file);
+	else if(DEBUG) write_to_out_buffer("\n:ELF_data\n", destination_file);
+	write_to_out_buffer("\n# Program global variables\n", destination_file);
 	recursive_output(globals_list, destination_file);
-	fputs("\n# Program strings\n", destination_file);
+	write_to_out_buffer("\n# Program strings\n", destination_file);
 	recursive_output(strings_list, destination_file);
-	if(KNIGHT_NATIVE == Architecture) fputs("\n:STACK\n", destination_file);
-	else if(!DEBUG) fputs("\n:ELF_end\n", destination_file);
+	if(KNIGHT_NATIVE == Architecture) write_to_out_buffer("\n:STACK\n", destination_file);
+	else if(!DEBUG) write_to_out_buffer("\n:ELF_end\n", destination_file);
 
 exit_success:
+	flush_output_buffer(destination_file);
 	if (destination_file != stdout)
 	{
 		fclose(destination_file);
