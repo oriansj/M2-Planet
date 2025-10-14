@@ -17,6 +17,7 @@
 * 1.13.2 - YYYY-MM-DD
 ** Changed
 Use buffers to speed up reads/writes.
+Deduplicate strings in the final binary. This should save a few kilobytes of executable.
 
 * 1.13.1 - 2025-08-17
 ** Fixed

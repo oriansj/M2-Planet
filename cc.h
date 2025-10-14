@@ -169,6 +169,12 @@ struct include_path_list
 	struct include_path_list* next;
 };
 
+struct string_list {
+  struct string_list* next;
+  char* name;
+  char* string;
+};
+
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options);
 void line_error_token(struct token_list* token);
 

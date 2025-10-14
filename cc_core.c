@@ -582,6 +582,35 @@ void primary_expr_failure(void)
 	exit(EXIT_FAILURE);
 }
 
+struct string_list* strings;
+char* add_string_to_string_list(char* str)
+{
+	struct string_list* s = strings;
+
+	while (s != NULL)
+	{
+		if (match(str, s->string))
+		{
+			return s->name;
+		}
+
+		s = s->next;
+	}
+
+	s = calloc(1, sizeof(struct string_list));
+	char* number_string = int2str(current_count, 10, TRUE);
+	current_count = current_count + 1;
+	s->name = create_unique_id("STRING_", function->s, number_string);
+	s->string = str;
+	s->next = strings;
+	strings = s;
+
+	strings_list = emit("\n", emit(s->name, emit(":", strings_list)));
+	strings_list = emit(parse_string(str), strings_list);
+
+	return s->name;
+}
+
 void primary_expr_string(void)
 {
 	/* catch case of just "foo" from segfaulting */
@@ -627,17 +656,9 @@ void primary_expr_string(void)
 		}
 	}
 
-	char* number_string = int2str(current_count, 10, TRUE);
-	current_count = current_count + 1;
-	char* unique_id = create_unique_id("STRING_", function->s, number_string);
+	char* unique_id = add_string_to_string_list(s);
 
 	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, "primary expr string");
-
-	/* The target */
-	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
-
-	/* Now use it */
-	strings_list = emit(parse_string(s), strings_list);
 }
 
 void primary_expr_char(void)
