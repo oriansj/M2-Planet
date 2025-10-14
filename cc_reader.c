@@ -41,8 +41,25 @@ int define_state;
 
 int grab_byte(void)
 {
-	int c = fgetc(input);
-	if(10 == c) line = line + 1;
+	if (file_index >= FILE_BUFFER_SIZE)
+	{
+		file_max = fread(file_buffer, 1, FILE_BUFFER_SIZE, input);
+		file_index = 0;
+	}
+
+	if (file_index == file_max)
+	{
+		return EOF;
+	}
+
+	int c = file_buffer[file_index];
+	file_index = file_index + 1;
+
+	if (c == '\n')
+	{
+		line = line + 1;
+	}
+
 	return c;
 }
 
@@ -451,6 +468,7 @@ struct token_list* read_all_tokens(FILE* a, struct token_list* current, char* fi
 	line = 1;
 	file = filename;
 	token = current;
+	file_index = FILE_BUFFER_SIZE;
 	int ch = grab_byte();
 	define_state = DEFINE_STATE_NONE;
 	while(EOF != ch)

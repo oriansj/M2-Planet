@@ -62,6 +62,9 @@ enum
 	NO_STRUCT_DEFINITION = 0,
 };
 
+void write_to_out_buffer(char* s, FILE* destination_file);
+void flush_output_buffer(FILE* destination_file);
+
 int copy_string(char* target, char* source, int max);
 char* concat_strings2(char* a, char* b);
 char* concat_strings3(char* a, char* b, char* c);
@@ -75,6 +78,11 @@ char* int2str(int x, int base, int signed_p);
 
 void require_extra_token(void);
 void require_token(void);
+
+enum {
+	FILE_BUFFER_SIZE = 65536,
+	OUTPUT_FILE_BUFFER_SIZE = 65536,
+};
 
 enum
 {
@@ -159,6 +167,12 @@ struct include_path_list
 {
 	char* path;
 	struct include_path_list* next;
+};
+
+struct string_list {
+  struct string_list* next;
+  char* name;
+  char* string;
 };
 
 struct token_list* sym_declare(char *s, struct type* t, struct token_list* list, int options);

@@ -59,6 +59,36 @@ struct type* type_name(void);
 
 char* parse_function_pointer(void);
 
+void flush_output_buffer(FILE* destination_file)
+{
+	if (output_file_index == 0)
+	{
+		return;
+	}
+
+	fwrite(output_file_buffer, 1, output_file_index, destination_file);
+	output_file_index = 0;
+}
+
+void write_to_out_buffer(char* s, FILE* destination_file)
+{
+	int size = string_length(s);
+
+	if (output_file_index + size >= OUTPUT_FILE_BUFFER_SIZE)
+	{
+		flush_output_buffer(destination_file);
+	}
+
+	if (size >= OUTPUT_FILE_BUFFER_SIZE)
+	{
+		fwrite(s, 1, size, destination_file);
+	}
+
+	output_file_index = output_file_index + copy_string(
+		output_file_buffer + output_file_index, s,
+		OUTPUT_FILE_BUFFER_SIZE - output_file_index);
+}
+
 int type_is_pointer(struct type* type_size)
 {
 	return type_size->type != type_size || (type_size->options & TO_FUNCTION_POINTER);
@@ -552,29 +582,51 @@ void primary_expr_failure(void)
 	exit(EXIT_FAILURE);
 }
 
-void primary_expr_string(void)
+struct string_list* strings;
+char* add_string_to_string_list(char* str)
 {
+	struct string_list* s = strings;
+
+	while (s != NULL)
+	{
+		if (match(str, s->string))
+		{
+			return s->name;
+		}
+
+		s = s->next;
+	}
+
+	s = calloc(1, sizeof(struct string_list));
 	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
-	char* unique_id = create_unique_id("STRING_", function->s, number_string);
+	s->name = create_unique_id("STRING_", function->s, number_string);
+	s->string = str;
+	s->next = strings;
+	strings = s;
 
-	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, "primary expr string");
+	strings_list = emit("\n", emit(s->name, emit(":", strings_list)));
+	strings_list = emit(parse_string(str), strings_list);
 
-	/* The target */
-	strings_list = emit("\n", emit(unique_id, emit(":", strings_list)));
+	return s->name;
+}
 
+void primary_expr_string(void)
+{
 	/* catch case of just "foo" from segfaulting */
 	require(NULL != global_token->next, "a string by itself is not valid C\n");
+
+	char* s;
 
 	/* Parse the string */
 	if('"' != global_token->next->s[0])
 	{
-		strings_list = emit(parse_string(global_token->s), strings_list);
+		s = global_token->s;
 		require_extra_token();
 	}
 	else
 	{
-		char* s = calloc(MAX_STRING, sizeof(char));
+		s = calloc(MAX_STRING, sizeof(char));
 
 		/* prefix leading string */
 		s[0] = '"';
@@ -602,10 +654,11 @@ void primary_expr_string(void)
 			require_extra_token();
 			used_string_concatenation = TRUE;
 		}
-
-		/* Now use it */
-		strings_list = emit(parse_string(s), strings_list);
 	}
+
+	char* unique_id = add_string_to_string_list(s);
+
+	emit_load_named_immediate(REGISTER_ZERO, "", unique_id, "primary expr string");
 }
 
 void primary_expr_char(void)
@@ -3377,7 +3430,7 @@ void recursive_output(struct token_list* head, FILE* out)
 	struct token_list* i = reverse_list(head);
 	while(NULL != i)
 	{
-		fputs(i->s, out);
+		write_to_out_buffer(i->s, out);
 		i = i->next;
 	}
 }
@@ -3386,8 +3439,8 @@ void output_tokens(struct token_list *i, FILE* out)
 {
 	while(NULL != i)
 	{
-		fputs(i->s, out);
-		fputs(" ", out);
+		write_to_out_buffer(i->s, out);
+		write_to_out_buffer(" ", out);
 		i = i->next;
 	}
 }
