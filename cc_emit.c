@@ -442,13 +442,7 @@ void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if (reg == REGISTER_ZERO)
-		{
-			emit_out("ldrsw_x");
-		} else
-		{
-			emit_out("ldr_w");
-		}
+		emit_out("ldr_w");
 		/* Normal register starts with X for 64bit wide
 		 * but we need W. */
 		emit_out(reg_name + 1);
@@ -559,13 +553,7 @@ void write_load_immediate(int reg, int value, char* note)
 		}
 		else
 		{
-			if (reg == REGISTER_ZERO)
-			{
-				emit_to_string("ldrsw_x");
-			} else
-			{
-				emit_to_string("ldr_w");
-			}
+			emit_to_string("ldr_w");
 			/* Normal register starts with X for 64bit wide
 			 * but we need W. */
 			emit_to_string(reg_name + 1);
