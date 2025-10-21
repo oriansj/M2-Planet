@@ -327,17 +327,13 @@ int main(int argc, char** argv)
 	{
 		return_instruction = "RET R15\n";
 	}
-	else if (Architecture & (ARCH_FAMILY_X86 | ARCH_FAMILY_RISCV))
+	else if (Architecture == AARCH64 || Architecture & (ARCH_FAMILY_X86 | ARCH_FAMILY_RISCV))
 	{
 		return_instruction = "ret\n";
 	}
 	else if (Architecture == ARMV7L)
 	{
 		return_instruction = "'1' LR RETURN\n";
-	}
-	else if (Architecture == AARCH64)
-	{
-		return_instruction = "RETURN\n";
 	}
 
 	/* Deal with special case of wanting to read from standard input */
