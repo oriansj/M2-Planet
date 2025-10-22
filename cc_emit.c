@@ -128,15 +128,15 @@ char* register_from_string(int reg)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if(reg == REGISTER_ZERO) return "X0";
-		else if(reg == REGISTER_ONE) return "X1";
-		else if(reg == REGISTER_LOCALS) return "X13";
-		else if(reg == REGISTER_EMIT_TEMP) return "X14";
-		else if(reg == REGISTER_TEMP2) return "X15";
-		else if(reg == REGISTER_TEMP) return "X16";
-		else if(reg == REGISTER_BASE) return "BP";
-		else if(reg == REGISTER_RETURN) return "LR";
-		else if(reg == REGISTER_STACK) return "SP";
+		if(reg == REGISTER_ZERO) return "x0";
+		else if(reg == REGISTER_ONE) return "x1";
+		else if(reg == REGISTER_LOCALS) return "x13";
+		else if(reg == REGISTER_EMIT_TEMP) return "x14";
+		else if(reg == REGISTER_TEMP2) return "x15";
+		else if(reg == REGISTER_TEMP) return "x16";
+		else if(reg == REGISTER_BASE) return "x17";
+		else if(reg == REGISTER_RETURN) return "lr";
+		else if(reg == REGISTER_STACK) return "x18";
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -182,7 +182,7 @@ void emit_unconditional_jump(char* prefix, char* name, char* note)
 	else if(AARCH64 == Architecture)
 	{
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
-		emit_out("BR_X16");
+		emit_out("br_x16");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -237,11 +237,11 @@ void emit_jump_if_zero(int reg, char* prefix, char* name, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("CBNZ_");
+		emit_out("cbnz_");
 		emit_out(reg_name);
-		emit_out("_PAST_BR\n");
+		emit_out(",20\n");
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
-		emit_out("BR_X16");
+		emit_out("br_x16");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -298,11 +298,11 @@ void emit_jump_if_not_zero(int reg, char* prefix, char* name, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("CBZ_");
+		emit_out("cbz_");
 		emit_out(reg_name);
-		emit_out("_PAST_BR\n");
+		emit_out(",20\n");
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
-		emit_out("BR_X16");
+		emit_out("br_x16");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -369,13 +369,13 @@ void emit_jump_if_equal(int reg1, int reg2, char* prefix, char* name, char* note
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("CMP_");
+		emit_out("cmp_");
 		emit_out(reg2_name);
-		emit_out("_");
+		emit_out(",");
 		emit_out(reg1_name);
 		emit_out("\n");
 		emit_load_named_immediate(REGISTER_TEMP, prefix, name, note);
-		emit_out("SKIP_INST_NE\nBR_X16");
+		emit_out("b.ne_8\nbr_x16");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -442,11 +442,11 @@ void emit_load_named_immediate(int reg, char* prefix, char* name, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("LOAD_W");
+		emit_out("ldr_w");
 		/* Normal register starts with X for 64bit wide
 		 * but we need W. */
 		emit_out(reg_name + 1);
-		emit_out("_AHEAD\nSKIP_32_DATA\n&");
+		emit_out(",8\nb_8\n&");
 		emit_out(prefix);
 		emit_out(name);
 	}
@@ -546,18 +546,18 @@ void write_load_immediate(int reg, int value, char* note)
 	{
 		if((value == 0 && (reg == 0 || reg == 1)) || (value == 1 && reg == 0))
 		{
-			emit_to_string("SET_");
+			emit_to_string("mov_");
 			emit_to_string(reg_name);
-			emit_to_string("_TO_");
+			emit_to_string(",");
 			emit_to_string(value_string);
 		}
 		else
 		{
-			emit_to_string("LOAD_W");
+			emit_to_string("ldr_w");
 			/* Normal register starts with X for 64bit wide
 			 * but we need W. */
 			emit_to_string(reg_name + 1);
-			emit_to_string("_AHEAD\nSKIP_32_DATA\n%");
+			emit_to_string(",8\nb_8\n%");
 			emit_to_string(value_string);
 		}
 	}
@@ -686,11 +686,11 @@ void write_add(int destination_reg, int source_reg, int is_signed, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_to_string("ADD_");
+		emit_to_string("add_");
 		emit_to_string(destination_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(source_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(destination_name);
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
@@ -812,11 +812,11 @@ void write_sub(int destination_reg, int source_reg, int is_signed, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_to_string("SUB_");
+		emit_to_string("sub_");
 		emit_to_string(destination_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(destination_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(source_name);
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
@@ -945,11 +945,11 @@ void write_rsub(int destination_reg, int source_reg, int is_signed, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_to_string("SUB_");
+		emit_to_string("sub_");
 		emit_to_string(destination_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(source_name);
-		emit_to_string("_");
+		emit_to_string(",");
 		emit_to_string(destination_name);
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
@@ -1005,9 +1005,9 @@ void emit_mul_into_register_zero(int reg, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("MUL_X0_");
+		emit_out("mul_x0,");
 		emit_out(reg_name);
-		emit_out("_X0");
+		emit_out(",x0");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -1063,9 +1063,9 @@ void write_move(int destination_reg, int source_reg, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_to_string("SET_");
+		emit_to_string("mov_");
 		emit_to_string(destination_name);
-		emit_to_string("_FROM_");
+		emit_to_string(",");
 		emit_to_string(source_name);
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
@@ -1220,8 +1220,11 @@ void emit_dereference(int reg, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("DEREF_");
+		emit_out("ldr_");
 		emit_out(reg_name);
+		emit_out(",[");
+		emit_out(reg_name);
+		emit_out("]");
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
@@ -1267,8 +1270,9 @@ void emit_push(int reg, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("PUSH_");
+		emit_out("str_");
 		emit_out(reg_name);
+		emit_out(",[x18,-8]!");
 	}
 	else if(RISCV32 == Architecture)
 	{
@@ -1317,8 +1321,9 @@ void emit_pop(int reg, char* note)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_out("POP_");
+		emit_out("ldr_");
 		emit_out(reg_name);
+		emit_out(",[x18],8");
 	}
 	else if(RISCV32 == Architecture)
 	{
