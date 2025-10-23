@@ -25,6 +25,7 @@ mkdir -p ${TMPDIR}
 ./bin/M2-Planet \
 	--architecture riscv32 \
 	-f M2libc/riscv32/linux/bootstrap.c \
+	-f M2libc/bootstrap.c \
 	-f cc.h \
 	-f M2libc/bootstrappable.c \
 	-f cc_globals.c \
