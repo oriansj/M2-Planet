@@ -1088,7 +1088,7 @@ struct token_list* maybe_expand(struct token_list* token)
 
 	struct token_list* hold2 = insert_tokens(token, expansion);
 
-	return hold2->next;
+	return hold2;
 }
 
 void preprocess(void)
