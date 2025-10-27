@@ -933,7 +933,7 @@ struct type *mirror_type(struct type *source)
 	head->members = source->members;
 	i->members =  source->indirect->members;
 	head->type = head;
-	i->type = i;
+	i->type = head;
 
 	return head;
 }
