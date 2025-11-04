@@ -1470,12 +1470,12 @@ void relational_expr_stub(void)
 	}
 	else if(AARCH64 == Architecture)
 	{
-		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.lt_8\nmov_x0,0\n", "cmp_x1,x0\nmov_x0,1\nb.cc_8\nmov_x0,0\n", "<", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.le_8\nmov_x0,0\n", "cmp_x1,x0\nmov_x0,1\nb.ls_8\nmov_x0,0\n", "<=", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.ge_8\nmov_x0,0\n", "cmp_x1,x0\nmov_x0,1\nb.cs_8\nmov_x0,0\n", ">=", relational_expr_stub);
-		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.gt_8\nmov_x0,0\n", "cmp_x1,x0\nmov_x0,1\nb.hi_8\nmov_x0,0\n", ">", relational_expr_stub);
-		general_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.eq_8\nmov_x0,0\n", "==", relational_expr_stub);
-		general_recursion(additive_expr_c, "cmp_x1,x0\nmov_x0,1\nb.ne_8\nmov_x0,0\n", "!=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,lt\n", "cmp_x1,x0\ncset_w0,cc\n", "<", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,le\n", "cmp_x1,x0\ncset_w0,ls\n", "<=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,ge\n", "cmp_x1,x0\ncset_w0,cs\n", ">=", relational_expr_stub);
+		arithmetic_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,gt\n", "cmp_x1,x0\ncset_w0,hi\n", ">", relational_expr_stub);
+		general_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,eq\n", "==", relational_expr_stub);
+		general_recursion(additive_expr_c, "cmp_x1,x0\ncset_w0,ne\n", "!=", relational_expr_stub);
 	}
 	else if((RISCV32 == Architecture) || (RISCV64 == Architecture))
 	{
