@@ -1147,8 +1147,21 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 	else if(AARCH64 == Architecture)
 	{
-		emit_move(destination, offset_register, note);
-		emit_sub_immediate(destination, absolute_value, note);
+		if (destination == REGISTER_ZERO && (offset_register == REGISTER_BASE || offset_register == REGISTER_LOCALS) &&
+		    ((absolute_value % 8 == 0) && absolute_value <= 128))
+		{
+			emit_out("sub_");
+			emit_out(destination_name);
+			emit_out(",");
+			emit_out(offset_name);
+			emit_out(",");
+			emit_out(int2str(absolute_value, 10, FALSE));
+		}
+		else
+		{
+			emit_move(destination, offset_register, note);
+			emit_sub_immediate(destination, absolute_value, note);
+		}
 	}
 	else if(Architecture & ARCH_FAMILY_RISCV)
 	{
