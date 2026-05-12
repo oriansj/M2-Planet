@@ -3087,7 +3087,7 @@ void declare_function(void)
 
 	require(NULL != global_token, "Function definitions either need to be prototypes or full\n");
 	/* If just a prototype don't waste time */
-	if(global_token->s[0] == ';') require_extra_token();
+	if(global_token->s[0] == ';') global_token = global_token->next;
 	else
 	{
 		emit_out("# Defining function ");
