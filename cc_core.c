@@ -242,6 +242,15 @@ int constant_unary_expression(void)
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
 		if(lookup != NULL)
 		{
+			if(lookup->arguments == NULL || lookup->arguments->s == NULL)
+			{
+				line_error();
+				fputs("Unable to use incomplete enum constant '", stderr);
+				fputs(global_token->s, stderr);
+				fputs("' in constant expression.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
 			require_extra_token();
 			return strtoint(lookup->arguments->s);
 		}
