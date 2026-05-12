@@ -1665,6 +1665,7 @@ void bitwise_expr(void)
 }
 
 void expression(void);
+void comma_expr(void);
 void conditional_expr(void)
 {
 	bitwise_expr();
@@ -1677,7 +1678,7 @@ void conditional_expr(void)
 		emit_jump_if_zero(REGISTER_ZERO, "TERNARY_FALSE_", unique_id, "conditional expression false branch");
 
 		require_extra_token();
-		expression();
+		comma_expr();
 		struct type* true_type = current_target;
 
 		emit_unconditional_jump("TERNARY_END_", unique_id, "conditional expression end");
@@ -2687,7 +2688,7 @@ char* function_locals_cleanup_string;
 void return_result(void)
 {
 	require_extra_token();
-	if(global_token->s[0] != ';') expression();
+	if(global_token->s[0] != ';') comma_expr();
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
@@ -2882,7 +2883,7 @@ void statement(void)
 	}
 	else
 	{
-		expression();
+		comma_expr();
 		require_match("ERROR in statement\nMISSING ;\n", ";");
 	}
 }
