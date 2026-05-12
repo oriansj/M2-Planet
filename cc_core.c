@@ -2545,16 +2545,21 @@ void process_for(void)
 
 	emit_label("FOR_", unique_id);
 
-	comma_expr();
-
-	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
+	if(!match(";", global_token->s))
+	{
+		comma_expr();
+		emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
+	}
 
 	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
 	emit_label("FOR_ITER_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
-	comma_expr();
+	if(!match(")", global_token->s))
+	{
+		comma_expr();
+	}
 
 	emit_unconditional_jump("FOR_", unique_id, "Check conditional");
 
