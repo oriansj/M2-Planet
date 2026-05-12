@@ -1634,10 +1634,37 @@ void bitwise_expr(void)
 	bitwise_expr_stub();
 }
 
+void expression(void);
+void conditional_expr(void)
+{
+	bitwise_expr();
+	if(match("?", global_token->s))
+	{
+		char* number_string = int2str(current_count, 10, TRUE);
+		current_count = current_count + 1;
+		char* unique_id = create_unique_id("", function->s, number_string);
+
+		emit_jump_if_zero(REGISTER_ZERO, "TERNARY_FALSE_", unique_id, "conditional expression false branch");
+
+		require_extra_token();
+		expression();
+		struct type* true_type = current_target;
+
+		emit_unconditional_jump("TERNARY_END_", unique_id, "conditional expression end");
+		require_match("ERROR in conditional expression\nMissing :\n", ":");
+
+		emit_label("TERNARY_FALSE_", unique_id);
+		expression();
+		current_target = promote_type(true_type, current_target);
+
+		emit_label("TERNARY_END_", unique_id);
+	}
+}
+
 /*
  * expression:
- *         bitwise-or-expr
- *         bitwise-or-expr = expression
+ *         conditional-expr
+ *         conditional-expr = expression
  */
 
 void primary_expr(void)
@@ -1976,7 +2003,7 @@ char* compound_operation(char* operator, int is_signed)
 
 void expression(void)
 {
-	bitwise_expr();
+	conditional_expr();
 	if(match("=", global_token->s))
 	{
 		char* store = "";
