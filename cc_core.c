@@ -3296,6 +3296,7 @@ int global_static_array(struct type* type_size, char* name)
 
 	/* Ensure properly closed */
 	require_match("missing close bracket\n", "]");
+	require(NULL != global_token, "Unterminated global array declaration\n");
 
 	if(global_token->s[0] == '=')
 	{
