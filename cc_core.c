@@ -703,12 +703,14 @@ void primary_expr_string(void)
 
 void primary_expr_char(void)
 {
+	current_target = integer;
 	emit_load_immediate(REGISTER_ZERO, escape_lookup(global_token->s + 1), "primary expr char");
 	require_extra_token();
 }
 
 void primary_expr_number(char* s)
 {
+	current_target = integer;
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
@@ -1132,7 +1134,25 @@ void multiply_by_object_size(int object_size)
 		return;
 	}
 
-	emit_mul_register_zero_with_immediate(current_target->type->size, "pointer arithmetic");
+	emit_mul_register_zero_with_immediate(object_size, "pointer arithmetic");
+}
+
+void multiply_register_one_by_object_size(int object_size)
+{
+	/* bootstrap mode can't depend upon on pointer arithmetic */
+	if(BOOTSTRAP_MODE) return;
+
+	if(object_size == 1)
+	{
+		/* No reason to multiply by one */
+		return;
+	}
+
+	emit_push(REGISTER_ZERO, "pointer arithmetic");
+	emit_move(REGISTER_ZERO, REGISTER_ONE, "pointer arithmetic");
+	emit_mul_register_zero_with_immediate(object_size, "pointer arithmetic");
+	emit_move(REGISTER_ONE, REGISTER_ZERO, "pointer arithmetic");
+	emit_pop(REGISTER_ZERO, "pointer arithmetic");
 }
 
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
@@ -1524,13 +1544,61 @@ void additive_expr_stub_b(void)
 	require(NULL != global_token, "Received EOF in additive_expr_stub_a\n");
 	if(match("+", global_token->s))
 	{
-		common_recursion(additive_expr_a);
+		struct type* left_type = current_target;
+		emit_push(REGISTER_ZERO, "_common_recursion");
+		require_extra_token();
+		additive_expr_a();
+		struct type* right_type = current_target;
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			current_target = left_type;
+		}
+		else if(!type_is_pointer(left_type) && type_is_pointer(right_type))
+		{
+			current_target = right_type;
+		}
+		else
+		{
+			current_target = promote_type(right_type, left_type);
+		}
+
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			multiply_by_object_size(left_type->type->size);
+		}
+
+		emit_pop(REGISTER_ONE, "_common_recursion");
+
+		if(!type_is_pointer(left_type) && type_is_pointer(right_type))
+		{
+			multiply_register_one_by_object_size(right_type->type->size);
+		}
+
 		emit_add(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
 		additive_expr_stub_b();
 	}
 	else if(match("-", global_token->s))
 	{
-		common_recursion(additive_expr_a);
+		struct type* left_type = current_target;
+		emit_push(REGISTER_ZERO, "_common_recursion");
+		require_extra_token();
+		additive_expr_a();
+		struct type* right_type = current_target;
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			current_target = left_type;
+		}
+		else
+		{
+			current_target = promote_type(right_type, left_type);
+		}
+
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			multiply_by_object_size(left_type->type->size);
+		}
+
+		emit_pop(REGISTER_ONE, "_common_recursion");
 		emit_rsub(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
 		additive_expr_stub_b();
 	}
