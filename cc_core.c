@@ -1704,7 +1704,7 @@ void primary_expr(void)
 				type_size = function_pointer;
 			}
 			require_match("Invalid character received in cast. Expected ')'.\n", ")");
-			primary_expr();
+			postfix_expr();
 			current_target = type_size;
 		}
 		else
