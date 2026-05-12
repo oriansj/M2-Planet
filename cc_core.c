@@ -298,6 +298,16 @@ int constant_expression(void)
 		require_extra_token();
 		return lhs * constant_expression();
 	}
+	else if(match("<<", global_token->s))
+	{
+		require_extra_token();
+		return lhs << constant_expression();
+	}
+	else if(match(">>", global_token->s))
+	{
+		require_extra_token();
+		return lhs >> constant_expression();
+	}
 	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
 	{
 		return lhs;
