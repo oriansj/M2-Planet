@@ -815,7 +815,9 @@ struct type* fallible_type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") ||
+			((NULL != global_token->next) &&
+			(match(global_token->next->s, "{") || match(global_token->next->s, ";"))))
 		{
 			return create_struct(FALSE);
 		}
@@ -837,7 +839,9 @@ struct type* fallible_type_name(void)
 	{
 		require_extra_token();
 		ret = lookup_global_type();
-		if(match(global_token->s, "{") || match(global_token->next->s, "{") || match(global_token->next->s, ";"))
+		if(match(global_token->s, "{") ||
+			((NULL != global_token->next) &&
+			(match(global_token->next->s, "{") || match(global_token->next->s, ";"))))
 		{
 			return create_struct(TRUE);
 		}
