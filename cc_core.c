@@ -1204,9 +1204,27 @@ void postfix_expr_array(void)
 	char* prefix_operator = global_token->prev->prev->s;
 
 	struct type* array = current_target;
-	common_recursion(expression);
-	current_target = array;
+	emit_push(REGISTER_ZERO, "_common_recursion");
+
+	require_extra_token();
+	expression();
+	struct type* index = current_target;
+	current_target = promote_type(index, array);
+
+	emit_pop(REGISTER_ONE, "_common_recursion");
 	require(NULL != current_target, "Arrays only apply to variables\n");
+
+	if(type_is_pointer(index) && !type_is_pointer(array))
+	{
+		emit_push(REGISTER_ZERO, "reverse array subscript");
+		emit_move(REGISTER_ZERO, REGISTER_ONE, "reverse array subscript");
+		emit_pop(REGISTER_ONE, "reverse array subscript");
+		current_target = index;
+	}
+	else
+	{
+		current_target = array;
+	}
 
 	char* assign = load_value(register_size, current_target->is_signed);
 
