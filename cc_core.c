@@ -986,6 +986,12 @@ void primary_expr_variable(void)
 		return;
 	}
 
+	if(options & TLO_LOCAL_ARRAY)
+	{
+		current_target = current_target->indirect;
+		return;
+	}
+
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 
