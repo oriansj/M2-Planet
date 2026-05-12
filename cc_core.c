@@ -3329,6 +3329,31 @@ void global_value_selection(struct type* type_size)
 			}
 			require_extra_token();
 		}
+		else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
+		{
+			char* name = global_token->s;
+			struct token_list* lookup_token = sym_lookup(name, global_function_list);
+			if(NULL != lookup_token)
+			{
+				globals_list = emit("&FUNCTION_", globals_list);
+				globals_list = emit(name, globals_list);
+				globals_list = emit(" ", globals_list);
+
+				if(register_size > 4)
+				{
+					globals_list = emit("%0 ", globals_list);
+				}
+			}
+			else
+			{
+				line_error();
+				fputs("Invalid global pointer initializer '", stderr);
+				fputs(name, stderr);
+				fputs("'.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			require_extra_token();
+		}
 		else
 		{
 			line_error();
