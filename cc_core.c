@@ -1185,6 +1185,7 @@ int unary_expr_sizeof(void)
 {
 	require_extra_token();
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
+	require(NULL != global_token, "Incomplete sizeof expression.\n");
 	struct token_list* t = NULL;
 
 	int num_dereferences = 0;
