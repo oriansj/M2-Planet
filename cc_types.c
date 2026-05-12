@@ -456,6 +456,7 @@ char* parse_function_pointer(void)
 {
 	require_extra_token(); /* skip '(' */
 	require_match("Required '*' after '(' in struct function pointer.", "*");
+	require(NULL != global_token, "Incomplete function pointer declarator.\n");
 
 	char* name = NULL;
 	if(global_token->s[0] != ')')
@@ -466,15 +467,18 @@ char* parse_function_pointer(void)
 
 	require_match("Required ')' after name in struct function pointer.", ")");
 	require_match("Required '(' after ')' in struct function pointer.", "(");
+	require(NULL != global_token, "Incomplete function pointer parameter list.\n");
 
 	while(global_token->s[0] != ')')
 	{
 		type_name();
+		require(NULL != global_token, "Incomplete function pointer parameter list.\n");
 
 		if(global_token->s[0] == '(')
 		{
 			parse_function_pointer();
 		}
+		require(NULL != global_token, "Incomplete function pointer parameter list.\n");
 
 		if(global_token->s[0] != ')' && global_token->s[0] != ',')
 		{
