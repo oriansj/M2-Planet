@@ -369,7 +369,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 
 	if(TRUE == is_function_pointer)
 	{
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_TEMP, 0, "Address of saved function pointer");
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, 0, "Address of saved function pointer");
 		emit_dereference(REGISTER_ZERO, "Restore function pointer from stack");
 
 		if(Architecture & ARCH_FAMILY_KNIGHT)
@@ -436,8 +436,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 	{
 		emit_move(REGISTER_STACK, REGISTER_BASE, "Clean up function arguments");
 	}
-
-	if(is_function_pointer)
+	if(TRUE == is_function_pointer)
 	{
 		emit_pop(REGISTER_ONE, "Discard saved function pointer slot");
 	}
