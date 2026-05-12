@@ -1783,6 +1783,11 @@ void primary_expr(void)
 		else
 		{
 			expression();
+			while(match(",", global_token->s))
+			{
+				require_extra_token();
+				expression();
+			}
 			require_match("Error in Primary expression\nDidn't get )\n", ")");
 		}
 	}
