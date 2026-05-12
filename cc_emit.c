@@ -1147,7 +1147,11 @@ void emit_load_relative_to_register(int destination, int offset_register, int va
 	}
 	else if(AARCH64 == Architecture)
 	{
-		if (destination == REGISTER_ZERO && (offset_register == REGISTER_BASE || offset_register == REGISTER_LOCALS) &&
+		if(0 == value)
+		{
+			emit_move(destination, offset_register, note);
+		}
+		else if (destination == REGISTER_ZERO && (offset_register == REGISTER_BASE || offset_register == REGISTER_LOCALS) &&
 		    ((absolute_value % 8 == 0) && absolute_value <= 128))
 		{
 			emit_out("sub_");
@@ -1369,4 +1373,3 @@ void emit_return()
 {
 	emit_out(return_instruction);
 }
-
