@@ -2089,6 +2089,8 @@ void collect_local(void)
 			require_extra_token();
 		}
 
+		require(NULL != name, "Local function pointer declarations require a name.\n");
+
 		a = sym_declare(name, current_type, list_to_append_to, TLO_LOCAL);
 		list_to_append_to = a;
 
