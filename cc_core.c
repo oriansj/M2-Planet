@@ -2991,6 +2991,7 @@ void collect_arguments(void)
 	require_extra_token();
 	struct type* type_size;
 	struct token_list* a;
+	char* name;
 
 	while(!match(")", global_token->s))
 	{
@@ -3009,7 +3010,39 @@ void collect_arguments(void)
 		type_size = type_name();
 		require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
 		require(NULL != type_size, "Must have non-null type\n");
-		if(global_token->s[0] == ')')
+		if(global_token->s[0] == '(')
+		{
+			name = parse_function_pointer();
+			if(NULL != name)
+			{
+				require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in argument variable name\n");
+				require(!iskeywordp(name), "You are not allowed to use a keyword as a argument variable name\n");
+				a = sym_declare(name, function_pointer, function->arguments, TLO_ARGUMENT);
+				if(NULL == function->arguments)
+				{
+					if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = 0;
+					else if(X86 == Architecture) a->depth = -4;
+					else if(AMD64 == Architecture) a->depth = -8;
+					else if(ARMV7L == Architecture) a->depth = 4;
+					else if(AARCH64 == Architecture) a->depth = register_size;
+					else if(RISCV32 == Architecture) a->depth = -4;
+					else if(RISCV64 == Architecture) a->depth = -8;
+				}
+				else
+				{
+					if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->arguments->depth + register_size;
+					else if(X86 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
+					else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
+					else if(RISCV32 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(RISCV64 == Architecture) a->depth = function->arguments->depth - register_size;
+				}
+
+				function->arguments = a;
+			}
+		}
+		else if(global_token->s[0] == ')')
 		{
 			/* foo(int,char,void) doesn't need anything done */
 			continue;
