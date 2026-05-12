@@ -1226,14 +1226,8 @@ void postfix_expr_array(void)
 		current_target = array;
 	}
 
-	char* assign = load_value(register_size, current_target->is_signed);
-
-	/* Add support for Ints */
-	if(match("char*", current_target->name))
-	{
-		assign = load_value(1, TRUE);
-	}
-	else
+	char* assign = "";
+	if(!match("char*", current_target->name))
 	{
 		emit_mul_register_zero_with_immediate(current_target->type->size, "primary expr array");
 	}
@@ -1248,6 +1242,14 @@ void postfix_expr_array(void)
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator)
 	{
 		assign = "";
+	}
+	else if(match("char*", current_target->name))
+	{
+		assign = load_value(1, TRUE);
+	}
+	else
+	{
+		assign = load_value(current_target->type->size, current_target->type->is_signed);
 	}
 	if(match("[", global_token->s))
 	{
