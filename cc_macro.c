@@ -492,6 +492,7 @@ void handle_function_like_macro(struct macro_list* hold)
 {
 
 	eat_current_token(); /* Skip '(' */
+	require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 	struct macro_argument* argument = calloc(1, sizeof(struct macro_argument));
 	hold->arguments = argument;
 
@@ -518,6 +519,7 @@ void handle_function_like_macro(struct macro_list* hold)
 
 		argument->name = macro_token->s;
 		eat_current_token(); /* skip past name to comma */
+		require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 
 		if(macro_token->s[0] == ',')
 		{
@@ -525,6 +527,7 @@ void handle_function_like_macro(struct macro_list* hold)
 			argument = argument->next;
 
 			eat_current_token(); /* skip comma */
+			require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 		}
 	}
 
@@ -550,6 +553,7 @@ void handle_define(void)
 
 	/* discard the macro name */
 	eat_current_token();
+	require(NULL != macro_token, "got an EOF terminated #define after macro name\n");
 
 	/* This is the only place in which a token can be whitespace
 	 * We need this to distinguish between function-like macros
@@ -565,6 +569,7 @@ void handle_define(void)
 	{
 		handle_function_like_macro(hold);
 	}
+	require(NULL != macro_token, "got an EOF terminated #define after macro name\n");
 
 	if (macro_token->s[0] == '\n')
 	{
@@ -578,6 +583,7 @@ void handle_define(void)
 	{
 		expansion_end = macro_token;
 		eat_current_token();
+		require(NULL != macro_token, "got an EOF terminated #define replacement\n");
 	}
 
 	hold->expansion->prev = NULL;
@@ -877,18 +883,27 @@ void macro_directive(void)
 void eat_until_endif(void)
 {
 	/* This #if block is nested inside of an #if block that needs to be dropped, lose EVERYTHING */
-	do
+	int nested_depth = 0;
+	while(TRUE)
 	{
 		require(NULL != macro_token, "Unterminated #if block\n");
 		if(match("#if", macro_token->s) || match("#ifdef", macro_token->s) || match("#ifndef", macro_token->s))
 		{
+			nested_depth = nested_depth + 1;
 			eat_current_token();
-			eat_until_endif();
+			continue;
 		}
 
+		if(match("#endif", macro_token->s))
+		{
+			if(0 == nested_depth)
+			{
+				return;
+			}
+			nested_depth = nested_depth - 1;
+		}
 		eat_current_token();
-		require(NULL != macro_token, "Unterminated #if block\n");
-	} while(!match("#endif", macro_token->s));
+	}
 }
 
 void eat_block(void)
@@ -989,6 +1004,7 @@ struct token_list* maybe_expand(struct token_list* token)
 			exit(EXIT_FAILURE);
 		}
 		token = eat_token(token); /* skip '(' */
+		require(NULL != token, "EOF in function-like macro invocation\n");
 
 		expansion = deep_copy_token_list(hold->expansion);
 

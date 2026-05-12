@@ -149,7 +149,14 @@ void line_error_token(struct token_list *token)
 		fputs("problem at end of file\n", stderr);
 		return;
 	}
-	fputs(token->filename, stderr);
+	if(NULL == token->filename)
+	{
+		fputs("<unknown>", stderr);
+	}
+	else
+	{
+		fputs(token->filename, stderr);
+	}
 	fputs(":", stderr);
 	fputs(int2str(token->linenumber, 10, TRUE), stderr);
 	fputs(":", stderr);
@@ -235,6 +242,15 @@ int constant_unary_expression(void)
 		struct token_list* lookup = sym_lookup(global_token->s, global_constant_list);
 		if(lookup != NULL)
 		{
+			if(lookup->arguments == NULL || lookup->arguments->s == NULL)
+			{
+				line_error();
+				fputs("Unable to use incomplete enum constant '", stderr);
+				fputs(global_token->s, stderr);
+				fputs("' in constant expression.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+
 			require_extra_token();
 			return strtoint(lookup->arguments->s);
 		}
@@ -1178,6 +1194,7 @@ int unary_expr_sizeof(void)
 {
 	require_extra_token();
 	require_match("ERROR in unary_expr\nMissing (\n", "(");
+	require(NULL != global_token, "Incomplete sizeof expression.\n");
 	struct token_list* t = NULL;
 
 	int num_dereferences = 0;
@@ -1701,7 +1718,7 @@ void primary_expr(void)
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
 		struct token_list* variable = sym_lookup(global_token->s, global_function_list);
-		if (variable != NULL && global_token->next->s[0] == '(')
+		if (variable != NULL && global_token->next != NULL && global_token->next->s[0] == '(')
 		{
 			/* Call function directly without loading into register optimization */
 			require_extra_token();
@@ -2081,6 +2098,8 @@ void collect_local(void)
 			name = global_token->s;
 			require_extra_token();
 		}
+
+		require(NULL != name, "Local function pointer declarations require a name.\n");
 
 		a = sym_declare(name, current_type, list_to_append_to, TLO_LOCAL);
 		list_to_append_to = a;
@@ -3289,6 +3308,7 @@ int global_static_array(struct type* type_size, char* name)
 
 	/* Ensure properly closed */
 	require_match("missing close bracket\n", "]");
+	require(NULL != global_token, "Unterminated global array declaration\n");
 
 	if(global_token->s[0] == '=')
 	{
