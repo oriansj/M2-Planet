@@ -492,6 +492,7 @@ void handle_function_like_macro(struct macro_list* hold)
 {
 
 	eat_current_token(); /* Skip '(' */
+	require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 	struct macro_argument* argument = calloc(1, sizeof(struct macro_argument));
 	hold->arguments = argument;
 
@@ -518,6 +519,7 @@ void handle_function_like_macro(struct macro_list* hold)
 
 		argument->name = macro_token->s;
 		eat_current_token(); /* skip past name to comma */
+		require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 
 		if(macro_token->s[0] == ',')
 		{
@@ -525,6 +527,7 @@ void handle_function_like_macro(struct macro_list* hold)
 			argument = argument->next;
 
 			eat_current_token(); /* skip comma */
+			require(NULL != macro_token, "got an EOF terminated function-like #define argument list\n");
 		}
 	}
 
