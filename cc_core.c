@@ -308,12 +308,15 @@ void function_call(struct token_list* s, int is_function_pointer)
 	emit_push(REGISTER_BASE, "Protect the old base pointer");
 	emit_push(REGISTER_LOCALS, "Protect the old locals pointer");
 
-	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
-
+	/* Spill the function pointer to the stack instead of a register.
+	 * On x86 REGISTER_TEMP2 is EDX, which is implicitly written by mul
+	 * (used to scale array subscripts) when evaluating arguments. */
 	if(is_function_pointer)
 	{
-		emit_move(REGISTER_TEMP2, REGISTER_ZERO, "Save function pointer address");
+		emit_push(REGISTER_ZERO, "Save function pointer on stack");
 	}
+
+	emit_move(REGISTER_TEMP, REGISTER_STACK, "Copy new base pointer");
 
 	int passed = 0;
 	while(global_token->s[0] != ')')
@@ -340,7 +343,8 @@ void function_call(struct token_list* s, int is_function_pointer)
 
 	if(TRUE == is_function_pointer)
 	{
-		emit_move(REGISTER_ZERO, REGISTER_TEMP2, "Restore function pointer");
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_TEMP, 0, "Address of saved function pointer");
+		emit_dereference(REGISTER_ZERO, "Restore function pointer from stack");
 
 		if(Architecture & ARCH_FAMILY_KNIGHT)
 		{
@@ -405,6 +409,11 @@ void function_call(struct token_list* s, int is_function_pointer)
 	if(passed > 0)
 	{
 		emit_move(REGISTER_STACK, REGISTER_BASE, "Clean up function arguments");
+	}
+
+	if(is_function_pointer)
+	{
+		emit_pop(REGISTER_ONE, "Discard saved function pointer slot");
 	}
 
 	emit_pop(REGISTER_LOCALS, "Restore old locals pointer");
