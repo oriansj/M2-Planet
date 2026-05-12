@@ -3516,6 +3516,15 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 int global_static_array(struct type* type_size, char* name)
 {
+	if(global_token->s[0] == '[' && global_token->next != NULL && global_token->next->s[0] == ']' &&
+	   global_token->next->next != NULL &&
+	   (global_token->next->next->s[0] == ';' || global_token->next->next->s[0] == ','))
+	{
+		require_extra_token();
+		require_match("missing close bracket\n", "]");
+		return 0;
+	}
+
 	global_variable_header(name);
 
 	if(global_token->s[0] == ';' || global_token->s[0] == ',')
