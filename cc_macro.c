@@ -883,18 +883,27 @@ void macro_directive(void)
 void eat_until_endif(void)
 {
 	/* This #if block is nested inside of an #if block that needs to be dropped, lose EVERYTHING */
-	do
+	int nested_depth = 0;
+	while(TRUE)
 	{
 		require(NULL != macro_token, "Unterminated #if block\n");
 		if(match("#if", macro_token->s) || match("#ifdef", macro_token->s) || match("#ifndef", macro_token->s))
 		{
+			nested_depth = nested_depth + 1;
 			eat_current_token();
-			eat_until_endif();
+			continue;
 		}
 
+		if(match("#endif", macro_token->s))
+		{
+			if(0 == nested_depth)
+			{
+				return;
+			}
+			nested_depth = nested_depth - 1;
+		}
 		eat_current_token();
-		require(NULL != macro_token, "Unterminated #if block\n");
-	} while(!match("#endif", macro_token->s));
+	}
 }
 
 void eat_block(void)
