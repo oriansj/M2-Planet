@@ -550,6 +550,7 @@ void handle_define(void)
 
 	/* discard the macro name */
 	eat_current_token();
+	require(NULL != macro_token, "got an EOF terminated #define after macro name\n");
 
 	/* This is the only place in which a token can be whitespace
 	 * We need this to distinguish between function-like macros
@@ -565,6 +566,7 @@ void handle_define(void)
 	{
 		handle_function_like_macro(hold);
 	}
+	require(NULL != macro_token, "got an EOF terminated #define after macro name\n");
 
 	if (macro_token->s[0] == '\n')
 	{
@@ -578,6 +580,7 @@ void handle_define(void)
 	{
 		expansion_end = macro_token;
 		eat_current_token();
+		require(NULL != macro_token, "got an EOF terminated #define replacement\n");
 	}
 
 	hold->expansion->prev = NULL;
