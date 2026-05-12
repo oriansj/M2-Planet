@@ -995,6 +995,7 @@ struct token_list* maybe_expand(struct token_list* token)
 			exit(EXIT_FAILURE);
 		}
 		token = eat_token(token); /* skip '(' */
+		require(NULL != token, "EOF in function-like macro invocation\n");
 
 		expansion = deep_copy_token_list(hold->expansion);
 
