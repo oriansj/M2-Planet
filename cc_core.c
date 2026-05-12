@@ -1708,7 +1708,7 @@ void primary_expr(void)
 	else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
 	{
 		struct token_list* variable = sym_lookup(global_token->s, global_function_list);
-		if (variable != NULL && global_token->next->s[0] == '(')
+		if (variable != NULL && global_token->next != NULL && global_token->next->s[0] == '(')
 		{
 			/* Call function directly without loading into register optimization */
 			require_extra_token();
