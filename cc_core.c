@@ -149,7 +149,14 @@ void line_error_token(struct token_list *token)
 		fputs("problem at end of file\n", stderr);
 		return;
 	}
-	fputs(token->filename, stderr);
+	if(NULL == token->filename)
+	{
+		fputs("<unknown>", stderr);
+	}
+	else
+	{
+		fputs(token->filename, stderr);
+	}
 	fputs(":", stderr);
 	fputs(int2str(token->linenumber, 10, TRUE), stderr);
 	fputs(":", stderr);
