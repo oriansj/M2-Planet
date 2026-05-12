@@ -850,6 +850,7 @@ void emit_va_end_intrinsic(void)
 }
 
 int num_dereference_after_postfix;
+void prefix_expr_inc_or_dec(void);
 struct type* lookup_global_type(void);
 int token_starts_type_name(struct token_list* token)
 {
@@ -898,6 +899,18 @@ void primary_expr_variable(void)
 		num_dereference = num_dereference + 1;
 	}
 	num_dereference_after_postfix = num_dereference;
+
+	if(match("++", global_token->s) || match("--", global_token->s))
+	{
+		prefix_expr_inc_or_dec();
+		while(num_dereference > 0)
+		{
+			current_target = current_target->type;
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			num_dereference = num_dereference - 1;
+		}
+		return;
+	}
 
 	struct type* cast_type = NULL;
 	if(global_token->s[0] == '(')
@@ -1015,6 +1028,7 @@ void primary_expr_variable(void)
 }
 
 void primary_expr(void);
+void postfix_expr(void);
 struct type* promote_type(struct type* a, struct type* b)
 {
 	require(NULL != b, "impossible case 1 in promote_type\n");
@@ -1034,6 +1048,48 @@ struct type* promote_type(struct type* a, struct type* b)
 	}
 	require(NULL != i, "impossible case 3 in promote_type\n");
 	return i;
+}
+
+void prefix_expr_inc_or_dec(void)
+{
+	int is_subtract = global_token->s[0] == '-';
+	maybe_bootstrap_error("prefix operators --/++");
+
+	emit_out("# prefix inc/dec\n");
+
+	emit_push(REGISTER_ZERO, "Previous value");
+	require_extra_token();
+	postfix_expr();
+	emit_pop(REGISTER_ONE, "Restore previous value");
+
+	emit_push(REGISTER_ONE, "Previous value");
+	emit_push(REGISTER_ZERO, "Address of variable");
+
+	emit_dereference(REGISTER_ZERO, "Deref to get value");
+
+	int value = 1;
+	if(type_is_pointer(current_target))
+	{
+		value = current_target->type->size;
+	}
+
+	if(is_subtract)
+	{
+		emit_sub_immediate(REGISTER_ZERO, value, "Sub prefix from deref value");
+	}
+	else
+	{
+		emit_add_immediate(REGISTER_ZERO, value, "Add prefix to deref value");
+	}
+
+	emit_pop(REGISTER_ONE, "Address of variable");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(current_target->size));
+
+	emit_pop(REGISTER_ONE, "Previous value");
+
+	emit_out("# prefix inc/dec end\n");
 }
 
 void common_recursion(FUNCTION f)
@@ -1757,44 +1813,7 @@ void primary_expr(void)
 	}
 	else if(match("--", global_token->s) || match("++", global_token->s))
 	{
-		int is_subtract = global_token->s[0] == '-';
-		maybe_bootstrap_error("prefix operators --/++");
-
-		emit_out("# prefix inc/dec\n");
-
-		emit_push(REGISTER_ZERO, "Previous value");
-		require_extra_token();
-		postfix_expr();
-		emit_pop(REGISTER_ONE, "Restore previous value");
-
-		emit_push(REGISTER_ONE, "Previous value");
-		emit_push(REGISTER_ZERO, "Address of variable");
-
-		emit_dereference(REGISTER_ZERO, "Deref to get value");
-
-		int value = 1;
-		if(type_is_pointer(current_target))
-		{
-			value = current_target->type->size;
-		}
-
-		if(is_subtract)
-		{
-			emit_sub_immediate(REGISTER_ZERO, value, "Sub prefix from deref value");
-		}
-		else
-		{
-			emit_add_immediate(REGISTER_ZERO, value, "Add prefix to deref value");
-		}
-
-		emit_pop(REGISTER_ONE, "Address of variable");
-
-		/* Store REGISTER_ZERO in REGISTER_ONE deref */
-		emit_out(store_value(current_target->size));
-
-		emit_pop(REGISTER_ONE, "Previous value");
-
-		emit_out("# prefix inc/dec end\n");
+		prefix_expr_inc_or_dec();
 	}
 	else if(global_token->s[0] == '(')
 	{
