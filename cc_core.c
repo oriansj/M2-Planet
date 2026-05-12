@@ -840,6 +840,46 @@ void emit_va_end_intrinsic(void)
 }
 
 int num_dereference_after_postfix;
+struct type* lookup_global_type(void);
+int token_starts_type_name(struct token_list* token)
+{
+	if(NULL == token) return FALSE;
+	if(match("const", token->s) || match("extern", token->s))
+	{
+		return token_starts_type_name(token->next);
+	}
+	if(match("enum", token->s) || match("struct", token->s) || match("union", token->s))
+	{
+		return TRUE;
+	}
+
+	struct token_list* old_token = global_token;
+	global_token = token;
+	struct type* type = lookup_global_type();
+	global_token = old_token;
+	return NULL != type;
+}
+
+void dereference_parenthesized_expression(int num_dereference)
+{
+	require_match("Expected '(' after dereference operator.\n", "(");
+	expression();
+	require_match("Expected ')' after dereferenced expression.\n", ")");
+
+	while(num_dereference > 1)
+	{
+		current_target = current_target->type;
+		emit_out(load_value(current_target->size, current_target->is_signed));
+		num_dereference = num_dereference - 1;
+	}
+
+	current_target = current_target->type;
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
+	{
+		emit_out(load_value(current_target->size, current_target->is_signed));
+	}
+}
+
 void primary_expr_variable(void)
 {
 	int num_dereference = 0;
@@ -852,6 +892,12 @@ void primary_expr_variable(void)
 	struct type* cast_type = NULL;
 	if(global_token->s[0] == '(')
 	{
+		if((num_dereference > 0) && !token_starts_type_name(global_token->next))
+		{
+			dereference_parenthesized_expression(num_dereference);
+			return;
+		}
+
 		require_extra_token();
 
 		cast_type = type_name();
