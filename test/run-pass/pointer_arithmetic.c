@@ -292,6 +292,22 @@ int test_false_positives(int* i) {
 	return 0;
 }
 
+int test_subscript_index_type(char* mem, int* offsets) {
+	offsets[1] = 3;
+	mem[4] = 77;
+	mem[8] = 88;
+
+	if(mem[offsets[1] + 1] != 77) {
+		return 1;
+	}
+
+	if(mem[offsets[1] + 5] != 88) {
+		return 1;
+	}
+
+	return 0;
+}
+
 int main() {
 	int i;
 
@@ -306,6 +322,10 @@ int main() {
 		chars[i] = i;
 	}
 	if(test_chars(chars) != 0) {
+		return 1;
+	}
+
+	if(test_subscript_index_type(chars, ints) != 0) {
 		return 1;
 	}
 
