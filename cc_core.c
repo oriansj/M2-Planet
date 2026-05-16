@@ -904,7 +904,20 @@ void primary_expr_variable(void)
 	if(match("++", global_token->s) || match("--", global_token->s))
 	{
 		prefix_expr_inc_or_dec();
-		while(num_dereference > 0)
+		if(match("=", global_token->s) || is_compound_assignment(global_token->s))
+		{
+			while(num_dereference > 1)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+				num_dereference = num_dereference - 1;
+			}
+			if(num_dereference > 0)
+			{
+				current_target = current_target->type;
+			}
+		}
+		else while(num_dereference > 0)
 		{
 			current_target = current_target->type;
 			emit_out(load_value(current_target->size, current_target->is_signed));
@@ -1307,10 +1320,11 @@ void postfix_expr_array(void)
 		current_target = array;
 	}
 
+	struct type* indexed_type = current_target->type;
 	char* assign = "";
 	if(!match("char*", current_target->name))
 	{
-		emit_mul_register_zero_with_immediate(current_target->type->size, "primary expr array");
+		emit_mul_register_zero_with_immediate(indexed_type->size, "primary expr array");
 	}
 
 	emit_add(REGISTER_ZERO, REGISTER_ONE, TRUE, "primary expr array");
@@ -1330,12 +1344,9 @@ void postfix_expr_array(void)
 	}
 	else
 	{
-		assign = load_value(current_target->type->size, current_target->type->is_signed);
+		assign = load_value(indexed_type->size, indexed_type->is_signed);
 	}
-	if(match("[", global_token->s))
-	{
-		current_target = current_target->type;
-	}
+	current_target = indexed_type;
 
 	emit_out(assign);
 }

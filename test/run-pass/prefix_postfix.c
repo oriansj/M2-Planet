@@ -282,6 +282,19 @@ int pointers_postfix_complex(int* a, char* b, struct T* t) {
 	return 0;
 }
 
+int prefix_dereference_assignment(int* a) {
+	int* p = a;
+	p += 2;
+
+	*--p = 35;
+	if(a[1] != 35) return 1;
+
+	*++p = 36;
+	if(a[2] != 36) return 2;
+
+	return 0;
+}
+
 int arr[3];
 char brr[3];
 struct T trr[3];
@@ -346,5 +359,6 @@ int main() {
 	if(b != 0) return 33;
 
 	if(pointers_postfix_complex(arr, brr, trr_ptr) != 0) return 34;
-}
 
+	if(prefix_dereference_assignment(arr) != 0) return 35;
+}
