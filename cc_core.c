@@ -909,10 +909,11 @@ void primary_expr_variable(void)
 
 	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
-	int is_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
+	int is_indexed_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
+	int is_local_array = (options & TLO_LOCAL_ARRAY) != 0;
 	int is_function = options & TLO_FUNCTION;
 
-	if(is_prefix_operator || is_postfix_operator || is_local_array || is_function)
+	if(is_prefix_operator || is_postfix_operator || is_indexed_local_array || is_function)
 	{
 		return;
 	}
@@ -920,7 +921,7 @@ void primary_expr_variable(void)
 	int is_assignment = match("=", global_token->s);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 
-	if(!is_assignment && !is_compound_operator)
+	if(!is_assignment && !is_compound_operator && !is_local_array)
 	{
 		int size = register_size;
 		if(options == TLO_LOCAL || options == TLO_ARGUMENT)
@@ -934,7 +935,11 @@ void primary_expr_variable(void)
 	{
 		while (num_dereference > 0)
 		{
-			emit_out(load_value(current_target->size, current_target->is_signed));
+			if(!is_local_array)
+			{
+				emit_out(load_value(current_target->size, current_target->is_signed));
+			}
+			is_local_array = FALSE;
 			current_target = current_target->type;
 			num_dereference = num_dereference - 1;
 		}
