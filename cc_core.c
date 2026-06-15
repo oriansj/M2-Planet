@@ -1151,6 +1151,7 @@ void postfix_expr_dot(void)
 void postfix_expr_array(void)
 {
 	char* prefix_operator = global_token->prev->prev->s;
+	int was_address_of = Address_of;
 
 	struct type* array = current_target;
 	common_recursion(expression);
@@ -1176,7 +1177,7 @@ void postfix_expr_array(void)
 
 	int is_prefix_operator = match("++", prefix_operator) || match("--", prefix_operator);
 	int is_postfix_operator = match("++", global_token->s) || match("--", global_token->s);
-	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator)
+	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator || was_address_of)
 	{
 		assign = "";
 	}
