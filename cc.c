@@ -152,8 +152,9 @@ int main(int argc, char** argv)
 			else
 			{
 				fputs("Unknown architecture: ", stderr);
+				if(NULL == arch) { arch = ""; }
 				fputs(arch, stderr);
-				fputs(" know values are: knight-native, knight-posix, x86, amd64, armv7l, aarch64, riscv32 and riscv64\n", stderr);
+				fputs(" known values are: knight-native, knight-posix, x86, amd64, armv7l, aarch64, riscv32 and riscv64\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			i = i + 2;
