@@ -108,6 +108,7 @@ test/results:
 	mkdir -p test/results
 
 # tests
+.PHONY: test
 test: bin/M2-Planet | bin test/results
 	+make -f makefile-tests --output-sync
 	sha256sum -c test/test.answers
