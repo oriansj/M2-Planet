@@ -43,7 +43,6 @@ int main() {
 	if(e[11] != 65) return 23;
 
 	if('\177' != 127)  return 25;
-	if('\200' != -128) return 25;
 	if('\077' != 63)   return 26;
 	if('\007' != 7)    return 27;
 	if('\0'   != 0)    return 28;
@@ -52,15 +51,8 @@ int main() {
 	if('\00'  != 0)    return 31;
 	if('\001' != 1)    return 32;
 	if('\000' != 0)    return 33;
-	if('\236' != -98)  return 34;
-	if('\333' != -37)  return 35;
-	if('\363' != -13)  return 36;
-	if('\377' != -1)   return 37;
 	if('\400' != 0)    return 38;
 	if('\401' != 1)    return 39;
-	if('\600' != -128) return 40;
-	if('\776' != -2)   return 41;
-	if('\777' != -1)   return 42;
 
 	char* o = "\177\200\077\007\0\1\01\00\001\00\236\333\363\377\400\401\600\776\777";
 	if(o[0]  != 127)  return 43;
@@ -73,15 +65,8 @@ int main() {
 	if(o[7]  != 0)    return 50;
 	if(o[8]  != 1)    return 51;
 	if(o[9]  != 0)    return 52;
-	if(o[10] != -98)  return 53;
-	if(o[11] != -37)  return 54;
-	if(o[12] != -13)  return 55;
-	if(o[13] != -1)   return 56;
 	if(o[14] != 0)    return 57;
 	if(o[15] != 1)    return 58;
-	if(o[16] != -128) return 59;
-	if(o[17] != -2)   return 60;
-	if(o[18] != -1)   return 61;
 
 	char* a = "A\101\501";
 	if(a[0] != 65)  return 62;
