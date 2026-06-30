@@ -1,0 +1,47 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            base: ubuntu-latest
+          - arch: x86
+            base: ubuntu-latest
+          - arch: aarch64
+            base: ubuntu-24.04-arm
+          - arch: armv7l
+            base: ubuntu-24.04-arm
+          - arch: riscv64
+            base: ubuntu-24.04-riscv
+          - arch: riscv32
+            base: ubuntu-latest
+    runs-on: ${{ matrix.base }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y build-essential git ${{ matrix.arch == 'riscv32' && 'qemu-user' || '' }}
+
+      - name: Install mescc-tools
+        run: cd ${RUNNER_TEMP} && git clone --recurse-submodules --depth=1 https://github.com/oriansj/mescc-tools && cd mescc-tools && make install -j$(nproc)
+
+      - name: Set up access and checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Build M2-Planet
+        run: make
+
+      - name: Test
+        env:
+          GET_MACHINE_FLAGS: --override ${{ matrix.arch }}
+        run: |
+           make test
+
