@@ -32,6 +32,11 @@ int main()
 {
 	MAX_STRING = 4096;
 	hold_string = calloc(MAX_STRING, sizeof(char));
+	if(NULL == hold_string)
+	{
+		fputs("Unable to allocate memory\n", stderr);
+		exit(EXIT_FAILURE);
+	}
 	FILE* in = fopen("tape_01", "r");
 	FILE* destination_file = fopen("tape_02", "w");
 	Architecture = KNIGHT_NATIVE;
