@@ -2437,11 +2437,20 @@ void process_for(void)
 	require_extra_token();
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
-	/* fallible_type_name moves the global token if non-NULL */
+	/* fallible_type_name moves the global token if non-NULL. A struct or
+	 * union name is also an ordinary identifier in C, so `for (nt = 0; ...)`
+	 * with a `struct nt` in scope is an assignment, not a declaration: here a
+	 * declaration only starts when a declarator follows the type name. */
 	struct token_list* current = global_token;
-	if (fallible_type_name() != NULL)
+	int declares = FALSE;
+	if(fallible_type_name() != NULL)
 	{
-		global_token = current;
+		char c = global_token->s[0];
+		declares = ('*' == c) || ('(' == c) || in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
+	}
+	global_token = current;
+	if(declares)
+	{
 		collect_local();
 	}
 	else if(!match(";", global_token->s))
