@@ -35,6 +35,10 @@ struct type* current_target;
 /* Declared return type of the function being declared; function_call takes a
  * call's result type from it. */
 struct type* function_return_type;
+/* Number of string initializers emitted so far; their storage labels are
+ * numbered, because a string's text may hold spaces, quotes and escapes,
+ * which no assembler accepts in a label. */
+int string_count;
 char* break_target_head;
 char* break_target_func;
 char* break_target_num;
@@ -3094,8 +3098,11 @@ void global_value_selection(struct type* type_size)
 	{
 		if(('"' == global_token->s[0]))
 		{
-			char* name = global_token->s + 1;
-			globals_list = emit("&GLOBAL_", globals_list);
+			/* The storage label is numbered: a string's text may carry
+			 * spaces, quotes and escapes, which M1 rejects in a label. */
+			char* name = int2str(string_count, 10, FALSE);
+			string_count = string_count + 1;
+			globals_list = emit("&GLOBAL_M2LIT", globals_list);
 			globals_list = emit(name, globals_list);
 			globals_list = emit("_contents ", globals_list);
 
@@ -3104,7 +3111,7 @@ void global_value_selection(struct type* type_size)
 				global_value_output(0, 4);
 			}
 
-			strings_list = emit(":GLOBAL_", strings_list);
+			strings_list = emit(":GLOBAL_M2LIT", strings_list);
 			strings_list = emit(name, strings_list);
 			strings_list = emit("_contents\n", strings_list);
 			strings_list = emit(parse_string(global_token->s), strings_list);
