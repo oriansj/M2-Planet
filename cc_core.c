@@ -32,6 +32,9 @@ struct token_list* function;
 
 /* What we are currently working on */
 struct type* current_target;
+/* Declared return type of the function being declared; function_call takes a
+ * call's result type from it. */
+struct type* function_return_type;
 char* break_target_head;
 char* break_target_func;
 char* break_target_num;
@@ -313,6 +316,10 @@ int constant_expression(void)
 void expression(void);
 void function_call(struct token_list* s, int is_function_pointer)
 {
+	/* The type at entry is the function pointer's, when the call goes
+	 * through one; reading the arguments overwrites current_target. */
+	struct type* callee = current_target;
+
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
 
@@ -349,6 +356,22 @@ void function_call(struct token_list* s, int is_function_pointer)
 	}
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
+
+	/* The expression's type is the value's type: the callee's declared return
+	 * type, not the last argument's one, which is what expression() left in
+	 * current_target. A member access through the call and the width of the
+	 * load of its value both depend on it. */
+	if(TRUE == is_function_pointer)
+	{
+		/* M2-Planet keeps no per-pointer return type; the pointer's own
+		 * type is register-sized, which keeps the value whole. */
+		if(NULL != callee) current_target = callee;
+	}
+	else
+	{
+		if(NULL != s->type) current_target = s->type;
+		else current_target = integer;
+	}
 
 	if(ARMV7L == Architecture)
 	{
@@ -2865,6 +2888,7 @@ void declare_function(void)
 {
 	current_count = 0;
 	function = sym_declare(global_token->prev->s, NULL, global_function_list, TLO_FUNCTION);
+	function->type = function_return_type;
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = function;
@@ -3458,6 +3482,7 @@ new_type:
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
+		function_return_type = type_size;
 		declare_function();
 		goto new_type;
 	}
