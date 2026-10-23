@@ -842,6 +842,8 @@ void emit_va_end_intrinsic(void)
 int num_dereference_after_postfix;
 void primary_expr_variable(void)
 {
+	/* A prefix ++ or -- stands ahead of the operand's `*`s. */
+	int is_prefix_operator = match("++", global_token->prev->s) || match("--", global_token->prev->s);
 	int num_dereference = 0;
 	while(global_token->s[0] == '*') {
 		require_extra_token();
@@ -907,18 +909,22 @@ void primary_expr_variable(void)
 		return;
 	}
 
-	int is_prefix_operator = (match("++", global_token->prev->prev->s) || match("--", global_token->prev->prev->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
+	/* The prefix operator's operand is the variable itself only when no
+	 * subscript follows: `++p[i]` indexes through p's value, so p is loaded
+	 * as for any subscript. `++*p` names the cell p points at, so it takes
+	 * the store path's loads, which leave that cell's address. */
+	int is_prefix_operand = is_prefix_operator && !match("[", global_token->s);
 	int is_postfix_operator = (match("++", global_token->s) || match("--", global_token->s)) && (options != TLO_STATIC && options != TLO_GLOBAL);
 	int is_indexed_local_array = match("[", global_token->s) && (options & TLO_LOCAL_ARRAY);
 	int is_local_array = (options & TLO_LOCAL_ARRAY) != 0;
 	int is_function = options & TLO_FUNCTION;
 
-	if(is_prefix_operator || is_postfix_operator || is_indexed_local_array || is_function)
+	if((is_prefix_operand && 0 == num_dereference && options != TLO_STATIC && options != TLO_GLOBAL) || is_postfix_operator || is_indexed_local_array || is_function)
 	{
 		return;
 	}
 
-	int is_assignment = match("=", global_token->s);
+	int is_assignment = match("=", global_token->s) || (is_prefix_operand && 0 != num_dereference);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 
 	if(!is_assignment && !is_compound_operator && !is_local_array)
