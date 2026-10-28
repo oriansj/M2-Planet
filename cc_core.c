@@ -32,6 +32,13 @@ struct token_list* function;
 
 /* What we are currently working on */
 struct type* current_target;
+/* Declared return type of the function being declared; function_call takes a
+ * call's result type from it. */
+struct type* function_return_type;
+/* Number of string initializers emitted so far; their storage labels are
+ * numbered, because a string's text may hold spaces, quotes and escapes,
+ * which no assembler accepts in a label. */
+int string_count;
 char* break_target_head;
 char* break_target_func;
 char* break_target_num;
@@ -313,6 +320,10 @@ int constant_expression(void)
 void expression(void);
 void function_call(struct token_list* s, int is_function_pointer)
 {
+	/* The type at entry is the function pointer's, when the call goes
+	 * through one; reading the arguments overwrites current_target. */
+	struct type* callee = current_target;
+
 	require_match("ERROR in process_expression_list\nNo ( was found\n", "(");
 	require(NULL != global_token, "Improper function call\n");
 
@@ -349,6 +360,22 @@ void function_call(struct token_list* s, int is_function_pointer)
 	}
 
 	require_match("ERROR in process_expression_list\nNo ) was found\n", ")");
+
+	/* The expression's type is the value's type: the callee's declared return
+	 * type, not the last argument's one, which is what expression() left in
+	 * current_target. A member access through the call and the width of the
+	 * load of its value both depend on it. */
+	if(TRUE == is_function_pointer)
+	{
+		/* M2-Planet keeps no per-pointer return type; the pointer's own
+		 * type is register-sized, which keeps the value whole. */
+		if(NULL != callee) current_target = callee;
+	}
+	else
+	{
+		if(NULL != s->type) current_target = s->type;
+		else current_target = integer;
+	}
 
 	if(ARMV7L == Architecture)
 	{
@@ -2420,11 +2447,20 @@ void process_for(void)
 	require_extra_token();
 
 	require_match("ERROR in process_for\nMISSING (\n", "(");
-	/* fallible_type_name moves the global token if non-NULL */
+	/* fallible_type_name moves the global token if non-NULL. A struct or
+	 * union name is also an ordinary identifier in C, so `for (nt = 0; ...)`
+	 * with a `struct nt` in scope is an assignment, not a declaration: here a
+	 * declaration only starts when a declarator follows the type name. */
 	struct token_list* current = global_token;
-	if (fallible_type_name() != NULL)
+	int declares = FALSE;
+	if(fallible_type_name() != NULL)
 	{
-		global_token = current;
+		char c = global_token->s[0];
+		declares = ('*' == c) || ('(' == c) || in_set(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
+	}
+	global_token = current;
+	if(declares)
+	{
 		collect_local();
 	}
 	else if(!match(";", global_token->s))
@@ -2871,6 +2907,7 @@ void declare_function(void)
 {
 	current_count = 0;
 	function = sym_declare(global_token->prev->s, NULL, global_function_list, TLO_FUNCTION);
+	function->type = function_return_type;
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = function;
@@ -3067,8 +3104,11 @@ void global_value_selection(struct type* type_size)
 	{
 		if(('"' == global_token->s[0]))
 		{
-			char* name = global_token->s + 1;
-			globals_list = emit("&GLOBAL_", globals_list);
+			/* The storage label is numbered: a string's text may carry
+			 * spaces, quotes and escapes, which M1 rejects in a label. */
+			char* name = int2str(string_count, 10, FALSE);
+			string_count = string_count + 1;
+			globals_list = emit("&GLOBAL_M2LIT", globals_list);
 			globals_list = emit(name, globals_list);
 			globals_list = emit("_contents ", globals_list);
 
@@ -3077,7 +3117,7 @@ void global_value_selection(struct type* type_size)
 				global_value_output(0, 4);
 			}
 
-			strings_list = emit(":GLOBAL_", strings_list);
+			strings_list = emit(":GLOBAL_M2LIT", strings_list);
 			strings_list = emit(name, strings_list);
 			strings_list = emit("_contents\n", strings_list);
 			strings_list = emit(parse_string(global_token->s), strings_list);
@@ -3464,6 +3504,7 @@ new_type:
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
+		function_return_type = type_size;
 		declare_function();
 		goto new_type;
 	}
