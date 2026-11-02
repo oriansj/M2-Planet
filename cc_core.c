@@ -899,9 +899,14 @@ void primary_expr_variable(void)
 		current_target = cast_type;
 	}
 
-	if(TRUE == Address_of) return;
-
 	int options = type->options;
+
+	/* Under &, a subscript still indexes through the variable's value, so the
+	 * value is loaded unless the variable is a local array, whose address is
+	 * its storage. A global array is a cell holding the address of its
+	 * storage, so it loads like a pointer. */
+	int indexes_value = match("[", global_token->s) && !(options & TLO_LOCAL_ARRAY);
+	if(TRUE == Address_of && !indexes_value) return;
 
 	if(match(".", global_token->s))
 	{
