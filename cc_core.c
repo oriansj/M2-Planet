@@ -448,6 +448,9 @@ void function_call(struct token_list* s, int is_function_pointer)
 		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 	emit_pop(REGISTER_TEMP, "Restore temp register");
+	/* Argument expressions must not determine the call's result type. */
+	if(NULL != s) current_target = s->type;
+	else current_target = integer;
 }
 
 char* load_value_signed(unsigned size)
@@ -2157,15 +2160,8 @@ void expression(void)
 	conditional_expr();
 	if(match("=", global_token->s))
 	{
-		char* store = "";
-		if(match("]", global_token->prev->s))
-		{
-			store = store_value(current_target->type->size);
-		}
-		else
-		{
-			store = store_value(current_target->size);
-		}
+		/* Subscripts leave current_target at the element type. */
+		char* store = store_value(current_target->size);
 
 		common_recursion(expression);
 		emit_out(store);
@@ -2178,9 +2174,8 @@ void expression(void)
 		char* operation = "";
 		char* store = "";
 		struct type* last_type = current_target;
-		int is_array_indexed = match("]", global_token->prev->s);
 
-		if(!is_array_indexed || !match("char*", current_target->name))
+		if(current_target->size != 1)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD R1 R1 0\n";
 			else if(X86 == Architecture) load = "mov_ebx,[ebx]\n";
@@ -2195,23 +2190,16 @@ void expression(void)
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD8 R1 R1 0\n";
 			else if(X86 == Architecture) load = "movsx_ebx,BYTE_PTR_[ebx]\n";
 			else if(AMD64 == Architecture) load = "movsx_rbx,BYTE_PTR_[rbx]\n";
-			else if(ARMV7L == Architecture) load = "LOADU8 R1 LOAD R1 MEMORY\n";
-			else if(AARCH64 == Architecture) load = "ldrb_x1,[x1]\n";
+			else if(ARMV7L == Architecture) load = "!0 R1 LOAD R1 MEMORY\n";
+			else if(AARCH64 == Architecture) load = "ldrb_w1,[x1]\n";
 			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) load = "rd_a1 rs1_a1 lbu\n";
 		}
 
 		char *operator = global_token->s;
 
-		if(is_array_indexed)
-		{
-			store = store_value(current_target->type->size);
-		}
-		else
-		{
-			store = store_value(current_target->size);
-		}
+		store = store_value(current_target->size);
 
-		int should_apply_pointer_arithmetic = type_is_pointer(current_target) && !is_array_indexed;
+		int should_apply_pointer_arithmetic = type_is_pointer(current_target);
 		/* We need this before it's changed by the following expression  */
 		int object_size = current_target->type->size;
 
@@ -3126,10 +3114,10 @@ void collect_arguments(void)
 	require_extra_token();
 }
 
-void declare_function(void)
+void declare_function(struct type* return_type)
 {
 	current_count = 0;
-	function = sym_declare(global_token->prev->s, NULL, global_function_list, TLO_FUNCTION);
+	function = sym_declare(global_token->prev->s, return_type, global_function_list, TLO_FUNCTION);
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = function;
@@ -3757,7 +3745,7 @@ new_type:
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
-		declare_function();
+		declare_function(type_size);
 		goto new_type;
 	}
 
