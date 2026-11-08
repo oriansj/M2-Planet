@@ -1627,7 +1627,7 @@ void primary_expr(void)
 			emit_load_immediate(REGISTER_ZERO, 0, "primary expr");
 		}
 
-		common_recursion(primary_expr);
+		common_recursion(postfix_expr);
 
 		if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) emit_out("NEG R0 R0\n");
 		else if(X86 == Architecture) emit_out("sub_ebx,eax\nmov_eax,ebx\n");
