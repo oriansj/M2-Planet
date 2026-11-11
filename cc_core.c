@@ -1337,7 +1337,7 @@ void postfix_expr_array(void)
 
 	struct type* indexed_type = current_target->type;
 	char* assign = "";
-	if(!match("char*", current_target->name))
+	if(indexed_type->size != 1)
 	{
 		emit_mul_register_zero_with_immediate(indexed_type->size, "primary expr array");
 	}
@@ -1352,10 +1352,6 @@ void postfix_expr_array(void)
 	if(match("=", global_token->s) || is_compound_assignment(global_token->s) || match(".", global_token->s) || is_prefix_operator || is_postfix_operator || was_address_of)
 	{
 		assign = "";
-	}
-	else if(match("char*", current_target->name))
-	{
-		assign = load_value(1, TRUE);
 	}
 	else
 	{
@@ -1821,6 +1817,36 @@ void bitwise_expr(void)
 
 void expression(void);
 void comma_expr(void);
+struct type* conditional_type(struct type* a, struct type* b)
+{
+	/* Preserve pointers, including a pointer paired with a null constant.
+	 * A void pointer is the common type when paired with another pointer. */
+	if(type_is_pointer(a))
+	{
+		if(type_is_pointer(b) && match("void", b->type->name)) return b;
+		return a;
+	}
+	if(type_is_pointer(b)) return b;
+
+	/* Both arms already produce register-wide, extended values. Promote
+	 * narrow integers in BOTH arms before selecting their common type;
+	 * choosing the false arm's type cannot convert the earlier true arm. */
+	if(a->size < integer->size) a = integer;
+	if(b->size < integer->size) b = integer;
+	if(a->size > b->size) return a;
+	if(b->size > a->size) return b;
+
+	struct type* common = promote_type(a, b);
+	if(a->is_signed == b->is_signed) return common;
+	/* Equal-width mixed signedness needs an unsigned result, even when
+	 * the signed operand has higher rank (e.g. long and unsigned int). */
+	if(common == signed_long_long) return unsigned_long_long;
+	if(common == signed_long) return unsigned_long;
+	if(common == integer) return unsigned_integer;
+	if(!a->is_signed) return a;
+	return b;
+}
+
 void conditional_expr(void)
 {
 	bitwise_expr();
@@ -1841,7 +1867,7 @@ void conditional_expr(void)
 
 		emit_label("TERNARY_FALSE_", unique_id);
 		expression();
-		current_target = promote_type(true_type, current_target);
+		current_target = conditional_type(true_type, current_target);
 
 		emit_label("TERNARY_END_", unique_id);
 	}
