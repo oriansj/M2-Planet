@@ -252,6 +252,10 @@ int main() {
 	if(global_array_no_size[2] != 60) return 42;
 
 	if(sizeof(global_char_array) != 4) return 43;
+	if(global_char_array[0] != 1) return 90;
+	if(global_char_array[1] != 2) return 91;
+	if(global_char_array[2] != 3) return 92;
+	if(global_char_array[3] != 4) return 93;
 
 	if(global_struct_initialized.a != 16) return 44;
 	if(global_struct_initialized.b != 32) return 45;

@@ -31,6 +31,8 @@ enum {
 	STRING_LENGTH = sizeof("1234567"),
 	CHARACTER = 'A', /* 0x41 */
 	CHARACTER_PLUS = 'A' + 10, /* 0x41 */
+	SHIFT_LEFT = 1 << 6,
+	SHIFT_RIGHT = 256 >> 5,
 };
 
 struct SizeTwelve {
@@ -82,4 +84,6 @@ int main() {
 
 	if(CHARACTER != 0x41) return 19;
 	if(CHARACTER_PLUS != 0x4B) return 20;
+	if(SHIFT_LEFT != 64) return 21;
+	if(SHIFT_RIGHT != 8) return 22;
 }

@@ -298,6 +298,16 @@ int constant_expression(void)
 		require_extra_token();
 		return lhs * constant_expression();
 	}
+	else if(match("<<", global_token->s))
+	{
+		require_extra_token();
+		return lhs << constant_expression();
+	}
+	else if(match(">>", global_token->s))
+	{
+		require_extra_token();
+		return lhs >> constant_expression();
+	}
 	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
 	{
 		return lhs;
@@ -359,7 +369,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 
 	if(TRUE == is_function_pointer)
 	{
-		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_TEMP, 0, "Address of saved function pointer");
+		emit_load_relative_to_register(REGISTER_ZERO, REGISTER_BASE, 0, "Address of saved function pointer");
 		emit_dereference(REGISTER_ZERO, "Restore function pointer from stack");
 
 		if(Architecture & ARCH_FAMILY_KNIGHT)
@@ -426,8 +436,7 @@ void function_call(struct token_list* s, int is_function_pointer)
 	{
 		emit_move(REGISTER_STACK, REGISTER_BASE, "Clean up function arguments");
 	}
-
-	if(is_function_pointer)
+	if(TRUE == is_function_pointer)
 	{
 		emit_pop(REGISTER_ONE, "Discard saved function pointer slot");
 	}
@@ -439,6 +448,9 @@ void function_call(struct token_list* s, int is_function_pointer)
 		emit_pop(REGISTER_RETURN, "Restore old return pointer (link)");
 	}
 	emit_pop(REGISTER_TEMP, "Restore temp register");
+	/* Argument expressions must not determine the call's result type. */
+	if(NULL != s) current_target = s->type;
+	else current_target = integer;
 }
 
 char* load_value_signed(unsigned size)
@@ -693,12 +705,14 @@ void primary_expr_string(void)
 
 void primary_expr_char(void)
 {
+	current_target = integer;
 	emit_load_immediate(REGISTER_ZERO, escape_lookup(global_token->s + 1), "primary expr char");
 	require_extra_token();
 }
 
 void primary_expr_number(char* s)
 {
+	current_target = integer;
 	emit_load_immediate(REGISTER_ZERO, strtoint(s), "primary expr number");
 }
 
@@ -840,6 +854,47 @@ void emit_va_end_intrinsic(void)
 }
 
 int num_dereference_after_postfix;
+void prefix_expr_inc_or_dec(void);
+struct type* lookup_global_type(void);
+int token_starts_type_name(struct token_list* token)
+{
+	if(NULL == token) return FALSE;
+	if(match("const", token->s) || match("extern", token->s))
+	{
+		return token_starts_type_name(token->next);
+	}
+	if(match("enum", token->s) || match("struct", token->s) || match("union", token->s))
+	{
+		return TRUE;
+	}
+
+	struct token_list* old_token = global_token;
+	global_token = token;
+	struct type* type = lookup_global_type();
+	global_token = old_token;
+	return NULL != type;
+}
+
+void dereference_parenthesized_expression(int num_dereference)
+{
+	require_match("Expected '(' after dereference operator.\n", "(");
+	expression();
+	require_match("Expected ')' after dereferenced expression.\n", ")");
+
+	while(num_dereference > 1)
+	{
+		current_target = current_target->type;
+		emit_out(load_value(current_target->size, current_target->is_signed));
+		num_dereference = num_dereference - 1;
+	}
+
+	current_target = current_target->type;
+	if(!match("=", global_token->s) && !is_compound_assignment(global_token->s))
+	{
+		emit_out(load_value(current_target->size, current_target->is_signed));
+	}
+}
+
 void primary_expr_variable(void)
 {
 	/* A prefix ++ or -- stands ahead of the operand's `*`s. */
@@ -851,9 +906,40 @@ void primary_expr_variable(void)
 	}
 	num_dereference_after_postfix = num_dereference;
 
+	if(match("++", global_token->s) || match("--", global_token->s))
+	{
+		prefix_expr_inc_or_dec();
+		if(match("=", global_token->s) || is_compound_assignment(global_token->s))
+		{
+			while(num_dereference > 1)
+			{
+				current_target = current_target->type;
+				emit_out(load_value(current_target->size, current_target->is_signed));
+				num_dereference = num_dereference - 1;
+			}
+			if(num_dereference > 0)
+			{
+				current_target = current_target->type;
+			}
+		}
+		else while(num_dereference > 0)
+		{
+			current_target = current_target->type;
+			emit_out(load_value(current_target->size, current_target->is_signed));
+			num_dereference = num_dereference - 1;
+		}
+		return;
+	}
+
 	struct type* cast_type = NULL;
 	if(global_token->s[0] == '(')
 	{
+		if((num_dereference > 0) && !token_starts_type_name(global_token->next))
+		{
+			dereference_parenthesized_expression(num_dereference);
+			return;
+		}
+
 		require_extra_token();
 
 		cast_type = type_name();
@@ -924,6 +1010,12 @@ void primary_expr_variable(void)
 		return;
 	}
 
+	if((options & TLO_LOCAL_ARRAY) && 0 == num_dereference)
+	{
+		current_target = current_target->indirect;
+		return;
+	}
+
 	int is_assignment = match("=", global_token->s) || (is_prefix_operand && 0 != num_dereference);
 	int is_compound_operator = is_compound_assignment(global_token->s);
 
@@ -970,6 +1062,7 @@ void primary_expr_variable(void)
 }
 
 void primary_expr(void);
+void postfix_expr(void);
 struct type* promote_type(struct type* a, struct type* b)
 {
 	require(NULL != b, "impossible case 1 in promote_type\n");
@@ -989,6 +1082,48 @@ struct type* promote_type(struct type* a, struct type* b)
 	}
 	require(NULL != i, "impossible case 3 in promote_type\n");
 	return i;
+}
+
+void prefix_expr_inc_or_dec(void)
+{
+	int is_subtract = global_token->s[0] == '-';
+	maybe_bootstrap_error("prefix operators --/++");
+
+	emit_out("# prefix inc/dec\n");
+
+	emit_push(REGISTER_ZERO, "Previous value");
+	require_extra_token();
+	postfix_expr();
+	emit_pop(REGISTER_ONE, "Restore previous value");
+
+	emit_push(REGISTER_ONE, "Previous value");
+	emit_push(REGISTER_ZERO, "Address of variable");
+
+	emit_dereference(REGISTER_ZERO, "Deref to get value");
+
+	int value = 1;
+	if(type_is_pointer(current_target))
+	{
+		value = current_target->type->size;
+	}
+
+	if(is_subtract)
+	{
+		emit_sub_immediate(REGISTER_ZERO, value, "Sub prefix from deref value");
+	}
+	else
+	{
+		emit_add_immediate(REGISTER_ZERO, value, "Add prefix to deref value");
+	}
+
+	emit_pop(REGISTER_ONE, "Address of variable");
+
+	/* Store REGISTER_ZERO in REGISTER_ONE deref */
+	emit_out(store_value(current_target->size));
+
+	emit_pop(REGISTER_ONE, "Previous value");
+
+	emit_out("# prefix inc/dec end\n");
 }
 
 void common_recursion(FUNCTION f)
@@ -1025,7 +1160,25 @@ void multiply_by_object_size(int object_size)
 		return;
 	}
 
-	emit_mul_register_zero_with_immediate(current_target->type->size, "pointer arithmetic");
+	emit_mul_register_zero_with_immediate(object_size, "pointer arithmetic");
+}
+
+void multiply_register_one_by_object_size(int object_size)
+{
+	/* bootstrap mode can't depend upon on pointer arithmetic */
+	if(BOOTSTRAP_MODE) return;
+
+	if(object_size == 1)
+	{
+		/* No reason to multiply by one */
+		return;
+	}
+
+	emit_push(REGISTER_ZERO, "pointer arithmetic");
+	emit_move(REGISTER_ZERO, REGISTER_ONE, "pointer arithmetic");
+	emit_mul_register_zero_with_immediate(object_size, "pointer arithmetic");
+	emit_move(REGISTER_ONE, REGISTER_ZERO, "pointer arithmetic");
+	emit_pop(REGISTER_ZERO, "pointer arithmetic");
 }
 
 void arithmetic_recursion(FUNCTION f, char* s1, char* s2, char* name, FUNCTION iterate)
@@ -1160,20 +1313,33 @@ void postfix_expr_array(void)
 	int was_address_of = Address_of;
 
 	struct type* array = current_target;
-	common_recursion(expression);
-	current_target = array;
+	emit_push(REGISTER_ZERO, "_common_recursion");
+
+	require_extra_token();
+	expression();
+	struct type* index = current_target;
+	current_target = promote_type(index, array);
+
+	emit_pop(REGISTER_ONE, "_common_recursion");
 	require(NULL != current_target, "Arrays only apply to variables\n");
 
-	char* assign = load_value(register_size, current_target->is_signed);
-
-	/* Add support for Ints */
-	if(match("char*", current_target->name))
+	if(type_is_pointer(index) && !type_is_pointer(array))
 	{
-		assign = load_value(1, TRUE);
+		emit_push(REGISTER_ZERO, "reverse array subscript");
+		emit_move(REGISTER_ZERO, REGISTER_ONE, "reverse array subscript");
+		emit_pop(REGISTER_ONE, "reverse array subscript");
+		current_target = index;
 	}
 	else
 	{
-		emit_mul_register_zero_with_immediate(current_target->type->size, "primary expr array");
+		current_target = array;
+	}
+
+	struct type* indexed_type = current_target->type;
+	char* assign = "";
+	if(indexed_type->size != 1)
+	{
+		emit_mul_register_zero_with_immediate(indexed_type->size, "primary expr array");
 	}
 
 	emit_add(REGISTER_ZERO, REGISTER_ONE, TRUE, "primary expr array");
@@ -1187,10 +1353,11 @@ void postfix_expr_array(void)
 	{
 		assign = "";
 	}
-	if(match("[", global_token->s))
+	else
 	{
-		current_target = current_target->type;
+		assign = load_value(indexed_type->size, indexed_type->is_signed);
 	}
+	current_target = indexed_type;
 
 	emit_out(assign);
 }
@@ -1398,13 +1565,61 @@ void additive_expr_stub_b(void)
 	require(NULL != global_token, "Received EOF in additive_expr_stub_a\n");
 	if(match("+", global_token->s))
 	{
-		common_recursion(additive_expr_a);
+		struct type* left_type = current_target;
+		emit_push(REGISTER_ZERO, "_common_recursion");
+		require_extra_token();
+		additive_expr_a();
+		struct type* right_type = current_target;
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			current_target = left_type;
+		}
+		else if(!type_is_pointer(left_type) && type_is_pointer(right_type))
+		{
+			current_target = right_type;
+		}
+		else
+		{
+			current_target = promote_type(right_type, left_type);
+		}
+
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			multiply_by_object_size(left_type->type->size);
+		}
+
+		emit_pop(REGISTER_ONE, "_common_recursion");
+
+		if(!type_is_pointer(left_type) && type_is_pointer(right_type))
+		{
+			multiply_register_one_by_object_size(right_type->type->size);
+		}
+
 		emit_add(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
 		additive_expr_stub_b();
 	}
 	else if(match("-", global_token->s))
 	{
-		common_recursion(additive_expr_a);
+		struct type* left_type = current_target;
+		emit_push(REGISTER_ZERO, "_common_recursion");
+		require_extra_token();
+		additive_expr_a();
+		struct type* right_type = current_target;
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			current_target = left_type;
+		}
+		else
+		{
+			current_target = promote_type(right_type, left_type);
+		}
+
+		if(type_is_pointer(left_type) && !type_is_pointer(right_type))
+		{
+			multiply_by_object_size(left_type->type->size);
+		}
+
+		emit_pop(REGISTER_ONE, "_common_recursion");
 		emit_rsub(REGISTER_ZERO, REGISTER_ONE, current_target->is_signed, NULL);
 		additive_expr_stub_b();
 	}
@@ -1600,10 +1815,68 @@ void bitwise_expr(void)
 	bitwise_expr_stub();
 }
 
+void expression(void);
+void comma_expr(void);
+struct type* conditional_type(struct type* a, struct type* b)
+{
+	/* Preserve pointers, including a pointer paired with a null constant.
+	 * A void pointer is the common type when paired with another pointer. */
+	if(type_is_pointer(a))
+	{
+		if(type_is_pointer(b) && match("void", b->type->name)) return b;
+		return a;
+	}
+	if(type_is_pointer(b)) return b;
+
+	/* Both arms already produce register-wide, extended values. Promote
+	 * narrow integers in BOTH arms before selecting their common type;
+	 * choosing the false arm's type cannot convert the earlier true arm. */
+	if(a->size < integer->size) a = integer;
+	if(b->size < integer->size) b = integer;
+	if(a->size > b->size) return a;
+	if(b->size > a->size) return b;
+
+	struct type* common = promote_type(a, b);
+	if(a->is_signed == b->is_signed) return common;
+	/* Equal-width mixed signedness needs an unsigned result, even when
+	 * the signed operand has higher rank (e.g. long and unsigned int). */
+	if(common == signed_long_long) return unsigned_long_long;
+	if(common == signed_long) return unsigned_long;
+	if(common == integer) return unsigned_integer;
+	if(!a->is_signed) return a;
+	return b;
+}
+
+void conditional_expr(void)
+{
+	bitwise_expr();
+	if(match("?", global_token->s))
+	{
+		char* number_string = int2str(current_count, 10, TRUE);
+		current_count = current_count + 1;
+		char* unique_id = create_unique_id("", function->s, number_string);
+
+		emit_jump_if_zero(REGISTER_ZERO, "TERNARY_FALSE_", unique_id, "conditional expression false branch");
+
+		require_extra_token();
+		comma_expr();
+		struct type* true_type = current_target;
+
+		emit_unconditional_jump("TERNARY_END_", unique_id, "conditional expression end");
+		require_match("ERROR in conditional expression\nMissing :\n", ":");
+
+		emit_label("TERNARY_FALSE_", unique_id);
+		expression();
+		current_target = conditional_type(true_type, current_target);
+
+		emit_label("TERNARY_END_", unique_id);
+	}
+}
+
 /*
  * expression:
- *         bitwise-or-expr
- *         bitwise-or-expr = expression
+ *         conditional-expr
+ *         conditional-expr = expression
  */
 
 void primary_expr(void)
@@ -1665,44 +1938,7 @@ void primary_expr(void)
 	}
 	else if(match("--", global_token->s) || match("++", global_token->s))
 	{
-		int is_subtract = global_token->s[0] == '-';
-		maybe_bootstrap_error("prefix operators --/++");
-
-		emit_out("# prefix inc/dec\n");
-
-		emit_push(REGISTER_ZERO, "Previous value");
-		require_extra_token();
-		postfix_expr();
-		emit_pop(REGISTER_ONE, "Restore previous value");
-
-		emit_push(REGISTER_ONE, "Previous value");
-		emit_push(REGISTER_ZERO, "Address of variable");
-
-		emit_dereference(REGISTER_ZERO, "Deref to get value");
-
-		int value = 1;
-		if(type_is_pointer(current_target))
-		{
-			value = current_target->type->size;
-		}
-
-		if(is_subtract)
-		{
-			emit_sub_immediate(REGISTER_ZERO, value, "Sub prefix from deref value");
-		}
-		else
-		{
-			emit_add_immediate(REGISTER_ZERO, value, "Add prefix to deref value");
-		}
-
-		emit_pop(REGISTER_ONE, "Address of variable");
-
-		/* Store REGISTER_ZERO in REGISTER_ONE deref */
-		emit_out(store_value(current_target->size));
-
-		emit_pop(REGISTER_ONE, "Previous value");
-
-		emit_out("# prefix inc/dec end\n");
+		prefix_expr_inc_or_dec();
 	}
 	else if(global_token->s[0] == '(')
 	{
@@ -1716,12 +1952,17 @@ void primary_expr(void)
 				type_size = function_pointer;
 			}
 			require_match("Invalid character received in cast. Expected ')'.\n", ")");
-			primary_expr();
+			postfix_expr();
 			current_target = type_size;
 		}
 		else
 		{
 			expression();
+			while(match(",", global_token->s))
+			{
+				require_extra_token();
+				expression();
+			}
 			require_match("Error in Primary expression\nDidn't get )\n", ")");
 		}
 	}
@@ -1942,18 +2183,11 @@ char* compound_operation(char* operator, int is_signed)
 
 void expression(void)
 {
-	bitwise_expr();
+	conditional_expr();
 	if(match("=", global_token->s))
 	{
-		char* store = "";
-		if(match("]", global_token->prev->s))
-		{
-			store = store_value(current_target->type->size);
-		}
-		else
-		{
-			store = store_value(current_target->size);
-		}
+		/* Subscripts leave current_target at the element type. */
+		char* store = store_value(current_target->size);
 
 		common_recursion(expression);
 		emit_out(store);
@@ -1966,9 +2200,8 @@ void expression(void)
 		char* operation = "";
 		char* store = "";
 		struct type* last_type = current_target;
-		int is_array_indexed = match("]", global_token->prev->s);
 
-		if(!is_array_indexed || !match("char*", current_target->name))
+		if(current_target->size != 1)
 		{
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD R1 R1 0\n";
 			else if(X86 == Architecture) load = "mov_ebx,[ebx]\n";
@@ -1983,23 +2216,16 @@ void expression(void)
 			if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) load = "LOAD8 R1 R1 0\n";
 			else if(X86 == Architecture) load = "movsx_ebx,BYTE_PTR_[ebx]\n";
 			else if(AMD64 == Architecture) load = "movsx_rbx,BYTE_PTR_[rbx]\n";
-			else if(ARMV7L == Architecture) load = "LOADU8 R1 LOAD R1 MEMORY\n";
-			else if(AARCH64 == Architecture) load = "ldrb_x1,[x1]\n";
+			else if(ARMV7L == Architecture) load = "!0 R1 LOAD R1 MEMORY\n";
+			else if(AARCH64 == Architecture) load = "ldrb_w1,[x1]\n";
 			else if((RISCV32 == Architecture) || (RISCV64 == Architecture)) load = "rd_a1 rs1_a1 lbu\n";
 		}
 
 		char *operator = global_token->s;
 
-		if(is_array_indexed)
-		{
-			store = store_value(current_target->type->size);
-		}
-		else
-		{
-			store = store_value(current_target->size);
-		}
+		store = store_value(current_target->size);
 
-		int should_apply_pointer_arithmetic = type_is_pointer(current_target) && !is_array_indexed;
+		int should_apply_pointer_arithmetic = type_is_pointer(current_target);
 		/* We need this before it's changed by the following expression  */
 		int object_size = current_target->type->size;
 
@@ -2020,6 +2246,15 @@ void expression(void)
 	}
 }
 
+void comma_expr(void)
+{
+	expression();
+	while(match(",", global_token->s))
+	{
+		require_extra_token();
+		expression();
+	}
+}
 
 int iskeywordp(char* s)
 {
@@ -2227,7 +2462,7 @@ void process_if(void)
 
 	global_token = global_token->next;
 	require_match("ERROR in process_if\nMISSING (\n", "(");
-	expression();
+	comma_expr();
 
 	emit_jump_if_zero(REGISTER_ZERO, "ELSE_", unique_id, "Jump to else");
 
@@ -2300,7 +2535,7 @@ void process_switch(void)
 	/* get what we are casing on */
 	global_token = global_token->next;
 	require_match("ERROR in process_switch\nMISSING (\n", "(");
-	expression();
+	comma_expr();
 	require_match("ERROR in process_switch\nMISSING )\n", ")");
 
 	/* Put the value in R1 as it is currently in R0 */
@@ -2429,7 +2664,7 @@ void process_for(void)
 	}
 	else if(!match(";", global_token->s))
 	{
-		expression();
+		comma_expr();
 		require_match("ERROR in process_for\nMISSING ;1\n", ";");
 	}
 	else
@@ -2439,16 +2674,21 @@ void process_for(void)
 
 	emit_label("FOR_", unique_id);
 
-	expression();
-
-	emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
+	if(!match(";", global_token->s))
+	{
+		comma_expr();
+		emit_jump_if_zero(REGISTER_ZERO, "FOR_END_", unique_id, "Jump to end");
+	}
 
 	emit_unconditional_jump("FOR_THEN_", unique_id, "Go to body");
 
 	emit_label("FOR_ITER_", unique_id);
 
 	require_match("ERROR in process_for\nMISSING ;2\n", ";");
-	expression();
+	if(!match(")", global_token->s))
+	{
+		comma_expr();
+	}
 
 	emit_unconditional_jump("FOR_", unique_id, "Check conditional");
 
@@ -2514,7 +2754,7 @@ void process_do(void)
 
 	require_match("ERROR in process_do\nMISSING while\n", "while");
 	require_match("ERROR in process_do\nMISSING (\n", "(");
-	expression();
+	comma_expr();
 	require_match("ERROR in process_do\nMISSING )\n", ")");
 	require_match("ERROR in process_do\nMISSING ;\n", ";");
 
@@ -2554,7 +2794,7 @@ void process_while(void)
 
 	global_token = global_token->next;
 	require_match("ERROR in process_while\nMISSING (\n", "(");
-	expression();
+	comma_expr();
 
 	emit_jump_if_zero(REGISTER_ZERO, "END_WHILE_", unique_id, "Jump to end");
 
@@ -2582,7 +2822,7 @@ char* function_locals_cleanup_string;
 void return_result(void)
 {
 	require_extra_token();
-	if(global_token->s[0] != ';') expression();
+	if(global_token->s[0] != ';') comma_expr();
 
 	require_match("ERROR in return_result\nMISSING ;\n", ";");
 
@@ -2777,7 +3017,7 @@ void statement(void)
 	}
 	else
 	{
-		expression();
+		comma_expr();
 		require_match("ERROR in statement\nMISSING ;\n", ";");
 	}
 }
@@ -2788,6 +3028,7 @@ void collect_arguments(void)
 	require_extra_token();
 	struct type* type_size;
 	struct token_list* a;
+	char* name;
 
 	while(!match(")", global_token->s))
 	{
@@ -2806,7 +3047,39 @@ void collect_arguments(void)
 		type_size = type_name();
 		require(NULL != global_token, "Received EOF when attempting to collect arguments\n");
 		require(NULL != type_size, "Must have non-null type\n");
-		if(global_token->s[0] == ')')
+		if(global_token->s[0] == '(')
+		{
+			name = parse_function_pointer();
+			if(NULL != name)
+			{
+				require(!in_set(name[0], "[{(<=>)}]|&!^%;:'\""), "forbidden character in argument variable name\n");
+				require(!iskeywordp(name), "You are not allowed to use a keyword as a argument variable name\n");
+				a = sym_declare(name, function_pointer, function->arguments, TLO_ARGUMENT);
+				if(NULL == function->arguments)
+				{
+					if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = 0;
+					else if(X86 == Architecture) a->depth = -4;
+					else if(AMD64 == Architecture) a->depth = -8;
+					else if(ARMV7L == Architecture) a->depth = 4;
+					else if(AARCH64 == Architecture) a->depth = register_size;
+					else if(RISCV32 == Architecture) a->depth = -4;
+					else if(RISCV64 == Architecture) a->depth = -8;
+				}
+				else
+				{
+					if((KNIGHT_POSIX == Architecture) || (KNIGHT_NATIVE == Architecture)) a->depth = function->arguments->depth + register_size;
+					else if(X86 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(AMD64 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(ARMV7L == Architecture) a->depth = function->arguments->depth + register_size;
+					else if(AARCH64 == Architecture) a->depth = function->arguments->depth + register_size;
+					else if(RISCV32 == Architecture) a->depth = function->arguments->depth - register_size;
+					else if(RISCV64 == Architecture) a->depth = function->arguments->depth - register_size;
+				}
+
+				function->arguments = a;
+			}
+		}
+		else if(global_token->s[0] == ')')
 		{
 			/* foo(int,char,void) doesn't need anything done */
 			continue;
@@ -2867,10 +3140,10 @@ void collect_arguments(void)
 	require_extra_token();
 }
 
-void declare_function(void)
+void declare_function(struct type* return_type)
 {
 	current_count = 0;
-	function = sym_declare(global_token->prev->s, NULL, global_function_list, TLO_FUNCTION);
+	function = sym_declare(global_token->prev->s, return_type, global_function_list, TLO_FUNCTION);
 
 	/* allow previously defined functions to be looked up */
 	global_function_list = function;
@@ -2883,7 +3156,7 @@ void declare_function(void)
 
 	require(NULL != global_token, "Function definitions either need to be prototypes or full\n");
 	/* If just a prototype don't waste time */
-	if(global_token->s[0] == ';') require_extra_token();
+	if(global_token->s[0] == ';') global_token = global_token->next;
 	else
 	{
 		emit_out("# Defining function ");
@@ -3125,6 +3398,31 @@ void global_value_selection(struct type* type_size)
 			}
 			require_extra_token();
 		}
+		else if(in_set(global_token->s[0], "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"))
+		{
+			char* name = global_token->s;
+			struct token_list* lookup_token = sym_lookup(name, global_function_list);
+			if(NULL != lookup_token)
+			{
+				globals_list = emit("&FUNCTION_", globals_list);
+				globals_list = emit(name, globals_list);
+				globals_list = emit(" ", globals_list);
+
+				if(register_size > 4)
+				{
+					globals_list = emit("%0 ", globals_list);
+				}
+			}
+			else
+			{
+				line_error();
+				fputs("Invalid global pointer initializer '", stderr);
+				fputs(name, stderr);
+				fputs("'.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
+			require_extra_token();
+		}
 		else
 		{
 			line_error();
@@ -3255,6 +3553,15 @@ int global_array_initializer_list(struct type* type_size, int array_modifier)
 
 int global_static_array(struct type* type_size, char* name)
 {
+	if(global_token->s[0] == '[' && global_token->next != NULL && global_token->next->s[0] == ']' &&
+	   global_token->next->next != NULL &&
+	   (global_token->next->next->s[0] == ';' || global_token->next->next->s[0] == ','))
+	{
+		require_extra_token();
+		require_match("missing close bracket\n", "]");
+		return 0;
+	}
+
 	global_variable_header(name);
 
 	if(global_token->s[0] == ';' || global_token->s[0] == ',')
@@ -3464,7 +3771,7 @@ new_type:
 	/* Deal with global functions */
 	if(match("(", global_token->s))
 	{
-		declare_function();
+		declare_function(type_size);
 		goto new_type;
 	}
 
