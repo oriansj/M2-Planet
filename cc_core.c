@@ -276,39 +276,51 @@ int constant_unary_expression(void)
 	exit(EXIT_FAILURE);
 }
 
+int constant_multiplicative_expression(void)
+{
+	int lhs = constant_unary_expression();
+	while(match("*", global_token->s))
+	{
+		require_extra_token();
+		lhs = lhs * constant_unary_expression();
+	}
+	return lhs;
+}
+
+int constant_additive_expression(void)
+{
+	int lhs = constant_multiplicative_expression();
+	int is_subtract;
+	int rhs;
+	while(match("+", global_token->s) || match("-", global_token->s))
+	{
+		is_subtract = match("-", global_token->s);
+		require_extra_token();
+		rhs = constant_multiplicative_expression();
+		if(is_subtract) lhs = lhs - rhs;
+		else lhs = lhs + rhs;
+	}
+	return lhs;
+}
+
 /* global_token should start on the first part of the expression
  * and it will end one token past the end of the expression. */
 int constant_expression(void)
 {
-	/* We go from the highest precedence operators down to the lowest */
-	int lhs = constant_unary_expression();
+	/* Each level consumes higher-precedence operands, left to right. */
+	int lhs = constant_additive_expression();
+	int is_right_shift;
+	int rhs;
+	while(match("<<", global_token->s) || match(">>", global_token->s))
+	{
+		is_right_shift = match(">>", global_token->s);
+		require_extra_token();
+		rhs = constant_additive_expression();
+		if(is_right_shift) lhs = lhs >> rhs;
+		else lhs = lhs << rhs;
+	}
 
-	if(global_token->s[0] == '+')
-	{
-		require_extra_token();
-		return lhs + constant_expression();
-	}
-	else if(global_token->s[0] == '-')
-	{
-		require_extra_token();
-		return lhs - constant_expression();
-	}
-	else if(global_token->s[0] == '*')
-	{
-		require_extra_token();
-		return lhs * constant_expression();
-	}
-	else if(match("<<", global_token->s))
-	{
-		require_extra_token();
-		return lhs << constant_expression();
-	}
-	else if(match(">>", global_token->s))
-	{
-		require_extra_token();
-		return lhs >> constant_expression();
-	}
-	else if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
+	if(global_token->s[0] == ',' || global_token->s[0] == ']' || global_token->s[0] == ';' || global_token->s[0] == '}' || global_token->s[0] == ':')
 	{
 		return lhs;
 	}
