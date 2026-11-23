@@ -3357,6 +3357,12 @@ void global_value_selection(struct type* type_size)
 	{
 		if(('"' == global_token->s[0]))
 		{
+			if(type_is_function_pointer(type_size))
+			{
+				line_error();
+				fputs("String literal cannot initialize a function pointer.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			char* name = global_token->s + 1;
 			globals_list = emit("&GLOBAL_", globals_list);
 			globals_list = emit(name, globals_list);
