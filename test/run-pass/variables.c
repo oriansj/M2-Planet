@@ -101,7 +101,7 @@ int some_global_function(void) {
 struct {
 	int* zero;
 	int* global;
-	void* func;
+	FUNCTION func;
 	char* str;
 } struct_pointers = {0, &function_called, &some_function, "str"};
 
