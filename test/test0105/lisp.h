@@ -48,7 +48,7 @@ struct cell
 		struct cell* car;
 		int value;
 		char* string;
-		FUNCTION* function;
+		FUNCTION function;
 	};
 	struct cell* cdr;
 	struct cell* env;

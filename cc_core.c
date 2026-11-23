@@ -1500,7 +1500,7 @@ void postfix_expr_stub(void)
 
 	if(global_token->s[0] == '(')
 	{
-		if((current_target->options & TO_FUNCTION_POINTER))
+		if((current_target == current_target->type) && (current_target->options & TO_FUNCTION_POINTER))
 		{
 			function_call(NULL, TRUE);
 		}
