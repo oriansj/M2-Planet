@@ -31,6 +31,17 @@ enum {
 	STRING_LENGTH = sizeof("1234567"),
 	CHARACTER = 'A', /* 0x41 */
 	CHARACTER_PLUS = 'A' + 10, /* 0x41 */
+	SHIFT_LEFT = 1 << 6,
+	SHIFT_RIGHT = 256 >> 5,
+	ADD_BEFORE_SHIFT = 1 + 2 << 1,
+	SHIFT_AFTER_ADD = 16 >> 1 + 1,
+	MULTIPLY_BEFORE_ADD = 2 * 3 + 4,
+	ADD_AFTER_MULTIPLY = 2 + 3 * 4,
+	SUBTRACT_LEFT = 10 - 3 - 2,
+	SHIFT_RIGHT_LEFT = 32 >> 2 >> 1,
+	SHIFT_LEFT_LEFT = 1 << 2 << 1,
+	MIXED_SHIFTS = 16 >> 1 << 1,
+	MIXED_PRECEDENCE = ONE << ONE + TWO * TWO,
 };
 
 struct SizeTwelve {
@@ -82,4 +93,15 @@ int main() {
 
 	if(CHARACTER != 0x41) return 19;
 	if(CHARACTER_PLUS != 0x4B) return 20;
+	if(SHIFT_LEFT != 64) return 21;
+	if(SHIFT_RIGHT != 8) return 22;
+	if(ADD_BEFORE_SHIFT != 6) return 23;
+	if(SHIFT_AFTER_ADD != 4) return 24;
+	if(MULTIPLY_BEFORE_ADD != 10) return 25;
+	if(ADD_AFTER_MULTIPLY != 14) return 26;
+	if(SUBTRACT_LEFT != 5) return 27;
+	if(SHIFT_RIGHT_LEFT != 4) return 28;
+	if(SHIFT_LEFT_LEFT != 8) return 29;
+	if(MIXED_SHIFTS != 16) return 30;
+	if(MIXED_PRECEDENCE != 32) return 31;
 }
