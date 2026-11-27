@@ -95,7 +95,7 @@ progn_reset:
 	goto progn_reset;
 }
 
-struct cell* exec_func(FUNCTION * func, struct cell* vals)
+struct cell* exec_func(FUNCTION func, struct cell* vals)
 {
 	return func(vals);
 }
@@ -575,7 +575,7 @@ void spinup(struct cell* sym, struct cell* prim)
 
 /*** Initialization ***/
 struct cell* intern(char *name);
-struct cell* make_prim(void* fun);
+struct cell* make_prim(FUNCTION fun);
 struct cell* make_sym(char* name);
 void init_sl3()
 {

@@ -94,6 +94,11 @@ int type_is_pointer(struct type* type_size)
 	return type_size->type != type_size || (type_size->options & TO_FUNCTION_POINTER);
 }
 
+int type_is_function_pointer(struct type* type_size)
+{
+	return (type_size == type_size->type) && (type_size->options & TO_FUNCTION_POINTER);
+}
+
 int type_is_struct_or_union(struct type* type_size)
 {
 	return type_size->members != NULL;
@@ -1495,7 +1500,7 @@ void postfix_expr_stub(void)
 
 	if(global_token->s[0] == '(')
 	{
-		if((current_target->options & TO_FUNCTION_POINTER))
+		if((current_target == current_target->type) && (current_target->options & TO_FUNCTION_POINTER))
 		{
 			function_call(NULL, TRUE);
 		}
@@ -3352,6 +3357,12 @@ void global_value_selection(struct type* type_size)
 	{
 		if(('"' == global_token->s[0]))
 		{
+			if(type_is_function_pointer(type_size))
+			{
+				line_error();
+				fputs("String literal cannot initialize a function pointer.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			char* name = global_token->s + 1;
 			globals_list = emit("&GLOBAL_", globals_list);
 			globals_list = emit(name, globals_list);
@@ -3380,8 +3391,15 @@ void global_value_selection(struct type* type_size)
 
 			char* name = global_token->s;
 			struct token_list* lookup_token = sym_lookup(name, global_function_list);
+			int function_destination = type_is_function_pointer(type_size);
 			if(NULL != lookup_token)
 			{
+				if(!function_destination)
+				{
+					line_error();
+					fputs("Function address requires a function pointer initializer.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
 				globals_list = emit("&FUNCTION_", globals_list);
 				globals_list = emit(name, globals_list);
 				globals_list = emit(" ", globals_list);
@@ -3391,6 +3409,12 @@ void global_value_selection(struct type* type_size)
 				lookup_token = sym_lookup(name, global_symbol_list);
 				if(NULL != lookup_token)
 				{
+					if(function_destination)
+					{
+						line_error();
+						fputs("Object address cannot initialize a function pointer.\n", stderr);
+						exit(EXIT_FAILURE);
+					}
 					globals_list = emit("&GLOBAL_", globals_list);
 					globals_list = emit(name, globals_list);
 					globals_list = emit(" ", globals_list);
